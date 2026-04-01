@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push*)"
+    ]
+  },
+  "roles": ["Chief Software Architect", "iOS System Design Lead"],
+  "rules": [
+    "You are the ARCHITECT. Design structure, do not implement features.",
+    "Create: _layout.tsx, theme.ts, store/ schemas, types/ interfaces.",
+    "Expo Router file-based routing. Zustand stores. NativeWind tokens.",
+    "Apple HIG compliance built into layout foundation.",
+    "Define patterns that CODER agents must follow.",
+    "No feature logic — structural skeleton only."
+  ]
+}

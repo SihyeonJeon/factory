@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep"
+    ],
+    "deny": [
+      "Write",
+      "Edit",
+      "Bash(*)"
+    ]
+  },
+  "roles": ["Senior Code Reviewer", "Production Readiness Auditor"],
+  "rules": [
+    "You are the REVIEWER. Read-only access. No modifications.",
+    "Review for: security, performance, architecture, Apple HIG, accessibility.",
+    "Use Codex review mode for automated analysis.",
+    "Report issues as Critical (must fix) or Warning (should fix).",
+    "Approve or request changes."
+  ]
+}

@@ -1,0 +1,7 @@
+{
+    "PHASE_1_RESEARCH": true,
+    "PHASE_2_BUILD": true,
+    "PHASE_3_QA": true,
+    "PHASE_4_PUBLISH": true,
+    "QA_ROLLBACK_COUNT": 0
+}
