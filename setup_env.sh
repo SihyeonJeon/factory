@@ -1,34 +1,49 @@
 #!/bin/bash
-# setup_env.sh — Multi-Agent Factory 환경 설정
-set -e
+# setup_env.sh - Company harness environment bootstrap
+set -euo pipefail
 
-echo "=== Multi-Agent Autonomous Publishing Factory Setup ==="
+echo "=== Factory Harness Setup ==="
 
-# Python 가상환경
-echo "> Python 가상환경 설정..."
-python3 -m venv venv
+if [ ! -d "venv" ]; then
+  echo "> Creating Python virtualenv..."
+  python3 -m venv venv
+fi
+
 source venv/bin/activate
 
+echo "> Upgrading Python tooling..."
 pip install --upgrade pip
-pip install playwright pydantic requests
+pip install playwright requests claude-agent-sdk
 
-# Playwright 브라우저
-echo "> Playwright Chromium 설치..."
+echo "> Installing Playwright Chromium..."
 playwright install chromium
 
-# CLI 도구 확인
 echo ""
-echo "=== CLI 도구 상태 ==="
-echo -n "Claude Code: "; claude --version 2>/dev/null || echo "NOT FOUND"
-echo -n "Gemini CLI:  "; gemini --version 2>/dev/null || echo "NOT FOUND"
+echo "=== CLI Status ==="
 echo -n "Codex CLI:   "; codex --version 2>/dev/null || echo "NOT FOUND"
+echo -n "Gemini CLI:  "; gemini --version 2>/dev/null || echo "NOT FOUND"
+echo -n "Claude CLI:  "; claude --version 2>/dev/null || echo "OPTIONAL - not required for new harness"
 
-# Node.js 글로벌 도구
 echo ""
-echo "> Node.js 글로벌 도구 확인..."
-which npx >/dev/null 2>&1 || { echo "[!] npx not found. Install Node.js first."; exit 1; }
+echo "=== Environment Checks ==="
+python3 - <<'PY'
+import os
+print("ANTHROPIC_API_KEY:", "SET" if os.environ.get("ANTHROPIC_API_KEY") else "MISSING")
+PY
+
+echo ""
+echo "=== Manual iOS Prerequisites ==="
+echo "- Install full Xcode.app from the App Store."
+echo "- Run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer"
+echo "- Verify: xcodebuild -version"
+echo "- Verify: xcrun simctl list devices"
+
+echo ""
+echo "=== Recommended Tooling ==="
+echo "- Run scripts/install_frontline_tools.sh after approving brew installs."
+echo "- Review context_harness/install_checklist.md"
 
 echo ""
 echo "=== Setup Complete ==="
-echo "사용법: source venv/bin/activate && python run_factory.py [시드아이디어]"
-echo "옵션:   --reset (상태 초기화)  --debug-fast (Rate limit 대기 단축)"
+echo "source venv/bin/activate && python run_factory.py [seed]"
+echo "or run: ./venv/bin/python run_factory.py [seed]"

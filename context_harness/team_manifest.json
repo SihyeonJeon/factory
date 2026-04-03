@@ -1,0 +1,363 @@
+{
+  "version": "2026-04-02",
+  "providers": {
+    "claude_api": {
+      "transport": "api",
+      "auth": "ANTHROPIC_API_KEY",
+      "primary_use": [
+        "planning",
+        "task allocation",
+        "architecture",
+        "red-team review",
+        "arbitration"
+      ],
+      "models": {
+        "default": "claude-sonnet-4-20250514",
+        "deep_review": "claude-opus-4-1-20250805"
+      }
+    },
+    "codex_cli": {
+      "transport": "cli",
+      "auth": "chatgpt-pro-login",
+      "primary_use": [
+        "implementation",
+        "refactor",
+        "parallel worktree execution",
+        "code review"
+      ],
+      "models": {
+        "default": "gpt-5.4",
+        "subagent": "gpt-5-codex-mini",
+        "override_env": "FACTORY_CODEX_PRIMARY_MODEL"
+      }
+    },
+    "gemini_cli": {
+      "transport": "cli",
+      "auth": "oauth-personal",
+      "primary_use": [
+        "market research",
+        "multimodal critique",
+        "visual QA",
+        "design reference synthesis"
+      ],
+      "models": {
+        "complex": "gemini-3.1-pro",
+        "default": "gemini-2.5-pro",
+        "fast": "gemini-2.5-flash"
+      }
+    }
+  },
+  "roles": [
+    {
+      "id": "platform_operator",
+      "title": "Platform Operator",
+      "team": "operations",
+      "provider": "claude_api",
+      "model": "claude-sonnet-4-20250514",
+      "ownership": [
+        "context_harness/state.json",
+        "context_harness/handoffs/",
+        "context_harness/reports/"
+      ],
+      "responsibilities": [
+        "Run the autonomous loop and keep lanes synchronized.",
+        "Compact context, prepare merge packets, and protect token budgets.",
+        "Prefer integration worktrees over direct edits to the operator's current branch.",
+        "Escalate when automation cannot safely resolve conflicts."
+      ]
+    },
+    {
+      "id": "product_lead",
+      "title": "Product Lead",
+      "team": "product",
+      "provider": "gemini_cli",
+      "model": "gemini-2.5-pro",
+      "ownership": [
+        "context_harness/handoffs/product_brief.md",
+        "reports/product_lead_product_research.md"
+      ],
+      "responsibilities": [
+        "Find market demand and category risk.",
+        "Collect relevant design and competitor references.",
+        "Flag flows that could violate Apple HIG or feel unnative on iOS.",
+        "Produce concise product brief handoffs."
+      ]
+    },
+    {
+      "id": "delivery_lead",
+      "title": "Delivery Lead",
+      "team": "planning",
+      "provider": "claude_api",
+      "model": "claude-sonnet-4-20250514",
+      "ownership": [
+        "context_harness/handoffs/fork_decision.json",
+        "reports/delivery_lead_planning.md"
+      ],
+      "responsibilities": [
+        "Convert product brief into milestones, task graph, and ownership.",
+        "Decide whether subagent forks are justified.",
+        "Enforce short handoff contracts and explicit acceptance criteria.",
+        "Keep token budget under control."
+      ]
+    },
+    {
+      "id": "ios_architect",
+      "title": "iOS Architect",
+      "team": "planning",
+      "provider": "claude_api",
+      "model": "claude-opus-4-1-20250805",
+      "ownership": [
+        "reports/ios_architect_architecture.md"
+      ],
+      "responsibilities": [
+        "Define file ownership, data flow, state boundaries, and HIG-safe UI constraints.",
+        "Prefer SPM-first iOS integration and avoid unnecessary dependency drift.",
+        "Create architecture contracts before implementation."
+      ]
+    },
+    {
+      "id": "ios_ui_builder",
+      "title": "iOS UI Builder",
+      "team": "development",
+      "provider": "codex_cli",
+      "model": "gpt-5.4",
+      "ownership": [
+        ".worktrees/ios_ui_builder"
+      ],
+      "responsibilities": [
+        "Implement screen structure, components, and native-feeling interactions.",
+        "Stay inside assigned worktree and file boundaries.",
+        "Do not bypass Safe Area, touch target, or accessibility constraints."
+      ]
+    },
+    {
+      "id": "ios_logic_builder",
+      "title": "iOS Logic Builder",
+      "team": "development",
+      "provider": "codex_cli",
+      "model": "gpt-5.4",
+      "ownership": [
+        ".worktrees/ios_logic_builder"
+      ],
+      "responsibilities": [
+        "Implement stores, network boundaries, domain logic, and testable flows.",
+        "Keep UI state and business state separated.",
+        "Document assumptions that could affect QA."
+      ]
+    },
+    {
+      "id": "red_team_reviewer",
+      "title": "Red Team Reviewer",
+      "team": "evaluation",
+      "provider": "claude_api",
+      "model": "claude-sonnet-4-20250514",
+      "ownership": [
+        "reports/red_team_reviewer_code_review.md"
+      ],
+      "responsibilities": [
+        "Assume the implementation is wrong until proven otherwise.",
+        "Find hallucinated behavior, architectural mismatches, and regression risk.",
+        "Reject vague or self-congratulatory reports."
+      ]
+    },
+    {
+      "id": "hig_guardian",
+      "title": "HIG Guardian",
+      "team": "evaluation",
+      "provider": "claude_api",
+      "model": "claude-sonnet-4-20250514",
+      "ownership": [
+        "reports/hig_guardian_hig_audit.md"
+      ],
+      "responsibilities": [
+        "Audit the product against Apple HIG and iOS conventions.",
+        "Block release when the app feels non-native, cluttered, or inaccessible.",
+        "Prefer concrete fix instructions over general style advice."
+      ]
+    },
+    {
+      "id": "visual_qa",
+      "title": "Visual QA",
+      "team": "evaluation",
+      "provider": "gemini_cli",
+      "model": "gemini-2.5-pro",
+      "ownership": [
+        "reports/visual_qa_visual_qa.md"
+      ],
+      "responsibilities": [
+        "Use screenshots and render artifacts to catch spacing, overlap, and visual incoherence.",
+        "Check whether the result looks native and complete enough for App Store review.",
+        "Escalate issues back to the delivery lead with file-level guidance."
+      ]
+    }
+  ],
+  "routing": [
+    {
+      "task": "product_research",
+      "primary_role": "product_lead",
+      "fallback_roles": [
+        "delivery_lead"
+      ],
+      "evaluation_roles": [
+        "red_team_reviewer"
+      ]
+    },
+    {
+      "task": "market_research",
+      "primary_role": "product_lead",
+      "fallback_roles": [
+        "delivery_lead"
+      ],
+      "evaluation_roles": [
+        "red_team_reviewer"
+      ]
+    },
+    {
+      "task": "planning",
+      "primary_role": "delivery_lead",
+      "fallback_roles": [
+        "ios_architect"
+      ],
+      "evaluation_roles": [
+        "red_team_reviewer"
+      ]
+    },
+    {
+      "task": "task_allocation",
+      "primary_role": "delivery_lead",
+      "fallback_roles": [
+        "ios_architect"
+      ],
+      "evaluation_roles": [
+        "red_team_reviewer"
+      ]
+    },
+    {
+      "task": "prd_generation",
+      "primary_role": "delivery_lead",
+      "fallback_roles": [
+        "product_lead"
+      ],
+      "evaluation_roles": [
+        "red_team_reviewer"
+      ]
+    },
+    {
+      "task": "architecture",
+      "primary_role": "ios_architect",
+      "fallback_roles": [
+        "delivery_lead"
+      ],
+      "evaluation_roles": [
+        "red_team_reviewer"
+      ]
+    },
+    {
+      "task": "ios_implementation",
+      "primary_role": "ios_ui_builder",
+      "fallback_roles": [
+        "ios_logic_builder"
+      ],
+      "evaluation_roles": [
+        "red_team_reviewer",
+        "hig_guardian"
+      ]
+    },
+    {
+      "task": "ui_coding",
+      "primary_role": "ios_ui_builder",
+      "fallback_roles": [
+        "ios_logic_builder"
+      ],
+      "evaluation_roles": [
+        "red_team_reviewer",
+        "hig_guardian"
+      ]
+    },
+    {
+      "task": "business_logic",
+      "primary_role": "ios_logic_builder",
+      "fallback_roles": [
+        "ios_ui_builder"
+      ],
+      "evaluation_roles": [
+        "red_team_reviewer"
+      ]
+    },
+    {
+      "task": "code_review",
+      "primary_role": "red_team_reviewer",
+      "fallback_roles": [
+        "hig_guardian"
+      ],
+      "evaluation_roles": [
+        "visual_qa"
+      ]
+    },
+    {
+      "task": "hig_audit",
+      "primary_role": "hig_guardian",
+      "fallback_roles": [
+        "visual_qa"
+      ],
+      "evaluation_roles": [
+        "red_team_reviewer"
+      ]
+    },
+    {
+      "task": "visual_qa",
+      "primary_role": "visual_qa",
+      "fallback_roles": [
+        "hig_guardian"
+      ],
+      "evaluation_roles": [
+        "red_team_reviewer"
+      ]
+    },
+    {
+      "task": "bug_fix",
+      "primary_role": "ios_logic_builder",
+      "fallback_roles": [
+        "ios_ui_builder"
+      ],
+      "evaluation_roles": [
+        "red_team_reviewer",
+        "hig_guardian"
+      ]
+    },
+    {
+      "task": "documentation",
+      "primary_role": "delivery_lead",
+      "fallback_roles": [
+        "product_lead"
+      ],
+      "evaluation_roles": [
+        "red_team_reviewer"
+      ]
+    },
+    {
+      "task": "arbitration",
+      "primary_role": "delivery_lead",
+      "fallback_roles": [
+        "red_team_reviewer"
+      ],
+      "evaluation_roles": [
+        "hig_guardian"
+      ]
+    }
+  ],
+  "fork_policy": {
+    "spawn_when": [
+      "the task has bounded acceptance criteria",
+      "the write scope is disjoint",
+      "the parent agent can continue independently",
+      "the fork returns a concrete verification artifact"
+    ],
+    "avoid_when": [
+      "the parent is blocked on the answer",
+      "ownership overlaps another active agent",
+      "the request is still ambiguous"
+    ],
+    "parallel_limit": 3
+  }
+}

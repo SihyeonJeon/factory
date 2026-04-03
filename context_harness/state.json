@@ -1,7 +1,32 @@
 {
-    "PHASE_1_RESEARCH": true,
-    "PHASE_2_BUILD": true,
-    "PHASE_3_QA": true,
-    "PHASE_4_PUBLISH": true,
-    "QA_ROLLBACK_COUNT": 0
+  "phase_1_research": true,
+  "phase_2_architecture": true,
+  "phase_2_epics_done": [],
+  "phase_2_review": false,
+  "phase_3_qa": false,
+  "phase_4_publish": false,
+  "qa_rollback_count": 0,
+  "PHASE_1_RESEARCH": false,
+  "PHASE_2_BUILD": false,
+  "PHASE_3_QA": false,
+  "PHASE_4_PUBLISH": false,
+  "QA_ROLLBACK_COUNT": 0,
+  "intake_complete": true,
+  "last_brief": "Use the context_harness product inputs\n  as the source of truth.",
+  "fork_lanes": [
+    "planner"
+  ],
+  "intake_artifacts": {
+    "system_rules": "/Users/jeonsihyeon/factory/context_harness/00_system_rules.md",
+    "native_ios_strategy": "/Users/jeonsihyeon/factory/context_harness/architecture/native_ios_strategy.md",
+    "hig_guardrails": "/Users/jeonsihyeon/factory/context_harness/policies/ios_hig_guardrails.md",
+    "sprint_contract": "/Users/jeonsihyeon/factory/context_harness/sprint_contract.json",
+    "idea_input": "/Users/jeonsihyeon/factory/context_harness/product_inputs/idea.md",
+    "constraints_input": "/Users/jeonsihyeon/factory/context_harness/product_inputs/constraints.md",
+    "design_input": "/Users/jeonsihyeon/factory/context_harness/product_inputs/design.md",
+    "acceptance_input": "/Users/jeonsihyeon/factory/context_harness/product_inputs/acceptance.md"
+  },
+  "product_report": "/Users/jeonsihyeon/factory/context_harness/reports/product_lead_product_packet.json",
+  "planning_report": "/Users/jeonsihyeon/factory/context_harness/reports/delivery_lead_execution_plan.json",
+  "architecture_report": "/Users/jeonsihyeon/factory/context_harness/reports/ios_architect_architecture.md"
 }

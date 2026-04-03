@@ -1,0 +1,6 @@
+{
+  "model": "opus",
+  "enabledPlugins": {
+    "codex@openai-codex": true
+  }
+}

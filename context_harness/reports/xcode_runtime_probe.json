@@ -1,0 +1,15 @@
+{
+  "workspace_root": "/Users/jeonsihyeon/factory/workspace",
+  "ios_dir_exists": true,
+  "xcworkspace": null,
+  "xcodeproj": "/Users/jeonsihyeon/factory/workspace/ios/MemoryMap.xcodeproj",
+  "xcodebuild_version": "Xcode 26.4\nBuild version 17E192",
+  "simctl": {
+    "ok": true,
+    "detail": "sandbox false negative; host ok: == Devices ==\n-- iOS 26.4 --\n    iPhone 17 Pro (00FCC049-D60A-4426-8EE3-EA743B48CCF9) (Shutdown) \n    iPhone 17 Pro Max (CEFC9FE8-6291-4BBA-ACD5-404E5E9F9300) (Shutdown) \n    iPhone 17e (8384CA50-C24D-47E1-9871-104CDB3004D4) (Shutdown) \n    iPhone Air (094DD5C3-C20A-4016-82E7-9FA9BAE08FEE) (Shutdown) \n    iPhone 17 (86938FB9-C757-413E-A3B7-265A9CBAE384) (Shutdown) \n    iPad Pro 13-inch (M5) (C1048C50-6413-4945-B85F-C"
+  },
+  "project_discovery": {
+    "ok": true,
+    "detail": "Command line invocation:\n    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -list -project /Users/jeonsihyeon/factory/workspace/ios/MemoryMap.xcodeproj\n\nInformation about project \"MemoryMap\":\n    Targets:\n        MemoryMap\n        MemoryMapTests\n\n    Build Configurations:\n        Debug\n        Release\n\n    If no build configuration is specified and -scheme is not passed then \"Debug\" is used.\n\n    Schemes:\n        MemoryMap"
+  }
+}

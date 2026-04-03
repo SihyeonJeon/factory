@@ -1,0 +1,6 @@
+workspace/
+.env
+__pycache__/
+.claude/
+.codex/
+.worktrees/

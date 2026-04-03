@@ -1,35 +1,66 @@
 #!/usr/bin/env python3
 """
-master_router.py — Triad Multi-Agent Model Router (2026-04-01)
+master_router.py - Company-style multi-agent model router.
 
-3사(Claude/Gemini/Codex) CLI를 task 유형에 따라 최적 모델로 라우팅한다.
-Pro 멤버십 토큰 기반 (API 키 아님). 모든 호출은 subprocess headless 모드.
+Routing policy:
+- Claude uses the Anthropic API for planning, architecture, arbitration, and review.
+- Codex uses ChatGPT-authenticated CLI for implementation-heavy tasks.
+- Gemini uses OAuth-authenticated CLI for web-grounded research and visual QA.
 """
+
+from __future__ import annotations
 
 import os
 import time
-import re
-import subprocess
-from pathlib import Path
 from dataclasses import dataclass
-from typing import Optional
 from enum import Enum
+from pathlib import Path
+from typing import Optional
+
+from harness.company import load_manifest, load_providers, load_roles
+from harness.providers import ProviderResult, normalize_claude_model, run_claude_api, run_cli
 
 FACTORY_DIR = Path(__file__).parent.resolve()
 CONTEXT_DIR = FACTORY_DIR / "context_harness"
 BLACKBOARD_FILE = CONTEXT_DIR / "blackboard.md"
+MANIFEST_FILE = CONTEXT_DIR / "team_manifest.json"
 
-# ---------------------------------------------------------------------------
-# Task → Model 라우팅 테이블
-# ---------------------------------------------------------------------------
+MANIFEST = load_manifest(MANIFEST_FILE)
+PROVIDERS = load_providers(MANIFEST)
+ROLES = load_roles(MANIFEST)
+TASK_ROLE_ORDER: dict[str, list[str]] = {
+    "product_research": ["product_lead", "delivery_lead"],
+    "market_research": ["product_lead", "delivery_lead"],
+    "planning": ["delivery_lead", "product_lead"],
+    "prd_generation": ["delivery_lead", "product_lead"],
+    "architecture": ["ios_architect", "delivery_lead"],
+    "task_allocation": ["delivery_lead", "ios_architect"],
+    "ios_implementation": ["ios_ui_builder", "ios_logic_builder"],
+    "ui_coding": ["ios_ui_builder", "ios_logic_builder"],
+    "business_logic": ["ios_logic_builder", "ios_ui_builder"],
+    "code_review": ["red_team_reviewer", "ios_architect"],
+    "hig_audit": ["hig_guardian", "visual_qa"],
+    "visual_qa": ["visual_qa", "hig_guardian"],
+    "e2e_test_gen": ["ios_logic_builder", "ios_ui_builder"],
+    "bug_fix": ["ios_logic_builder", "ios_ui_builder"],
+    "sprint_eval": ["red_team_reviewer", "visual_qa"],
+    "documentation": ["delivery_lead", "product_lead"],
+    "boilerplate": ["ios_ui_builder", "ios_logic_builder"],
+    "arbitration": ["delivery_lead", "ios_architect"],
+}
 
 class TaskType(Enum):
+    PRODUCT_RESEARCH = "product_research"
     MARKET_RESEARCH = "market_research"
+    PLANNING = "planning"
     PRD_GENERATION = "prd_generation"
     ARCHITECTURE = "architecture"
+    TASK_ALLOCATION = "task_allocation"
+    IOS_IMPLEMENTATION = "ios_implementation"
     UI_CODING = "ui_coding"
     BUSINESS_LOGIC = "business_logic"
     CODE_REVIEW = "code_review"
+    HIG_AUDIT = "hig_audit"
     VISUAL_QA = "visual_qa"
     E2E_TEST_GEN = "e2e_test_gen"
     BUG_FIX = "bug_fix"
@@ -39,147 +70,116 @@ class TaskType(Enum):
     ARBITRATION = "arbitration"
 
 
-@dataclass
-class ModelConfig:
-    cli: str            # "claude" | "gemini" | "codex"
-    model: str          # model identifier
-    tier: str           # "high" | "mid" | "low" | "vision" | "search"
-    max_retries: int = 2
-    timeout: int = 300  # seconds
-
-
-# 라우팅 맵: TaskType → 1차 모델 → fallback 모델
-ROUTING_TABLE: dict[TaskType, list[ModelConfig]] = {
-    # Gemini: 웹 그라운딩 + 실시간 검색 최적
-    TaskType.MARKET_RESEARCH: [
-        ModelConfig(cli="gemini", model="gemini-2.5-pro", tier="search"),
-        ModelConfig(cli="claude", model="opus", tier="high"),
-    ],
-    # Opus: 장문 추론 + 구조화된 문서 생성
-    TaskType.PRD_GENERATION: [
-        ModelConfig(cli="claude", model="opus", tier="high"),
-        ModelConfig(cli="gemini", model="gemini-2.5-pro", tier="search"),
-    ],
-    # Opus: 아키텍처 의사결정, 트레이드오프 분석
-    TaskType.ARCHITECTURE: [
-        ModelConfig(cli="claude", model="opus", tier="high"),
-        ModelConfig(cli="codex", model="o3", tier="high"),
-    ],
-    # Sonnet: 컴포넌트 수준 코딩의 속도/품질 밸런스
-    TaskType.UI_CODING: [
-        ModelConfig(cli="claude", model="sonnet", tier="mid"),
-        ModelConfig(cli="codex", model="o4-mini", tier="mid"),
-    ],
-    # Sonnet: 도메인 로직 구현
-    TaskType.BUSINESS_LOGIC: [
-        ModelConfig(cli="claude", model="sonnet", tier="mid"),
-        ModelConfig(cli="codex", model="o4-mini", tier="mid"),
-    ],
-    # Codex review: 코드 리뷰 전용 기능 활용
-    TaskType.CODE_REVIEW: [
-        ModelConfig(cli="codex", model="o3", tier="high"),
-        ModelConfig(cli="claude", model="opus", tier="high"),
-    ],
-    # Gemini: 멀티모달 비전 최강
-    TaskType.VISUAL_QA: [
-        ModelConfig(cli="gemini", model="gemini-2.5-pro", tier="vision"),
-        ModelConfig(cli="claude", model="opus", tier="high"),
-    ],
-    # Sonnet: 테스트 코드 생성
-    TaskType.E2E_TEST_GEN: [
-        ModelConfig(cli="claude", model="sonnet", tier="mid"),
-        ModelConfig(cli="codex", model="o4-mini", tier="mid"),
-    ],
-    # Sonnet: 빠른 턴어라운드, 스택트레이스 분석
-    TaskType.BUG_FIX: [
-        ModelConfig(cli="claude", model="sonnet", tier="mid"),
-        ModelConfig(cli="claude", model="opus", tier="high"),
-    ],
-    # Gemini Flash: 빠르고 저렴한 체크리스트 검증
-    TaskType.SPRINT_EVAL: [
-        ModelConfig(cli="gemini", model="gemini-2.5-flash", tier="low"),
-        ModelConfig(cli="claude", model="haiku", tier="low"),
-    ],
-    # Haiku: 단순 산문 생성
-    TaskType.DOCUMENTATION: [
-        ModelConfig(cli="claude", model="haiku", tier="low"),
-        ModelConfig(cli="gemini", model="gemini-2.5-flash", tier="low"),
-    ],
-    # Haiku: 템플릿/스캐폴딩
-    TaskType.BOILERPLATE: [
-        ModelConfig(cli="claude", model="haiku", tier="low"),
-        ModelConfig(cli="gemini", model="gemini-2.5-flash", tier="low"),
-    ],
-    # Opus: 교착상태 중재 — 최고 추론력 필요
-    TaskType.ARBITRATION: [
-        ModelConfig(cli="claude", model="opus", tier="high"),
-    ],
+TASK_TIMEOUTS: dict[TaskType, int] = {
+    TaskType.PRODUCT_RESEARCH: 180,
+    TaskType.MARKET_RESEARCH: 180,
+    TaskType.PLANNING: 240,
+    TaskType.PRD_GENERATION: 240,
+    TaskType.ARCHITECTURE: 360,
+    TaskType.TASK_ALLOCATION: 240,
+    TaskType.IOS_IMPLEMENTATION: 900,
+    TaskType.UI_CODING: 900,
+    TaskType.BUSINESS_LOGIC: 900,
+    TaskType.CODE_REVIEW: 420,
+    TaskType.HIG_AUDIT: 300,
+    TaskType.VISUAL_QA: 240,
+    TaskType.E2E_TEST_GEN: 600,
+    TaskType.BUG_FIX: 600,
+    TaskType.SPRINT_EVAL: 300,
+    TaskType.DOCUMENTATION: 180,
+    TaskType.BOILERPLATE: 600,
+    TaskType.ARBITRATION: 240,
 }
 
-# ---------------------------------------------------------------------------
-# Rate Limit 감지 패턴
-# ---------------------------------------------------------------------------
 
-RATE_LIMIT_PATTERNS = [
-    re.compile(r"rate\s*limit", re.IGNORECASE),
-    re.compile(r"too\s*many\s*requests", re.IGNORECASE),
-    re.compile(r"429", re.IGNORECASE),
-    re.compile(r"overloaded", re.IGNORECASE),
-    re.compile(r"capacity", re.IGNORECASE),
-]
-RETRY_WAIT_PATTERN = re.compile(r"try\s*again\s*in\s*(\d+)", re.IGNORECASE)
+@dataclass
+class AgentResult:
+    success: bool
+    output: str
+    model_used: str
+    cli_used: str
+    retries: int = 0
+    role_used: str = ""
 
 
-def is_rate_limited(output: str) -> tuple[bool, int]:
-    for pat in RATE_LIMIT_PATTERNS:
-        if pat.search(output):
-            match = RETRY_WAIT_PATTERN.search(output)
-            wait = int(match.group(1)) if match else 60
-            return True, wait
-    return False, 0
+def _provider_name(provider_id: str) -> str:
+    if provider_id == "claude_api":
+        return "claude-api"
+    if provider_id == "codex_cli":
+        return "codex"
+    if provider_id == "gemini_cli":
+        return "gemini"
+    return provider_id
 
 
-# ---------------------------------------------------------------------------
-# CLI 빌더: 각 CLI의 headless 명령어 구성
-# ---------------------------------------------------------------------------
+def _resolve_model(role_id: str) -> str:
+    role = ROLES[role_id]
+    overrides = {
+        "product_lead": os.environ.get("FACTORY_GEMINI_RESEARCH_MODEL"),
+        "delivery_lead": os.environ.get("FACTORY_CLAUDE_DELIVERY_MODEL"),
+        "ios_architect": os.environ.get("FACTORY_CLAUDE_STRATEGY_MODEL"),
+        "ios_ui_builder": os.environ.get("FACTORY_CODEX_PRIMARY_MODEL"),
+        "ios_logic_builder": os.environ.get("FACTORY_CODEX_PRIMARY_MODEL"),
+        "red_team_reviewer": os.environ.get("FACTORY_CLAUDE_STRATEGY_MODEL"),
+        "hig_guardian": os.environ.get("FACTORY_CLAUDE_DELIVERY_MODEL"),
+        "visual_qa": os.environ.get("FACTORY_GEMINI_VISION_MODEL"),
+    }
+    if overrides.get(role_id):
+        model = overrides[role_id]
+        if role.provider == "claude_api":
+            return normalize_claude_model(model)
+        return model
 
-def build_claude_cmd(
+    provider = PROVIDERS.get(role.provider)
+    if not provider:
+        return role.model or "unknown"
+
+    provider_models = provider.models
+    if role.model:
+        if role.provider == "claude_api":
+            return normalize_claude_model(role.model)
+        return role.model
+    if role.provider == "claude_api":
+        model = provider_models.get("deep_review") or provider_models.get("default") or "claude-sonnet-4"
+        return normalize_claude_model(model)
+    if role.provider == "codex_cli":
+        env_override = provider_models.get("override_env")
+        if env_override and os.environ.get(env_override):
+            return os.environ[env_override]
+        return provider_models.get("default") or "gpt-5.4"
+    if role.provider == "gemini_cli":
+        return provider_models.get("default") or "gemini-2.5-pro"
+    return role.model or "unknown"
+
+
+def _resolve_model_for_task(role_id: str, task_type: TaskType) -> str:
+    role = ROLES[role_id]
+    model = _resolve_model(role_id)
+    if role.provider != "gemini_cli":
+        return model
+
+    complex_override = os.environ.get("FACTORY_GEMINI_COMPLEX_MODEL")
+    provider = PROVIDERS.get(role.provider)
+    provider_models = provider.models if provider else {}
+    complex_model = complex_override or provider_models.get("complex") or model
+    complex_tasks = {
+        TaskType.PRODUCT_RESEARCH,
+        TaskType.MARKET_RESEARCH,
+        TaskType.VISUAL_QA,
+        TaskType.SPRINT_EVAL,
+    }
+    if task_type in complex_tasks:
+        return complex_model
+    return model
+
+
+def _build_codex_cmd(
     prompt: str,
-    model: str = "sonnet",
-    system_prompt: Optional[str] = None,
-    json_schema: Optional[str] = None,
-    skip_permissions: bool = True,
-    fallback_model: Optional[str] = None,
-) -> list[str]:
-    cmd = ["claude", "-p", prompt, "--model", model, "--output-format", "text"]
-    if system_prompt:
-        cmd += ["--system-prompt", system_prompt]
-    if json_schema:
-        cmd += ["--json-schema", json_schema]
-    if fallback_model:
-        cmd += ["--fallback-model", fallback_model]
-    if skip_permissions:
-        cmd.append("--dangerously-skip-permissions")
-    return cmd
-
-
-def build_gemini_cmd(
-    prompt: str,
-    model: str = "gemini-2.5-pro",
-    yolo: bool = True,
-) -> list[str]:
-    cmd = ["gemini", "-p", prompt, "-m", model]
-    if yolo:
-        cmd.append("-y")
-    return cmd
-
-
-def build_codex_cmd(
-    prompt: str,
-    model: str = "o3",
-    cwd: Optional[Path] = None,
+    *,
+    model: str,
+    cwd: Optional[Path],
+    image_path: Optional[str],
     full_auto: bool = True,
-    image_path: Optional[str] = None,
 ) -> list[str]:
     cmd = ["codex", "exec", prompt, "-m", model]
     if full_auto:
@@ -191,25 +191,82 @@ def build_codex_cmd(
     return cmd
 
 
-def build_codex_review_cmd(cwd: Optional[Path] = None) -> list[str]:
-    cmd = ["codex", "exec", "review"]
+def _build_codex_review_cmd(*, cwd: Optional[Path], model: str) -> list[str]:
+    cmd = ["codex", "exec", "review", "-m", model]
     if cwd:
         cmd += ["-C", str(cwd)]
     cmd.append("--full-auto")
     return cmd
 
 
-# ---------------------------------------------------------------------------
-# 통합 실행기
-# ---------------------------------------------------------------------------
+def _build_gemini_cmd(prompt: str, *, model: str) -> list[str]:
+    return ["gemini", "-p", prompt, "-m", model, "-y"]
 
-@dataclass
-class AgentResult:
-    success: bool
-    output: str
-    model_used: str
-    cli_used: str
-    retries: int = 0
+
+def _run_role(
+    role_id: str,
+    prompt: str,
+    *,
+    cwd: Optional[Path],
+    system_prompt: Optional[str],
+    image_path: Optional[str],
+    json_schema: Optional[str],
+    timeout: int,
+    task_type: TaskType,
+) -> AgentResult:
+    role = ROLES[role_id]
+    provider = PROVIDERS[role.provider]
+    model = _resolve_model_for_task(role_id, task_type)
+
+    result: ProviderResult
+    if provider.transport == "api":
+        result = run_claude_api(
+            prompt,
+            model=model,
+            system_prompt=system_prompt,
+            cwd=cwd,
+            json_schema=json_schema,
+            timeout=timeout,
+        )
+    elif provider.provider_id == "codex_cli":
+        if task_type == TaskType.CODE_REVIEW:
+            cmd = _build_codex_review_cmd(cwd=cwd, model=model)
+        else:
+            cmd = _build_codex_cmd(
+                prompt,
+                model=model,
+                cwd=cwd,
+                image_path=image_path,
+            )
+        result = run_cli(cmd, cwd=cwd, timeout=timeout)
+    elif provider.provider_id == "gemini_cli":
+        effective_prompt = prompt
+        if image_path:
+            effective_prompt = f"[Image: {image_path}]\n\n{prompt}"
+        cmd = _build_gemini_cmd(effective_prompt, model=model)
+        result = run_cli(cmd, cwd=cwd or FACTORY_DIR, timeout=timeout)
+    else:
+        result = ProviderResult(False, "", error=f"Unsupported provider: {provider.provider_id}")
+
+    if result.success:
+        _append_blackboard(task_type, role_id, model, result.output[:500])
+        return AgentResult(
+            success=True,
+            output=result.output,
+            model_used=model,
+            cli_used=_provider_name(provider.provider_id),
+            retries=result.retries,
+            role_used=role_id,
+        )
+
+    return AgentResult(
+        success=False,
+        output=result.error,
+        model_used=model,
+        cli_used=_provider_name(provider.provider_id),
+        retries=result.retries,
+        role_used=role_id,
+    )
 
 
 def dispatch(
@@ -220,119 +277,56 @@ def dispatch(
     image_path: Optional[str] = None,
     json_schema: Optional[str] = None,
     timeout: Optional[int] = None,
+    preferred_role: Optional[str] = None,
+    allow_fallback_roles: bool = True,
     debug: bool = False,
 ) -> AgentResult:
-    """
-    TaskType에 따라 최적 모델을 선택하고, 실패 시 fallback 체인을 따른다.
-    """
-    models = ROUTING_TABLE.get(task_type, ROUTING_TABLE[TaskType.BUSINESS_LOGIC])
+    del debug
 
-    for model_cfg in models:
-        effective_timeout = timeout or model_cfg.timeout
+    role_order = list(TASK_ROLE_ORDER.get(task_type.value, []))
+    if not role_order:
+        return AgentResult(False, f"No route configured for {task_type.value}", "none", "none")
 
-        for attempt in range(model_cfg.max_retries + 1):
-            # CLI별 커맨드 빌드
-            if model_cfg.cli == "claude":
-                cmd = build_claude_cmd(
-                    prompt=prompt,
-                    model=model_cfg.model,
-                    system_prompt=system_prompt,
-                    json_schema=json_schema,
-                )
-            elif model_cfg.cli == "gemini":
-                # Vision task: 이미지 경로를 프롬프트에 포함
-                effective_prompt = prompt
-                if image_path:
-                    effective_prompt = f"[Image: {image_path}]\n\n{prompt}"
-                cmd = build_gemini_cmd(
-                    prompt=effective_prompt,
-                    model=model_cfg.model,
-                )
-            elif model_cfg.cli == "codex":
-                if task_type == TaskType.CODE_REVIEW:
-                    cmd = build_codex_review_cmd(cwd=cwd)
-                else:
-                    cmd = build_codex_cmd(
-                        prompt=prompt,
-                        model=model_cfg.model,
-                        cwd=cwd,
-                        image_path=image_path,
-                    )
-            else:
-                continue
+    if preferred_role:
+        if not allow_fallback_roles and preferred_role in ROLES:
+            role_order = [preferred_role]
+        elif preferred_role in role_order:
+            role_order = [preferred_role] + [role for role in role_order if role != preferred_role]
+        elif preferred_role in ROLES:
+            role_order = [preferred_role] + role_order
 
-            tag = f"[Router] {model_cfg.cli}:{model_cfg.model} (attempt {attempt+1})"
-            print(f"\n{tag} — {task_type.value}")
+    effective_timeout = timeout or TASK_TIMEOUTS.get(task_type, 300)
 
-            try:
-                proc = subprocess.run(
-                    cmd,
-                    cwd=str(cwd) if cwd else str(FACTORY_DIR),
-                    capture_output=True,
-                    text=True,
-                    timeout=effective_timeout,
-                )
-                combined = proc.stdout + proc.stderr
+    for role_id in role_order:
+        tag = f"[Router] {task_type.value} -> {role_id}:{_resolve_model(role_id)}"
+        print(f"\n{tag}")
+        result = _run_role(
+            role_id,
+            prompt,
+            cwd=cwd,
+            system_prompt=system_prompt,
+            image_path=image_path,
+            json_schema=json_schema,
+            timeout=effective_timeout,
+            task_type=task_type,
+        )
+        if result.success:
+            return result
+        print(f"{tag} failed: {result.output[:200]}")
 
-                # Rate limit 감지
-                limited, wait_sec = is_rate_limited(combined)
-                if limited:
-                    actual_wait = 5 if debug else wait_sec
-                    print(f"{tag} Rate limited. {actual_wait}s 대기 후 재시도...")
-                    time.sleep(actual_wait)
-                    continue
-
-                if proc.returncode == 0 and proc.stdout.strip():
-                    # 블랙보드에 결과 요약 기록
-                    _append_blackboard(task_type, model_cfg, proc.stdout[:500])
-                    return AgentResult(
-                        success=True,
-                        output=proc.stdout,
-                        model_used=model_cfg.model,
-                        cli_used=model_cfg.cli,
-                        retries=attempt,
-                    )
-
-                # stderr만 있는 경우에도 stdout이 있으면 성공으로 간주
-                if proc.stdout.strip():
-                    _append_blackboard(task_type, model_cfg, proc.stdout[:500])
-                    return AgentResult(
-                        success=True,
-                        output=proc.stdout,
-                        model_used=model_cfg.model,
-                        cli_used=model_cfg.cli,
-                        retries=attempt,
-                    )
-
-                print(f"{tag} 실패 (rc={proc.returncode}). stderr: {proc.stderr[:200]}")
-
-            except subprocess.TimeoutExpired:
-                print(f"{tag} 타임아웃 ({effective_timeout}s)")
-            except FileNotFoundError:
-                print(f"{tag} CLI '{model_cfg.cli}' 를 찾을 수 없습니다. 다음 fallback으로...")
-                break  # 이 CLI 전체 스킵
-            except Exception as e:
-                print(f"{tag} 예외: {e}")
-
-        print(f"[Router] {model_cfg.cli}:{model_cfg.model} 소진. 다음 fallback...")
-
-    return AgentResult(success=False, output="", model_used="none", cli_used="none")
+    return AgentResult(False, "", model_used="none", cli_used="none")
 
 
-# ---------------------------------------------------------------------------
-# Blackboard: 에이전트 간 공유 컨텍스트
-# ---------------------------------------------------------------------------
-
-def _append_blackboard(task_type: TaskType, model: ModelConfig, summary: str):
+def _append_blackboard(task_type: TaskType, role_id: str, model: str, summary: str):
     os.makedirs(CONTEXT_DIR, exist_ok=True)
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
     entry = (
         f"\n---\n"
-        f"**[{timestamp}]** `{task_type.value}` via `{model.cli}:{model.model}`\n"
+        f"**[{timestamp}]** `{task_type.value}` via `{role_id}:{model}`\n"
         f"{summary.strip()[:300]}\n"
     )
-    with open(BLACKBOARD_FILE, "a", encoding="utf-8") as f:
-        f.write(entry)
+    with open(BLACKBOARD_FILE, "a", encoding="utf-8") as handle:
+        handle.write(entry)
 
 
 def read_blackboard(max_chars: int = 3000) -> str:
@@ -344,58 +338,90 @@ def read_blackboard(max_chars: int = 3000) -> str:
 
 def reset_blackboard():
     os.makedirs(CONTEXT_DIR, exist_ok=True)
-    with open(BLACKBOARD_FILE, "w", encoding="utf-8") as f:
-        f.write("# Blackboard — Agent Shared Context\n\n")
+    with open(BLACKBOARD_FILE, "w", encoding="utf-8") as handle:
+        handle.write("# Blackboard - Agent Shared Context\n\n")
 
-
-# ---------------------------------------------------------------------------
-# 편의 함수: 특정 task 유형의 원샷 호출
-# ---------------------------------------------------------------------------
 
 def research(prompt: str, **kwargs) -> AgentResult:
     return dispatch(TaskType.MARKET_RESEARCH, prompt, **kwargs)
 
+
+def product_research(prompt: str, **kwargs) -> AgentResult:
+    return dispatch(TaskType.PRODUCT_RESEARCH, prompt, **kwargs)
+
+
+def plan_work(prompt: str, **kwargs) -> AgentResult:
+    return dispatch(TaskType.PLANNING, prompt, **kwargs)
+
+
 def generate_prd(prompt: str, **kwargs) -> AgentResult:
     return dispatch(TaskType.PRD_GENERATION, prompt, **kwargs)
+
 
 def design_architecture(prompt: str, **kwargs) -> AgentResult:
     return dispatch(TaskType.ARCHITECTURE, prompt, **kwargs)
 
+
+def allocate_tasks(prompt: str, **kwargs) -> AgentResult:
+    return dispatch(TaskType.TASK_ALLOCATION, prompt, **kwargs)
+
+
+def implement_ios(prompt: str, cwd: Path = None, **kwargs) -> AgentResult:
+    return dispatch(TaskType.IOS_IMPLEMENTATION, prompt, cwd=cwd, **kwargs)
+
+
 def code_ui(prompt: str, cwd: Path = None, **kwargs) -> AgentResult:
     return dispatch(TaskType.UI_CODING, prompt, cwd=cwd, **kwargs)
+
 
 def code_logic(prompt: str, cwd: Path = None, **kwargs) -> AgentResult:
     return dispatch(TaskType.BUSINESS_LOGIC, prompt, cwd=cwd, **kwargs)
 
-def review_code(cwd: Path = None, **kwargs) -> AgentResult:
-    return dispatch(TaskType.CODE_REVIEW, "Review the codebase for bugs and quality issues", cwd=cwd, **kwargs)
+
+def review_code(prompt: str = "Review the codebase for bugs, HIG regressions, and release risks.", cwd: Path = None, **kwargs) -> AgentResult:
+    return dispatch(
+        TaskType.CODE_REVIEW,
+        prompt,
+        cwd=cwd,
+        **kwargs,
+    )
+
+
+def audit_hig(prompt: str, **kwargs) -> AgentResult:
+    return dispatch(TaskType.HIG_AUDIT, prompt, **kwargs)
+
 
 def visual_qa(prompt: str, image_path: str = None, **kwargs) -> AgentResult:
     return dispatch(TaskType.VISUAL_QA, prompt, image_path=image_path, **kwargs)
 
+
 def generate_tests(prompt: str, cwd: Path = None, **kwargs) -> AgentResult:
     return dispatch(TaskType.E2E_TEST_GEN, prompt, cwd=cwd, **kwargs)
+
 
 def fix_bug(prompt: str, cwd: Path = None, **kwargs) -> AgentResult:
     return dispatch(TaskType.BUG_FIX, prompt, cwd=cwd, **kwargs)
 
+
 def evaluate_sprint(prompt: str, **kwargs) -> AgentResult:
     return dispatch(TaskType.SPRINT_EVAL, prompt, **kwargs)
+
 
 def write_docs(prompt: str, **kwargs) -> AgentResult:
     return dispatch(TaskType.DOCUMENTATION, prompt, **kwargs)
 
+
 def scaffold(prompt: str, cwd: Path = None, **kwargs) -> AgentResult:
     return dispatch(TaskType.BOILERPLATE, prompt, cwd=cwd, **kwargs)
+
 
 def arbitrate(prompt: str, **kwargs) -> AgentResult:
     return dispatch(TaskType.ARBITRATION, prompt, **kwargs)
 
 
 if __name__ == "__main__":
-    # 단독 테스트: 라우팅 테이블 출력
-    print("=== Triad Model Routing Table ===\n")
-    for task, models in ROUTING_TABLE.items():
-        primary = models[0]
-        fallbacks = [f"{m.cli}:{m.model}" for m in models[1:]]
-        print(f"  {task.value:20s} -> {primary.cli}:{primary.model:20s} | fallback: {', '.join(fallbacks) or 'none'}")
+    print("=== Company Harness Routing Table ===\n")
+    for task_name, role_order in TASK_ROLE_ORDER.items():
+        primary = role_order[0]
+        fallbacks = ", ".join(role_order[1:]) or "none"
+        print(f"  {task_name:20s} -> {primary:20s} | fallback: {fallbacks}")

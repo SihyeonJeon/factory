@@ -132,6 +132,26 @@ def check_hig(workspace: Path) -> list[HIGViolation]:
                                    "useColorScheme() 또는 NativeWind dark: 프리픽스 사용 필요.",
                         ))
 
+            # Rule 7: Android-only affordance가 iOS 화면에 직접 노출되는지 점검
+            if "android_ripple" in line or "android:" in line:
+                violations.append(HIGViolation(
+                    file=rel_path, line=i,
+                    rule="HIG-IOS-NATIVE-PATTERN",
+                    severity="warning",
+                    detail="iOS 우선 앱에 Android 전용 상호작용 힌트 감지. "
+                           "플랫폼 분기 또는 iOS 네이티브 패턴 검토 필요.",
+                ))
+
+            # Rule 8: placeholder UI 흔적 감지
+            if re.search(r"\b(lorem ipsum|todo|coming soon|placeholder)\b", line, re.IGNORECASE):
+                violations.append(HIGViolation(
+                    file=rel_path, line=i,
+                    rule="HIG-APP-STORE-POLISH",
+                    severity="warning",
+                    detail="출시 품질에 맞지 않는 placeholder 텍스트 감지. "
+                           "App Store 제출 전 실제 카피로 교체 필요.",
+                ))
+
     return violations
 
 

@@ -1,0 +1,21 @@
+{
+  "summary": "This epic, 'Group Creation and Invitations,' establishes the foundational user flow for creating private, shared groups and inviting members via a link or code. It is the critical first step for users to begin building their collective memory map. The flow must be simple, secure, and feel native to iOS, setting a high-quality baseline for subsequent features.",
+  "user_pains": [
+    "Existing photo albums and chat logs lose the context of 'what happened here with us?'",
+    "Searching through years of messages to recall a shared memory at a specific location is inefficient and frustrating.",
+    "Public map review apps are for discovery, not for preserving private group memories over time.",
+    "Tools for couples are too narrow for friend groups, and social feeds are too public and ephemeral for intimate memories."
+  ],
+  "hig_risks": [
+    "The group creation flow, with its text inputs and image picker, could fail HIG if controls are smaller than 44x44pt or if text contrast is poor.",
+    "Invitation screens must present links and codes clearly, respecting Dynamic Type and not being obscured by the keyboard.",
+    "The initial group setup screen must respect all device safe areas (notches, Dynamic Island) to avoid looking like a non-native web view.",
+    "Failing to use standard iOS patterns for this simple form-based flow could increase App Store review risk and create a jarring user experience."
+  ],
+  "design_references": [
+    "The emotional clarity and intimacy of a private diary app.",
+    "The spatial confidence and calm hierarchy of a strong native map experience like Apple Maps.",
+    "The polish and interaction quality expected from top-tier iOS productivity or memory products.",
+    "The simple, focused onboarding flows of modern social apps that prioritize getting the user to the core value quickly."
+  ]
+}

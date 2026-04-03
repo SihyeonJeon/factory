@@ -1,0 +1,20 @@
+{
+  "claude_api": {
+    "success": false,
+    "model": "claude-sonnet-4",
+    "output": "",
+    "error": "Command failed with exit code 1 (exit code: 1)\nError output: Check stderr output for details"
+  },
+  "codex_cli": {
+    "success": false,
+    "model": "gpt-5.4",
+    "output": "",
+    "error": "timeout after 12s"
+  },
+  "gemini_cli": {
+    "success": false,
+    "model": "gemini-2.5-pro",
+    "output": "",
+    "error": "timeout after 12s"
+  }
+}

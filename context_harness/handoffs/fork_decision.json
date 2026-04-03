@@ -1,0 +1,7 @@
+{
+  "should_fork": false,
+  "reasons": [],
+  "lanes": [
+    "planner"
+  ]
+}
