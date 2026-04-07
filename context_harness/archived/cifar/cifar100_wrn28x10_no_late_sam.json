@@ -1,0 +1,45 @@
+{
+  "method_id": "cifar100_wrn28x10_no_late_sam",
+  "model": {
+    "family": "wideresnet",
+    "name": "wideresnet",
+    "depth": 28,
+    "widen_factor": 10,
+    "dropout": 0.3,
+    "num_parameters_estimate": 36479140
+  },
+  "optimizer": {
+    "name": "sgd",
+    "lr": 0.1,
+    "momentum": 0.9,
+    "nesterov": true,
+    "weight_decay": 0.0005
+  },
+  "scheduler": {
+    "name": "cosine",
+    "warmup_epochs": 5
+  },
+  "training": {
+    "epochs": 200,
+    "batch_size": 256,
+    "label_smoothing": 0.1,
+    "mixup_alpha": 0.2,
+    "amp": true,
+    "ema": false
+  },
+  "augmentations": [
+    "random_crop_32_pad_4",
+    "random_horizontal_flip",
+    "randaugment",
+    "random_erasing",
+    "normalize"
+  ],
+  "regularization": [
+    "label_smoothing",
+    "mixup"
+  ],
+  "hypothesis": {
+    "statement": "Removing late-phase SAM should reduce generalization if sharpness-aware optimization contributes meaningful late-stage gains beyond the base WRN recipe.",
+    "expected_information_gain": "Isolates the value of the late-phase SAM component relative to the same architecture and augmentation stack."
+  }
+}

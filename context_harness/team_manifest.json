@@ -1,363 +1,454 @@
 {
-  "version": "2026-04-02",
+  "version": "2026-04-06",
+  "domain": "birdclef_2026_accuracy_optimization_harness",
+  "target_hardware": "NVIDIA A100 80GB via Colab MCP",
   "providers": {
-    "claude_api": {
-      "transport": "api",
-      "auth": "ANTHROPIC_API_KEY",
+    "colab_mcp": {
+      "transport": "mcp",
+      "auth": "google-oauth",
       "primary_use": [
-        "planning",
-        "task allocation",
-        "architecture",
-        "red-team review",
-        "arbitration"
+        "GPU training",
+        "inference",
+        "profiling",
+        "evaluation"
       ],
-      "models": {
-        "default": "claude-sonnet-4-20250514",
-        "deep_review": "claude-opus-4-1-20250805"
-      }
-    },
-    "codex_cli": {
-      "transport": "cli",
-      "auth": "chatgpt-pro-login",
-      "primary_use": [
-        "implementation",
-        "refactor",
-        "parallel worktree execution",
-        "code review"
-      ],
-      "models": {
-        "default": "gpt-5.4",
-        "subagent": "gpt-5-codex-mini",
-        "override_env": "FACTORY_CODEX_PRIMARY_MODEL"
+      "runtime": {
+        "gpu": "A100-80GB",
+        "framework": "PyTorch 2.x",
+        "python": "3.11+"
       }
     },
     "gemini_cli": {
       "transport": "cli",
-      "auth": "oauth-personal",
+      "auth": "local_cli_oauth_login",
       "primary_use": [
-        "market research",
-        "multimodal critique",
-        "visual QA",
-        "design reference synthesis"
+        "paper search",
+        "SOTA survey",
+        "visual analysis of training curves",
+        "web-grounded benchmark verification",
+        "large-context repo and log scanning"
       ],
       "models": {
-        "complex": "gemini-3.1-pro",
-        "default": "gemini-2.5-pro",
-        "fast": "gemini-2.5-flash"
+        "heavy": "gemini-2.5-pro",
+        "default": "gemini-2.5-flash",
+        "light": "gemini-2.5-flash"
+      },
+      "model_routing": {
+        "heavy": ["deep SOTA survey", "multi-paper synthesis", "competition strategy analysis"],
+        "default": ["web search", "notebook scan", "citation lookup", "log inspection"]
       }
+    },
+    "claude_code_cli": {
+      "transport": "cli",
+      "auth": "local_cli_login",
+      "primary_use": [
+        "hypothesis framing",
+        "experiment planning",
+        "cross-run synthesis",
+        "adversarial review",
+        "final selection"
+      ],
+      "models": {
+        "heavy": "claude-opus-4-6",
+        "default": "claude-sonnet-4-6",
+        "light": "claude-haiku-4-5"
+      },
+      "model_routing": {
+        "heavy": ["critic gate", "final selection", "architecture proposal", "ambiguity resolution"],
+        "default": ["explainer analysis", "experiment planning", "cross-run synthesis"],
+        "light": ["log parsing", "format validation", "simple artifact checks", "template generation"]
+      }
+    },
+    "codex_cli": {
+      "transport": "cli",
+      "auth": "local_cli_login",
+      "primary_use": [
+        "implementation",
+        "refactoring",
+        "parameter sweep scaffolding",
+        "test and harness maintenance",
+        "parallel bounded tasks"
+      ],
+      "models": {
+        "default": "o3",
+        "heavy": "o3"
+      },
+      "model_routing": {
+        "heavy": ["complex multi-file refactors", "novel algorithm implementation"],
+        "default": ["training scripts", "data pipelines", "utility code", "config changes"]
+      },
+      "notes": "o4-mini not supported on ChatGPT account. Use o3 as default."
     }
   },
   "roles": [
     {
-      "id": "platform_operator",
-      "title": "Platform Operator",
-      "team": "operations",
-      "provider": "claude_api",
-      "model": "claude-sonnet-4-20250514",
+      "id": "architect",
+      "title": "Architecture Designer",
+      "team": "design",
+      "provider": "claude_code_cli",
+      "model": "claude-opus-4-6",
       "ownership": [
-        "context_harness/state.json",
-        "context_harness/handoffs/",
-        "context_harness/reports/"
+        "experiment_log/architecture_proposal.json",
+        "experiment_log/architecture_revision_*.json"
       ],
       "responsibilities": [
-        "Run the autonomous loop and keep lanes synchronized.",
-        "Compact context, prepare merge packets, and protect token budgets.",
-        "Prefer integration worktrees over direct edits to the operator's current branch.",
-        "Escalate when automation cannot safely resolve conflicts."
+        "Own hypothesis generation and experiment framing.",
+        "Survey SOTA architectures and training strategies for BirdCLEF-style bioacoustic classification.",
+        "Design model configs with estimated FLOPs, params, and memory.",
+        "Define hyperparameter search spaces with ranked priorities.",
+        "Cite prior art for every design decision.",
+        "Write explicit hypotheses and expected information gain for each run."
       ]
     },
     {
-      "id": "product_lead",
-      "title": "Product Lead",
-      "team": "product",
-      "provider": "gemini_cli",
-      "model": "gemini-2.5-pro",
+      "id": "trainer",
+      "title": "Training Executor",
+      "team": "execution",
+      "provider": "colab_mcp",
+      "model": null,
       "ownership": [
-        "context_harness/handoffs/product_brief.md",
-        "reports/product_lead_product_research.md"
+        "experiment_log/training_run_*.json",
+        "checkpoints/"
       ],
       "responsibilities": [
-        "Find market demand and category risk.",
-        "Collect relevant design and competitor references.",
-        "Flag flows that could violate Apple HIG or feel unnative on iOS.",
-        "Produce concise product brief handoffs."
+        "Implement approved architectures in PyTorch on A100 via Colab MCP.",
+        "Log per-epoch metrics: loss, leaderboard-aligned score, LR, GPU memory, wall-clock time.",
+        "Save checkpoints every 10 epochs and at best validation accuracy.",
+        "Handle OOM gracefully: log failure, reduce batch size, retry."
       ]
     },
     {
-      "id": "delivery_lead",
-      "title": "Delivery Lead",
-      "team": "planning",
-      "provider": "claude_api",
-      "model": "claude-sonnet-4-20250514",
-      "ownership": [
-        "context_harness/handoffs/fork_decision.json",
-        "reports/delivery_lead_planning.md"
-      ],
-      "responsibilities": [
-        "Convert product brief into milestones, task graph, and ownership.",
-        "Decide whether subagent forks are justified.",
-        "Enforce short handoff contracts and explicit acceptance criteria.",
-        "Keep token budget under control."
-      ]
-    },
-    {
-      "id": "ios_architect",
-      "title": "iOS Architect",
-      "team": "planning",
-      "provider": "claude_api",
-      "model": "claude-opus-4-1-20250805",
-      "ownership": [
-        "reports/ios_architect_architecture.md"
-      ],
-      "responsibilities": [
-        "Define file ownership, data flow, state boundaries, and HIG-safe UI constraints.",
-        "Prefer SPM-first iOS integration and avoid unnecessary dependency drift.",
-        "Create architecture contracts before implementation."
-      ]
-    },
-    {
-      "id": "ios_ui_builder",
-      "title": "iOS UI Builder",
-      "team": "development",
-      "provider": "codex_cli",
-      "model": "gpt-5.4",
-      "ownership": [
-        ".worktrees/ios_ui_builder"
-      ],
-      "responsibilities": [
-        "Implement screen structure, components, and native-feeling interactions.",
-        "Stay inside assigned worktree and file boundaries.",
-        "Do not bypass Safe Area, touch target, or accessibility constraints."
-      ]
-    },
-    {
-      "id": "ios_logic_builder",
-      "title": "iOS Logic Builder",
-      "team": "development",
-      "provider": "codex_cli",
-      "model": "gpt-5.4",
-      "ownership": [
-        ".worktrees/ios_logic_builder"
-      ],
-      "responsibilities": [
-        "Implement stores, network boundaries, domain logic, and testable flows.",
-        "Keep UI state and business state separated.",
-        "Document assumptions that could affect QA."
-      ]
-    },
-    {
-      "id": "red_team_reviewer",
-      "title": "Red Team Reviewer",
+      "id": "evaluator",
+      "title": "Evaluation Specialist",
       "team": "evaluation",
-      "provider": "claude_api",
-      "model": "claude-sonnet-4-20250514",
+      "provider": "colab_mcp",
+      "model": null,
       "ownership": [
-        "reports/red_team_reviewer_code_review.md"
+        "experiment_log/eval_report_*.json"
       ],
       "responsibilities": [
-        "Assume the implementation is wrong until proven otherwise.",
-        "Find hallucinated behavior, architectural mismatches, and regression risk.",
-        "Reject vague or self-congratulatory reports."
+        "Own empirical validation of run outcomes.",
+        "Evaluate checkpoints on the canonical test set for the active benchmark.",
+        "Compute leaderboard-aligned metrics, per-class performance, calibration, and inference latency.",
+        "Profile FLOPs, parameter count, and memory during inference.",
+        "Compare results against published SOTA with citations."
       ]
     },
     {
-      "id": "hig_guardian",
-      "title": "HIG Guardian",
-      "team": "evaluation",
-      "provider": "claude_api",
-      "model": "claude-sonnet-4-20250514",
+      "id": "explainer",
+      "title": "Analysis & Interpretation",
+      "team": "analysis",
+      "provider": "claude_code_cli",
+      "model": "claude-sonnet-4-6",
       "ownership": [
-        "reports/hig_guardian_hig_audit.md"
+        "experiment_log/analysis_*.json"
       ],
       "responsibilities": [
-        "Audit the product against Apple HIG and iOS conventions.",
-        "Block release when the app feels non-native, cluttered, or inaccessible.",
-        "Prefer concrete fix instructions over general style advice."
+        "Analyze training curves for convergence, overfitting, instability.",
+        "Compare runs to isolate which changes drove improvements.",
+        "Identify failure modes by class, augmentation, or architecture.",
+        "Produce data-backed explanations, never speculation.",
+        "When evidence is counterintuitive, generate at least one revised causal hypothesis and one bounded follow-up experiment.",
+        "Hand off bounded code or script follow-ups to Codex when analysis implies concrete implementation work."
       ]
     },
     {
-      "id": "visual_qa",
-      "title": "Visual QA",
+      "id": "critic",
+      "title": "Adversarial Reviewer",
       "team": "evaluation",
-      "provider": "gemini_cli",
-      "model": "gemini-2.5-pro",
+      "provider": "claude_code_cli",
+      "model": "claude-opus-4-6",
       "ownership": [
-        "reports/visual_qa_visual_qa.md"
+        "experiment_log/critique_*.json"
       ],
       "responsibilities": [
-        "Use screenshots and render artifacts to catch spacing, overlap, and visual incoherence.",
-        "Check whether the result looks native and complete enough for App Store review.",
-        "Escalate issues back to the delivery lead with file-level guidance."
+        "Verify every proposal and result for correctness and reproducibility.",
+        "Detect hallucinated or unsupported claims from any agent.",
+        "Enforce anti-hallucination guardrails and role boundaries.",
+        "Challenge metrics against known benchmarks.",
+        "Validate whether a claimed gain survives ablation logic and evidence quality checks."
+      ]
+    },
+    {
+      "id": "selector",
+      "title": "Final Model / Ensemble Selector",
+      "team": "decision",
+      "provider": "claude_code_cli",
+      "model": "claude-opus-4-6",
+      "ownership": [
+        "experiment_log/selection_final.json"
+      ],
+      "responsibilities": [
+        "Compare all evaluated models on accuracy, speed, memory, FLOPs.",
+        "Construct and rank ensemble candidates under the active inference budget.",
+        "Resolve agent disagreements using only logged evidence.",
+        "Apply Pareto analysis for multi-objective optimization.",
+        "Declare winning single model and winning ensemble with complete reproduction instructions."
       ]
     }
   ],
+  "research_ownership": {
+    "hypothesis_owner": "architect",
+    "implementation_owner": "trainer",
+    "empirical_validation_owner": "evaluator",
+    "claim_validation_owner": "critic",
+    "selection_owner": "selector"
+  },
   "routing": [
     {
-      "task": "product_research",
-      "primary_role": "product_lead",
-      "fallback_roles": [
-        "delivery_lead"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
+      "task": "architecture_design",
+      "primary_role": "architect",
+      "evaluation_roles": ["critic"],
+      "preferred_provider": "claude_code_cli",
+      "supporting_providers": ["gemini_cli", "codex_cli"],
+      "delegation_policy": {
+        "claude_code_cli": [
+          "formulate hypotheses",
+          "rank experiment queue",
+          "resolve ambiguous tradeoffs"
+        ],
+        "gemini_cli": [
+          "gather papers, benchmarks, and community signal",
+          "verify current SOTA claims"
+        ],
+        "codex_cli": [
+          "draft config diffs",
+          "prepare implementation-ready scaffolds for approved experiments"
+        ]
+      }
     },
     {
-      "task": "market_research",
-      "primary_role": "product_lead",
-      "fallback_roles": [
-        "delivery_lead"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
+      "task": "sota_survey",
+      "primary_role": "architect",
+      "evaluation_roles": ["critic"],
+      "preferred_provider": "gemini_cli",
+      "supporting_providers": ["claude_code_cli"],
+      "delegation_policy": {
+        "gemini_cli": [
+          "search papers, blogs, benchmark tables, and release notes",
+          "collect citations and dated claims"
+        ],
+        "claude_code_cli": [
+          "compress findings into hypotheses and decision criteria"
+        ]
+      }
     },
     {
-      "task": "planning",
-      "primary_role": "delivery_lead",
-      "fallback_roles": [
-        "ios_architect"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
+      "task": "data_cleaning",
+      "primary_role": "trainer",
+      "evaluation_roles": ["evaluator", "critic"],
+      "preferred_provider": "colab_mcp",
+      "supporting_providers": ["codex_cli", "claude_code_cli"],
+      "delegation_policy": {
+        "codex_cli": [
+          "implement cleaning scripts per data_cleaning_policy.md",
+          "write per-stage logging artifacts"
+        ],
+        "colab_mcp": [
+          "execute cleaning pipeline on A100 (Silero VAD, silence trim, dedup)",
+          "write cleaned dataset and stage logs to Drive"
+        ],
+        "claude_code_cli": [
+          "review cleaning stats for over-aggressive removal",
+          "approve or reject cleaning stages that exceed the max_removal_rate guard"
+        ]
+      }
     },
     {
-      "task": "task_allocation",
-      "primary_role": "delivery_lead",
-      "fallback_roles": [
-        "ios_architect"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
+      "task": "training_execution",
+      "primary_role": "trainer",
+      "evaluation_roles": ["evaluator", "critic"],
+      "preferred_provider": "colab_mcp",
+      "supporting_providers": ["codex_cli", "claude_code_cli"],
+      "delegation_policy": {
+        "codex_cli": [
+          "implement training code",
+          "wire config, logging, retry, and batch-size fallback logic",
+          "prepare parameter sweep scripts and harness utilities"
+        ],
+        "claude_code_cli": [
+          "review run plan before expensive GPU execution",
+          "triage failures that need deeper reasoning"
+        ]
+      }
     },
     {
-      "task": "prd_generation",
-      "primary_role": "delivery_lead",
-      "fallback_roles": [
-        "product_lead"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
+      "task": "pseudo_label_iteration",
+      "primary_role": "architect",
+      "evaluation_roles": ["critic", "evaluator"],
+      "preferred_provider": "claude_code_cli",
+      "supporting_providers": ["codex_cli", "colab_mcp", "gemini_cli"],
+      "delegation_policy": {
+        "claude_code_cli": [
+          "define pseudo-label round objective, acceptance threshold, and stop conditions",
+          "decide whether another pseudo-label round is justified"
+        ],
+        "codex_cli": [
+          "implement pseudo-label merging and provenance logging utilities"
+        ],
+        "colab_mcp": [
+          "run pseudo-label inference and retraining"
+        ],
+        "gemini_cli": [
+          "cross-check pseudo-labeling patterns against public competition practice"
+        ]
+      }
     },
     {
-      "task": "architecture",
-      "primary_role": "ios_architect",
-      "fallback_roles": [
-        "delivery_lead"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
+      "task": "model_evaluation",
+      "primary_role": "evaluator",
+      "evaluation_roles": ["critic"],
+      "preferred_provider": "colab_mcp",
+      "supporting_providers": ["codex_cli", "gemini_cli", "claude_code_cli"],
+      "delegation_policy": {
+        "codex_cli": [
+          "build evaluation scripts and metric export utilities"
+        ],
+        "gemini_cli": [
+          "verify external benchmark references"
+        ],
+        "claude_code_cli": [
+          "check interpretation before selection"
+        ]
+      }
     },
     {
-      "task": "ios_implementation",
-      "primary_role": "ios_ui_builder",
-      "fallback_roles": [
-        "ios_logic_builder"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer",
-        "hig_guardian"
-      ]
+      "task": "result_analysis",
+      "primary_role": "explainer",
+      "evaluation_roles": ["critic"],
+      "preferred_provider": "claude_code_cli",
+      "supporting_providers": ["gemini_cli", "codex_cli"],
+      "delegation_policy": {
+        "claude_code_cli": [
+          "identify causal hypotheses from run deltas",
+          "write next-step recommendations",
+          "convert surprising failures into new testable hypotheses"
+        ],
+        "gemini_cli": [
+          "inspect plots or large log windows",
+          "match anomalies against external reports"
+        ],
+        "codex_cli": [
+          "materialize follow-up analysis scripts or dashboards"
+        ]
+      }
     },
     {
-      "task": "ui_coding",
-      "primary_role": "ios_ui_builder",
-      "fallback_roles": [
-        "ios_logic_builder"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer",
-        "hig_guardian"
-      ]
+      "task": "model_selection",
+      "primary_role": "selector",
+      "evaluation_roles": ["critic"],
+      "preferred_provider": "claude_code_cli",
+      "supporting_providers": ["gemini_cli"],
+      "delegation_policy": {
+        "claude_code_cli": [
+          "perform Pareto and tradeoff reasoning",
+          "optimize ensemble composition and weights under inference constraints",
+          "write final recommendation"
+        ],
+        "gemini_cli": [
+          "re-verify any external comparison table used in the final report"
+        ]
+      }
     },
     {
-      "task": "business_logic",
-      "primary_role": "ios_logic_builder",
-      "fallback_roles": [
-        "ios_ui_builder"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
-    },
-    {
-      "task": "code_review",
-      "primary_role": "red_team_reviewer",
-      "fallback_roles": [
-        "hig_guardian"
-      ],
-      "evaluation_roles": [
-        "visual_qa"
-      ]
-    },
-    {
-      "task": "hig_audit",
-      "primary_role": "hig_guardian",
-      "fallback_roles": [
-        "visual_qa"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
-    },
-    {
-      "task": "visual_qa",
-      "primary_role": "visual_qa",
-      "fallback_roles": [
-        "hig_guardian"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
-    },
-    {
-      "task": "bug_fix",
-      "primary_role": "ios_logic_builder",
-      "fallback_roles": [
-        "ios_ui_builder"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer",
-        "hig_guardian"
-      ]
-    },
-    {
-      "task": "documentation",
-      "primary_role": "delivery_lead",
-      "fallback_roles": [
-        "product_lead"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
+      "task": "guardrail_enforcement",
+      "primary_role": "critic",
+      "evaluation_roles": ["selector"],
+      "preferred_provider": "claude_code_cli",
+      "supporting_providers": [],
+      "delegation_policy": {
+        "claude_code_cli": [
+          "enforce role boundaries and evidence requirements"
+        ]
+      }
     },
     {
       "task": "arbitration",
-      "primary_role": "delivery_lead",
-      "fallback_roles": [
-        "red_team_reviewer"
-      ],
-      "evaluation_roles": [
-        "hig_guardian"
-      ]
+      "primary_role": "selector",
+      "evaluation_roles": ["critic"],
+      "preferred_provider": "claude_code_cli",
+      "supporting_providers": [],
+      "delegation_policy": {
+        "claude_code_cli": [
+          "resolve disagreements among agents using evidence"
+        ]
+      }
     }
   ],
-  "fork_policy": {
-    "spawn_when": [
-      "the task has bounded acceptance criteria",
-      "the write scope is disjoint",
-      "the parent agent can continue independently",
-      "the fork returns a concrete verification artifact"
-    ],
-    "avoid_when": [
-      "the parent is blocked on the answer",
-      "ownership overlaps another active agent",
-      "the request is still ambiguous"
-    ],
-    "parallel_limit": 3
+  "experiment_policy": {
+    "dataset": "BirdCLEF-2026",
+    "test_set_access": "hidden_kaggle_test_only_via_submission_or_local_proxy",
+    "validation_split": "group-aware split from training metadata before first run",
+    "checkpoint_interval": 10,
+    "max_concurrent_runs": 1,
+    "seed_logging": "mandatory",
+    "failed_run_policy": "log_and_preserve",
+    "default_research_mode": "ablation_first",
+    "smoke_benchmark": "birdclef2026_small_fold",
+    "primary_research_benchmark": "birdclef2026_full",
+    "promotion_rule": "Do not claim a new method until the gain is reproduced and survives at least one component ablation, one group-aware validation split, and where relevant one pseudo-label round comparison.",
+    "pseudo_labeling": {
+      "enabled": true,
+      "max_rounds": 4,
+      "require_roundwise_logging": true,
+      "require_leakage_review": true
+    },
+    "inference_budget": {
+      "must_fit_kaggle_notebook": true,
+      "track_latency": true,
+      "track_peak_memory": true
+    }
+  },
+  "orchestration_policy": {
+    "default_split": {
+      "claude_code_cli": [
+        "hypothesis generation",
+        "planning",
+        "deep analysis",
+        "critique",
+        "final decisions"
+      ],
+      "codex_cli": [
+        "code implementation",
+        "refactors",
+        "script generation",
+        "parameter tuning scaffolds",
+        "parallel bounded execution tasks"
+      ],
+      "gemini_cli": [
+        "search-grounded research",
+        "literature and community scan",
+        "benchmark verification",
+        "large-context evidence gathering"
+      ],
+      "colab_mcp": [
+        "GPU-bound execution",
+        "evaluation",
+        "profiling"
+      ]
+    },
+    "handoff_contract": {
+      "required_fields": [
+        "task_id",
+        "objective",
+        "success_criteria",
+        "input_artifacts",
+        "output_artifacts",
+        "evidence_requirements",
+        "stop_conditions"
+      ],
+      "max_parallel_cli_agents": 3
+    },
+    "review_rule": "Codex-produced code or tuning scripts must be reviewed by Claude Code before expensive training runs when the task changes model behavior, data handling, or evaluation logic."
+  },
+  "ablation_policy": {
+    "default_style": "factorized",
+    "required_for_method_claims": true,
+    "minimum_checks": [
+      "baseline rerun for variance estimate",
+      "single-factor removal for each claimed ingredient",
+      "cost accounting for wall-clock and peak memory",
+      "critic sign-off on causal interpretation"
+    ]
   }
 }

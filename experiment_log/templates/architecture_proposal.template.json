@@ -1,0 +1,13 @@
+{
+  "proposal_id": "",
+  "created_at": "",
+  "dataset_manifest": "",
+  "method_manifest": "",
+  "hypothesis": "",
+  "estimated_params": null,
+  "estimated_flops": null,
+  "estimated_peak_memory_mb": null,
+  "expected_information_gain": "",
+  "citations": [],
+  "status": "draft"
+}

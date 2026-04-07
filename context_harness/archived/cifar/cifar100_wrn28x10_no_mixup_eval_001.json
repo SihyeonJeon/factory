@@ -1,0 +1,23 @@
+{
+  "eval_id": "cifar100-wrn28x10-no-mixup-eval-001",
+  "run_id": "cifar100-wrn28x10-no-mixup-001",
+  "baseline_run_id": "cifar100-wrn28x10-late-sam-001",
+  "ablation_axis": "mixup",
+  "metrics": [
+    "top1_accuracy",
+    "per_class_accuracy",
+    "confusion_matrix",
+    "inference_latency_ms",
+    "parameter_count",
+    "flops",
+    "peak_inference_memory_mb"
+  ],
+  "comparison_targets": [
+    "baseline_run",
+    "repo_internal_pareto_front",
+    "published_cifar100_sota"
+  ],
+  "notes": [
+    "Primary question: how much of the gain is from target interpolation rather than optimizer geometry?"
+  ]
+}

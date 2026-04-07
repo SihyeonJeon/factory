@@ -1,0 +1,28 @@
+{
+  "eval_id": "birdclef2026-ast-strong-eval-001",
+  "run_id": "birdclef2026-ast-strong-001",
+  "pseudo_label_round": 0,
+  "inference_budget": {
+    "max_latency_ms": 5000,
+    "max_peak_memory_mb": 32000,
+    "must_fit_kaggle_notebook": true
+  },
+  "metrics": [
+    "birdclef_leaderboard_score",
+    "macro_f1",
+    "mean_average_precision",
+    "calibration_error",
+    "inference_latency_ms",
+    "parameter_count",
+    "flops",
+    "peak_inference_memory_mb"
+  ],
+  "comparison_targets": [
+    "repo_internal_pareto_front",
+    "published_audio_backbone_references"
+  ],
+  "notes": [
+    "Validation must be group-aware and threshold-tuned.",
+    "Do not over-interpret offline score without leakage checks."
+  ]
+}

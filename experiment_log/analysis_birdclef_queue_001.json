@@ -1,0 +1,132 @@
+{
+  "analysis_id": "birdclef_queue_001",
+  "created": "2026-04-06",
+  "author_lane": "architect",
+  "anchor": "birdclef2026_effnet_b0_gem",
+  "days_remaining": 58,
+  "verified_facts": [
+    "Harness state: 0 training runs, 0 submissions, phase_1 incomplete.",
+    "6 candidate method manifests exist (3 CNN, 3 transformer).",
+    "Submission format: float probability per species per 5s window, 234 columns."
+  ],
+  "working_assumptions": [
+    "Metric is ROC-AUC (strong confidence, not logged-confirmed).",
+    "28 test-only species (25 Insecta, 3 Amphibia) with 0 training samples.",
+    "Dataset counts: 35549 train recordings, 206 train species, 234 submission species.",
+    "Train soundscapes: 66 files, 1478 labeled 5s segments."
+  ],
+  "experiment_queue": [
+    {
+      "exp_id": "EXP-01",
+      "name": "Dataset Fact Reproduction + Submission Loop Smoke Test",
+      "type": "prerequisite_baseline",
+      "priority_rank": 1,
+      "estimated_a100_hours": 0,
+      "depends_on": []
+    },
+    {
+      "exp_id": "EXP-02",
+      "name": "EfficientNet-B0 + GeM Anchor Baseline (fold 0)",
+      "type": "baseline",
+      "method_manifest": "birdclef2026_effnet_b0_gem",
+      "priority_rank": 2,
+      "estimated_a100_hours": 1.5,
+      "depends_on": ["EXP-01"],
+      "success_threshold": "macro_auroc >= 0.70"
+    },
+    {
+      "exp_id": "EXP-03",
+      "name": "EfficientNetV2-S + GeM (fold 0)",
+      "type": "ablation_backbone_capacity",
+      "method_manifest": "birdclef2026_effnet_v2_s_gem",
+      "priority_rank": 3,
+      "estimated_a100_hours": 3,
+      "depends_on": ["EXP-02"],
+      "success_threshold": "macro_auroc > EXP-02 by >= 0.015"
+    },
+    {
+      "exp_id": "EXP-04",
+      "name": "AST Pretrained Transformer (fold 0)",
+      "type": "baseline_transformer",
+      "method_manifest": "birdclef2026_ast_strong",
+      "priority_rank": 4,
+      "estimated_a100_hours": 4,
+      "depends_on": ["EXP-02"],
+      "success_threshold": "macro_auroc > EXP-02 by >= 0.02"
+    },
+    {
+      "exp_id": "EXP-05",
+      "name": "BEATs Fine-tune (fold 0)",
+      "type": "ablation_ssl_vs_supervised_pretraining",
+      "method_manifest": "birdclef2026_beats_ft_strong",
+      "priority_rank": 5,
+      "estimated_a100_hours": 5,
+      "depends_on": ["EXP-04"],
+      "success_threshold": "macro_auroc > max(EXP-02, EXP-04) by >= 0.01"
+    },
+    {
+      "exp_id": "EXP-06",
+      "name": "EfficientNet-B3 + GeM (fold 0)",
+      "type": "ablation_cnn_scaling",
+      "method_manifest": "birdclef2026_effnet_b3_gem",
+      "priority_rank": 6,
+      "estimated_a100_hours": 2,
+      "depends_on": ["EXP-02", "EXP-03"]
+    },
+    {
+      "exp_id": "EXP-07",
+      "name": "HTS-AT Hierarchical Transformer (fold 0)",
+      "type": "ablation_efficient_transformer",
+      "method_manifest": "birdclef2026_htsat_strong",
+      "priority_rank": 7,
+      "estimated_a100_hours": 3,
+      "depends_on": ["EXP-04"]
+    },
+    {
+      "exp_id": "EXP-08",
+      "name": "External Data for 28 Test-Only Species",
+      "type": "exploitation_external_data",
+      "priority_rank": 8,
+      "estimated_a100_hours": 2,
+      "depends_on": ["EXP-01", "EXP-02"]
+    },
+    {
+      "exp_id": "EXP-09",
+      "name": "Pseudo-Label Round 1",
+      "type": "exploitation_pseudo_labeling",
+      "priority_rank": 9,
+      "estimated_a100_hours": 3,
+      "depends_on": ["EXP-02"]
+    },
+    {
+      "exp_id": "EXP-10",
+      "name": "Per-Class Threshold Tuning (metric assumption test)",
+      "type": "exploitation_postprocessing",
+      "priority_rank": 10,
+      "estimated_a100_hours": 0.5,
+      "depends_on": ["EXP-02"]
+    },
+    {
+      "exp_id": "EXP-11",
+      "name": "2-Model Ensemble (Best CNN + Best Transformer)",
+      "type": "exploitation_ensemble",
+      "priority_rank": 11,
+      "estimated_a100_hours": 0.5,
+      "depends_on": ["EXP-02", "EXP-04"]
+    },
+    {
+      "exp_id": "EXP-12",
+      "name": "5-Fold CV of Best Recipe",
+      "type": "exploitation_robustness",
+      "priority_rank": 12,
+      "estimated_a100_hours": "5x single fold",
+      "depends_on": ["best recipe from EXP-02 through EXP-09"]
+    }
+  ],
+  "queue_summary": {
+    "total_experiments": 12,
+    "critical_path": "EXP-01 -> EXP-02 -> [EXP-03 || EXP-04] -> EXP-05 -> EXP-08 -> EXP-09 -> EXP-11 -> EXP-12",
+    "parallelizable_pairs": [["EXP-03", "EXP-04"], ["EXP-06", "EXP-07"], ["EXP-08", "EXP-10"]],
+    "estimated_total_a100_hours": "25-30"
+  }
+}

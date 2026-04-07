@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "context_harness/schemas/method_manifest.schema.json",
+  "title": "Method Manifest",
+  "type": "object",
+  "required": [
+    "method_id",
+    "model",
+    "optimizer",
+    "scheduler",
+    "training",
+    "augmentations",
+    "hypothesis"
+  ],
+  "properties": {
+    "method_id": { "type": "string" },
+    "model": {
+      "type": "object",
+      "required": ["family", "name"],
+      "properties": {
+        "family": { "type": "string" },
+        "name": { "type": "string" },
+        "depth": { "type": "integer" },
+        "widen_factor": { "type": "integer" },
+        "dropout": { "type": "number" },
+        "width_multiplier": { "type": "number" },
+        "num_parameters_estimate": { "type": "integer" }
+      },
+      "additionalProperties": true
+    },
+    "optimizer": {
+      "type": "object",
+      "required": ["name", "lr", "weight_decay"],
+      "properties": {
+        "name": { "type": "string" },
+        "lr": { "type": "number" },
+        "momentum": { "type": "number" },
+        "weight_decay": { "type": "number" },
+        "nesterov": { "type": "boolean" },
+        "betas": {
+          "type": "array",
+          "items": { "type": "number" },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "rho": { "type": "number" },
+        "adaptive": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "scheduler": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "warmup_epochs": { "type": "integer" }
+      },
+      "additionalProperties": true
+    },
+    "training": {
+      "type": "object",
+      "required": ["epochs", "batch_size", "label_smoothing"],
+      "properties": {
+        "epochs": { "type": "integer", "minimum": 1 },
+        "batch_size": { "type": "integer", "minimum": 1 },
+        "label_smoothing": { "type": "number", "minimum": 0 },
+        "amp": { "type": "boolean" },
+        "ema": { "type": "boolean" },
+        "mixup_alpha": { "type": "number", "minimum": 0 },
+        "sharpness_aware": {
+          "type": "object",
+          "properties": {
+            "start_epoch": { "type": "integer", "minimum": 1 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": true
+    },
+    "augmentations": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "regularization": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "hypothesis": {
+      "type": "object",
+      "required": ["statement", "expected_information_gain"],
+      "properties": {
+        "statement": { "type": "string" },
+        "expected_information_gain": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

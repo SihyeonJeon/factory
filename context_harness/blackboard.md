@@ -1,130 +1,90 @@
 # Blackboard — Agent Shared Context
 
+## Domain: BirdCLEF 2026 Leaderboard Optimization on A100
+
+### Competition Metric — Working Assumption (2026-04-06)
+- **Submission format**: probability per species per 5-second window
+  - Columns: `row_id` + 234 species columns (float probabilities)
+  - row_id pattern: `BC2026_Test_{recorder}_{site}_{date}_{time}_{seconds_offset}`
+  - Default fill: 1/234 = 0.004274 (uniform prior)
+- **Working assumption metric**: **macro-averaged ROC-AUC** (skips classes with no true positive labels in evaluation set)
+  - Source: Gemini grounding search (indirect), 2026-04-06
+  - Evidence quality: **indirect only** — official Kaggle overview page was not directly readable; inferred from submission format + prior-year precedent
+  - Implication: threshold-free ranking metric. Per-class threshold tuning (EXP-10) is a no-op for this metric.
+  - "Skip no-positive classes" means test-only species with zero predictions won't penalize — but covering them still helps if they appear in test.
+  - **Action required**: confirm via direct official source read before threshold-sensitive experiments
+- **Local proxy metrics**: `macro_auroc`, `per_class_auroc`, `calibration_error`
+
+### Dataset Facts — Working Assumption (2026-04-06, pending Colab artifact verification)
+| Fact | Value |
+|------|-------|
+| Training recordings (train_audio) | 35,549 (from train.csv) |
+| Train species in train_audio | 206 (from train.csv primary_label) |
+| Submission species (taxonomy) | **234** (from sample_submission.csv) |
+| Species absent from train_audio | **28** (25 Insecta, 3 Amphibia) — see note below |
+| Train soundscapes (labeled segments) | 1,478 labeled 5s segments (from train_soundscapes_labels.csv) |
+| Train soundscape labels | multi-label (`;`-separated), expert-annotated |
+| Train soundscapes (unlabeled) | additional soundscapes exist without expert labels |
+| Class breakdown (train_audio only) | Aves: 162 spp / Amphibia: 32 / Mammalia: 8 / Insecta: 3 / Reptilia: 1 |
+| Label column | `primary_label` (iNat taxon ID or eBird code) |
+| Collections | iNat + Xeno-Canto (mixed) |
+| Location | Pantanal, Mato Grosso do Sul, Brazil |
+| Quality metadata | `rating` field (1-5, XC only; 0=unrated; iNat=no rating) |
+| Geo metadata | `latitude`, `longitude` per recording |
+
+### Important: "Test-only species" claim needs verification
+The 28 species absent from `train.csv` are NOT necessarily zero-shot:
+- **Official description states**: "Some species with occurrences in the hidden test data might only have train samples in the **labeled portion of train_soundscapes** and not in the train_audio."
+- This means some of the 28 species may have labeled examples in `train_soundscapes_labels.csv`.
+- **Action required**: count species coverage in `train_soundscapes_labels.csv` before concluding any species is truly zero-shot.
+- Until verified, do NOT plan external data or zero-shot strategies based solely on the train_audio gap.
+
+### Data Sources and Domain Gap
+| Source | Domain match to test | Format | Label type |
+|--------|---------------------|--------|------------|
+| `train_audio/` (via `train.csv`) | **Low** — single-species XC/iNat recordings | short clips | single primary + optional secondary |
+| `train_soundscapes/` (via `train_soundscapes_labels.csv`) | **High** — same locations as test | 1-min soundscapes, 5s segments | multi-label, expert-annotated |
+| `train_soundscapes/` (unlabeled) | **High** — same locations as test | 1-min soundscapes | unlabeled (pseudo-label candidate) |
+
+### Critical Strategic Implications
+1. **train_soundscapes is the highest-value training data** — same domain as test, expert-labeled, multi-label. Must be incorporated into training, not ignored.
+2. **28 species absent from train_audio** — some may exist in train_soundscapes_labels.csv; verify before declaring zero-shot.
+3. **Multi-label soundscapes**: multiple species per 5s window → multi-label loss (BCE/Focal), not softmax.
+4. **Extreme class imbalance** in train_audio: Aves dominates (97.9%), Reptilia has 1 sample.
+5. **5-second prediction windows**: model must handle short audio segments.
+6. **Unlabeled train_soundscapes** are first-class pseudo-labeling targets (same domain as test).
+7. **`rating` field** can be used for sample weighting — high-quality recordings should carry more weight.
+8. **Geographic metadata** can inform group-aware splits and regional diversity sampling.
+
+### Target Metrics
+- Primary: maximize ROC-AUC on Kaggle hidden test
+- Secondary: wall-clock training time, inference budget compliance
+- Full reproducibility for every result
+
+### Competition Pressure
+- Deadline target: 2026-06-03 (58 days remaining)
+- Entry deadline: 2026-05-27
+- Submission loop must compare local CV against Kaggle LB
+- External data and pseudo-labeling are first-class research axes
+- Final promotion decisions must consider Kaggle notebook inference budget
+
+### SOTA Reference Points
+| Method | Score | Year | Notes |
+|--------|-------|------|-------|
+| BirdCLEF 2025 1st (Noisy Student) | 0.933 AUC | 2025 | EfficientNet ensemble + 4-round PL |
+| BirdCLEF 2025 2nd (Semi-supervised) | 0.928 AUC | 2025 | ECA-NFNet-L0 + EfficientNetV2-S |
+| BirdCLEF 2025 top 2% baseline | 0.902 AUC | 2025 | EfficientNet-B0 + GeM + Quantile-Mix |
+| BEATs-style SSL audio backbone | *TBD by architect* | 2023 | Strong generic audio representation prior |
+| AST / SSAST / PaSST family | *TBD by architect* | 2021-2022 | Spectrogram transformer family |
+| HTS-AT family | *TBD by architect* | 2022 | Efficient hierarchical audio transformer |
+
+### Structural Priorities
+- **Train soundscapes integration is prerequisite** — incorporate train_soundscapes_labels.csv before any serious baseline.
+- Iterative pseudo-labeling is a first-class loop, not a one-off utility. Unlabeled train_soundscapes are the primary PL target.
+- Final selection is ensemble-aware by default.
+- Counterintuitive results must feed a revised hypothesis, not only a failure note.
+- Verify the 28-species gap against train_soundscapes_labels.csv before committing to external-data or zero-shot strategies.
 
 ---
-**[2026-04-02 10:45:01]** `prd_generation` via `claude:opus`
-# 모임 추억 기록을 위한 공간 다이어리 — PRD
 
----
-
-## 파트 1: Market Insight 요약 (01_market_insight.md 용)
-
-### 시장 인사이트
-
-**카테고리:** 소셜 메모리 / 공간 기반 다이어리
-
-**시장 배경:**
-- MZ세대를 중심으로 "기록 문화"가 급부상. 다이어리 앱, 포토 로그, 위치 기반 SNS 등의 사용량이 꾸준히 증가하고 있음
-- 기존 사진 공유 서비스(인스타그램, 네이버 밴드 등)는 모임의 *순간*은 공유하지만, **장소에 깃든 감정과 맥락**은 휘발됨
-- "우리가 그때 거기
-
----
-**[2026-04-02 10:45:46]** `sprint_eval` via `gemini:gemini-2.5-flash`
-```json
-{
-  "sprints": [
-    {
-      "epic": "모임 그룹 생성과 멤버 초대",
-      "acceptance_criteria": [
-        "그룹 생성 시 이름은 필수, 이미지와 소개는 선택",
-        "초대 링크는 24시간 유효하며 재발급 가능",
-        "한 사용자가 최대 20개 그룹에 가입 가능",
-        "그룹 생성자는 멤버 내보내기 및 그룹 삭제 권한 보유"
-      ],
-      "priority": "P0"
-    },
-    {
-      "epic
-```
-
----
-**[2026-04-02 11:00:00]** `product_lead` via `gemini:gemini-pro`
-# Epic 1 Brief Ready for Development
-
-The detailed product brief for Epic 1 ("Group Creation and Invitations") is now available at `context_harness/plans/epic_1_brief.md`.
-
-This brief provides a full breakdown of user flows and HIG considerations. The planning and engineering teams can now begin architecting and implementing this P0 feature.
-
----
-**[2026-04-02 19:54:52]** `product_research` via `product_lead:gemini-2.5-pro`
-I will now create a detailed product brief for the first epic, "Group Creation and Invitations," to guide the design and engineering teams. This brief will break down the user flows, specify requirements, and highlight critical considerations for Apple's Human Interface Guidelines (HIG) and native i
-
----
-**[2026-04-02 19:59:27]** `product_research` via `product_lead:gemini-2.5-pro`
-```json
-{
-  "summary": "This epic covers the foundational user flow of creating a private, shared group and inviting members. This is the first step required for users to begin building their collective memory map. The flow must be simple, secure, and feel native to iOS, establishing the app's quali
-
----
-**[2026-04-02 20:00:15]** `planning` via `product_lead:gemini-2.5-pro`
-```json
-{
-  "execution_summary": "This plan initiates the development of Epic 1 (Group Creation & Invitations) as a native SwiftUI feature. It defines a sequence of milestones for building the necessary data models, UI screens, and business logic. Work is organized into parallel UI, Logic, and QA la
-
----
-**[2026-04-02 20:03:38]** `product_research` via `product_lead:gemini-2.5-pro`
-```json
-{
-  "summary": "This epic, 'Group Creation and Invitations,' establishes the foundational user flow for creating private, shared groups and inviting members via a link or code. It is the critical first step for users to begin building their collective memory map. The flow must be simple, sec
-
----
-**[2026-04-02 20:06:05]** `planning` via `product_lead:gemini-2.5-pro`
-```json
-{
-  "execution_summary": "This plan initiates the development of Epic 1 (Group Creation & Invitations) as a native SwiftUI feature. It defines a sequence of milestones for building the necessary data models, UI screens, and business logic. Work is organized into parallel UI, Logic, and QA la
-
----
-**[2026-04-02 20:14:31]** `architecture` via `ios_architect:claude-opus-4-1`
-# iOS Architecture Contract for Epic 1: Group Creation & Invitations
-
-## File Ownership & Module Structure
-
-```
-workspace/ios/Unfading/
-├── UnfadingApp.swift                    # App entry point, scene configuration
-├── Core/
-│   ├── Models/
-│   │   ├── Group.swift                  # @frozen struct,
-
----
-**[2026-04-03 13:30:18]** `product_research` via `product_lead:gemini-2.5-pro`
-```json
-{
-  "summary": "This epic, 'Group Creation and Invitations,' establishes the foundational user flow for creating private, shared groups and inviting members via a link or code. It is the critical first step for users to begin building their collective memory map. The flow must be simple, sec
-
----
-**[2026-04-03 14:43:54]** `product_research` via `product_lead:gemini-2.5-pro`
-```json
-{
-  "summary": "This epic, 'Group Creation and Invitations,' establishes the foundational user flow for creating private, shared groups and inviting members via a link or code. It is the critical first step for users to begin building their collective memory map. The flow must be simple, sec
-
----
-**[2026-04-03 14:44:31]** `planning` via `delivery_lead:claude-sonnet-4-20250514`
-{
-  "execution_summary": "Epic 1 (Group Creation & Invitations) will be built as native SwiftUI screens with Core Data persistence. This foundational epic enables users to create private groups with required names and optional images/descriptions, generate secure invitation links with 24-hour expira
-
----
-**[2026-04-03 14:48:27]** `product_research` via `product_lead:gemini-2.5-pro`
-```json
-{
-  "summary": "This epic, 'Group Creation and Invitations,' establishes the foundational user flow for creating private, shared groups and inviting members via a link or code. It is the critical first step for users to begin building their collective memory map. The flow must be simple, sec
-
----
-**[2026-04-03 14:49:03]** `planning` via `delivery_lead:claude-sonnet-4-20250514`
-{
-  "execution_summary": "Epic 1 (Group Creation & Invitations) will be built as native SwiftUI screens with Core Data persistence. This foundational epic enables users to create private groups with required names and optional images/descriptions, generate secure invitation links with 24-hour expira
-
----
-**[2026-04-03 14:50:08]** `architecture` via `ios_architect:claude-opus-4-1-20250805`
-# iOS Architecture Contract for Epic 1: Group Creation & Invitations
-
-## File Ownership Matrix
-
-### Core Models (`/Models`)
-```swift
-// GroupModel.swift
-struct Group: Codable, Identifiable {
-    let id: UUID
-    var name: String // Required, 1-50 chars
-    var imageData: Data? // Optional, max 5MB
- 
+*Experiment entries will be appended below as agents produce results.*

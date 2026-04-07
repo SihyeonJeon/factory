@@ -1,0 +1,51 @@
+{
+  "method_id": "cifar100_wrn28x10_late_sam",
+  "model": {
+    "family": "wideresnet",
+    "name": "wideresnet",
+    "depth": 28,
+    "widen_factor": 10,
+    "dropout": 0.3,
+    "num_parameters_estimate": 36479140
+  },
+  "optimizer": {
+    "name": "sam_sgd",
+    "lr": 0.1,
+    "momentum": 0.9,
+    "nesterov": true,
+    "weight_decay": 0.0005,
+    "rho": 0.05,
+    "adaptive": false
+  },
+  "scheduler": {
+    "name": "cosine",
+    "warmup_epochs": 5
+  },
+  "training": {
+    "epochs": 200,
+    "batch_size": 256,
+    "label_smoothing": 0.1,
+    "mixup_alpha": 0.2,
+    "amp": true,
+    "ema": false,
+    "sharpness_aware": {
+      "start_epoch": 141
+    }
+  },
+  "augmentations": [
+    "random_crop_32_pad_4",
+    "random_horizontal_flip",
+    "randaugment",
+    "random_erasing",
+    "normalize"
+  ],
+  "regularization": [
+    "label_smoothing",
+    "mixup",
+    "late_sam"
+  ],
+  "hypothesis": {
+    "statement": "CIFAR-100 should benefit more from a modern recipe than from a plain baseline: WRN-28-10 plus RandAugment, Mixup, and late-phase SAM should improve the accuracy-to-time tradeoff over always-on SAM and smoke-level ResNet training.",
+    "expected_information_gain": "Separates representation capacity from optimization sharpness by delaying SAM until late training, revealing whether flat-minima selection is the main gain driver under this harness budget."
+  }
+}

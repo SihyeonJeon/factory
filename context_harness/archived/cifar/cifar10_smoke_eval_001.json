@@ -1,0 +1,18 @@
+{
+  "eval_id": "cifar10-smoke-eval-001",
+  "run_id": "cifar10-smoke-001",
+  "checkpoint_policy": "best_validation_accuracy",
+  "metrics": [
+    "top1_accuracy",
+    "per_class_accuracy",
+    "confusion_matrix",
+    "inference_latency_ms",
+    "parameter_count",
+    "flops",
+    "peak_inference_memory_mb"
+  ],
+  "external_comparison_required": true,
+  "notes": [
+    "Evaluator compares against current CIFAR-10 baseline references collected by Gemini CLI."
+  ]
+}

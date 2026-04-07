@@ -1,56 +1,152 @@
-# Company Harness Constitution
+# Deep Learning Experiment Harness Constitution
 
-This repository now follows a company-style harness instead of a flat model router.
+This repository operates a multi-agent harness for deep learning research, targeting BirdCLEF 2026 leaderboard optimization on A100 GPU via Colab MCP.
 
-## 1. Team structure
+The harness itself is an orchestration system. It should not silently replace the architect / critic / codex / trainer workflow with ad hoc local implementation.
 
-- Product team
-- `market_analyst` uses Gemini CLI for fresh market signals, competitor scans, and community evidence.
-- `product_strategist` uses Claude API for PRD synthesis, tradeoffs, and release-scope decisions.
+## 1. Team Structure
 
-- Planning team
-- `delivery_planner` uses Claude API to break work into bounded tasks, define ownership, and decide when forks are justified.
+- Design team
+  - `architect` uses `claude_code_cli` as the default reasoning lead for architecture design, hypothesis setting, and experiment planning.
+  - `gemini_cli` supports the architect with web-grounded SOTA search, benchmark verification, and external citations.
 
-- Engineering team
-- `ios_architect` uses Claude API for system design, iOS constraints, and HIG-safe architecture.
-- `implementation_lead` uses Codex CLI for long-running code edits, tool use, and parallel implementation.
-- `subagent_executor` uses a cheaper Codex model only for bounded, non-blocking subtasks with disjoint ownership.
+- Execution team
+  - `trainer` uses Colab MCP to execute PyTorch training on A100 GPU with full metric logging.
+  - `codex_cli` supports the trainer by implementing approved model/config/logging changes and bounded tuning utilities.
+  - `evaluator` uses Colab MCP to run inference and compute evaluation metrics on the canonical test set.
+
+- Analysis team
+  - `explainer` uses `claude_code_cli` for training curve analysis, run comparison, failure mode identification, and counterintuitive-result hypothesis generation.
+  - `gemini_cli` may inspect plots, long logs, and external references when grounded analysis is needed.
 
 - Evaluation team
-- `vision_auditor` uses Gemini CLI for screenshot review, visual regressions, and HIG layout checks.
-- `code_auditor` uses Claude API for spec compliance, regression review, and feedback synthesis.
+  - `critic` uses `claude_code_cli` for adversarial review, guardrail enforcement, and claim verification.
+  - `selector` uses `claude_code_cli` for final model and final ensemble selection based on logged evidence.
 
-## 2. Model assignment policy
+## 1.1 Explicit Research Ownership
 
-- Gemini owns web-grounded research and screenshot-heavy QA.
-- Claude owns planning, architecture, arbitration, and review loops.
-- Codex owns implementation, refactors, and tool-using code execution.
-- No single provider may both implement and self-approve a release-critical task without another evaluator.
+- `architect` is the hypothesis owner.
+- `evaluator` is the empirical validation owner.
+- `critic` is the claim-validation owner.
+- `trainer` is the implementation/execution owner.
+- `selector` is the final decision owner.
 
-## 3. HIG release gate
+No claimed method improvement is valid unless all three roles agree:
+- `architect`: the gain matches the intended mechanism
+- `evaluator`: the gain is measured on the correct benchmark and metrics
+- `critic`: the gain survives evidence and ablation scrutiny
 
-- Every screen must respect safe areas, 44 pt targets, contrast, accessibility labels, and dark mode support.
-- AI-generated UI is not considered releasable until it passes both code-level and screenshot-level HIG review.
-- If a custom interaction risks violating native iOS expectations, the architect must replace it with a safer native pattern.
-- Native iOS is the primary release target. Expo web is only a temporary proving ground until a real `workspace/ios` project exists.
+## 2. Model/Provider Assignment Policy
 
-## 4. Token efficiency
+- `claude_code_cli` owns hypothesis generation, experiment planning, cross-run synthesis, adversarial review, and final model selection.
+- `codex_cli` owns implementation-heavy work: training code edits, harness refactors, sweep scaffolding, metric export utilities, and bounded parallel subtask execution.
+- Colab MCP owns all GPU-bound execution: training, inference, profiling.
+- `gemini_cli` owns web-grounded research: paper search, SOTA tables, release tracking, community signal, and visual/large-context evidence gathering.
+- All first-party reasoning agents in this harness operate through local CLIs, not direct API provider calls.
+- No agent may both produce and self-approve a result. Every result passes through the critic.
 
-- Keep product, plans, reports, and code in separate directories so each agent reads only the relevant slice.
-- Use planner-generated task packets instead of replaying the full project history.
-- Fork only when the file ownership is disjoint and the parent can continue working.
-- Archive stale bug reports and screenshots instead of leaving them in the default prompt path.
-- Treat `context_harness/product_inputs/*.md` as the highest-priority user intent inputs during intake.
+## 2.1 Harness Engineering Split
 
-## 5. Evidence loop
+- Use `claude_code_cli` first when the task is ambiguous, strategic, or requires ranking experiments by expected information gain.
+- Use `codex_cli` first when the task is concrete, local to the repo, and best advanced by editing code or generating scripts quickly.
+- Use `gemini_cli` first when the task depends on current external knowledge, broad search, long-context reading, or source triangulation across papers/docs/community posts.
+- Use Colab MCP only after a hypothesis, stop condition, and logging contract are explicit.
 
-- Product generates sources and assumptions.
-- Planning converts them into bounded acceptance criteria.
-- Engineering implements against that contract.
-- Evaluation returns file-specific bugs and release evidence.
-- Engineering only re-enters after feedback is concrete.
+## 2.2 Mandatory Handoff Contract
 
-## 6. Native strategy
+Every cross-CLI delegation must include:
 
-- Follow [`context_harness/architecture/native_ios_strategy.md`](/Users/jeonsihyeon/factory/context_harness/architecture/native_ios_strategy.md) as the default platform plan.
-- Once native project artifacts exist, Xcode evidence outranks Expo-only evidence.
+- `task_id`
+- `objective`
+- `success_criteria`
+- `input_artifacts`
+- `output_artifacts`
+- `evidence_requirements`
+- `stop_conditions`
+
+If any field is missing, the receiving agent should reject the handoff as underspecified.
+
+## 3. Anti-Hallucination Gate (MANDATORY)
+
+- No agent may claim a metric without citing the exact experiment log entry.
+- No agent may infer results it has not directly computed or received.
+- If evidence is lacking, the only valid response is `{"type": "insufficient_evidence"}`.
+- Violation invalidates the agent's entire turn output.
+
+## 4. Evidence Loop
+
+```
+gemini_cli → gathers papers, benchmark tables, and community signal
+    ↓
+architect → proposes architecture, preprocessing, and experiment queue with citations
+    ↓
+critic → verifies feasibility, checks citations, rejects unsupported assumptions
+    ↓
+codex_cli → implements only the approved diffs and utilities
+    ↓
+trainer → executes approved training or data-processing jobs on Colab MCP, logs all metrics
+    ↓
+evaluator → evaluates on validation / proxy leaderboard / submission results via Colab MCP
+    ↓
+explainer → analyzes results, identifies patterns and failed assumptions
+    ↓
+critic → verifies all claims against experiment log
+    ↓
+if another round is justified:
+    architect → revises hypothesis or queue
+        ↓
+    critic → re-approves
+        ↓
+    codex_cli / trainer / evaluator repeat
+        ↺
+selector → picks winning single model and final ensemble based on logged data
+```
+
+## 4.1 Ablation-First Rule
+
+- The default research mode is not "new model first"; it is "ablation first".
+- Every new method claim must identify the minimal changed factors relative to the current baseline.
+- If a run changes multiple major axes, it is exploratory only until follow-up ablations isolate the source of gain.
+- Small proxy folds are for smoke validation and rapid sanity checks, not primary method claims.
+- Primary method claims start on BirdCLEF 2026 with group-aware validation and should later be stress-tested on alternative folds or prior BirdCLEF years.
+- Pseudo-label gains are not valid evidence unless each round is logged separately, compared against the prior round, and reviewed for leakage.
+- Pseudo-labeling, cleaning, and post-processing are approved experiment axes, not autonomous side loops outside the main review chain.
+
+## 4.2 Failure-To-Hypothesis Rule
+
+- When a result contradicts the leading hypothesis, `explainer` must do more than summarize the failure.
+- `explainer` must write at least one causal alternative hypothesis and one bounded follow-up experiment whenever the evidence is materially counterintuitive.
+- `architect` must explicitly accept, revise, or reject that follow-up hypothesis before more GPU time is spent on the same axis.
+
+## 4.3 Ensemble Rule
+
+- BirdCLEF final selection is ensemble-aware by default.
+- `selector` must compare:
+  - best single model
+  - best per-backbone fold average
+  - best weighted ensemble under the current inference budget
+- A single-model winner is allowed only if ensemble candidates fail the score / latency / memory tradeoff review.
+
+## 5. Token Efficiency
+
+- Keep experiment logs, proposals, and critiques in separate files so each agent reads only its relevant slice.
+- Use the architect's prioritized experiment queue instead of replaying full history.
+- Archive completed experiment cycles instead of keeping them in active context.
+- Treat `experiment_log/` as the single source of truth — no duplication.
+
+## 6. Reproducibility Standard
+
+- Every training run must log: random seed, exact command, git hash, environment spec.
+- Every evaluation must log: checkpoint path, test set hash, inference command.
+- Every pseudo-label round must log: source checkpoints, confidence rules, filtered row counts, and merged dataset hash.
+- "Non-reproducible" results are treated as failed experiments, not evidence.
+
+## 7. Resource Discipline
+
+- A100 time is finite. Every run must have a hypothesis and expected information gain.
+- Architect ranks experiments before trainer executes.
+- Code changes that alter model behavior, data handling, or evaluation logic must be reviewed by `critic` before GPU spend.
+- Runs exceeding 2x time estimate without improvement are terminated.
+- Failed runs are preserved as negative evidence, not deleted.
+- Prefer runs that improve the leaderboard score / wall-clock / memory Pareto front over runs that only chase a marginal offline gain.
+- Final ensemble candidates must fit the active Kaggle notebook inference budget before they can be promoted.

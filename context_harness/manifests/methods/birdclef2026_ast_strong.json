@@ -1,0 +1,47 @@
+{
+  "method_id": "birdclef2026_ast_strong",
+  "model": {
+    "family": "audio_transformer",
+    "name": "ast",
+    "variant": "base",
+    "pretraining_source": "AudioSet_or_equivalent_audio_ssl",
+    "frontend": "logmel_128x512",
+    "num_parameters_estimate": 87000000
+  },
+  "optimizer": {
+    "name": "adamw",
+    "lr": 0.0001,
+    "weight_decay": 0.01,
+    "betas": [0.9, 0.999]
+  },
+  "scheduler": {
+    "name": "cosine",
+    "warmup_epochs": 3
+  },
+  "training": {
+    "epochs": 20,
+    "batch_size": 32,
+    "label_smoothing": 0.05,
+    "amp": true,
+    "ema": true,
+    "loss": "bce_focal",
+    "segment_seconds": 5,
+    "sample_rate": 32000
+  },
+  "augmentations": [
+    "specaugment",
+    "time_shift",
+    "random_gain",
+    "background_mix",
+    "normalize"
+  ],
+  "regularization": [
+    "focal_loss",
+    "ema",
+    "threshold_tuning"
+  ],
+  "hypothesis": {
+    "statement": "A pretrained AST-style spectrogram transformer should provide the fastest credible high-accuracy BirdCLEF baseline because strong audio pretraining and spectrogram-domain augmentation transfer well to bioacoustic soundscape classification.",
+    "expected_information_gain": "Establishes the first serious pretrained transformer baseline for later comparison against BEATs-style and hierarchical audio transformers."
+  }
+}

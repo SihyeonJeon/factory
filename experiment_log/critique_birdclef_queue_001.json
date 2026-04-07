@@ -1,0 +1,43 @@
+{
+  "critique_id": "critique_birdclef_queue_001",
+  "created": "2026-04-06",
+  "author_lane": "critic",
+  "verdict": "CONDITIONAL_PASS",
+  "summary": "Queue is structurally sound and correctly ordered. EXP-01 approved with amendments. All GPU experiments HOLD until blocking objections are resolved.",
+  "blocking_objections": [
+    {
+      "id": "BLOCK-01",
+      "target": "All GPU experiments",
+      "issue": "Colab MCP has never been verified in this phase. colab_session_active=false. EXP-01 must include a connectivity smoke test logging GPU type, VRAM, and session duration."
+    },
+    {
+      "id": "BLOCK-02",
+      "target": "EXP-02",
+      "issue": "No executable training command exists. Method manifest has hyperparameters but no script path, seed, checkpoint path, or metric logging destination. Constitution §6 requires exact commands."
+    },
+    {
+      "id": "BLOCK-03",
+      "target": "EXP-10",
+      "issue": "Metric-sensitive experiment built on unconfirmed metric. Must confirm metric first via EXP-01 submission feedback."
+    },
+    {
+      "id": "BLOCK-04",
+      "target": "EXP-08",
+      "issue": "The 28 test-only species claim is unverified (self-hallucination audit). Cannot build external data pipeline on unlogged claim."
+    }
+  ],
+  "non_blocking_observations": [
+    {"id": "OBS-01", "note": "EXP-02 macro_auroc >= 0.70 threshold is ungrounded. First run should establish anchor, not hit arbitrary bar."},
+    {"id": "OBS-02", "note": "BEATs 5-hour estimate may exceed single Colab session. Need checkpoint/resume protocol."},
+    {"id": "OBS-03", "note": "EXP-09 lacks full PL logging contract (source checkpoint, confidence threshold, row counts, dataset hash)."},
+    {"id": "OBS-04", "note": "EXP-12 has no concrete A100 estimate."},
+    {"id": "OBS-05", "note": "Validation split strategy is unspecified — seed exists but group-aware strategy not documented."},
+    {"id": "OBS-06", "note": "SOTA scores cited without source URLs. Label as unverified."}
+  ],
+  "required_next_actions": [
+    "Architect amends EXP-01 to resolve BLOCK-01, BLOCK-03, BLOCK-04, and OBS-05.",
+    "codex_cli produces concrete training script for EXP-02 (resolves BLOCK-02).",
+    "Critic re-reviews after EXP-01 artifacts are logged.",
+    "No A100 time authorized until EXP-01 completes and critic gate clears."
+  ]
+}

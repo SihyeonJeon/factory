@@ -1,0 +1,100 @@
+{
+  "dataset_id": "birdclef2026",
+  "dataset_family": "kaggle_birdclef_soundscape",
+  "input_shape": [1, 128, 512],
+  "num_submission_species": 234,
+  "num_train_audio_species": 206,
+  "num_species_absent_from_train_audio": 28,
+  "species_absent_from_train_audio_breakdown": {"Insecta": 25, "Amphibia": 3},
+  "species_absent_note": "These 28 species are absent from train.csv (train_audio). Some may have labeled examples in train_soundscapes_labels.csv per official competition description. Verify before declaring zero-shot.",
+  "download_source": "https://www.kaggle.com/competitions/birdclef-2026/data",
+  "storage": {
+    "location": "google_drive",
+    "mount_hint": "/content/drive/MyDrive/Kaggle/birdclef-2026/birdclef-2026"
+  },
+  "preprocessing_manifest": "context_harness/manifests/preprocessing/birdclef2026_logmel_32k_128mel_5s.json",
+  "data_sources": {
+    "train_audio": {
+      "metadata": "train.csv",
+      "directory": "train_audio/",
+      "format": "OGG, 32kHz",
+      "label_type": "single primary_label + optional secondary_labels",
+      "domain_match_to_test": "low — single-species XC/iNat recordings, different acoustic environment",
+      "collection_field": "collection (XC or iNat)",
+      "quality_field": "rating (1-5 for XC, 0 for unrated, absent for iNat)",
+      "geo_fields": ["latitude", "longitude"]
+    },
+    "train_soundscapes_labeled": {
+      "metadata": "train_soundscapes_labels.csv",
+      "directory": "train_soundscapes/",
+      "format": "OGG, 32kHz, 1-minute soundscapes",
+      "label_type": "multi-label per 5s segment (semicolon-separated primary_label), expert-annotated",
+      "label_columns": ["filename", "start", "end", "primary_label"],
+      "domain_match_to_test": "high — same recording locations as test_soundscapes",
+      "note": "Some species may ONLY appear here and not in train_audio. Critical for species coverage."
+    },
+    "train_soundscapes_unlabeled": {
+      "directory": "train_soundscapes/",
+      "format": "OGG, 32kHz, 1-minute soundscapes",
+      "label_type": "unlabeled",
+      "domain_match_to_test": "high — same recording locations as test_soundscapes",
+      "note": "Primary target for pseudo-labeling. Soundscapes without entries in train_soundscapes_labels.csv."
+    }
+  },
+  "splits": {
+    "train_audio_recordings": 35549,
+    "train_soundscapes_total": "count pending verification",
+    "train_soundscapes_labeled_segments": 1478,
+    "validation": "group-aware from train metadata (author or site-based)",
+    "test": "hidden kaggle test (~600 one-minute soundscapes)"
+  },
+  "class_distribution_train_audio_only": {
+    "Aves": {"species": 162, "recordings": 34799},
+    "Amphibia": {"species": 32, "recordings": 451},
+    "Mammalia": {"species": 8, "recordings": 99},
+    "Insecta": {"species": 3, "recordings": 199},
+    "Reptilia": {"species": 1, "recordings": 1}
+  },
+  "label_format": {
+    "train_csv": "primary_label (single label per recording) + secondary_labels (list)",
+    "train_soundscapes_labels": "primary_label (multi-label, semicolon-separated per 5s segment)",
+    "submission": "float probability per species per 5s window"
+  },
+  "metadata_fields": {
+    "train_csv": ["primary_label", "secondary_labels", "latitude", "longitude", "author", "filename", "rating", "collection"],
+    "taxonomy_csv": ["primary_label", "class_name", "..."],
+    "sample_submission": ["row_id", "234 species columns"]
+  },
+  "row_id_format": {
+    "pattern": "{soundscape_filename}_{end_time_seconds}",
+    "example": "BC2026_Test_0001_S05_20250227_010002_20",
+    "soundscape_filename_pattern": "BC2026_Test_{fileID}_{site}_{date}_{time_UTC}"
+  },
+  "normalization": {
+    "mean": [-4.5],
+    "std": [5.0]
+  },
+  "benchmark_targets": {
+    "primary_metric": "roc_auc",
+    "metric_confidence": "working_assumption — inferred from float-probability submission format + 2024-2025 precedent",
+    "expected_baseline_auroc": 0.75,
+    "stretch_auroc": 0.90,
+    "secondary_metrics": [
+      "macro_auroc",
+      "per_class_auroc",
+      "calibration_error"
+    ]
+  },
+  "notes": [
+    "Multi-label soundscape classification: 5-second windows, 234 species columns, float probabilities.",
+    "28 species absent from train_audio — verify coverage in train_soundscapes_labels.csv before declaring zero-shot.",
+    "train_soundscapes share recording locations with test — highest domain match, must be used for training.",
+    "Extreme class imbalance in train_audio: Aves = 97.9%, Reptilia = 1 sample.",
+    "Training audio is OGG format, resampled to 32 kHz.",
+    "Use group-aware validation based on author or site metadata to reduce leakage.",
+    "rating field (XC only) available for sample quality weighting.",
+    "latitude/longitude available for geographic diversity analysis.",
+    "Insect sonotypes (e.g., 47158son16) are treated as classes despite lack of species-level ID.",
+    "Official: 'we expect there is no benefit to looking for more on xeno-canto.org or iNaturalist'."
+  ]
+}

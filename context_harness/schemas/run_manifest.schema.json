@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "context_harness/schemas/run_manifest.schema.json",
+  "title": "Run Manifest",
+  "type": "object",
+  "required": [
+    "run_id",
+    "dataset_manifest",
+    "method_manifest",
+    "seed",
+    "execution_target",
+    "stop_conditions"
+  ],
+  "properties": {
+    "run_id": { "type": "string" },
+    "dataset_manifest": { "type": "string" },
+    "method_manifest": { "type": "string" },
+    "seed": { "type": "integer" },
+    "execution_target": { "type": "string" },
+    "comparison_group": { "type": "string" },
+    "baseline_run_id": { "type": "string" },
+    "ablation_axis": { "type": "string" },
+    "pseudo_label_round": { "type": "integer", "minimum": 0 },
+    "ensemble_group": { "type": "string" },
+    "budget": {
+      "type": "object",
+      "properties": {
+        "max_hours": { "type": "number" },
+        "max_gpu_count": { "type": "integer" },
+        "max_submission_inference_minutes": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    "artifacts": {
+      "type": "object",
+      "properties": {
+        "training_log": { "type": "string" },
+        "checkpoint_dir": { "type": "string" },
+        "submission_csv": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "stop_conditions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

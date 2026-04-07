@@ -1,0 +1,31 @@
+{
+  "preprocessing_id": "birdclef2026_logmel_32k_128mel_5s",
+  "domain": "birdclef2026",
+  "sample_rate": 32000,
+  "clip_seconds": 5.0,
+  "feature_type": "logmel",
+  "feature_shape": [1, 128, 512],
+  "logmel": {
+    "n_mels": 128,
+    "n_fft": 2048,
+    "hop_length": 512,
+    "fmin": 20,
+    "fmax": 16000
+  },
+  "chunking": {
+    "window_seconds": 5.0,
+    "stride_seconds": 2.5,
+    "aggregation": "clip_mean_then_soundscape_pool"
+  },
+  "augmentations": [
+    "specaugment_time_mask",
+    "specaugment_freq_mask",
+    "time_shift",
+    "random_gain",
+    "background_mix"
+  ],
+  "notes": [
+    "This is the default BirdCLEF preprocessing contract for the first serious baseline.",
+    "Any cached feature store must include preprocessing_id in its cache key."
+  ]
+}
