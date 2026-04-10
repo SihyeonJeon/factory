@@ -2,10 +2,12 @@
 """
 master_router.py - Company-style multi-agent model router.
 
-Routing policy:
-- Claude uses the Anthropic API for planning, architecture, arbitration, and review.
-- Codex uses ChatGPT-authenticated CLI for implementation-heavy tasks.
-- Gemini uses OAuth-authenticated CLI for web-grounded research and visual QA.
+Routing policy (2026-04-10):
+- Claude CLI handles all reasoning, planning, review, HIG audit, and visual QA.
+  Model tier scales by task difficulty: opus-4-6 for heavy reasoning,
+  sonnet-4-6 for standard work, haiku-4-5 for ops/compaction.
+- Codex CLI handles iOS implementation (UI + logic) in worktrees.
+- Gemini is no longer used.
 """
 
 from __future__ import annotations
@@ -18,7 +20,7 @@ from pathlib import Path
 from typing import Optional
 
 from harness.company import load_manifest, load_providers, load_roles
-from harness.providers import ProviderResult, normalize_claude_model, run_claude_api, run_cli
+from harness.providers import ProviderResult, normalize_claude_model, run_claude_api, run_claude_cli, run_cli
 
 FACTORY_DIR = Path(__file__).parent.resolve()
 CONTEXT_DIR = FACTORY_DIR / "context_harness"
@@ -75,13 +77,13 @@ TASK_TIMEOUTS: dict[TaskType, int] = {
     TaskType.MARKET_RESEARCH: 180,
     TaskType.PLANNING: 240,
     TaskType.PRD_GENERATION: 240,
-    TaskType.ARCHITECTURE: 360,
+    TaskType.ARCHITECTURE: 900,
     TaskType.TASK_ALLOCATION: 240,
     TaskType.IOS_IMPLEMENTATION: 900,
     TaskType.UI_CODING: 900,
     TaskType.BUSINESS_LOGIC: 900,
     TaskType.CODE_REVIEW: 420,
-    TaskType.HIG_AUDIT: 300,
+    TaskType.HIG_AUDIT: 600,
     TaskType.VISUAL_QA: 240,
     TaskType.E2E_TEST_GEN: 600,
     TaskType.BUG_FIX: 600,
@@ -104,25 +106,28 @@ class AgentResult:
 
 def _provider_name(provider_id: str) -> str:
     if provider_id == "claude_api":
-        return "claude-api"
+        return "claude-cli" if _claude_cli_enabled() else "claude-api"
     if provider_id == "codex_cli":
         return "codex"
-    if provider_id == "gemini_cli":
-        return "gemini"
     return provider_id
+
+
+def _claude_cli_enabled() -> bool:
+    return os.environ.get("FACTORY_CLAUDE_USE_CLI", "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _resolve_model(role_id: str) -> str:
     role = ROLES[role_id]
     overrides = {
-        "product_lead": os.environ.get("FACTORY_GEMINI_RESEARCH_MODEL"),
+        "product_lead": os.environ.get("FACTORY_CLAUDE_STRATEGY_MODEL"),
         "delivery_lead": os.environ.get("FACTORY_CLAUDE_DELIVERY_MODEL"),
         "ios_architect": os.environ.get("FACTORY_CLAUDE_STRATEGY_MODEL"),
         "ios_ui_builder": os.environ.get("FACTORY_CODEX_PRIMARY_MODEL"),
         "ios_logic_builder": os.environ.get("FACTORY_CODEX_PRIMARY_MODEL"),
-        "red_team_reviewer": os.environ.get("FACTORY_CLAUDE_STRATEGY_MODEL"),
+        "red_team_reviewer": os.environ.get("FACTORY_CLAUDE_DELIVERY_MODEL"),
         "hig_guardian": os.environ.get("FACTORY_CLAUDE_DELIVERY_MODEL"),
-        "visual_qa": os.environ.get("FACTORY_GEMINI_VISION_MODEL"),
+        "visual_qa": os.environ.get("FACTORY_CLAUDE_DELIVERY_MODEL"),
+        "platform_operator": os.environ.get("FACTORY_CLAUDE_OPS_MODEL"),
     }
     if overrides.get(role_id):
         model = overrides[role_id]
@@ -140,36 +145,43 @@ def _resolve_model(role_id: str) -> str:
             return normalize_claude_model(role.model)
         return role.model
     if role.provider == "claude_api":
-        model = provider_models.get("deep_review") or provider_models.get("default") or "claude-sonnet-4"
+        model = provider_models.get("default") or "claude-sonnet-4-6"
         return normalize_claude_model(model)
     if role.provider == "codex_cli":
         env_override = provider_models.get("override_env")
         if env_override and os.environ.get(env_override):
             return os.environ[env_override]
         return provider_models.get("default") or "gpt-5.4"
-    if role.provider == "gemini_cli":
-        return provider_models.get("default") or "gemini-2.5-pro"
     return role.model or "unknown"
+
+
+# Claude model tier by task difficulty. Heavy reasoning → opus, standard → sonnet,
+# ops/compaction → haiku. Codex is not tiered here (codex roles own their model).
+_CLAUDE_HEAVY_TASKS = {
+    TaskType.PRODUCT_RESEARCH,
+    TaskType.MARKET_RESEARCH,
+    TaskType.ARCHITECTURE,
+    TaskType.ARBITRATION,
+}
+_CLAUDE_OPS_TASKS = {
+    TaskType.DOCUMENTATION,
+}
 
 
 def _resolve_model_for_task(role_id: str, task_type: TaskType) -> str:
     role = ROLES[role_id]
     model = _resolve_model(role_id)
-    if role.provider != "gemini_cli":
+    if role.provider != "claude_api":
         return model
 
-    complex_override = os.environ.get("FACTORY_GEMINI_COMPLEX_MODEL")
     provider = PROVIDERS.get(role.provider)
     provider_models = provider.models if provider else {}
-    complex_model = complex_override or provider_models.get("complex") or model
-    complex_tasks = {
-        TaskType.PRODUCT_RESEARCH,
-        TaskType.MARKET_RESEARCH,
-        TaskType.VISUAL_QA,
-        TaskType.SPRINT_EVAL,
-    }
-    if task_type in complex_tasks:
-        return complex_model
+    heavy = os.environ.get("FACTORY_CLAUDE_STRATEGY_MODEL") or provider_models.get("deep_review") or "claude-opus-4-6"
+    ops = os.environ.get("FACTORY_CLAUDE_OPS_MODEL") or provider_models.get("ops") or "claude-haiku-4-5-20251001"
+    if task_type in _CLAUDE_HEAVY_TASKS:
+        return normalize_claude_model(heavy)
+    if task_type in _CLAUDE_OPS_TASKS:
+        return normalize_claude_model(ops)
     return model
 
 
@@ -199,10 +211,6 @@ def _build_codex_review_cmd(*, cwd: Optional[Path], model: str) -> list[str]:
     return cmd
 
 
-def _build_gemini_cmd(prompt: str, *, model: str) -> list[str]:
-    return ["gemini", "-p", prompt, "-m", model, "-y"]
-
-
 def _run_role(
     role_id: str,
     prompt: str,
@@ -219,15 +227,28 @@ def _run_role(
     model = _resolve_model_for_task(role_id, task_type)
 
     result: ProviderResult
-    if provider.transport == "api":
-        result = run_claude_api(
-            prompt,
-            model=model,
-            system_prompt=system_prompt,
-            cwd=cwd,
-            json_schema=json_schema,
-            timeout=timeout,
-        )
+    if provider.provider_id == "claude_api":
+        effective_prompt = prompt
+        if image_path:
+            effective_prompt = f"[Image attachment: {image_path}]\n\n{prompt}"
+        if _claude_cli_enabled() or provider.transport == "cli":
+            result = run_claude_cli(
+                effective_prompt,
+                model=model,
+                system_prompt=system_prompt,
+                cwd=cwd,
+                json_schema=json_schema,
+                timeout=timeout,
+            )
+        else:
+            result = run_claude_api(
+                effective_prompt,
+                model=model,
+                system_prompt=system_prompt,
+                cwd=cwd,
+                json_schema=json_schema,
+                timeout=timeout,
+            )
     elif provider.provider_id == "codex_cli":
         if task_type == TaskType.CODE_REVIEW:
             cmd = _build_codex_review_cmd(cwd=cwd, model=model)
@@ -239,12 +260,6 @@ def _run_role(
                 image_path=image_path,
             )
         result = run_cli(cmd, cwd=cwd, timeout=timeout)
-    elif provider.provider_id == "gemini_cli":
-        effective_prompt = prompt
-        if image_path:
-            effective_prompt = f"[Image: {image_path}]\n\n{prompt}"
-        cmd = _build_gemini_cmd(effective_prompt, model=model)
-        result = run_cli(cmd, cwd=cwd or FACTORY_DIR, timeout=timeout)
     else:
         result = ProviderResult(False, "", error=f"Unsupported provider: {provider.provider_id}")
 
@@ -298,7 +313,7 @@ def dispatch(
     effective_timeout = timeout or TASK_TIMEOUTS.get(task_type, 300)
 
     for role_id in role_order:
-        tag = f"[Router] {task_type.value} -> {role_id}:{_resolve_model(role_id)}"
+        tag = f"[Router] {task_type.value} -> {role_id}:{_resolve_model_for_task(role_id, task_type)}"
         print(f"\n{tag}")
         result = _run_role(
             role_id,

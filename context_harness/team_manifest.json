@@ -1,19 +1,25 @@
 {
-  "version": "2026-04-02",
+  "version": "2026-04-10",
   "providers": {
     "claude_api": {
-      "transport": "api",
-      "auth": "ANTHROPIC_API_KEY",
+      "transport": "cli",
+      "auth": "claude-pro-login",
       "primary_use": [
+        "product strategy",
+        "market research",
         "planning",
         "task allocation",
         "architecture",
         "red-team review",
-        "arbitration"
+        "HIG audit",
+        "visual QA",
+        "arbitration",
+        "ops"
       ],
       "models": {
-        "default": "claude-sonnet-4-20250514",
-        "deep_review": "claude-opus-4-1-20250805"
+        "default": "claude-sonnet-4-6",
+        "deep_review": "claude-opus-4-6",
+        "ops": "claude-haiku-4-5-20251001"
       }
     },
     "codex_cli": {
@@ -30,21 +36,6 @@
         "subagent": "gpt-5-codex-mini",
         "override_env": "FACTORY_CODEX_PRIMARY_MODEL"
       }
-    },
-    "gemini_cli": {
-      "transport": "cli",
-      "auth": "oauth-personal",
-      "primary_use": [
-        "market research",
-        "multimodal critique",
-        "visual QA",
-        "design reference synthesis"
-      ],
-      "models": {
-        "complex": "gemini-3.1-pro",
-        "default": "gemini-2.5-pro",
-        "fast": "gemini-2.5-flash"
-      }
     }
   },
   "roles": [
@@ -53,7 +44,7 @@
       "title": "Platform Operator",
       "team": "operations",
       "provider": "claude_api",
-      "model": "claude-sonnet-4-20250514",
+      "model": "claude-haiku-4-5-20251001",
       "ownership": [
         "context_harness/state.json",
         "context_harness/handoffs/",
@@ -70,8 +61,8 @@
       "id": "product_lead",
       "title": "Product Lead",
       "team": "product",
-      "provider": "gemini_cli",
-      "model": "gemini-2.5-pro",
+      "provider": "claude_api",
+      "model": "claude-opus-4-6",
       "ownership": [
         "context_harness/handoffs/product_brief.md",
         "reports/product_lead_product_research.md"
@@ -88,7 +79,7 @@
       "title": "Delivery Lead",
       "team": "planning",
       "provider": "claude_api",
-      "model": "claude-sonnet-4-20250514",
+      "model": "claude-sonnet-4-6",
       "ownership": [
         "context_harness/handoffs/fork_decision.json",
         "reports/delivery_lead_planning.md"
@@ -105,7 +96,7 @@
       "title": "iOS Architect",
       "team": "planning",
       "provider": "claude_api",
-      "model": "claude-opus-4-1-20250805",
+      "model": "claude-opus-4-6",
       "ownership": [
         "reports/ios_architect_architecture.md"
       ],
@@ -150,7 +141,7 @@
       "title": "Red Team Reviewer",
       "team": "evaluation",
       "provider": "claude_api",
-      "model": "claude-sonnet-4-20250514",
+      "model": "claude-sonnet-4-6",
       "ownership": [
         "reports/red_team_reviewer_code_review.md"
       ],
@@ -165,7 +156,7 @@
       "title": "HIG Guardian",
       "team": "evaluation",
       "provider": "claude_api",
-      "model": "claude-sonnet-4-20250514",
+      "model": "claude-sonnet-4-6",
       "ownership": [
         "reports/hig_guardian_hig_audit.md"
       ],
@@ -179,8 +170,8 @@
       "id": "visual_qa",
       "title": "Visual QA",
       "team": "evaluation",
-      "provider": "gemini_cli",
-      "model": "gemini-2.5-pro",
+      "provider": "claude_api",
+      "model": "claude-sonnet-4-6",
       "ownership": [
         "reports/visual_qa_visual_qa.md"
       ],

@@ -734,6 +734,23 @@ def build_feedback_brief(original_brief: str, summary: EvaluationSummary, round_
     return packet
 
 
+def _intake_cache_fresh(state: dict[str, Any], intake_artifacts: dict[str, Path], brief: str) -> bool:
+    """True when prior intake reports exist and are newer than every product_input source."""
+    if not state.get("intake_complete"):
+        return False
+    if state.get("last_brief") != brief:
+        return False
+    keys = ("product_report", "planning_report", "architecture_report")
+    report_paths = [Path(state[key]) for key in keys if state.get(key)]
+    if len(report_paths) != 3 or not all(p.exists() for p in report_paths):
+        return False
+    oldest_report_mtime = min(p.stat().st_mtime for p in report_paths)
+    for source in intake_artifacts.values():
+        if source.exists() and source.stat().st_mtime > oldest_report_mtime:
+            return False
+    return True
+
+
 def run_intake(brief: str):
     ensure_dirs()
     load_runtime_env()
@@ -742,6 +759,14 @@ def run_intake(brief: str):
     fork_path = HANDOFFS_DIR / "fork_decision.json"
     save_json(fork_path, {"should_fork": fork.should_fork, "reasons": fork.reasons, "lanes": fork.lanes})
     intake_artifacts = collect_intake_artifacts()
+
+    state = load_json(STATE_FILE, {})
+    if _intake_cache_fresh(state, intake_artifacts, brief):
+        append_operator_journal("Intake cache fresh; skipping product/planning/architecture re-run")
+        print(f"product report: {state['product_report']} (cached)")
+        print(f"planning report: {state['planning_report']} (cached)")
+        print(f"architecture report: {state['architecture_report']} (cached)")
+        return
 
     product_report = run_role(
         "product_lead",
@@ -818,7 +843,7 @@ def run_delivery(brief: str, phase_tag: str = "delivery") -> Path:
                     artifacts,
                     cwd=worktree,
                     report_stem=f"{role_name}_{phase_tag}_{lane}_{index}",
-                    timeout=420,
+                    timeout=1800,
                     allow_fallback_roles=False,
                 )
                 task_reports.append(str(report_path))
@@ -831,7 +856,7 @@ def run_delivery(brief: str, phase_tag: str = "delivery") -> Path:
                 artifacts,
                 cwd=worktree,
                 report_stem=f"{role_name}_{phase_tag}_{lane}",
-                timeout=420,
+                timeout=1800,
                 allow_fallback_roles=False,
             )
             task_reports.append(str(report_path))

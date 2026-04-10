@@ -254,7 +254,7 @@ def run_role(
         failure_path = deps.reports_dir / f"{stem}.error.txt"
         failure_text = result.output.strip() or f"{role_name} failed for {task_type.value} with no stdout/stderr payload."
         deps.save_text(failure_path, failure_text)
-        deps.append_ledger(_ledger_base("dispatch_failure", {"report": str(failure_path), "error": (result.error or failure_text)[:240]}))
+        deps.append_ledger(_ledger_base("dispatch_failure", {"report": str(failure_path), "error": failure_text[:240]}))
         raise RuntimeError(f"{role_name} failed for {task_type.value}: {failure_text[:200]}")
 
     try:

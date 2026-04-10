@@ -20,17 +20,32 @@ RATE_LIMIT_PATTERNS = [
     re.compile(r"429", re.IGNORECASE),
     re.compile(r"overloaded", re.IGNORECASE),
     re.compile(r"capacity", re.IGNORECASE),
+    re.compile(r"out of extra usage", re.IGNORECASE),
+    re.compile(r"credit balance is too low", re.IGNORECASE),
 ]
 RETRY_WAIT_PATTERN = re.compile(r"try\s*again\s*in\s*(\d+)", re.IGNORECASE)
 CLAUDE_MODEL_ALIASES = {
     "claude-sonnet-4": "claude-sonnet-4-20250514",
     "claude-opus-4": "claude-opus-4-20250514",
     "claude-opus-4-1": "claude-opus-4-1-20250805",
+    "claude-haiku-4-5": "claude-haiku-4-5-20251001",
+    "claude-opus-4-6": "claude-opus-4-6",
+    "claude-sonnet-4-6": "claude-sonnet-4-6",
 }
 
 
 def normalize_claude_model(model: str) -> str:
     return CLAUDE_MODEL_ALIASES.get(model, model)
+
+
+def normalize_claude_cli_model(model: str) -> str:
+    normalized = normalize_claude_model(model)
+    lowered = normalized.lower()
+    if "opus" in lowered:
+        return "opus"
+    if "haiku" in lowered:
+        return "haiku"
+    return "sonnet"
 
 
 @dataclass
@@ -107,6 +122,83 @@ def run_claude_api(
         timeout=timeout,
         max_retries=max_retries,
     )
+
+
+def run_claude_cli(
+    prompt: str,
+    model: str,
+    *,
+    system_prompt: str | None = None,
+    cwd: Path | None = None,
+    json_schema: str | dict | None = None,
+    timeout: int = 300,
+    max_retries: int = 1,
+) -> ProviderResult:
+    project_root = Path(__file__).resolve().parent.parent
+    load_project_env(project_root)
+
+    cmd = [
+        "claude",
+        "-p",
+        prompt,
+        "--model",
+        normalize_claude_cli_model(model),
+        "--output-format",
+        "text",
+        "--permission-mode",
+        "plan",
+        "--setting-sources",
+        "project,local",
+        "--allowedTools",
+        "Read",
+        "Glob",
+        "Grep",
+        "--disallowedTools",
+        "Write",
+        "Edit",
+        "MultiEdit",
+        "Bash",
+    ]
+    if system_prompt:
+        cmd += ["--append-system-prompt", system_prompt]
+    if cwd:
+        cmd += ["--add-dir", str(cwd)]
+
+    parsed_schema = _parse_json_schema(json_schema)
+    if parsed_schema is not None:
+        cmd[cmd.index("text")] = "json"
+        cmd += ["--json-schema", json.dumps(parsed_schema, ensure_ascii=False)]
+
+    result = run_cli(
+        cmd,
+        cwd=cwd or project_root,
+        timeout=timeout,
+        max_retries=max_retries,
+        extra_env={"ANTHROPIC_API_KEY": None},
+    )
+    if not result.success:
+        return result
+
+    if parsed_schema is None:
+        return result
+
+    try:
+        payload = json.loads(result.output)
+    except json.JSONDecodeError:
+        return result
+
+    if payload.get("is_error"):
+        return ProviderResult(False, "", retries=result.retries, error=str(payload.get("result", "")).strip() or result.output)
+
+    structured_output = payload.get("structured_output")
+    if structured_output is not None:
+        return ProviderResult(
+            True,
+            json.dumps(structured_output, ensure_ascii=False),
+            retries=result.retries,
+        )
+
+    return result
 
 
 async def _run_claude_agent_sdk_query(
@@ -253,15 +345,24 @@ def run_cli(
     cwd: Path | None = None,
     timeout: int = 300,
     max_retries: int = 2,
+    extra_env: dict[str, str | None] | None = None,
 ) -> ProviderResult:
     for attempt in range(max_retries + 1):
         try:
+            env = os.environ.copy()
+            if extra_env:
+                for key, value in extra_env.items():
+                    if value is None:
+                        env.pop(key, None)
+                    else:
+                        env[key] = value
             proc = subprocess.run(
                 cmd,
                 cwd=str(cwd) if cwd else None,
                 capture_output=True,
                 text=True,
                 timeout=timeout,
+                env=env,
             )
         except FileNotFoundError as exc:
             return ProviderResult(False, "", retries=attempt, error=str(exc))
@@ -275,6 +376,8 @@ def run_cli(
         if limited and attempt < max_retries:
             time.sleep(wait_seconds)
             continue
+        if limited:
+            return ProviderResult(False, "", retries=attempt, error=combined.strip())
 
         if proc.returncode == 0 and proc.stdout.strip():
             return ProviderResult(True, proc.stdout, retries=attempt)

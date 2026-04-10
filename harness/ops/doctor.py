@@ -133,23 +133,6 @@ def provider_smoke_report(deps: DoctorDeps) -> Path:
     except Exception as exc:
         payload["codex_cli"] = {"success": False, "model": codex_model, "output": "", "error": str(exc)[:240]}
 
-    gemini_model = deps.roles["product_lead"].model or deps.providers["gemini_cli"].models.get("default", "gemini-2.5-pro")
-    try:
-        gemini_result = deps.run_cli(
-            ["gemini", "-p", smoke_prompt, "-m", gemini_model, "-y"],
-            cwd=deps.factory_dir,
-            timeout=30,
-            max_retries=0,
-        )
-        payload["gemini_cli"] = {
-            "success": gemini_result.success,
-            "model": gemini_model,
-            "output": gemini_result.output.strip()[:120],
-            "error": gemini_result.error[:240],
-        }
-    except Exception as exc:
-        payload["gemini_cli"] = {"success": False, "model": gemini_model, "output": "", "error": str(exc)[:240]}
-
     deps.save_json(report_path, payload)
     return report_path
 
@@ -178,14 +161,6 @@ def run_preflight_doctor(deps: DoctorDeps, *, quick: bool = False) -> Path:
     codex = deps.run_shell(["codex", "--version"])
     add_check("codex_cli", codex.returncode == 0, (codex.stdout or codex.stderr).strip()[:200])
 
-    gemini = deps.run_shell(["gemini", "--version"])
-    gemini_host_ok = bool(host_baseline.get("gemini_version", {}).get("ok"))
-    gemini_ok = gemini.returncode == 0
-    gemini_detail = (gemini.stdout or gemini.stderr).strip()[:200]
-    if not gemini_ok and gemini_host_ok:
-        gemini_detail = f"host baseline only; current runtime probe failed: {host_baseline['gemini_version'].get('detail', '')[:120]}"
-    add_check("gemini_cli", gemini_ok, gemini_detail)
-
     claude_sdk = deps.run_shell([str(deps.factory_dir / "venv" / "bin" / "python"), "-c", "import claude_agent_sdk; print('ok')"])
     add_check("claude_agent_sdk", claude_sdk.returncode == 0, (claude_sdk.stdout or claude_sdk.stderr).strip()[:200])
 
@@ -213,9 +188,6 @@ def run_preflight_doctor(deps: DoctorDeps, *, quick: bool = False) -> Path:
     codex_auth = (Path.home() / ".codex" / "auth.json").exists()
     add_check("codex_auth_state", codex_auth, str(Path.home() / ".codex" / "auth.json"))
 
-    gemini_auth = (Path.home() / ".gemini" / "oauth_creds.json").exists()
-    add_check("gemini_auth_state", gemini_auth, str(Path.home() / ".gemini" / "oauth_creds.json"))
-
     claude_settings = (Path.home() / ".claude" / "settings.json").exists()
     add_check("claude_settings_state", claude_settings, str(Path.home() / ".claude" / "settings.json"))
 
@@ -224,13 +196,10 @@ def run_preflight_doctor(deps: DoctorDeps, *, quick: bool = False) -> Path:
     if not quick:
         add_check("claude_api_smoke", bool(smoke_payload.get("claude_api", {}).get("success")), smoke_payload.get("claude_api", {}).get("error") or smoke_payload.get("claude_api", {}).get("output", ""))
         add_check("codex_cli_smoke", bool(smoke_payload.get("codex_cli", {}).get("success")), smoke_payload.get("codex_cli", {}).get("error") or smoke_payload.get("codex_cli", {}).get("output", ""))
-        add_check("gemini_cli_smoke", bool(smoke_payload.get("gemini_cli", {}).get("success")), smoke_payload.get("gemini_cli", {}).get("error") or smoke_payload.get("gemini_cli", {}).get("output", ""))
 
     codex_auth_payload = deps.load_json(Path.home() / ".codex" / "auth.json", {})
-    gemini_auth_payload = deps.load_json(Path.home() / ".gemini" / "oauth_creds.json", {})
     codex_access_payload = decode_jwt_payload(codex_auth_payload.get("tokens", {}).get("access_token"))
     codex_session_status, codex_session_detail = describe_session(parse_unix_timestamp(codex_access_payload.get("exp")))
-    gemini_session_status, gemini_session_detail = describe_session(parse_unix_timestamp(gemini_auth_payload.get("expiry_date")))
     if claude_cli_enabled:
         claude_session_status = "ready" if claude_cli_logged_in else "blocked"
         claude_session_detail = "Claude CLI login present" if claude_cli_logged_in else "Claude CLI login missing"
@@ -239,22 +208,17 @@ def run_preflight_doctor(deps: DoctorDeps, *, quick: bool = False) -> Path:
         claude_session_detail = "ANTHROPIC_API_KEY present" if anthropic_key else "ANTHROPIC_API_KEY missing"
 
     codex_binary_ready = _status_from_checks(codex.returncode == 0)
-    gemini_binary_ready = _status_from_checks(gemini_ok)
     claude_binary_ready = _status_from_checks(claude_sdk.returncode == 0)
     xcode_binary_ready = _status_from_checks(xcode.returncode == 0)
 
     codex_auth_ready = _status_from_checks(codex_auth)
-    gemini_auth_ready = _status_from_checks(gemini_auth)
     claude_auth_ready = _status_from_checks(claude_cli_logged_in if claude_cli_enabled else anthropic_key)
 
     codex_local_ready = _status_from_checks(codex_binary_ready == "ready", codex_auth_ready == "ready", codex_session_status == "ready")
-    gemini_local_ready = _status_from_checks(gemini_ok, gemini_auth_ready == "ready")
     claude_local_ready = _status_from_checks(claude_binary_ready == "ready", claude_auth_ready == "ready", claude_session_status == "ready")
     codex_live = "skipped" if quick else _status_from_checks(bool(smoke_payload.get("codex_cli", {}).get("success")))
-    gemini_live = "skipped" if quick else _status_from_checks(bool(smoke_payload.get("gemini_cli", {}).get("success")))
     claude_live = "skipped" if quick else _status_from_checks(bool(smoke_payload.get("claude_api", {}).get("success")))
     codex_ready = codex_local_ready
-    gemini_ready = gemini_local_ready
     claude_ready = claude_local_ready
     xcode_mcp_ready = _status_from_checks(xcode.returncode == 0, mcp_project)
 
@@ -283,18 +247,6 @@ def run_preflight_doctor(deps: DoctorDeps, *, quick: bool = False) -> Path:
             "lane_impact": "implementation, refactor, parallel worktrees",
             "notes": f"Session={codex_session_detail}. Smoke={'skipped' if quick else ('ok' if smoke_payload.get('codex_cli', {}).get('success') else 'failed')}. Project is trusted in ~/.codex/config.toml.",
         },
-        "gemini_cli": {
-            "status": gemini_ready,
-            "binary_ready": gemini_binary_ready,
-            "auth_ready": gemini_auth_ready,
-            "session_ready": gemini_session_status,
-            "local_readiness": gemini_local_ready,
-            "live_connectivity": gemini_live,
-            "runtime": (gemini.stdout or gemini.stderr).strip()[:120] if gemini.returncode == 0 else f"current runtime probe failed; last host baseline: {host_baseline.get('gemini_version', {}).get('detail', 'unknown')[:120]}",
-            "mcp": "project .mcp.json available" if mcp_project else "missing project .mcp.json",
-            "lane_impact": "product research, visual QA, multimodal critique",
-            "notes": f"Session={gemini_session_detail}. Smoke={'skipped' if quick else ('ok' if smoke_payload.get('gemini_cli', {}).get('success') else 'failed')}. Host baseline={'ok' if gemini_host_ok else 'missing'}, but readiness now requires the current runtime probe to succeed.",
-        },
         "xcode_mcp": {
             "status": xcode_mcp_ready,
             "binary_ready": xcode_binary_ready,
@@ -322,13 +274,12 @@ def run_preflight_doctor(deps: DoctorDeps, *, quick: bool = False) -> Path:
             ],
         },
         "product": {
-            "status": _status_from_checks(gemini_auth, gemini_ok),
+            "status": _status_from_checks(claude_ready == "ready"),
             "blockers": [
                 blocker
                 for blocker, ok in {
-                    "gemini_auth_missing": gemini_auth,
-                    "gemini_cli_unavailable": gemini_ok,
-                    "gemini_live_probe_failed": quick or gemini_live == "ready",
+                    "claude_cli_unavailable": claude_ready == "ready",
+                    "claude_live_probe_failed": quick or claude_live == "ready",
                 }.items()
                 if not ok
             ],
@@ -356,12 +307,12 @@ def run_preflight_doctor(deps: DoctorDeps, *, quick: bool = False) -> Path:
             ],
         },
         "evaluation": {
-            "status": _status_from_checks(playwright.returncode == 0, gemini_auth),
+            "status": _status_from_checks(playwright.returncode == 0, claude_ready == "ready"),
             "blockers": [
                 blocker
                 for blocker, ok in {
                     "playwright_missing": playwright.returncode == 0,
-                    "gemini_auth_missing": gemini_auth,
+                    "claude_cli_unavailable": claude_ready == "ready",
                     "simctl_unstable": simctl_ok,
                     "native_ios_project_missing": (deps.current_target_workspace() / "ios").exists(),
                 }.items()
