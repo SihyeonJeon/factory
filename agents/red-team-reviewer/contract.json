@@ -1,0 +1,19 @@
+{
+  "role_id": "red_team_reviewer",
+  "title": "Red Team Reviewer",
+  "provider_hint": "claude_api",
+  "inputs": [
+    "architecture_report",
+    "planning_report",
+    "ui_summary",
+    "logic_summary",
+    "xcode_test_probe",
+    "xcode_runtime_probe",
+    "acceptance_input"
+  ],
+  "output": {
+    "kind": "markdown",
+    "filename_stem": "red_team_reviewer_code_review",
+    "min_bytes": 400
+  }
+}

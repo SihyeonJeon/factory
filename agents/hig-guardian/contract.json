@@ -1,0 +1,17 @@
+{
+  "role_id": "hig_guardian",
+  "title": "HIG Guardian",
+  "provider_hint": "claude_api",
+  "inputs": [
+    "hig_guardrails",
+    "ui_ux_screen_contract",
+    "ui_summary",
+    "xcode_runtime_probe",
+    "design_input"
+  ],
+  "output": {
+    "kind": "markdown",
+    "filename_stem": "hig_guardian_hig_audit",
+    "min_bytes": 300
+  }
+}

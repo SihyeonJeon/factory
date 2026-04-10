@@ -1,0 +1,38 @@
+{
+  "role_id": "delivery_lead",
+  "title": "Delivery Lead",
+  "provider_hint": "claude_api",
+  "inputs": [
+    "system_rules",
+    "product_report",
+    "sprint_contract",
+    "constraints_input",
+    "acceptance_input",
+    "fork_policy"
+  ],
+  "output": {
+    "kind": "json",
+    "filename_stem": "delivery_lead_execution_plan",
+    "json_schema": {
+      "type": "object",
+      "properties": {
+        "execution_summary": {"type": "string"},
+        "milestones": {"type": "array", "items": {"type": "string"}},
+        "lane_ownership": {
+          "type": "object",
+          "properties": {
+            "ui": {"type": "array", "items": {"type": "string"}},
+            "logic": {"type": "array", "items": {"type": "string"}},
+            "qa": {"type": "array", "items": {"type": "string"}}
+          },
+          "required": ["ui", "logic", "qa"],
+          "additionalProperties": false
+        },
+        "merge_strategy": {"type": "string"},
+        "feedback_loop": {"type": "string"}
+      },
+      "required": ["execution_summary", "milestones", "lane_ownership", "merge_strategy", "feedback_loop"],
+      "additionalProperties": false
+    }
+  }
+}

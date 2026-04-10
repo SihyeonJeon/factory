@@ -1,0 +1,17 @@
+{
+  "role_id": "visual_qa",
+  "title": "Visual QA",
+  "provider_hint": "gemini_cli",
+  "inputs": [
+    "hig_guardrails",
+    "ui_ux_screen_contract",
+    "xcode_runtime_probe",
+    "runtime_release_closure_evidence",
+    "acceptance_input"
+  ],
+  "output": {
+    "kind": "markdown",
+    "filename_stem": "hig_guardian_visual_qa",
+    "min_bytes": 300
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "role_id": "ios_ui_builder",
+  "title": "iOS UI Builder",
+  "provider_hint": "codex_cli",
+  "inputs": [
+    "architecture_report",
+    "planning_report",
+    "product_report",
+    "ui_ux_screen_contract",
+    "hig_guardrails",
+    "blackboard_compact"
+  ],
+  "output": {
+    "kind": "markdown",
+    "filename_stem": "ios_ui_builder_ui_summary",
+    "min_bytes": 300
+  }
+}

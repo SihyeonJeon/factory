@@ -19,7 +19,7 @@
     {
       "name": "gemini_cli",
       "ok": true,
-      "detail": "0.35.3"
+      "detail": "0.36.0"
     },
     {
       "name": "claude_agent_sdk",
@@ -32,9 +32,9 @@
       "detail": "ok"
     },
     {
-      "name": "anthropic_api_key",
+      "name": "claude_cli_auth",
       "ok": true,
-      "detail": "visible in current process"
+      "detail": "Claude CLI logged in"
     },
     {
       "name": "project_mcp_config",
@@ -44,12 +44,12 @@
     {
       "name": "codex_mcp_runtime",
       "ok": true,
-      "detail": "Name        Command  Args                     Env                                                                 Cwd  Status   Auth       \nxcodebuild  npx      -y xcodebuildmcp@latest  XCODEBUILDMCP_SENTRY_DISABLED=*****, XCODEBUILDMCP_WORKFLOWS=*****  -    enabled  Unsupported"
+      "detail": "Name        Command  Args                                          Env                                                                 Cwd  Status   Auth       \ncolab-mcp   uvx      git+https://github.com/googlecolab/colab-mcp  -                                                                   -   "
     },
     {
       "name": "claude_mcp_runtime",
       "ok": true,
-      "detail": "Checking MCP server health...\n\nclaude.ai Gmail: https://gmail.mcp.claude.com/mcp - ! Needs authentication\nclaude.ai Google Calendar: https://gcal.mcp.claude.com/mcp - ! Needs authentication\nxcodebuild: npx -y xcodebuildmcp@latest - ✗ Failed to connect"
+      "detail": "Checking MCP server health...\n\nclaude.ai Gmail: https://gmail.mcp.claude.com/mcp - ! Needs authentication\nclaude.ai Google Calendar: https://gcal.mcp.claude.com/mcp - ! Needs authentication\ncolab-mcp: uvx git+https://github.com/googlecolab/colab-mcp - ✓ Connected\nxcodebuild: npx -y xcodebuildmcp@lat"
     },
     {
       "name": "codex_auth_state",
@@ -79,7 +79,7 @@
       "runtime": "claude-agent-sdk ok",
       "mcp": "claude mcp runtime ok",
       "lane_impact": "planning, architecture, review, operator",
-      "notes": "Session=ANTHROPIC_API_KEY present. Smoke=skipped. Claude API path is usable even if Claude CLI MCP runtime is not."
+      "notes": "Session=Claude CLI login present. Smoke=skipped. Active transport=claude-cli."
     },
     "codex_cli": {
       "status": "ready",
@@ -89,9 +89,9 @@
       "local_readiness": "ready",
       "live_connectivity": "skipped",
       "runtime": "codex-cli 0.118.0",
-      "mcp": "Name        Command  Args                     Env                                                                 Cwd  Status   Auth       \nxcodebuild  npx     ",
+      "mcp": "Name        Command  Args                                          Env                                                                 Cwd  Status   Auth       ",
       "lane_impact": "implementation, refactor, parallel worktrees",
-      "notes": "Session=expires at 2026-04-10T11:57:52+00:00 (10250 min remaining). Smoke=skipped. Project is trusted in ~/.codex/config.toml."
+      "notes": "Session=expires at 2026-04-10T11:57:52+00:00 (1543 min remaining). Smoke=skipped. Project is trusted in ~/.codex/config.toml."
     },
     "gemini_cli": {
       "status": "ready",
@@ -100,10 +100,10 @@
       "session_ready": "blocked",
       "local_readiness": "ready",
       "live_connectivity": "skipped",
-      "runtime": "0.35.3",
+      "runtime": "0.36.0",
       "mcp": "project .mcp.json available",
       "lane_impact": "product research, visual QA, multimodal critique",
-      "notes": "Session=no expiry metadata available. Smoke=skipped. Host baseline=ok."
+      "notes": "Session=no expiry metadata available. Smoke=skipped. Host baseline=ok, but readiness now requires the current runtime probe to succeed."
     },
     "xcode_mcp": {
       "status": "ready",
@@ -137,9 +137,7 @@
     },
     "evaluation": {
       "status": "ready",
-      "blockers": [
-        "native_ios_project_missing"
-      ]
+      "blockers": []
     }
   },
   "evaluator_mode": "playwright_e2e_plus_visual_qa",

@@ -1,0 +1,18 @@
+{
+  "role_id": "ios_architect",
+  "title": "iOS Architect",
+  "provider_hint": "claude_api",
+  "inputs": [
+    "system_rules",
+    "native_ios_strategy",
+    "ui_ux_screen_contract",
+    "product_report",
+    "planning_report",
+    "hig_guardrails"
+  ],
+  "output": {
+    "kind": "markdown",
+    "filename_stem": "ios_architect_architecture",
+    "min_bytes": 800
+  }
+}

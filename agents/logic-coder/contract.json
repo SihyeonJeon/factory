@@ -1,0 +1,18 @@
+{
+  "role_id": "ios_logic_builder",
+  "title": "iOS Logic Builder",
+  "provider_hint": "codex_cli",
+  "inputs": [
+    "architecture_report",
+    "planning_report",
+    "product_report",
+    "constraints_input",
+    "acceptance_input",
+    "blackboard_compact"
+  ],
+  "output": {
+    "kind": "markdown",
+    "filename_stem": "ios_logic_builder_logic_summary",
+    "min_bytes": 300
+  }
+}

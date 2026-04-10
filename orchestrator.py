@@ -9,7 +9,9 @@ import argparse
 import base64
 import json
 import os
+import plistlib
 import re
+import shutil
 import subprocess
 import time
 from dataclasses import dataclass
@@ -18,12 +20,21 @@ from pathlib import Path
 from typing import Any
 
 from harness.company import load_manifest, load_providers, load_roles
-from harness.providers import run_claude_api, run_cli
+from harness.ops.artifacts import build_artifact_snapshot, read_artifact_excerpt
+from harness.ops.json_parse import _extract_json_candidates, parse_json_output
+from harness.ops.session import (
+    decode_jwt_payload,
+    describe_session,
+    parse_iso_timestamp,
+    parse_unix_timestamp,
+)
+from harness.providers import run_claude_api, run_claude_cli, run_cli
 from harness.runtime_env import load_project_env
 from master_router import TaskType, dispatch, read_blackboard
 
 FACTORY_DIR = Path(__file__).parent.resolve()
 WORKSPACE_DIR = FACTORY_DIR / "workspace"
+AGENTS_DIR = FACTORY_DIR / "agents"
 CONTEXT_DIR = FACTORY_DIR / "context_harness"
 REPORTS_DIR = CONTEXT_DIR / "reports"
 HANDOFFS_DIR = CONTEXT_DIR / "handoffs"
@@ -80,6 +91,13 @@ def load_json(path: Path, default: Any) -> Any:
         return default
 
 
+def load_json_from_string(raw: str, default: Any | None = None) -> Any:
+    try:
+        return json.loads(raw)
+    except Exception:
+        return {} if default is None else default
+
+
 def save_json(path: Path, payload: Any):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -90,10 +108,24 @@ def save_text(path: Path, text: str):
     path.write_text(text.strip() + "\n", encoding="utf-8")
 
 
+LEDGER_SCHEMA_VERSION = 2
+
+
 def append_ledger(entry: dict[str, Any]):
+    """Append a structured entry to the handoff ledger.
+
+    Every entry is stamped with ``ts`` (ISO8601 UTC) and ``schema_version``
+    if the caller didn't supply them, so downstream replay tooling has a
+    stable minimum contract regardless of the call site.
+    """
+    enriched: dict[str, Any] = {
+        "ts": datetime.now(tz=UTC).isoformat(timespec="seconds"),
+        "schema_version": LEDGER_SCHEMA_VERSION,
+        **entry,
+    }
     HANDOFF_LEDGER_FILE.parent.mkdir(parents=True, exist_ok=True)
     with HANDOFF_LEDGER_FILE.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        handle.write(json.dumps(enriched, ensure_ascii=False) + "\n")
 
 
 def append_operator_journal(message: str):
@@ -114,6 +146,11 @@ def git(*args: str, check: bool = True, cwd: Path | None = None) -> subprocess.C
     )
 
 
+def git_output(*args: str, cwd: Path | None = None) -> str:
+    proc = git(*args, cwd=cwd)
+    return proc.stdout.strip()
+
+
 def run_shell(command: list[str], *, cwd: Path | None = None, timeout: int = 12) -> subprocess.CompletedProcess[str]:
     try:
         return subprocess.run(
@@ -130,46 +167,6 @@ def run_shell(command: list[str], *, cwd: Path | None = None, timeout: int = 12)
 
 def status_from_checks(*flags: bool) -> str:
     return "ready" if all(flags) else "blocked"
-
-
-def parse_iso_timestamp(value: str | None) -> datetime | None:
-    if not value:
-        return None
-    try:
-        normalized = value.replace("Z", "+00:00")
-        return datetime.fromisoformat(normalized)
-    except ValueError:
-        return None
-
-
-def parse_unix_timestamp(value: Any) -> datetime | None:
-    try:
-        return datetime.fromtimestamp(int(value), tz=UTC)
-    except Exception:
-        return None
-
-
-def decode_jwt_payload(token: str | None) -> dict[str, Any]:
-    if not token or "." not in token:
-        return {}
-    try:
-        middle = token.split(".")[1]
-        padding = "=" * (-len(middle) % 4)
-        raw = base64.urlsafe_b64decode(middle + padding)
-        return json.loads(raw.decode("utf-8"))
-    except Exception:
-        return {}
-
-
-def describe_session(deadline: datetime | None) -> tuple[str, str]:
-    if not deadline:
-        return "blocked", "no expiry metadata available"
-    now = datetime.now(tz=UTC)
-    if deadline <= now:
-        return "blocked", f"expired at {deadline.isoformat()}"
-    remaining = deadline - now
-    minutes = int(remaining.total_seconds() // 60)
-    return "ready", f"expires at {deadline.isoformat()} ({minutes} min remaining)"
 
 
 def write_doctor_summary(report_payload: dict[str, Any]) -> Path:
@@ -215,8 +212,10 @@ def provider_smoke_report() -> Path:
     payload: dict[str, Any] = {}
 
     claude_model = ROLES["delivery_lead"].model or PROVIDERS["claude_api"].models.get("default", "claude-sonnet-4")
+    claude_cli_enabled = os.environ.get("FACTORY_CLAUDE_USE_CLI", "").strip().lower() in {"1", "true", "yes", "on"}
     try:
-        claude_result = run_claude_api(
+        claude_runner = run_claude_cli if claude_cli_enabled else run_claude_api
+        claude_result = claude_runner(
             smoke_prompt,
             model=claude_model,
             system_prompt="Return exactly OK.",
@@ -228,9 +227,16 @@ def provider_smoke_report() -> Path:
             "model": claude_model,
             "output": claude_result.output.strip()[:120],
             "error": claude_result.error[:240],
+            "transport": "cli" if claude_cli_enabled else "api",
         }
     except Exception as exc:
-        payload["claude_api"] = {"success": False, "model": claude_model, "output": "", "error": str(exc)[:240]}
+        payload["claude_api"] = {
+            "success": False,
+            "model": claude_model,
+            "output": "",
+            "error": str(exc)[:240],
+            "transport": "cli" if claude_cli_enabled else "api",
+        }
 
     codex_model = ROLES["ios_ui_builder"].model or PROVIDERS["codex_cli"].models.get("default", "gpt-5.4")
     try:
@@ -272,6 +278,7 @@ def provider_smoke_report() -> Path:
 
 def run_xcode_runtime_probe(repo: Path) -> Path:
     report_path = REPORTS_DIR / "xcode_runtime_probe.json"
+    summary_path = REPORTS_DIR / "xcode_runtime_probe.md"
     host_baseline = load_json(HOST_RUNTIME_BASELINE_FILE, {})
     workspace = repo / "workspace"
     ios_dir = workspace / "ios"
@@ -298,17 +305,181 @@ def run_xcode_runtime_probe(repo: Path) -> Path:
         ),
     }
 
+    scheme = None
     if xcworkspace:
         build_list = run_shell(["xcodebuild", "-list", "-workspace", str(xcworkspace)], cwd=ios_dir, timeout=30)
         payload["project_discovery"] = {"ok": build_list.returncode == 0, "detail": (build_list.stdout or build_list.stderr).strip()[:1000]}
+        if build_list.returncode == 0:
+            for line in build_list.stdout.splitlines():
+                candidate = line.strip()
+                if candidate and candidate not in {"Information about workspace", "Schemes:"} and not candidate.endswith(":"):
+                    scheme = candidate
+                    break
     elif xcodeproj:
         build_list = run_shell(["xcodebuild", "-list", "-project", str(xcodeproj)], cwd=ios_dir, timeout=30)
         payload["project_discovery"] = {"ok": build_list.returncode == 0, "detail": (build_list.stdout or build_list.stderr).strip()[:1000]}
+        if build_list.returncode == 0:
+            in_schemes = False
+            for line in build_list.stdout.splitlines():
+                stripped = line.strip()
+                if stripped == "Schemes:":
+                    in_schemes = True
+                    continue
+                if in_schemes and stripped:
+                    scheme = stripped
+                    break
     else:
         payload["project_discovery"] = {
             "ok": False,
             "detail": "No native iOS project detected under workspace/ios. Current evaluation remains Expo web plus visual QA.",
         }
+
+    if not scheme:
+        scheme = "MemoryMap" if xcodeproj and xcodeproj.stem == "MemoryMap" else (xcodeproj.stem if xcodeproj else None)
+    payload["scheme"] = scheme
+
+    build_log = REPORTS_DIR / "xcode_build.log"
+    screenshot_path = REPORTS_DIR / "xcode_runtime_screenshot.png"
+    derived_data = repo / ".deriveddata" / "evaluation"
+    destination_name = None
+    device_id = None
+    simulator_status = "unavailable"
+
+    if simctl.returncode == 0:
+        for line in simctl.stdout.splitlines():
+            if "(Booted)" in line and "iPhone" in line:
+                match = re.search(r"^\s*(.+?) \(([0-9A-F-]+)\) \((Booted|Shutdown)\)\s*$", line)
+                if match:
+                    destination_name = match.group(1).strip()
+                    device_id = match.group(2).strip()
+                    simulator_status = "booted"
+                    break
+        if not device_id:
+            for line in simctl.stdout.splitlines():
+                if "iPhone" not in line:
+                    continue
+                match = re.search(r"^\s*(.+?) \(([0-9A-F-]+)\) \((Booted|Shutdown)\)\s*$", line)
+                if match:
+                    destination_name = match.group(1).strip()
+                    device_id = match.group(2).strip()
+                    simulator_status = match.group(3).lower()
+                    break
+
+    build_target: list[str] = []
+    if xcworkspace:
+        build_target = ["-workspace", str(xcworkspace)]
+    elif xcodeproj:
+        build_target = ["-project", str(xcodeproj)]
+
+    build_command: list[str] = []
+    if build_target and scheme:
+        build_command = [
+            "xcodebuild",
+            *build_target,
+            "-scheme",
+            scheme,
+            "-derivedDataPath",
+            str(derived_data),
+        ]
+        if destination_name:
+            build_command.extend(["-destination", f"platform=iOS Simulator,name={destination_name}"])
+        else:
+            build_command.extend(["-destination", "generic/platform=iOS Simulator"])
+        build_command.append("build")
+
+    if build_command:
+        build_proc = subprocess.run(
+            build_command,
+            cwd=str(ios_dir),
+            capture_output=True,
+            text=True,
+            env=os.environ.copy(),
+        )
+        build_text = "\n".join(part for part in [build_proc.stdout, build_proc.stderr] if part).strip()
+        save_text(build_log, build_text or "[no build output]")
+        payload["build"] = {
+            "ok": build_proc.returncode == 0,
+            "returncode": build_proc.returncode,
+            "command": " ".join(build_command),
+            "log_path": str(build_log),
+            "detail": build_text[-1500:] if build_text else "",
+        }
+        payload["build_output"] = "BUILD SUCCEEDED" if build_proc.returncode == 0 else "BUILD FAILED"
+    else:
+        payload["build"] = {
+            "ok": False,
+            "returncode": None,
+            "command": "",
+            "log_path": None,
+            "detail": "No project/scheme available for native build.",
+        }
+        payload["build_output"] = "NONE"
+
+    app_binary = None
+    if derived_data.exists():
+        candidates = sorted(derived_data.glob("Build/Products/Debug-iphonesimulator/*.app"))
+        if candidates:
+            app_binary = candidates[0]
+
+    payload["app_binary"] = str(app_binary) if app_binary else None
+    payload["simulator_status"] = simulator_status
+    payload["runtime_verification"] = {
+        "booted_device": destination_name,
+        "device_id": device_id,
+        "install_ok": False,
+        "launch_ok": False,
+        "screenshot": None,
+        "bundle_id": None,
+    }
+
+    if app_binary and device_id:
+        try:
+            info = plistlib.loads((app_binary / "Info.plist").read_bytes())
+            bundle_id = info.get("CFBundleIdentifier")
+        except Exception:
+            bundle_id = None
+        payload["runtime_verification"]["bundle_id"] = bundle_id
+
+        boot_proc = run_shell(["xcrun", "simctl", "boot", device_id], timeout=30)
+        bootstatus_proc = run_shell(["xcrun", "simctl", "bootstatus", device_id, "-b"], timeout=60)
+        if boot_proc.returncode == 0 or "Unable to boot device in current state: Booted" in (boot_proc.stderr or ""):
+            install_proc = run_shell(["xcrun", "simctl", "install", device_id, str(app_binary)], timeout=60)
+            payload["runtime_verification"]["install_ok"] = install_proc.returncode == 0
+            if bundle_id and install_proc.returncode == 0 and bootstatus_proc.returncode == 0:
+                launch_proc = run_shell(
+                    ["xcrun", "simctl", "launch", "--terminate-running-process", device_id, bundle_id],
+                    timeout=45,
+                )
+                payload["runtime_verification"]["launch_ok"] = launch_proc.returncode == 0
+                if launch_proc.returncode == 0:
+                    time.sleep(2)
+                    screenshot_proc = run_shell(["xcrun", "simctl", "io", device_id, "screenshot", str(screenshot_path)], timeout=30)
+                    if screenshot_proc.returncode == 0 and screenshot_path.exists():
+                        payload["runtime_verification"]["screenshot"] = str(screenshot_path)
+        payload["runtime_verification"]["bootstatus_detail"] = (bootstatus_proc.stdout or bootstatus_proc.stderr).strip()[:500]
+
+    payload["screenshot"] = payload["runtime_verification"]["screenshot"]
+
+    summary_lines = [
+        "# Xcode Runtime Probe",
+        "",
+        f"- xcodeproj: {payload.get('xcodeproj') or 'NONE'}",
+        f"- scheme: {payload.get('scheme') or 'NONE'}",
+        f"- build_output: {payload.get('build_output')}",
+        f"- build_log: {payload.get('build', {}).get('log_path') or 'NONE'}",
+        f"- simulator_status: {payload.get('simulator_status')}",
+        f"- booted_device: {payload.get('runtime_verification', {}).get('booted_device') or 'NONE'}",
+        f"- app_binary: {payload.get('app_binary') or 'NOT FOUND'}",
+        f"- bundle_id: {payload.get('runtime_verification', {}).get('bundle_id') or 'NONE'}",
+        f"- install_ok: {payload.get('runtime_verification', {}).get('install_ok')}",
+        f"- launch_ok: {payload.get('runtime_verification', {}).get('launch_ok')}",
+        f"- screenshot: {payload.get('screenshot') or 'NONE'}",
+        "",
+        "## Evidence",
+        "",
+        payload.get("build", {}).get("detail") or "No build detail captured.",
+    ]
+    save_text(summary_path, "\n".join(summary_lines))
 
     save_json(report_path, payload)
     append_ledger({"type": "xcode_runtime_probe", "report": str(report_path)})
@@ -316,10 +487,68 @@ def run_xcode_runtime_probe(repo: Path) -> Path:
     return report_path
 
 
+def run_xcode_test_probe(repo: Path) -> Path:
+    report_path = REPORTS_DIR / "xcode_test_probe.json"
+    workspace = repo / "workspace"
+    ios_dir = workspace / "ios"
+    xcodeproj = next(iter(sorted(ios_dir.glob("*.xcodeproj"))), None) if ios_dir.exists() else None
+
+    payload: dict[str, Any] = {
+        "workspace_root": str(workspace),
+        "xcodeproj": str(xcodeproj) if xcodeproj else None,
+        "scheme": "MemoryMap" if xcodeproj else None,
+        "ok": False,
+        "returncode": None,
+        "command": None,
+        "log_path": None,
+        "detail": "",
+    }
+
+    if not xcodeproj:
+        payload["detail"] = "No xcodeproj available for test execution."
+        save_json(report_path, payload)
+        return report_path
+
+    log_path = REPORTS_DIR / "xcode_test.log"
+    command = [
+        "xcodebuild",
+        "-project",
+        str(xcodeproj),
+        "-scheme",
+        "MemoryMap",
+        "-destination",
+        "platform=iOS Simulator,name=iPhone 17 Pro",
+        "test",
+    ]
+    proc = subprocess.run(
+        command,
+        cwd=str(ios_dir),
+        capture_output=True,
+        text=True,
+        env=os.environ.copy(),
+    )
+    output = "\n".join(part for part in [proc.stdout, proc.stderr] if part).strip()
+    save_text(log_path, output or "[no test output]")
+    payload.update(
+        {
+            "ok": proc.returncode == 0,
+            "returncode": proc.returncode,
+            "command": " ".join(command),
+            "log_path": str(log_path),
+            "detail": output[-1500:] if output else "",
+        }
+    )
+    save_json(report_path, payload)
+    append_ledger({"type": "xcode_test_probe", "report": str(report_path), "ok": payload["ok"]})
+    append_operator_journal(f"Xcode test probe wrote {report_path.name} with ok={payload['ok']}")
+    return report_path
+
+
 def run_preflight_doctor(*, quick: bool = False) -> Path:
     ensure_dirs()
     loaded_env = sorted(load_runtime_env().keys())
     host_baseline = load_json(HOST_RUNTIME_BASELINE_FILE, {})
+    claude_cli_enabled = os.environ.get("FACTORY_CLAUDE_USE_CLI", "").strip().lower() in {"1", "true", "yes", "on"}
     checks = []
 
     def add_check(name: str, ok: bool, detail: str):
@@ -341,10 +570,10 @@ def run_preflight_doctor(*, quick: bool = False) -> Path:
 
     gemini = run_shell(["gemini", "--version"])
     gemini_host_ok = bool(host_baseline.get("gemini_version", {}).get("ok"))
-    gemini_ok = gemini.returncode == 0 or gemini_host_ok
+    gemini_ok = gemini.returncode == 0
     gemini_detail = (gemini.stdout or gemini.stderr).strip()[:200]
-    if gemini_host_ok and gemini.returncode != 0:
-        gemini_detail = f"sandbox false negative; host ok: {host_baseline['gemini_version'].get('detail', '')[:120]}"
+    if not gemini_ok and gemini_host_ok:
+        gemini_detail = f"host baseline only; current runtime probe failed: {host_baseline['gemini_version'].get('detail', '')[:120]}"
     add_check("gemini_cli", gemini_ok, gemini_detail)
 
     claude_sdk = run_shell([str(FACTORY_DIR / "venv" / "bin" / "python"), "-c", "import claude_agent_sdk; print('ok')"])
@@ -354,7 +583,13 @@ def run_preflight_doctor(*, quick: bool = False) -> Path:
     add_check("playwright_python", playwright.returncode == 0, (playwright.stdout or playwright.stderr).strip()[:200])
 
     anthropic_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
-    add_check("anthropic_api_key", anthropic_key, "visible in current process" if anthropic_key else "not visible in current process")
+    claude_auth_status = run_shell(["claude", "auth", "status"])
+    claude_auth_payload = load_json_from_string(claude_auth_status.stdout) if claude_auth_status.returncode == 0 else {}
+    claude_cli_logged_in = bool(claude_auth_payload.get("loggedIn"))
+    if claude_cli_enabled:
+        add_check("claude_cli_auth", claude_cli_logged_in, "Claude CLI logged in" if claude_cli_logged_in else "Claude CLI not logged in")
+    else:
+        add_check("anthropic_api_key", anthropic_key, "visible in current process" if anthropic_key else "not visible in current process")
 
     mcp_project = (FACTORY_DIR / ".mcp.json").exists()
     add_check("project_mcp_config", mcp_project, str(FACTORY_DIR / ".mcp.json"))
@@ -386,8 +621,12 @@ def run_preflight_doctor(*, quick: bool = False) -> Path:
     codex_access_payload = decode_jwt_payload(codex_auth_payload.get("tokens", {}).get("access_token"))
     codex_session_status, codex_session_detail = describe_session(parse_unix_timestamp(codex_access_payload.get("exp")))
     gemini_session_status, gemini_session_detail = describe_session(parse_unix_timestamp(gemini_auth_payload.get("expiry_date")))
-    claude_session_status = "ready" if anthropic_key else "blocked"
-    claude_session_detail = "ANTHROPIC_API_KEY present" if anthropic_key else "ANTHROPIC_API_KEY missing"
+    if claude_cli_enabled:
+        claude_session_status = "ready" if claude_cli_logged_in else "blocked"
+        claude_session_detail = "Claude CLI login present" if claude_cli_logged_in else "Claude CLI login missing"
+    else:
+        claude_session_status = "ready" if anthropic_key else "blocked"
+        claude_session_detail = "ANTHROPIC_API_KEY present" if anthropic_key else "ANTHROPIC_API_KEY missing"
 
     codex_binary_ready = status_from_checks(codex.returncode == 0)
     gemini_binary_ready = status_from_checks(gemini_ok)
@@ -396,7 +635,7 @@ def run_preflight_doctor(*, quick: bool = False) -> Path:
 
     codex_auth_ready = status_from_checks(codex_auth)
     gemini_auth_ready = status_from_checks(gemini_auth)
-    claude_auth_ready = status_from_checks(anthropic_key)
+    claude_auth_ready = status_from_checks(claude_cli_logged_in if claude_cli_enabled else anthropic_key)
 
     codex_local_ready = status_from_checks(codex_binary_ready == "ready", codex_auth_ready == "ready", codex_session_status == "ready")
     gemini_local_ready = status_from_checks(gemini_ok, gemini_auth_ready == "ready")
@@ -420,7 +659,7 @@ def run_preflight_doctor(*, quick: bool = False) -> Path:
             "runtime": "claude-agent-sdk ok" if claude_sdk.returncode == 0 else "claude-agent-sdk unavailable",
             "mcp": "claude mcp runtime ok" if claude_mcp.returncode == 0 else "claude mcp runtime unavailable",
             "lane_impact": "planning, architecture, review, operator",
-            "notes": f"Session={claude_session_detail}. Smoke={'skipped' if quick else ('ok' if smoke_payload.get('claude_api', {}).get('success') else 'failed')}. Claude API path is usable even if Claude CLI MCP runtime is not.",
+            "notes": f"Session={claude_session_detail}. Smoke={'skipped' if quick else ('ok' if smoke_payload.get('claude_api', {}).get('success') else 'failed')}. Active transport={'claude-cli' if claude_cli_enabled else 'claude-api'}.",
         },
         "codex_cli": {
             "status": codex_ready,
@@ -441,10 +680,10 @@ def run_preflight_doctor(*, quick: bool = False) -> Path:
             "session_ready": gemini_session_status,
             "local_readiness": gemini_local_ready,
             "live_connectivity": gemini_live,
-            "runtime": (gemini.stdout or gemini.stderr).strip()[:120] if gemini.returncode == 0 else f"host baseline ok: {host_baseline.get('gemini_version', {}).get('detail', 'gemini CLI unavailable or slow')[:120]}",
+            "runtime": (gemini.stdout or gemini.stderr).strip()[:120] if gemini.returncode == 0 else f"current runtime probe failed; last host baseline: {host_baseline.get('gemini_version', {}).get('detail', 'unknown')[:120]}",
             "mcp": "project .mcp.json available" if mcp_project else "missing project .mcp.json",
             "lane_impact": "product research, visual QA, multimodal critique",
-            "notes": f"Session={gemini_session_detail}. Smoke={'skipped' if quick else ('ok' if smoke_payload.get('gemini_cli', {}).get('success') else 'failed')}. Host baseline={'ok' if gemini_host_ok else 'missing'}.",
+            "notes": f"Session={gemini_session_detail}. Smoke={'skipped' if quick else ('ok' if smoke_payload.get('gemini_cli', {}).get('success') else 'failed')}. Host baseline={'ok' if gemini_host_ok else 'missing'}, but readiness now requires the current runtime probe to succeed.",
         },
         "xcode_mcp": {
             "status": xcode_mcp_ready,
@@ -473,11 +712,12 @@ def run_preflight_doctor(*, quick: bool = False) -> Path:
             ],
         },
         "product": {
-            "status": status_from_checks(gemini_auth),
+            "status": status_from_checks(gemini_auth, gemini_ok),
             "blockers": [
                 blocker
                 for blocker, ok in {
                     "gemini_auth_missing": gemini_auth,
+                    "gemini_cli_unavailable": gemini_ok,
                     "gemini_live_probe_failed": quick or gemini_live == "ready",
                 }.items()
                 if not ok
@@ -576,6 +816,12 @@ def evaluate_fork_policy(brief: str) -> ForkDecision:
 
 def ensure_integration_worktree() -> Path:
     if INTEGRATION_WORKTREE.exists():
+        factory_head = git_output("rev-parse", "HEAD", cwd=FACTORY_DIR)
+        integration_head = git_output("rev-parse", "HEAD", cwd=INTEGRATION_WORKTREE)
+        integration_clean = not git("status", "--short", cwd=INTEGRATION_WORKTREE).stdout.strip()
+        if integration_head != factory_head and integration_clean:
+            git("worktree", "remove", str(INTEGRATION_WORKTREE), cwd=FACTORY_DIR)
+            git("worktree", "add", "-B", INTEGRATION_BRANCH, str(INTEGRATION_WORKTREE), "HEAD", cwd=FACTORY_DIR)
         return INTEGRATION_WORKTREE
     git("worktree", "add", "-B", INTEGRATION_BRANCH, str(INTEGRATION_WORKTREE), "HEAD")
     return INTEGRATION_WORKTREE
@@ -585,9 +831,45 @@ def ensure_lane_worktree(role_name: str, lane_tag: str, start_point: str) -> tup
     worktree_dir = WORKTREES_DIR / f"{role_name}-{lane_tag}"
     branch_name = f"harness/{role_name}-{lane_tag}"
     if worktree_dir.exists():
+        sync_workspace_overlay(FACTORY_DIR, worktree_dir)
         return worktree_dir, branch_name
     git("worktree", "add", "-B", branch_name, str(worktree_dir), start_point)
+    sync_workspace_overlay(FACTORY_DIR, worktree_dir)
     return worktree_dir, branch_name
+
+
+def sync_workspace_overlay(source_repo: Path, target_repo: Path):
+    source_workspace = source_repo / "workspace"
+    target_workspace = target_repo / "workspace"
+    if not source_workspace.exists():
+        return
+
+    target_workspace.mkdir(parents=True, exist_ok=True)
+    for item in source_workspace.iterdir():
+        if item.name == "node_modules":
+            continue
+        destination = target_workspace / item.name
+        if item.is_dir():
+            shutil.copytree(item, destination, dirs_exist_ok=True)
+        else:
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(item, destination)
+
+
+def find_worktree_for_branch(branch_name: str) -> Path | None:
+    listing = git("worktree", "list", "--porcelain", cwd=FACTORY_DIR).stdout.splitlines()
+    current_worktree: Path | None = None
+    current_branch: str | None = None
+    for line in listing:
+        if line.startswith("worktree "):
+            current_worktree = Path(line.split(" ", 1)[1])
+            current_branch = None
+            continue
+        if line.startswith("branch "):
+            current_branch = line.split(" ", 1)[1].removeprefix("refs/heads/")
+            if current_worktree and current_branch == branch_name:
+                return current_worktree
+    return None
 
 
 def current_target_repo() -> Path:
@@ -599,46 +881,38 @@ def current_target_workspace() -> Path:
     return repo / "workspace"
 
 
-def read_artifact_excerpt(path: Path, max_chars: int = 1600) -> str:
-    try:
-        if path.suffix.lower() == ".json":
-            payload = json.loads(path.read_text(encoding="utf-8"))
-            text = json.dumps(payload, ensure_ascii=False, indent=2)
-        else:
-            text = path.read_text(encoding="utf-8")
-    except Exception as exc:
-        return f"[unreadable artifact: {exc}]"
-
-    compact = text.strip()
-    if len(compact) > max_chars:
-        compact = compact[:max_chars].rstrip() + "\n...[truncated]"
-    return compact
-
-
-def build_artifact_snapshot(artifacts: dict[str, Path]) -> str:
-    sections: list[str] = []
-    for name, path in artifacts.items():
-        if not path.exists():
-            sections.append(f"## {name}\nPath: {path}\n[missing]")
-            continue
-        if path.suffix.lower() not in {".md", ".txt", ".json"}:
-            sections.append(f"## {name}\nPath: {path}\n[non-text artifact; use path only]")
-            continue
-        sections.append(f"## {name}\nPath: {path}\n{read_artifact_excerpt(path)}")
-    return "\n\n".join(sections)
-
-
 def build_role_prompt(
     role_name: str,
     brief: str,
     artifacts: dict[str, Path],
     json_schema: dict[str, Any] | None = None,
+    task_type: TaskType | None = None,
 ) -> str:
     manifest = load_json(TEAM_MANIFEST_FILE, {})
     role = next((item for item in manifest.get("roles", []) if item.get("id") == role_name), {})
     responsibilities = "\n".join(f"- {item}" for item in role.get("responsibilities", []))
-    artifact_lines = "\n".join(f"- {name}: {path}" for name, path in artifacts.items())
-    artifact_snapshot = build_artifact_snapshot(artifacts)
+    provider = role.get("provider")
+    relevant_artifacts = artifacts
+    blackboard_chars = 1800
+    artifact_chars = 1600
+    if provider == "codex_cli" and task_type in {TaskType.IOS_IMPLEMENTATION, TaskType.BUG_FIX, TaskType.UI_CODING, TaskType.BUSINESS_LOGIC}:
+        preferred_names = [
+            "architecture_report",
+            "planning_report",
+            "product_report",
+            "ui_ux_screen_contract",
+            "constraints_input",
+            "acceptance_input",
+            "design_input",
+            "hig_guardrails",
+            "native_ios_strategy",
+            "blackboard_compact",
+        ]
+        relevant_artifacts = {name: artifacts[name] for name in preferred_names if name in artifacts}
+        blackboard_chars = 600
+        artifact_chars = 450
+    artifact_lines = "\n".join(f"- {name}: {path}" for name, path in relevant_artifacts.items())
+    artifact_snapshot = build_artifact_snapshot(relevant_artifacts, max_chars_per_artifact=artifact_chars)
     schema_section = ""
     if json_schema:
         schema_section = f"""
@@ -658,7 +932,7 @@ CURRENT BRIEF:
 {brief}
 
 RECENT BLACKBOARD:
-{read_blackboard(1800)}
+{read_blackboard(blackboard_chars)}
 
 AVAILABLE ARTIFACTS:
 {artifact_lines or "- none"}
@@ -667,6 +941,52 @@ ARTIFACT CONTENT SNAPSHOTS:
 {artifact_snapshot or "- none"}
 {schema_section}
 """
+
+
+_ROLE_OUTPUT_ERROR_PATTERNS = (
+    "credit balance is too low",
+    "out of extra usage",
+    "rate limit",
+    "quota exceeded",
+    "insufficient credit",
+    "service unavailable",
+    "too many requests",
+    "usage limit reached",
+    "resets 9pm",
+    "resets at",
+)
+
+
+def validate_role_output(
+    role_name: str,
+    task_type: TaskType,
+    text: str,
+    json_schema: dict | None,
+) -> None:
+    """Fail fast if a role's response is empty, too short, or a provider error payload.
+
+    Guards against the 2026-04-09 class of incident where credit-exhaustion
+    strings silently overwrote architecture reports because the CLI returned
+    success=True with an error body.
+    """
+    stripped = (text or "").strip()
+    if not stripped:
+        raise RuntimeError(
+            f"{role_name} produced empty output for {task_type.value}"
+        )
+    lowered = stripped.lower()
+    for pattern in _ROLE_OUTPUT_ERROR_PATTERNS:
+        if pattern in lowered:
+            raise RuntimeError(
+                f"{role_name} returned provider error payload for "
+                f"{task_type.value}: {stripped[:200]!r}"
+            )
+    min_length = 64 if json_schema else 200
+    if len(stripped) < min_length:
+        raise RuntimeError(
+            f"{role_name} output too short ({len(stripped)} chars, "
+            f"min {min_length}) for {task_type.value}: {stripped[:200]!r}"
+        )
 
 
 def run_role(
@@ -682,10 +1002,16 @@ def run_role(
     timeout: int | None = None,
     allow_fallback_roles: bool = True,
 ) -> Path:
-    prompt = build_role_prompt(role_name, brief, artifacts, json_schema)
+    import hashlib
+
+    prompt = build_role_prompt(role_name, brief, artifacts, json_schema, task_type)
     extension = ".json" if json_schema else ".md"
     stem = report_stem or f"{role_name}_{task_type.value}"
     output_path = REPORTS_DIR / f"{stem}{extension}"
+    role_config = ROLES.get(role_name)
+    model_name = role_config.model if role_config else None
+    prompt_sha = hashlib.sha256(prompt.encode("utf-8")).hexdigest()[:16]
+    dispatch_start = time.monotonic()
     result = dispatch(
         task_type,
         prompt,
@@ -696,8 +1022,38 @@ def run_role(
         preferred_role=role_name,
         allow_fallback_roles=allow_fallback_roles,
     )
+    duration_ms = int((time.monotonic() - dispatch_start) * 1000)
+
+    def _ledger_base(health: str, extra: dict[str, Any] | None = None) -> dict[str, Any]:
+        base: dict[str, Any] = {
+            "type": "role_output",
+            "role": role_name,
+            "task_type": task_type.value,
+            "model": model_name,
+            "duration_ms": duration_ms,
+            "prompt_sha256_16": prompt_sha,
+            "output_bytes": len(result.output or ""),
+            "health": health,
+            "cwd": str(cwd) if cwd else None,
+        }
+        if extra:
+            base.update(extra)
+        return base
+
     if not result.success:
-        raise RuntimeError(f"{role_name} failed for {task_type.value}: {result.output[:200]}")
+        failure_path = REPORTS_DIR / f"{stem}.error.txt"
+        failure_text = result.output.strip() or f"{role_name} failed for {task_type.value} with no stdout/stderr payload."
+        save_text(failure_path, failure_text)
+        append_ledger(_ledger_base("dispatch_failure", {"report": str(failure_path), "error": (result.error or failure_text)[:240]}))
+        raise RuntimeError(f"{role_name} failed for {task_type.value}: {failure_text[:200]}")
+
+    try:
+        validate_role_output(role_name, task_type, result.output, json_schema)
+    except RuntimeError as exc:
+        unhealthy_path = REPORTS_DIR / f"{stem}.unhealthy.txt"
+        save_text(unhealthy_path, result.output or "[empty]")
+        append_ledger(_ledger_base("unhealthy_output", {"report": str(unhealthy_path), "reason": str(exc)[:240]}))
+        raise
 
     if json_schema:
         try:
@@ -705,6 +1061,7 @@ def run_role(
         except Exception as exc:
             raw_output_path = REPORTS_DIR / f"{stem}.raw.txt"
             save_text(raw_output_path, result.output)
+            append_ledger(_ledger_base("json_parse_failure", {"report": str(raw_output_path), "error": str(exc)[:240]}))
             raise RuntimeError(
                 f"{role_name} returned invalid JSON for {task_type.value}. "
                 f"Raw output saved to {raw_output_path}. Parser error: {exc}"
@@ -712,61 +1069,11 @@ def run_role(
         save_json(output_path, parsed)
     else:
         save_text(output_path, result.output)
-    append_ledger(
-        {
-            "type": "role_output",
-            "role": role_name,
-            "task_type": task_type.value,
-            "report": str(output_path),
-            "cwd": str(cwd) if cwd else None,
-        }
-    )
+
+    output_sha = hashlib.sha256((result.output or "").encode("utf-8")).hexdigest()[:16]
+    append_ledger(_ledger_base("ok", {"report": str(output_path), "output_sha256_16": output_sha}))
     append_operator_journal(f"{role_name} completed {task_type.value} -> {output_path.name}")
     return output_path
-
-
-def _extract_json_candidates(text: str) -> list[str]:
-    stripped = text.strip()
-    candidates: list[str] = []
-    if stripped:
-        candidates.append(stripped)
-
-    if stripped.startswith("```"):
-        unfenced = re.sub(r"^```(?:json)?\s*", "", stripped)
-        unfenced = re.sub(r"\s*```$", "", unfenced)
-        if unfenced and unfenced not in candidates:
-            candidates.append(unfenced.strip())
-
-    decoder = json.JSONDecoder()
-    for index, char in enumerate(stripped):
-        if char not in "[{":
-            continue
-        try:
-            obj, end = decoder.raw_decode(stripped[index:])
-        except json.JSONDecodeError:
-            continue
-        candidate = stripped[index:index + end]
-        if candidate not in candidates:
-            candidates.append(candidate)
-        if isinstance(obj, (dict, list)):
-            normalized = json.dumps(obj, ensure_ascii=False)
-            if normalized not in candidates:
-                candidates.append(normalized)
-    return candidates
-
-
-def parse_json_output(text: str) -> Any:
-    errors: list[str] = []
-    for candidate in _extract_json_candidates(text):
-        try:
-            return json.loads(candidate)
-        except json.JSONDecodeError as exc:
-            errors.append(f"{exc.msg} at line {exc.lineno} column {exc.colno}")
-    raise json.JSONDecodeError(
-        "Could not recover valid JSON from model output",
-        text,
-        0,
-    )
 
 
 def write_state(update: dict[str, Any]):
@@ -781,6 +1088,7 @@ def collect_intake_artifacts() -> dict[str, Path]:
         "system_rules": CONTEXT_DIR / "00_system_rules.md",
         "native_ios_strategy": CONTEXT_DIR / "architecture" / "native_ios_strategy.md",
         "hig_guardrails": CONTEXT_DIR / "policies" / "ios_hig_guardrails.md",
+        "ui_ux_screen_contract": CONTEXT_DIR / "prd" / "ui_ux_screen_contract.md",
         "sprint_contract": CONTEXT_DIR / "sprint_contract.json",
         "idea_input": PRODUCT_INPUTS_DIR / "idea.md",
         "constraints_input": PRODUCT_INPUTS_DIR / "constraints.md",
@@ -871,6 +1179,22 @@ def get_lane_tasks(state: dict[str, Any], lane: str) -> list[str]:
     return [task for task in tasks if isinstance(task, str) and task.strip()]
 
 
+def report_is_fresh_for_current_plan(report_path: Path, state: dict[str, Any]) -> bool:
+    if not report_path.exists():
+        return False
+
+    report_mtime = report_path.stat().st_mtime
+    dependency_keys = ("planning_report", "architecture_report", "product_report")
+    for key in dependency_keys:
+        path_value = state.get(key)
+        if not path_value:
+            continue
+        dependency_path = Path(path_value)
+        if dependency_path.exists() and dependency_path.stat().st_mtime > report_mtime:
+            return False
+    return True
+
+
 def build_subtask_delivery_brief(base_brief: str, lane: str, task: str, state: dict[str, Any]) -> str:
     lane_brief = build_lane_delivery_brief(base_brief, lane, state)
     return "\n".join(
@@ -888,42 +1212,53 @@ def build_subtask_delivery_brief(base_brief: str, lane: str, task: str, state: d
     )
 
 
+_ROLE_CONTRACT_CACHE: dict[str, dict[str, Any]] = {}
+
+
+def load_role_contract(role_id: str) -> dict[str, Any]:
+    """Return the declarative contract for ``role_id`` or ``{}`` if absent.
+
+    Contracts live at ``agents/<dir>/contract.json`` and are the single
+    source of truth for per-role inputs, output kind, filename stem, and
+    JSON schema. The orchestrator consults them instead of hard-coding
+    per-role schemas so role definitions remain data, not code.
+    """
+    if role_id in _ROLE_CONTRACT_CACHE:
+        return _ROLE_CONTRACT_CACHE[role_id]
+    if AGENTS_DIR.exists():
+        for contract_path in sorted(AGENTS_DIR.glob("*/contract.json")):
+            data = load_json(contract_path, {})
+            if isinstance(data, dict) and data.get("role_id") == role_id:
+                _ROLE_CONTRACT_CACHE[role_id] = data
+                return data
+    _ROLE_CONTRACT_CACHE[role_id] = {}
+    return {}
+
+
+def role_output_schema(role_id: str) -> dict[str, Any] | None:
+    contract = load_role_contract(role_id)
+    schema = contract.get("output", {}).get("json_schema") if contract else None
+    return schema if isinstance(schema, dict) else None
+
+
 def product_schema() -> dict[str, Any]:
-    return {
-        "type": "object",
-        "properties": {
-            "summary": {"type": "string"},
-            "user_pains": {"type": "array", "items": {"type": "string"}},
-            "hig_risks": {"type": "array", "items": {"type": "string"}},
-            "design_references": {"type": "array", "items": {"type": "string"}},
-        },
-        "required": ["summary", "user_pains", "hig_risks", "design_references"],
-        "additionalProperties": False,
-    }
+    schema = role_output_schema("product_lead")
+    if schema:
+        return schema
+    raise RuntimeError(
+        "product_lead contract is missing agents/product-lead/contract.json "
+        "or its output.json_schema. Declarative contracts are required."
+    )
 
 
 def plan_schema() -> dict[str, Any]:
-    return {
-        "type": "object",
-        "properties": {
-            "execution_summary": {"type": "string"},
-            "milestones": {"type": "array", "items": {"type": "string"}},
-            "lane_ownership": {
-                "type": "object",
-                "properties": {
-                    "ui": {"type": "array", "items": {"type": "string"}},
-                    "logic": {"type": "array", "items": {"type": "string"}},
-                    "qa": {"type": "array", "items": {"type": "string"}}
-                },
-                "required": ["ui", "logic", "qa"],
-                "additionalProperties": False
-            },
-            "merge_strategy": {"type": "string"},
-            "feedback_loop": {"type": "string"}
-        },
-        "required": ["execution_summary", "milestones", "lane_ownership", "merge_strategy", "feedback_loop"],
-        "additionalProperties": False,
-    }
+    schema = role_output_schema("delivery_lead")
+    if schema:
+        return schema
+    raise RuntimeError(
+        "delivery_lead contract is missing agents/delivery-lead/contract.json "
+        "or its output.json_schema. Declarative contracts are required."
+    )
 
 
 def compact_blackboard(force: bool = False):
@@ -972,9 +1307,14 @@ def merge_branch_into_integration(branch_name: str) -> tuple[bool, str]:
 
 def merge_delivery_branches(branches: list[str], phase_label: str) -> Path:
     results = []
+    integration = ensure_integration_worktree()
     for branch_name in branches:
         success, detail = merge_branch_into_integration(branch_name)
         results.append({"branch": branch_name, "success": success, "detail": detail})
+        if success:
+            source_worktree = find_worktree_for_branch(branch_name)
+            if source_worktree:
+                sync_workspace_overlay(source_worktree, integration)
         if not success:
             break
 
@@ -990,6 +1330,17 @@ def extract_blockers(text: str) -> tuple[list[str], list[str]]:
     blockers: list[str] = []
     lanes: list[str] = []
 
+    verdict_match = re.search(r"verdict:\s*\*\*([^*]+)\*\*", lowered)
+    verdict = verdict_match.group(1).strip() if verdict_match else ""
+    positive_verdict_signals = ["unblocked", "approved", "pass", "provisionally unblocked", "conditionally approved"]
+    negative_verdict_signals = ["blocked", "hard block", "rejected", "qa_fail", "changes requested", "failed"]
+
+    if verdict:
+        if any(signal in verdict for signal in positive_verdict_signals):
+            blockers = []
+        elif any(signal in verdict for signal in negative_verdict_signals):
+            blockers.append("verdict_blocked")
+
     blocker_signals = [
         "qa_fail",
         "changes_requested",
@@ -1000,9 +1351,10 @@ def extract_blockers(text: str) -> tuple[list[str], list[str]]:
         "failed criteria",
         "overall verdict\nqa_fail",
     ]
-    for signal in blocker_signals:
-        if signal in lowered:
-            blockers.append(signal)
+    if not verdict or blockers:
+        for signal in blocker_signals:
+            if signal in lowered:
+                blockers.append(signal)
 
     ui_signals = ["safe area", "touch target", "layout", "screen", "visual", "dark mode", "hig", "spacing"]
     logic_signals = ["state", "store", "auth", "api", "logic", "network", "data flow"]
@@ -1015,7 +1367,13 @@ def extract_blockers(text: str) -> tuple[list[str], list[str]]:
     return blockers, list(dict.fromkeys(lanes))
 
 
-def summarize_evaluation(review_report: Path, hig_report: Path, visual_report: Path) -> EvaluationSummary:
+def summarize_evaluation(
+    review_report: Path,
+    hig_report: Path,
+    visual_report: Path,
+    *,
+    xcode_test_probe: Path | None = None,
+) -> EvaluationSummary:
     blockers: list[str] = []
     lanes: list[str] = []
     for path in (review_report, hig_report, visual_report):
@@ -1023,6 +1381,10 @@ def summarize_evaluation(review_report: Path, hig_report: Path, visual_report: P
         file_blockers, file_lanes = extract_blockers(content)
         blockers.extend([f"{path.name}:{item}" for item in file_blockers])
         lanes.extend(file_lanes)
+    if xcode_test_probe and xcode_test_probe.exists():
+        test_payload = load_json(xcode_test_probe, {})
+        if not test_payload.get("ok", False):
+            blockers.append(f"{xcode_test_probe.name}:test_failed")
     passed = not blockers
     if not lanes:
         lanes = ["ui", "logic"]
@@ -1180,6 +1542,11 @@ def run_delivery(brief: str, phase_tag: str = "delivery") -> Path:
         task_reports: list[str] = []
         if lane_tasks:
             for index, task in enumerate(lane_tasks, start=1):
+                existing_report = REPORTS_DIR / f"{role_name}_{phase_tag}_{lane}_{index}.md"
+                if report_is_fresh_for_current_plan(existing_report, state):
+                    task_reports.append(str(existing_report))
+                    append_operator_journal(f"Skipping completed subtask {role_name} {phase_tag} {lane} #{index}")
+                    continue
                 subtask_brief = build_subtask_delivery_brief(brief, lane, task, state)
                 report_path = run_role(
                     role_name,
@@ -1234,29 +1601,72 @@ def run_evaluation(brief: str, image_path: str | None = None) -> EvaluationSumma
     repo = current_target_repo()
     smoke_report = run_playwright_smoke(repo / "workspace")
     xcode_probe = run_xcode_runtime_probe(repo)
+    xcode_test_probe = run_xcode_test_probe(repo)
+    xcode_probe_summary = REPORTS_DIR / "xcode_runtime_probe.md"
+    xcode_visual_summary = REPORTS_DIR / "xcode_runtime_visual_summary.md"
+    probe_payload = load_json(xcode_probe, {})
+    visual_image = image_path or probe_payload.get("screenshot") or probe_payload.get("runtime_verification", {}).get("screenshot")
+    supplementary_artifacts = {}
+    for name, path in {
+        "runtime_release_closure_evidence": REPORTS_DIR / "runtime_release_closure_evidence.md",
+        "permission_flow_audit": REPORTS_DIR / "permission_flow_audit_20260408.md",
+        "accessibility_readiness": REPORTS_DIR / "accessibility_readiness_20260408.md",
+    }.items():
+        if path.exists():
+            supplementary_artifacts[name] = path
     review_report = run_role(
         "red_team_reviewer",
         TaskType.CODE_REVIEW,
         brief,
-        {"team_manifest": TEAM_MANIFEST_FILE, "playwright_smoke": smoke_report, "xcode_runtime_probe": xcode_probe},
+        {
+            "team_manifest": TEAM_MANIFEST_FILE,
+            "playwright_smoke": smoke_report,
+            "xcode_runtime_probe": xcode_probe,
+            "xcode_test_probe": xcode_test_probe,
+            "xcode_runtime_summary": xcode_probe_summary,
+            "xcode_runtime_visual_summary": xcode_visual_summary,
+            **supplementary_artifacts,
+        },
         cwd=repo,
     )
     hig_report = run_role(
         "hig_guardian",
         TaskType.HIG_AUDIT,
         brief,
-        {"review_report": review_report, "playwright_smoke": smoke_report, "xcode_runtime_probe": xcode_probe},
+        {
+            "review_report": review_report,
+            "playwright_smoke": smoke_report,
+            "xcode_runtime_probe": xcode_probe,
+            "xcode_test_probe": xcode_test_probe,
+            "xcode_runtime_summary": xcode_probe_summary,
+            "xcode_runtime_visual_summary": xcode_visual_summary,
+            **supplementary_artifacts,
+        },
         cwd=repo,
     )
     visual_report = run_role(
         "visual_qa",
         TaskType.VISUAL_QA,
         brief,
-        {"review_report": review_report, "hig_report": hig_report, "playwright_smoke": smoke_report, "xcode_runtime_probe": xcode_probe},
+        {
+            "review_report": review_report,
+            "hig_report": hig_report,
+            "playwright_smoke": smoke_report,
+            "xcode_runtime_probe": xcode_probe,
+            "xcode_test_probe": xcode_test_probe,
+            "xcode_runtime_summary": xcode_probe_summary,
+            "xcode_runtime_visual_summary": xcode_visual_summary,
+            **supplementary_artifacts,
+        },
         cwd=repo,
-        image_path=image_path,
+        image_path=visual_image,
     )
-    summary = summarize_evaluation(review_report, hig_report, visual_report)
+    summary = summarize_evaluation(
+        review_report,
+        hig_report,
+        visual_report,
+        xcode_test_probe=xcode_test_probe,
+    )
     save_json(
         REPORTS_DIR / "evaluation_summary.json",
         {
@@ -1265,6 +1675,7 @@ def run_evaluation(brief: str, image_path: str | None = None) -> EvaluationSumma
             "lanes": summary.lanes,
             "playwright_smoke": str(smoke_report),
             "xcode_runtime_probe": str(xcode_probe),
+            "xcode_test_probe": str(xcode_test_probe),
             "review_report": str(review_report),
             "hig_report": str(hig_report),
             "visual_report": str(visual_report),
@@ -1275,6 +1686,7 @@ def run_evaluation(brief: str, image_path: str | None = None) -> EvaluationSumma
             "evaluation_complete": True,
             "playwright_smoke": str(smoke_report),
             "xcode_runtime_probe": str(xcode_probe),
+            "xcode_test_probe": str(xcode_test_probe),
             "review_report": str(review_report),
             "hig_report": str(hig_report),
             "visual_report": str(visual_report),
@@ -1283,6 +1695,7 @@ def run_evaluation(brief: str, image_path: str | None = None) -> EvaluationSumma
     )
     print(f"playwright smoke: {smoke_report}")
     print(f"xcode runtime probe: {xcode_probe}")
+    print(f"xcode test probe: {xcode_test_probe}")
     print(f"review report: {review_report}")
     print(f"hig report: {hig_report}")
     print(f"visual report: {visual_report}")
@@ -1295,6 +1708,7 @@ def run_evaluation(brief: str, image_path: str | None = None) -> EvaluationSumma
             "lanes": summary.lanes,
             "playwright_smoke": str(smoke_report),
             "xcode_runtime_probe": str(xcode_probe),
+            "xcode_test_probe": str(xcode_test_probe),
             "review_report": str(review_report),
             "hig_report": str(hig_report),
             "visual_report": str(visual_report),

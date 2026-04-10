@@ -14,7 +14,7 @@
 - runtime: claude-agent-sdk ok
 - mcp: claude mcp runtime ok
 - lane impact: planning, architecture, review, operator
-- notes: Session=ANTHROPIC_API_KEY present. Smoke=skipped. Claude API path is usable even if Claude CLI MCP runtime is not.
+- notes: Session=Claude CLI login present. Smoke=skipped. Active transport=claude-cli.
 
 ### codex_cli
 - status: ready
@@ -24,10 +24,9 @@
 - local readiness: ready
 - live connectivity: skipped
 - runtime: codex-cli 0.118.0
-- mcp: Name        Command  Args                     Env                                                                 Cwd  Status   Auth       
-xcodebuild  npx     
+- mcp: Name        Command  Args                                          Env                                                                 Cwd  Status   Auth       
 - lane impact: implementation, refactor, parallel worktrees
-- notes: Session=expires at 2026-04-10T11:57:52+00:00 (10250 min remaining). Smoke=skipped. Project is trusted in ~/.codex/config.toml.
+- notes: Session=expires at 2026-04-10T11:57:52+00:00 (1543 min remaining). Smoke=skipped. Project is trusted in ~/.codex/config.toml.
 
 ### gemini_cli
 - status: ready
@@ -36,10 +35,10 @@ xcodebuild  npx
 - session: blocked
 - local readiness: ready
 - live connectivity: skipped
-- runtime: 0.35.3
+- runtime: 0.36.0
 - mcp: project .mcp.json available
 - lane impact: product research, visual QA, multimodal critique
-- notes: Session=no expiry metadata available. Smoke=skipped. Host baseline=ok.
+- notes: Session=no expiry metadata available. Smoke=skipped. Host baseline=ok, but readiness now requires the current runtime probe to succeed.
 
 ### xcode_mcp
 - status: ready
@@ -73,4 +72,4 @@ Build version 17E192
 
 ### evaluation
 - status: ready
-- blockers: native_ios_project_missing
+- blockers: none

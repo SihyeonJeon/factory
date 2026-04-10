@@ -1,0 +1,29 @@
+{
+  "role_id": "product_lead",
+  "title": "Product Lead",
+  "provider_hint": "gemini_cli",
+  "inputs": [
+    "system_rules",
+    "idea_input",
+    "constraints_input",
+    "design_input",
+    "acceptance_input",
+    "native_ios_strategy",
+    "hig_guardrails"
+  ],
+  "output": {
+    "kind": "json",
+    "filename_stem": "product_lead_product_packet",
+    "json_schema": {
+      "type": "object",
+      "properties": {
+        "summary": {"type": "string"},
+        "user_pains": {"type": "array", "items": {"type": "string"}},
+        "hig_risks": {"type": "array", "items": {"type": "string"}},
+        "design_references": {"type": "array", "items": {"type": "string"}}
+      },
+      "required": ["summary", "user_pains", "hig_risks", "design_references"],
+      "additionalProperties": false
+    }
+  }
+}
