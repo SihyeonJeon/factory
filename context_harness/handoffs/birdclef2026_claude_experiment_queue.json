@@ -1,0 +1,40 @@
+{
+  "task_id": "birdclef-2026-claude-experiment-queue-001",
+  "objective": "Design the first high-value BirdCLEF 2026 experiment queue using the current harness state, emphasizing fast score gains, ablation value, and practical leaderboard pressure before the 2026-06-03 deadline.",
+  "success_criteria": [
+    "Rank the first 8-12 experiments by expected information gain and expected leaderboard value.",
+    "Do not assume any currently coded baseline is already the active anchor; choose the anchor explicitly from the candidate method manifests and justify it.",
+    "Identify which experiments are pure baselines, which are ablations, and which are exploitation-oriented leaderboard pushes.",
+    "Produce explicit stop conditions and success thresholds for each experiment."
+  ],
+  "input_artifacts": [
+    "context_harness/manifests/datasets/birdclef2026.json",
+    "context_harness/state.json",
+    "context_harness/blackboard.md",
+    "context_harness/manifests/methods/birdclef2026_effnet_b0_gem.json",
+    "context_harness/manifests/methods/birdclef2026_effnet_b3_gem.json",
+    "context_harness/manifests/methods/birdclef2026_effnet_v2_s_gem.json",
+    "context_harness/manifests/methods/birdclef2026_ast_strong.json",
+    "context_harness/manifests/methods/birdclef2026_beats_ft_strong.json",
+    "context_harness/manifests/methods/birdclef2026_htsat_strong.json",
+    "context_harness/external_data_policy.md",
+    "context_harness/kaggle_submission_loop.md",
+    "context_harness/birdclef2026_research_brief.md",
+    "context_harness/self_hallucination_audit_2026_04_06.md"
+  ],
+  "output_artifacts": [
+    "experiment_log/architecture_proposal.json",
+    "experiment_log/analysis_birdclef_queue_001.json"
+  ],
+  "evidence_requirements": [
+    "Each queued run must include why it matters for leaderboard score rather than only offline neatness.",
+    "Every external-data or pseudo-labeling recommendation must respect the current external-data policy.",
+    "If a recommendation depends on assumptions about the competition metric, those assumptions must be stated explicitly.",
+    "Separate directly verified facts from working assumptions."
+  ],
+  "stop_conditions": [
+    "The metric definition remains too ambiguous to prioritize threshold-sensitive experiments.",
+    "The current evidence is too weak to justify naming an active baseline.",
+    "The queue would spend A100 time before the submission loop is functional."
+  ]
+}

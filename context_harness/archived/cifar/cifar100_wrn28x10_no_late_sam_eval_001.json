@@ -1,0 +1,23 @@
+{
+  "eval_id": "cifar100-wrn28x10-no-late-sam-eval-001",
+  "run_id": "cifar100-wrn28x10-no-late-sam-001",
+  "baseline_run_id": "cifar100-wrn28x10-late-sam-001",
+  "ablation_axis": "late_sam",
+  "metrics": [
+    "top1_accuracy",
+    "per_class_accuracy",
+    "confusion_matrix",
+    "inference_latency_ms",
+    "parameter_count",
+    "flops",
+    "peak_inference_memory_mb"
+  ],
+  "comparison_targets": [
+    "baseline_run",
+    "repo_internal_pareto_front",
+    "published_cifar100_sota"
+  ],
+  "notes": [
+    "Primary question: does removing late-phase SAM materially reduce accuracy enough to justify its wall-clock overhead?"
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "context_harness/schemas/dataset_manifest.schema.json",
+  "title": "Dataset Manifest",
+  "type": "object",
+  "required": [
+    "dataset_id",
+    "dataset_family",
+    "input_shape",
+    "num_classes",
+    "splits",
+    "normalization",
+    "benchmark_targets"
+  ],
+  "properties": {
+    "dataset_id": { "type": "string" },
+    "dataset_family": { "type": "string" },
+    "input_shape": {
+      "type": "array",
+      "items": { "type": "integer" },
+      "minItems": 2,
+      "maxItems": 3
+    },
+    "num_classes": { "type": "integer", "minimum": 2 },
+    "download_source": { "type": "string" },
+    "preprocessing_manifest": { "type": "string" },
+    "splits": {
+      "type": "object",
+      "required": ["train", "validation", "test"],
+      "properties": {
+        "train": { "type": "integer", "minimum": 1 },
+        "validation": { "type": "integer", "minimum": 1 },
+        "test": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "normalization": {
+      "type": "object",
+      "required": ["mean", "std"],
+      "properties": {
+        "mean": {
+          "type": "array",
+          "items": { "type": "number" },
+          "minItems": 1,
+          "maxItems": 3
+        },
+        "std": {
+          "type": "array",
+          "items": { "type": "number" },
+          "minItems": 1,
+          "maxItems": 3
+        }
+      },
+      "additionalProperties": false
+    },
+    "benchmark_targets": {
+      "type": "object",
+      "required": ["primary_metric", "expected_baseline_accuracy"],
+      "properties": {
+        "primary_metric": { "type": "string" },
+        "expected_baseline_accuracy": { "type": "number" },
+        "stretch_accuracy": { "type": "number" },
+        "secondary_metrics": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "storage": {
+      "type": "object",
+      "properties": {
+        "location": { "type": "string" },
+        "mount_hint": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,22 @@
+{
+  "run_id": "cifar100-wrn28x10-no-late-sam-001",
+  "dataset_manifest": "context_harness/manifests/datasets/cifar100.json",
+  "method_manifest": "context_harness/manifests/methods/cifar100_wrn28x10_no_late_sam.json",
+  "seed": 3407,
+  "execution_target": "colab_mcp_a100",
+  "comparison_group": "cifar100_wrn28x10_late_sam_ablation_suite",
+  "baseline_run_id": "cifar100-wrn28x10-late-sam-001",
+  "ablation_axis": "late_sam",
+  "artifacts": {
+    "training_log": "experiment_log/training_run_cifar100-wrn28x10-no-late-sam-001.json",
+    "checkpoint_dir": "checkpoints/cifar100-wrn28x10-no-late-sam-001/"
+  },
+  "stop_conditions": [
+    "validation_loss_increases_3_times",
+    "oom_after_batch_size_reduction",
+    "missing_colab_session"
+  ],
+  "notes": [
+    "Single-factor ablation: remove late-phase SAM while holding architecture and augmentation constant."
+  ]
+}

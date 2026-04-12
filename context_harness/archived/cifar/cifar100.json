@@ -1,0 +1,25 @@
+{
+  "dataset_id": "cifar100",
+  "dataset_family": "torchvision_cifar",
+  "input_shape": [3, 32, 32],
+  "num_classes": 100,
+  "download_source": "torchvision.datasets.CIFAR100",
+  "splits": {
+    "train": 45000,
+    "validation": 5000,
+    "test": 10000
+  },
+  "normalization": {
+    "mean": [0.5071, 0.4867, 0.4408],
+    "std": [0.2675, 0.2565, 0.2761]
+  },
+  "benchmark_targets": {
+    "primary_metric": "top1_accuracy",
+    "expected_baseline_accuracy": 0.74,
+    "stretch_accuracy": 0.93
+  },
+  "notes": [
+    "Use this only after the CIFAR-10 harness loop is reproducible.",
+    "Confusion analysis matters more because class granularity is much higher."
+  ]
+}

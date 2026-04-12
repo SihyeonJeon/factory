@@ -1,0 +1,27 @@
+{
+  "proposal_id": "birdclef2026_arch_proposal_001",
+  "created": "2026-04-06",
+  "author_lane": "architect",
+  "status": "proposed_pending_critic_gate",
+  "anchor_selection": {
+    "chosen_anchor": "birdclef2026_effnet_b0_gem",
+    "justification": [
+      "No training run has completed (total_training_runs=0). Anchor must be cheapest credible first score.",
+      "B0+GeM: 5.3M params, batch 64, fastest wall-clock. Unblocks submission loop ASAP.",
+      "BirdCLEF 2025 top-2% kernels anchored on B0 before layering PL and ensembles.",
+      "Transformers (AST 87M, BEATs 90M) are 16-17x larger — too risky before pipeline is proven.",
+      "Submission loop has 0 entries. Every day without LB feedback is blind optimization."
+    ]
+  },
+  "metric_assumptions": [
+    "ROC-AUC: working assumption, NOT confirmed from official page.",
+    "Local proxy: macro_auroc over 234 species.",
+    "If non-ROC-AUC, re-prioritize threshold-sensitive experiments."
+  ],
+  "stop_conditions_global": [
+    "STOP if submission loop non-functional before EXP-02 completes.",
+    "STOP threshold-sensitive experiments if metric is non-ROC-AUC.",
+    "STOP if 28 test-only species claim disproved.",
+    "STOP if A100 exhausted before EXP-03 — escalate."
+  ]
+}

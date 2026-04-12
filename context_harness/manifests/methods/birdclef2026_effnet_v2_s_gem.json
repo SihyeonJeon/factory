@@ -1,0 +1,51 @@
+{
+  "method_id": "birdclef2026_effnet_v2_s_gem",
+  "model": {
+    "family": "audio_cnn",
+    "name": "efficientnet_v2_s",
+    "variant": "v2_s",
+    "pooling": "gem",
+    "pretraining_source": "imagenet_or_equivalent",
+    "frontend": "logmel_128x512",
+    "num_parameters_estimate": 21500000
+  },
+  "optimizer": {
+    "name": "adamw",
+    "lr": 0.0002,
+    "weight_decay": 0.01,
+    "betas": [0.9, 0.999]
+  },
+  "scheduler": {
+    "name": "cosine",
+    "warmup_epochs": 2
+  },
+  "training": {
+    "epochs": 20,
+    "batch_size": 32,
+    "amp": true,
+    "ema": true,
+    "loss": "bce_focal",
+    "mixup_alpha": 0.15,
+    "segment_seconds": 5,
+    "sample_rate": 32000,
+    "fold_index": 0,
+    "num_folds": 5
+  },
+  "augmentations": [
+    "specaugment",
+    "time_shift",
+    "random_gain",
+    "background_mix",
+    "normalize"
+  ],
+  "regularization": [
+    "focal_loss",
+    "ema",
+    "gem_pooling",
+    "roc_auc_selection"
+  ],
+  "hypothesis": {
+    "statement": "EfficientNetV2-S with GeM may outperform older B-series backbones on BirdCLEF by combining stronger feature extraction with training efficiency, making it a likely ensemble anchor if inference cost stays acceptable.",
+    "expected_information_gain": "Measures whether the newer CNN family is worth prioritizing over B0 and B3 for the main workhorse lane."
+  }
+}

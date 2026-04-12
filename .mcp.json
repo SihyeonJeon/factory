@@ -1,16 +1,9 @@
 {
   "mcpServers": {
-    "xcodebuild": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "xcodebuildmcp@latest"
-      ],
-      "env": {
-        "XCODEBUILDMCP_WORKFLOWS": "project-discovery,simulator-management,simulator-control,ui-testing,builds,logging,doctor",
-        "XCODEBUILDMCP_SENTRY_DISABLED": "1"
-      }
+    "colab-mcp": {
+      "command": "uvx",
+      "args": ["git+https://github.com/googlecolab/colab-mcp"],
+      "timeout": 30000
     }
   }
 }

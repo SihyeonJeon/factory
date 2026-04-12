@@ -1,0 +1,26 @@
+{
+  "eval_id": "",
+  "run_id": "",
+  "checkpoint_path": "",
+  "artifacts": {},
+  "metrics": {},
+  "external_comparisons": [],
+  "baseline_comparison": {},
+  "submission_comparison": {
+    "local_proxy_score": null,
+    "public_lb_score": null,
+    "delta": null
+  },
+  "inference_budget": {
+    "fits_kaggle_notebook": null,
+    "latency_ms": null,
+    "peak_memory_mb": null
+  },
+  "ablation_verdict": {
+    "axis": "",
+    "supports_claim": null,
+    "summary": ""
+  },
+  "command": "",
+  "status": "pending"
+}

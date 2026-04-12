@@ -1,0 +1,27 @@
+{
+  "run_id": "",
+  "created_at": "",
+  "dataset_manifest": "",
+  "method_manifest": "",
+  "seed": null,
+  "git_hash": "",
+  "command": "",
+  "environment": {
+    "python": "",
+    "pytorch": "",
+    "device": ""
+  },
+  "strategy": {
+    "optimizer": "",
+    "mixup_alpha": 0.0,
+    "sharpness_aware_start_epoch": null,
+    "pseudo_label_round": 0,
+    "pseudo_label_source_runs": [],
+    "data_cleaning_pipeline": [],
+    "postprocessing_manifest": ""
+  },
+  "epochs": [],
+  "best_validation_accuracy": null,
+  "checkpoint_path": "",
+  "status": "pending"
+}

@@ -1,0 +1,15 @@
+{
+  "ensemble_id": "",
+  "candidate_runs": [],
+  "candidate_groups": [],
+  "aggregation": "weighted_mean",
+  "weights": [],
+  "fold_strategy": "",
+  "postprocessing_manifest": "",
+  "inference_budget": {
+    "max_latency_ms": null,
+    "max_peak_memory_mb": null,
+    "must_fit_kaggle_notebook": true
+  },
+  "notes": []
+}

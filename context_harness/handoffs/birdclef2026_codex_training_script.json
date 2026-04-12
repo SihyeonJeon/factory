@@ -1,0 +1,36 @@
+{
+  "task_id": "birdclef-2026-codex-training-script-001",
+  "objective": "Produce a self-contained Colab-runnable training script for EfficientNet-B0+GeM on BirdCLEF 2026 (EXP-02). The script must satisfy Constitution §6 reproducibility requirements.",
+  "success_criteria": [
+    "Script runs in a single Colab cell with A100 GPU and mounted Google Drive.",
+    "Reads dataset from /content/drive/MyDrive/Kaggle/birdclef-2026/birdclef-2026/.",
+    "Uses EfficientNet-B0 + GeM pooling, BCE focal loss, MixUp alpha=0.15, AdamW lr=3e-4, cosine schedule.",
+    "Implements group-aware train/val split (by primary_label or recording source) with seed 3407, fold 0.",
+    "Logs per-epoch: loss, macro_auroc, LR, GPU memory, wall-clock time.",
+    "Saves best checkpoint to Drive with model state, optimizer state, epoch, and metric.",
+    "Generates submission CSV from best checkpoint on test soundscapes.",
+    "Prints final JSON artifact suitable for experiment_log/training_run_birdclef2026-effnet-b0-001.json."
+  ],
+  "input_artifacts": [
+    "context_harness/manifests/methods/birdclef2026_effnet_b0_gem.json",
+    "context_harness/manifests/preprocessing/birdclef2026_logmel_32k_128mel_5s.json",
+    "context_harness/manifests/datasets/birdclef2026.json",
+    "benchmark_harness/models.py",
+    "benchmark_harness/losses.py",
+    "benchmark_harness/metrics.py"
+  ],
+  "output_artifacts": [
+    "context_harness/colab_payloads/exp02_effnet_b0_train.py"
+  ],
+  "evidence_requirements": [
+    "Script must include: random seed, git hash placeholder, exact hyperparameters from method manifest.",
+    "Script must handle OOM gracefully: catch RuntimeError, halve batch size, retry.",
+    "All Drive paths must be configurable at the top of the script, not hardcoded inline.",
+    "Do NOT import from benchmark_harness — script must be self-contained for Colab paste."
+  ],
+  "stop_conditions": [
+    "If the method manifest is ambiguous about any hyperparameter, use the default from the manifest and log the choice.",
+    "If torchaudio is unavailable, fall back to librosa and log the change.",
+    "Do not attempt to run the script — only produce the code file."
+  ]
+}

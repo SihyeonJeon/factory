@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "context_harness/schemas/ensemble_manifest.schema.json",
+  "title": "Ensemble Manifest",
+  "type": "object",
+  "required": [
+    "ensemble_id",
+    "candidate_runs",
+    "aggregation"
+  ],
+  "properties": {
+    "ensemble_id": { "type": "string" },
+    "candidate_runs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "candidate_groups": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "aggregation": {
+      "type": "string",
+      "enum": [
+        "mean",
+        "weighted_mean",
+        "rank_average",
+        "stacked_meta_model"
+      ]
+    },
+    "weights": {
+      "type": "array",
+      "items": { "type": "number" }
+    },
+    "fold_strategy": { "type": "string" },
+    "postprocessing_manifest": { "type": "string" },
+    "inference_budget": {
+      "type": "object",
+      "properties": {
+        "max_latency_ms": { "type": "number" },
+        "max_peak_memory_mb": { "type": "number" },
+        "must_fit_kaggle_notebook": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

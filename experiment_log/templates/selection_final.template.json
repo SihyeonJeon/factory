@@ -1,0 +1,17 @@
+{
+  "selection_id": "",
+  "candidate_runs": [],
+  "candidate_ensembles": [],
+  "winner_run_id": "",
+  "winner_ensemble_id": "",
+  "single_model_summary": {},
+  "ensemble_summary": {},
+  "inference_budget_check": {
+    "fits_kaggle_notebook": null,
+    "latency_ms": null,
+    "peak_memory_mb": null
+  },
+  "decision_basis": [],
+  "reproduction_steps": [],
+  "status": "pending"
+}

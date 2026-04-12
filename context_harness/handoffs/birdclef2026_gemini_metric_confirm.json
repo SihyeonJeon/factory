@@ -1,0 +1,19 @@
+{
+  "task_id": "birdclef-2026-gemini-metric-confirm-001",
+  "objective": "Confirm the official evaluation metric for BirdCLEF 2026. The current working assumption is ROC-AUC, inferred from submission format and BirdCLEF 2024-2025 precedent. Find direct evidence.",
+  "success_criteria": [
+    "Return the exact metric name as stated on the official competition page or rules.",
+    "Provide the source URL and access date.",
+    "If the metric cannot be confirmed, state so explicitly and list what was tried."
+  ],
+  "input_artifacts": [],
+  "output_artifacts": [],
+  "evidence_requirements": [
+    "Only claims backed by a directly accessible URL count as confirmation.",
+    "Forum posts or discussion threads count as supporting evidence, not confirmation.",
+    "If the Kaggle overview page is JS-rendered and unreadable, try: Kaggle API, competition rules tab, evaluation tab, forum pinned posts, or prior-year competition pages that reference 2026."
+  ],
+  "stop_conditions": [
+    "If no direct evidence is found after checking all listed sources, return status: unconfirmed."
+  ]
+}

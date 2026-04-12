@@ -1,0 +1,36 @@
+{
+  "method_id": "cifar10_resnet18_smoke",
+  "model": {
+    "family": "resnet",
+    "name": "resnet18",
+    "depth": 18,
+    "num_parameters_estimate": 11180000
+  },
+  "optimizer": {
+    "name": "sgd",
+    "lr": 0.1,
+    "momentum": 0.9,
+    "weight_decay": 0.0005
+  },
+  "scheduler": {
+    "name": "cosine",
+    "warmup_epochs": 5
+  },
+  "training": {
+    "epochs": 30,
+    "batch_size": 512,
+    "label_smoothing": 0.0,
+    "amp": true,
+    "ema": false
+  },
+  "augmentations": [
+    "random_crop_32_pad_4",
+    "random_horizontal_flip",
+    "normalize"
+  ],
+  "regularization": [],
+  "hypothesis": {
+    "statement": "A conservative ResNet-18 baseline should validate the end-to-end harness with low implementation risk and enough signal to test reproducibility.",
+    "expected_information_gain": "Confirms the orchestration loop, logging schema, and seed stability before more expensive methods are attempted."
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "method_id": "birdclef2026_beats_ft_strong",
+  "model": {
+    "family": "audio_ssl_transformer",
+    "name": "beats",
+    "variant": "base",
+    "pretraining_source": "BEATs",
+    "frontend": "waveform_or_internal_patch_embedding",
+    "num_parameters_estimate": 90000000
+  },
+  "optimizer": {
+    "name": "adamw",
+    "lr": 5e-05,
+    "weight_decay": 0.01,
+    "betas": [0.9, 0.999]
+  },
+  "scheduler": {
+    "name": "cosine",
+    "warmup_epochs": 3
+  },
+  "training": {
+    "epochs": 16,
+    "batch_size": 24,
+    "label_smoothing": 0.03,
+    "amp": true,
+    "ema": true,
+    "loss": "bce_asymmetric",
+    "segment_seconds": 5,
+    "sample_rate": 32000
+  },
+  "augmentations": [
+    "time_shift",
+    "random_gain",
+    "background_mix",
+    "mixup_multilabel"
+  ],
+  "regularization": [
+    "asymmetric_loss",
+    "ema",
+    "threshold_tuning",
+    "group_aware_cv"
+  ],
+  "hypothesis": {
+    "statement": "A BEATs-style SSL audio backbone should outperform a plain spectrogram transformer on BirdCLEF 2026 because its pretrained acoustic tokenization better captures fine-grained call structure under noisy soundscapes.",
+    "expected_information_gain": "Measures whether modern audio SSL transfers better than spectrogram transformers on this leaderboard."
+  }
+}

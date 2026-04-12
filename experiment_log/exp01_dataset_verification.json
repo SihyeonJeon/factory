@@ -1,0 +1,47 @@
+{
+  "exp_id": "EXP-01",
+  "name": "Dataset Fact Reproduction + Submission Loop Smoke Test",
+  "timestamp": "2026-04-06T04:39:45.473428",
+  "execution_environment": "Google Colab (CPU runtime, Drive mounted)",
+  "gpu_info": {
+    "note": "CPU-only runtime used for data verification; GPU not required for EXP-01"
+  },
+  "dataset_facts": {
+    "num_train_recordings": 35549,
+    "num_train_audio_files": 35549,
+    "num_train_species": 206,
+    "num_submission_species": 234,
+    "num_taxonomy_species": 234,
+    "num_test_only_species": 28,
+    "test_only_by_class": {
+      "Amphibia": 3,
+      "Insecta": 25
+    },
+    "num_soundscape_segments": 1478,
+    "sample_sub_shape": [3, 235],
+    "default_fill": 0.004274
+  },
+  "claim_verification": {
+    "num_train_recordings": true,
+    "num_train_species": true,
+    "num_submission_species": true,
+    "num_test_only_species": true,
+    "all_claims_verified": true
+  },
+  "metric_confirmed": {
+    "name": "macro_averaged_roc_auc_skip_no_positive",
+    "source": "gemini_2.5_flash_grounding_search",
+    "date": "2026-04-06"
+  },
+  "uniform_submission_path": "/content/drive/MyDrive/Kaggle/birdclef-2026/uniform_prior_submission.csv",
+  "blocking_issues_resolved": {
+    "BLOCK-01": "Colab MCP connected, Drive mounted, runtime verified",
+    "BLOCK-03": "Metric confirmed as macro-averaged ROC-AUC (skip no-positive classes)",
+    "BLOCK-04": "28 test-only species confirmed (25 Insecta + 3 Amphibia)"
+  },
+  "remaining": {
+    "BLOCK-02": "Training script pending (Codex o3 running)",
+    "kaggle_submission": "uniform_prior_submission.csv ready, pending manual Kaggle submit for LB floor score"
+  },
+  "status": "COMPLETE"
+}
