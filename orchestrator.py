@@ -664,12 +664,20 @@ def summarize_evaluation(
 def run_playwright_smoke(target_workspace: Path) -> Path:
     load_runtime_env()
     report_path = REPORTS_DIR / "playwright_smoke.json"
-    if not (target_workspace / "package.json").exists() or not (target_workspace / "app.json").exists():
+    native_ios_present = (target_workspace / "ios" / "project.yml").exists() or any(
+        (target_workspace / "ios").glob("*.xcodeproj")
+    ) if (target_workspace / "ios").exists() else False
+    expo_layer_present = (target_workspace / "package.json").exists() and (target_workspace / "app.json").exists()
+    if native_ios_present or not expo_layer_present:
         payload = {
             "mode": "playwright_smoke",
             "status": "skipped",
             "passed": True,
-            "reason": "Expo smoke path retired; native iOS is now the primary evaluation target.",
+            "reason": (
+                "Native iOS xcodeproj present; Expo Playwright smoke suppressed to avoid false HIG noise against stale App.tsx."
+                if native_ios_present
+                else "Expo smoke path retired; native iOS is now the primary evaluation target."
+            ),
             "workspace": str(target_workspace),
             "context": str(CONTEXT_DIR),
         }

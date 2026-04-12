@@ -1,17 +1,13 @@
 {
   "phase_1_research": true,
   "phase_2_architecture": true,
-  "phase_2_epics_done": [],
   "phase_2_review": false,
-  "phase_3_qa": true,
-  "phase_4_publish": false,
+  "phase_3_qa": false,
   "qa_rollback_count": 0,
   "intake_complete": true,
-  "last_brief": "Read context_harness/reports/session_handoff_20260408_release_closure_passed.md first. The current state is evaluation passed and release ready after fixing the test target, wiring the memory composer into the app target, generating denied/manual-picker/large-text runtime evidence, and clearing stale blackboard bias. Continue only from this passed baseline.",
+  "last_brief": "Resume from 2026-04-08 release baseline. Read all context_harness/product_inputs/*.md as the spec. Run intake -> delivery -> evaluation end-to-end.",
   "fork_lanes": [
-    "planner",
-    "logic",
-    "qa"
+    "planner"
   ],
   "intake_artifacts": {
     "system_rules": "/Users/jeonsihyeon/factory/context_harness/00_system_rules.md",
@@ -30,15 +26,11 @@
   "review_report": "/Users/jeonsihyeon/factory/context_harness/reports/red_team_reviewer_code_review.md",
   "hig_report": "/Users/jeonsihyeon/factory/context_harness/reports/hig_guardian_hig_audit.md",
   "visual_report": "/Users/jeonsihyeon/factory/context_harness/reports/visual_qa_visual_qa.md",
-  "evaluation_passed": true,
-  "delivery_complete": true,
-  "delivery_reports": {
-    "ui": "/Users/jeonsihyeon/factory/context_harness/reports/ios_ui_builder_release-closure-r3b_ui_summary.md",
-    "logic": "/Users/jeonsihyeon/factory/context_harness/reports/ios_logic_builder_release-closure-r3b_logic_summary.md"
-  },
-  "merge_report": "/Users/jeonsihyeon/factory/context_harness/reports/platform_operator_merge_release-closure-r3b.json",
+  "evaluation_passed": false,
   "integration_repo": "/Users/jeonsihyeon/factory/.worktrees/_integration",
-  "release_ready": true,
-  "release_packet": "/Users/jeonsihyeon/factory/context_harness/reports/release_submission_packet_20260408.md",
-  "xcode_test_probe": "/Users/jeonsihyeon/factory/context_harness/reports/xcode_test_probe.json"
+  "xcode_test_probe": "/Users/jeonsihyeon/factory/context_harness/reports/xcode_test_probe.json",
+  "product_report": "/Users/jeonsihyeon/factory/context_harness/reports/product_lead_product_packet.json",
+  "planning_report": "/Users/jeonsihyeon/factory/context_harness/reports/delivery_lead_execution_plan.json",
+  "architecture_report": "/Users/jeonsihyeon/factory/context_harness/reports/ios_architect_architecture.md",
+  "latest_feedback_packet": "/Users/jeonsihyeon/factory/context_harness/handoffs/remediation_round_1.md"
 }

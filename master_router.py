@@ -82,11 +82,11 @@ TASK_TIMEOUTS: dict[TaskType, int] = {
     TaskType.IOS_IMPLEMENTATION: 900,
     TaskType.UI_CODING: 900,
     TaskType.BUSINESS_LOGIC: 900,
-    TaskType.CODE_REVIEW: 420,
+    TaskType.CODE_REVIEW: 720,
     TaskType.HIG_AUDIT: 600,
-    TaskType.VISUAL_QA: 240,
+    TaskType.VISUAL_QA: 600,
     TaskType.E2E_TEST_GEN: 600,
-    TaskType.BUG_FIX: 600,
+    TaskType.BUG_FIX: 1200,
     TaskType.SPRINT_EVAL: 300,
     TaskType.DOCUMENTATION: 180,
     TaskType.BOILERPLATE: 600,
@@ -162,6 +162,7 @@ _CLAUDE_HEAVY_TASKS = {
     TaskType.MARKET_RESEARCH,
     TaskType.ARCHITECTURE,
     TaskType.ARBITRATION,
+    TaskType.CODE_REVIEW,
 }
 _CLAUDE_OPS_TASKS = {
     TaskType.DOCUMENTATION,

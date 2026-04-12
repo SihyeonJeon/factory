@@ -5,26 +5,26 @@ This repository now follows a company-style harness instead of a flat model rout
 ## 1. Team structure
 
 - Product team
-- `market_analyst` uses Gemini CLI for fresh market signals, competitor scans, and community evidence.
-- `product_strategist` uses Claude API for PRD synthesis, tradeoffs, and release-scope decisions.
+- `market_analyst` uses Claude CLI (sonnet-4-6) for market signal synthesis, competitor scans, and community evidence.
+- `product_strategist` uses Claude CLI (opus-4-6) for PRD synthesis, tradeoffs, and release-scope decisions.
 
 - Planning team
-- `delivery_planner` uses Claude API to break work into bounded tasks, define ownership, and decide when forks are justified.
+- `delivery_planner` uses Claude CLI (sonnet-4-6) to break work into bounded tasks, define ownership, and decide when forks are justified.
 
 - Engineering team
-- `ios_architect` uses Claude API for system design, iOS constraints, and HIG-safe architecture.
-- `implementation_lead` uses Codex CLI for long-running code edits, tool use, and parallel implementation.
-- `subagent_executor` uses a cheaper Codex model only for bounded, non-blocking subtasks with disjoint ownership.
+- `ios_architect` uses Claude CLI (opus-4-6) for system design, iOS constraints, and HIG-safe architecture.
+- `implementation_lead` uses Codex CLI (gpt-5.4) for long-running code edits, tool use, and parallel implementation.
+- `subagent_executor` uses Codex CLI for bounded, non-blocking subtasks with disjoint ownership.
 
 - Evaluation team
-- `vision_auditor` uses Gemini CLI for screenshot review, visual regressions, and HIG layout checks.
-- `code_auditor` uses Claude API for spec compliance, regression review, and feedback synthesis.
+- `visual_qa` uses Claude CLI (sonnet-4-6) for screenshot review, visual regressions, and HIG layout checks.
+- `red_team_reviewer` / `code_auditor` uses Claude CLI (opus-4-6) for spec compliance, regression review, and feedback synthesis.
 
 ## 2. Model assignment policy
 
-- Gemini owns web-grounded research and screenshot-heavy QA.
-- Claude owns planning, architecture, arbitration, and review loops.
-- Codex owns implementation, refactors, and tool-using code execution.
+- Claude (opus/sonnet/haiku tiered) owns research, planning, architecture, arbitration, review, and screenshot-heavy QA.
+- Codex (gpt-5.4) owns implementation, refactors, and tool-using code execution inside worktrees.
+- Tier routing lives in `master_router.py` `_CLAUDE_HEAVY_TASKS` (opus) vs default (sonnet); ops tasks may use haiku.
 - No single provider may both implement and self-approve a release-critical task without another evaluator.
 
 ## 3. HIG release gate
