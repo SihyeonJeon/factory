@@ -35,6 +35,8 @@ export function PhotoUploadButton({
 
       const filesToProcess = Array.from(files).slice(0, remaining);
 
+      setUploading(true);
+
       for (const file of filesToProcess) {
         if (!ACCEPTED_TYPES.includes(file.type)) {
           setError("JPG, PNG, WebP 이미지만 업로드할 수 있어요");
@@ -44,8 +46,6 @@ export function PhotoUploadButton({
           setError("10MB 이하의 이미지만 업로드할 수 있어요");
           continue;
         }
-
-        setUploading(true);
 
         // Get image dimensions before upload
         const objectUrl = URL.createObjectURL(file);
@@ -74,7 +74,6 @@ export function PhotoUploadButton({
         if (!res.ok) {
           const body = await res.json();
           setError(body.error ?? "업로드에 실패했어요");
-          setUploading(false);
           continue;
         }
 
@@ -93,8 +92,9 @@ export function PhotoUploadButton({
         };
 
         onUpload(photo);
-        setUploading(false);
       }
+
+      setUploading(false);
 
       // Reset input so same file can be selected again
       if (inputRef.current) inputRef.current.value = "";
