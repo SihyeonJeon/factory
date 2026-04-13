@@ -40,6 +40,14 @@ function EventHeader({
   );
 }
 
+function ChevronRightIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300" aria-hidden="true">
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  );
+}
+
 export function DashboardView({ event }: DashboardViewProps) {
   const mood = useMemo(() => getMoodTemplate(event.mood), [event.mood]);
   const { guests, counts, isLoading } = useRealtimeGuests(event.id);
@@ -95,19 +103,26 @@ export function DashboardView({ event }: DashboardViewProps) {
                       </p>
                     </div>
                   </div>
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-gray-300"
-                  >
-                    <path d="m9 18 6-6-6-6" />
-                  </svg>
+                  <ChevronRightIcon />
+                </a>
+              </section>
+
+              {/* Settlement link */}
+              <section>
+                <a
+                  href={`/dashboard/${event.id}/settlement`}
+                  className="flex items-center justify-between rounded-xl border p-4 transition-colors hover:bg-gray-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg">💰</span>
+                    <div>
+                      <p className="text-sm font-semibold">정산하기</p>
+                      <p className="text-xs text-gray-400">
+                        1/N 정산 및 송금 링크
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRightIcon />
                 </a>
               </section>
 

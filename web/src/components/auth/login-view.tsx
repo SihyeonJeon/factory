@@ -18,6 +18,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 export function LoginView({ error, redirectTo }: LoginViewProps) {
   const [loading, setLoading] = useState<"kakao" | "apple" | null>(null);
+  const [consent, setConsent] = useState(false);
   const { isKakao } = useKakaoBrowser();
 
   const handleKakaoLogin = useCallback(async () => {
@@ -57,12 +58,28 @@ export function LoginView({ error, redirectTo }: LoginViewProps) {
           </div>
         )}
 
+        {/* Privacy consent */}
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={consent}
+            onChange={(e) => setConsent(e.target.checked)}
+            className="mt-0.5 h-5 w-5 rounded border-gray-300 accent-[#FF6B9D] shrink-0"
+          />
+          <span className="text-xs text-muted-foreground leading-relaxed">
+            <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">서비스 이용약관</a>
+            {" "}및{" "}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">개인정보처리방침</a>
+            에 동의합니다. (필수)
+          </span>
+        </label>
+
         {/* Login buttons */}
         <div className="space-y-3">
           <KakaoLoginGate loginUrl={`/login?next=${encodeURIComponent(redirectTo ?? "/")}`}>
             <Button
               onClick={handleKakaoLogin}
-              disabled={loading !== null}
+              disabled={loading !== null || !consent}
               className="h-12 w-full rounded-xl text-sm font-semibold"
               style={{
                 backgroundColor: "#FEE500",
@@ -84,7 +101,7 @@ export function LoginView({ error, redirectTo }: LoginViewProps) {
           {!isKakao && (
             <Button
               onClick={handleAppleLogin}
-              disabled={loading !== null}
+              disabled={loading !== null || !consent}
               variant="outline"
               className="h-12 w-full rounded-xl text-sm font-semibold border-2"
               style={{
@@ -105,14 +122,6 @@ export function LoginView({ error, redirectTo }: LoginViewProps) {
           )}
         </div>
 
-        {/* Terms notice */}
-        <p className="text-center text-xs text-muted-foreground leading-relaxed">
-          로그인하면{" "}
-          <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">서비스 이용약관</a>
-          {" "}및{" "}
-          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">개인정보처리방침</a>
-          에 동의하게 됩니다.
-        </p>
       </div>
     </main>
   );

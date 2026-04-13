@@ -40,6 +40,11 @@ export function EventRsvpFlow({ event }: EventRsvpFlowProps) {
   );
 
   const handleSubmit = useCallback(async () => {
+    if (event.hasFee && rsvp.status === "attending" && !rsvp.feeIntention) {
+      alert("참석비 납부 의향을 선택해주세요");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const res = await fetch("/api/rsvp", {

@@ -247,12 +247,17 @@ export function PhotoSwipeViewer({
                 type="button"
                 onClick={() => goTo(i)}
                 aria-label={`사진 ${i + 1}`}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === currentIndex
-                    ? "w-4 bg-white"
-                    : "w-1.5 bg-white/30"
-                }`}
-              />
+                className="flex items-center justify-center"
+                style={{ minWidth: 44, minHeight: 44 }}
+              >
+                <span
+                  className={`block h-1.5 rounded-full transition-all ${
+                    i === currentIndex
+                      ? "w-4 bg-white"
+                      : "w-1.5 bg-white/30"
+                  }`}
+                />
+              </button>
             ))}
           </div>
         )}

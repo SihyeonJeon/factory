@@ -43,6 +43,14 @@ export async function POST(request: Request) {
     );
   }
 
+  // Validate eventId is a proper UUID
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId)) {
+    return NextResponse.json(
+      { error: "잘못된 이벤트 ID입니다" },
+      { status: 400 },
+    );
+  }
+
   // Validate file type & size
   if (!ALLOWED_TYPES.has(file.type)) {
     return NextResponse.json(
