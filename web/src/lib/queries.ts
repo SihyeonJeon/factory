@@ -68,6 +68,7 @@ export async function getEventById(
     description: event.description,
     mood: event.mood,
     coverImage,
+    hostId: event.host_id,
     hostName: host?.display_name ?? "호스트",
     hostAvatar: host?.avatar_url ?? null,
     guestCount: count ?? 0,

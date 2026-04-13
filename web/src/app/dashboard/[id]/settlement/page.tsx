@@ -39,23 +39,13 @@ export default async function SettlementPage({ params }: Props) {
     redirect("/login");
   }
 
-  const { data: event } = await supabase
-    .from("events")
-    .select("id, host_id, title")
-    .eq("id", id)
-    .single();
-
-  if (!event) {
-    notFound();
-  }
-
-  if (event.host_id !== user.id) {
-    redirect(`/event/${id}`);
-  }
-
   const eventDetail = await getEventById(supabase, id);
   if (!eventDetail) {
     notFound();
+  }
+
+  if (eventDetail.hostId !== user.id) {
+    redirect(`/event/${id}`);
   }
 
   // Fetch existing settlement if any

@@ -18,6 +18,11 @@ export default async function OgImage({
 }) {
   const { id } = await params;
 
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!UUID_RE.test(id)) {
+    return new Response(null, { status: 404 });
+  }
+
   // Fetch event from Supabase
   const supabase = await createServerSupabaseClient();
   const { data: event } = await supabase

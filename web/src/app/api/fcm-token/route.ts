@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   const body = await request.json();
   const token = body.token;
 
-  if (typeof token !== "string" || token.length === 0) {
+  if (typeof token !== "string" || token.length === 0 || token.length > 4096) {
     return NextResponse.json(
       { error: "Missing or invalid token" },
       { status: 400 },

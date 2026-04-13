@@ -17,13 +17,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await request.json();
-  const { eventId, status, companionCount, feeIntention } = body as {
-    eventId: string;
-    status: RsvpStatusEnum;
-    companionCount: number;
-    feeIntention: FeeIntentionEnum | null;
-  };
+  let body: { eventId: string; status: RsvpStatusEnum; companionCount: number; feeIntention: FeeIntentionEnum | null };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "잘못된 요청입니다" }, { status: 400 });
+  }
+  const { eventId, status, companionCount, feeIntention } = body;
 
   if (!eventId || !status) {
     return NextResponse.json(

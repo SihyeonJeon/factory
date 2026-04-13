@@ -21,17 +21,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await request.json();
-  const { mood, title, datetime, location, description, coverImageUrl, hasFee } =
-    body as {
-      mood: EventMoodEnum;
-      title: string;
-      datetime: string;
-      location: string;
-      description: string;
-      coverImageUrl: string | null;
-      hasFee?: boolean;
-    };
+  let body: { mood: EventMoodEnum; title: string; datetime: string; location: string; description: string; coverImageUrl: string | null; hasFee?: boolean };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "잘못된 요청입니다" }, { status: 400 });
+  }
+  const { mood, title, datetime, location, description, coverImageUrl, hasFee } = body;
 
   if (!title || !datetime) {
     return NextResponse.json(
@@ -89,7 +85,7 @@ export async function POST(request: Request) {
     // Only allow Supabase storage paths (covers/xxx.ext) or Supabase storage URLs
     const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
     const isStoragePath = /^covers\/[a-f0-9-]+\.\w+$/i.test(coverImageUrl);
-    const isSupabaseUrl = supabaseHost && coverImageUrl.startsWith(supabaseHost);
+    const isSupabaseUrl = supabaseHost && coverImageUrl.startsWith(supabaseHost + "/storage/v1/");
     if (!isStoragePath && !isSupabaseUrl) {
       return NextResponse.json(
         { error: "커버 이미지는 업로드된 파일만 사용할 수 있습니다" },

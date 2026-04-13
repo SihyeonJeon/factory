@@ -77,7 +77,7 @@ export function EventRsvpFlow({ event }: EventRsvpFlowProps) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [event.id, rsvp]);
+  }, [event.id, event.hasFee, rsvp]);
 
   const handleReset = useCallback(() => {
     setPhase("respond");

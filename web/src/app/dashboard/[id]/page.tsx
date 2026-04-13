@@ -40,21 +40,13 @@ export default async function DashboardPage({ params }: Props) {
     redirect("/login");
   }
 
-  // Single query: fetch event detail and verify host ownership
   const eventDetail = await getEventById(supabase, id);
 
   if (!eventDetail) {
     notFound();
   }
 
-  // Check host ownership from the already-fetched event
-  const { data: hostCheck } = await supabase
-    .from("events")
-    .select("host_id")
-    .eq("id", id)
-    .single();
-
-  if (hostCheck && hostCheck.host_id !== user.id) {
+  if (eventDetail.hostId !== user.id) {
     redirect(`/event/${id}`);
   }
 

@@ -75,6 +75,7 @@ export interface EventDetail {
   description: string;
   mood: EventMood;
   coverImage: string | null;
+  hostId: string;
   hostName: string;
   hostAvatar: string | null;
   guestCount: number;
