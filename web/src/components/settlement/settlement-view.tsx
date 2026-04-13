@@ -27,6 +27,7 @@ export function SettlementView({ event, initialSettlement }: SettlementViewProps
   const [totalAmount, setTotalAmount] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [markError, setMarkError] = useState<string | null>(null);
 
   const handleCreate = useCallback(async () => {
     const amount = parseInt(totalAmount, 10);
@@ -85,7 +86,7 @@ export function SettlementView({ event, initialSettlement }: SettlementViewProps
           : prev,
       );
     } catch {
-      // silent fail for toggle
+      setMarkError("상태 변경에 실패했습니다");
     }
   }, [event.id]);
 
@@ -220,6 +221,9 @@ export function SettlementView({ event, initialSettlement }: SettlementViewProps
             {/* Participant list */}
             <div className="rounded-2xl border bg-white p-6 shadow-sm">
               <h2 className="mb-4 text-base font-semibold">참여자 현황</h2>
+              {markError && (
+                <p className="mb-3 text-sm text-red-500" role="alert">{markError}</p>
+              )}
               <ul className="divide-y">
                 {settlement.participant_statuses.map((p) => (
                   <li key={p.user_id} className="flex items-center justify-between py-3">

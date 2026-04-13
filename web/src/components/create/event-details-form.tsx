@@ -28,7 +28,7 @@ export function EventDetailsForm({ data, onUpdate }: EventDetailsFormProps) {
             placeholder="예: 4월 러닝크루 정기런"
             value={data.title}
             onChange={(e) => onUpdate({ title: e.target.value })}
-            maxLength={50}
+            maxLength={100}
             autoFocus
           />
         </div>
