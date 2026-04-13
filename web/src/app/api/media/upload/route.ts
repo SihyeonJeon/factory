@@ -51,6 +51,36 @@ export async function POST(request: Request) {
     );
   }
 
+  // Verify user is host or guest of this event
+  const { data: event } = await supabase
+    .from("events")
+    .select("host_id")
+    .eq("id", eventId)
+    .single();
+
+  if (!event) {
+    return NextResponse.json(
+      { error: "이벤트를 찾을 수 없습니다" },
+      { status: 404 },
+    );
+  }
+
+  if (event.host_id !== user.id) {
+    const { data: guest } = await supabase
+      .from("guest_states")
+      .select("id")
+      .eq("event_id", eventId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (!guest) {
+      return NextResponse.json(
+        { error: "이 이벤트에 사진을 업로드할 권한이 없습니다" },
+        { status: 403 },
+      );
+    }
+  }
+
   // Validate file type & size
   if (!ALLOWED_TYPES.has(file.type)) {
     return NextResponse.json(
