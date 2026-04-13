@@ -1,5 +1,7 @@
 {
-  "version": "2026-04-10",
+  "version": "2026-04-12",
+  "project": "moment",
+  "architecture": "planner-generator-evaluator",
   "providers": {
     "claude_api": {
       "transport": "cli",
@@ -10,9 +12,10 @@
         "planning",
         "task allocation",
         "architecture",
-        "red-team review",
-        "HIG audit",
-        "visual QA",
+        "implementation",
+        "code review",
+        "UX audit",
+        "accessibility check",
         "arbitration",
         "ops"
       ],
@@ -26,10 +29,8 @@
       "transport": "cli",
       "auth": "chatgpt-pro-login",
       "primary_use": [
-        "implementation",
-        "refactor",
-        "parallel worktree execution",
-        "code review"
+        "secondary implementation",
+        "parallel worktree execution"
       ],
       "models": {
         "default": "gpt-5.4",
@@ -53,14 +54,14 @@
       "responsibilities": [
         "Run the autonomous loop and keep lanes synchronized.",
         "Compact context, prepare merge packets, and protect token budgets.",
-        "Prefer integration worktrees over direct edits to the operator's current branch.",
+        "Maintain claude-progress.md with current state between sessions.",
         "Escalate when automation cannot safely resolve conflicts."
       ]
     },
     {
       "id": "product_lead",
-      "title": "Product Lead",
-      "team": "product",
+      "title": "Product Lead (Planner)",
+      "team": "planner",
       "provider": "claude_api",
       "model": "claude-opus-4-6",
       "ownership": [
@@ -68,16 +69,16 @@
         "reports/product_lead_product_research.md"
       ],
       "responsibilities": [
-        "Find market demand and category risk.",
-        "Collect relevant design and competitor references.",
-        "Flag flows that could violate Apple HIG or feel unnative on iOS.",
-        "Produce concise product brief handoffs."
+        "Analyze market demand, competitor landscape, and category risk for Korean social/event market.",
+        "Validate product assumptions against Korean user behavior patterns.",
+        "Produce concise product brief handoffs aligned with 모먼트 vision.",
+        "Flag UX flows that could hurt conversion (especially RSVP funnel and 카카오톡 sharing)."
       ]
     },
     {
       "id": "delivery_lead",
-      "title": "Delivery Lead",
-      "team": "planning",
+      "title": "Delivery Lead (Planner)",
+      "team": "planner",
       "provider": "claude_api",
       "model": "claude-sonnet-4-6",
       "ownership": [
@@ -85,100 +86,50 @@
         "reports/delivery_lead_planning.md"
       ],
       "responsibilities": [
-        "Convert product brief into milestones, task graph, and ownership.",
+        "Convert product brief into sprint milestones, task graph, and ownership.",
+        "Define web architecture decisions (Next.js routes, Supabase schema, Edge Functions).",
+        "Negotiate sprint contracts with testable acceptance criteria.",
         "Decide whether subagent forks are justified.",
-        "Enforce short handoff contracts and explicit acceptance criteria.",
         "Keep token budget under control."
       ]
     },
     {
-      "id": "ios_architect",
-      "title": "iOS Architect",
-      "team": "planning",
+      "id": "web_builder",
+      "title": "Web Builder (Generator)",
+      "team": "generator",
       "provider": "claude_api",
       "model": "claude-opus-4-6",
       "ownership": [
-        "reports/ios_architect_architecture.md"
+        "workspace/",
+        ".worktrees/web_builder"
       ],
       "responsibilities": [
-        "Define file ownership, data flow, state boundaries, and HIG-safe UI constraints.",
-        "Prefer SPM-first iOS integration and avoid unnecessary dependency drift.",
-        "Create architecture contracts before implementation."
+        "Implement Next.js pages, components, and API routes.",
+        "Build Supabase schema, RLS policies, and Edge Functions.",
+        "Create PWA configuration and service worker.",
+        "Implement 카카오 OAuth and OG meta generation.",
+        "Stay inside sprint contract scope.",
+        "Write TypeScript strict-mode code with proper type safety."
       ]
     },
     {
-      "id": "ios_ui_builder",
-      "title": "iOS UI Builder",
-      "team": "development",
-      "provider": "codex_cli",
-      "model": "gpt-5.4",
-      "ownership": [
-        ".worktrees/ios_ui_builder"
-      ],
-      "responsibilities": [
-        "Implement screen structure, components, and native-feeling interactions.",
-        "Stay inside assigned worktree and file boundaries.",
-        "Do not bypass Safe Area, touch target, or accessibility constraints."
-      ]
-    },
-    {
-      "id": "ios_logic_builder",
-      "title": "iOS Logic Builder",
-      "team": "development",
-      "provider": "codex_cli",
-      "model": "gpt-5.4",
-      "ownership": [
-        ".worktrees/ios_logic_builder"
-      ],
-      "responsibilities": [
-        "Implement stores, network boundaries, domain logic, and testable flows.",
-        "Keep UI state and business state separated.",
-        "Document assumptions that could affect QA."
-      ]
-    },
-    {
-      "id": "red_team_reviewer",
-      "title": "Red Team Reviewer",
-      "team": "evaluation",
+      "id": "reviewer",
+      "title": "Reviewer (Evaluator)",
+      "team": "evaluator",
       "provider": "claude_api",
-      "model": "claude-sonnet-4-6",
+      "model": "claude-opus-4-6",
       "ownership": [
-        "reports/red_team_reviewer_code_review.md"
+        "reports/reviewer_code_review.md",
+        "reports/reviewer_ux_audit.md"
       ],
       "responsibilities": [
+        "Review code for correctness, security (RLS, XSS, injection), and performance.",
+        "Audit UX against acceptance criteria and design direction.",
+        "Check accessibility (touch targets, contrast, font sizes).",
+        "Verify 카카오톡 OG rendering and PWA compliance.",
         "Assume the implementation is wrong until proven otherwise.",
-        "Find hallucinated behavior, architectural mismatches, and regression risk.",
-        "Reject vague or self-congratulatory reports."
-      ]
-    },
-    {
-      "id": "hig_guardian",
-      "title": "HIG Guardian",
-      "team": "evaluation",
-      "provider": "claude_api",
-      "model": "claude-sonnet-4-6",
-      "ownership": [
-        "reports/hig_guardian_hig_audit.md"
-      ],
-      "responsibilities": [
-        "Audit the product against Apple HIG and iOS conventions.",
-        "Block release when the app feels non-native, cluttered, or inaccessible.",
-        "Prefer concrete fix instructions over general style advice."
-      ]
-    },
-    {
-      "id": "visual_qa",
-      "title": "Visual QA",
-      "team": "evaluation",
-      "provider": "claude_api",
-      "model": "claude-sonnet-4-6",
-      "ownership": [
-        "reports/visual_qa_visual_qa.md"
-      ],
-      "responsibilities": [
-        "Use screenshots and render artifacts to catch spacing, overlap, and visual incoherence.",
-        "Check whether the result looks native and complete enough for App Store review.",
-        "Escalate issues back to the delivery lead with file-level guidance."
+        "Return file-specific, actionable feedback with line numbers.",
+        "Block release when evaluation evidence is insufficient."
       ]
     }
   ],
@@ -186,161 +137,98 @@
     {
       "task": "product_research",
       "primary_role": "product_lead",
-      "fallback_roles": [
-        "delivery_lead"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
+      "fallback_roles": ["delivery_lead"],
+      "evaluation_roles": ["reviewer"]
     },
     {
       "task": "market_research",
       "primary_role": "product_lead",
-      "fallback_roles": [
-        "delivery_lead"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
+      "fallback_roles": ["delivery_lead"],
+      "evaluation_roles": ["reviewer"]
     },
     {
       "task": "planning",
       "primary_role": "delivery_lead",
-      "fallback_roles": [
-        "ios_architect"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
+      "fallback_roles": ["product_lead"],
+      "evaluation_roles": ["reviewer"]
     },
     {
       "task": "task_allocation",
       "primary_role": "delivery_lead",
-      "fallback_roles": [
-        "ios_architect"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
+      "fallback_roles": ["product_lead"],
+      "evaluation_roles": ["reviewer"]
     },
     {
       "task": "prd_generation",
       "primary_role": "delivery_lead",
-      "fallback_roles": [
-        "product_lead"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
+      "fallback_roles": ["product_lead"],
+      "evaluation_roles": ["reviewer"]
     },
     {
       "task": "architecture",
-      "primary_role": "ios_architect",
-      "fallback_roles": [
-        "delivery_lead"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
+      "primary_role": "delivery_lead",
+      "fallback_roles": ["product_lead"],
+      "evaluation_roles": ["reviewer"]
     },
     {
-      "task": "ios_implementation",
-      "primary_role": "ios_ui_builder",
-      "fallback_roles": [
-        "ios_logic_builder"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer",
-        "hig_guardian"
-      ]
+      "task": "web_implementation",
+      "primary_role": "web_builder",
+      "fallback_roles": ["delivery_lead"],
+      "evaluation_roles": ["reviewer"]
     },
     {
-      "task": "ui_coding",
-      "primary_role": "ios_ui_builder",
-      "fallback_roles": [
-        "ios_logic_builder"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer",
-        "hig_guardian"
-      ]
+      "task": "frontend_coding",
+      "primary_role": "web_builder",
+      "fallback_roles": ["delivery_lead"],
+      "evaluation_roles": ["reviewer"]
     },
     {
-      "task": "business_logic",
-      "primary_role": "ios_logic_builder",
-      "fallback_roles": [
-        "ios_ui_builder"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
+      "task": "backend_coding",
+      "primary_role": "web_builder",
+      "fallback_roles": ["delivery_lead"],
+      "evaluation_roles": ["reviewer"]
     },
     {
       "task": "code_review",
-      "primary_role": "red_team_reviewer",
-      "fallback_roles": [
-        "hig_guardian"
-      ],
-      "evaluation_roles": [
-        "visual_qa"
-      ]
+      "primary_role": "reviewer",
+      "fallback_roles": ["delivery_lead"],
+      "evaluation_roles": ["product_lead"]
     },
     {
-      "task": "hig_audit",
-      "primary_role": "hig_guardian",
-      "fallback_roles": [
-        "visual_qa"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
-    },
-    {
-      "task": "visual_qa",
-      "primary_role": "visual_qa",
-      "fallback_roles": [
-        "hig_guardian"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
+      "task": "ux_audit",
+      "primary_role": "reviewer",
+      "fallback_roles": ["product_lead"],
+      "evaluation_roles": ["delivery_lead"]
     },
     {
       "task": "bug_fix",
-      "primary_role": "ios_logic_builder",
-      "fallback_roles": [
-        "ios_ui_builder"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer",
-        "hig_guardian"
-      ]
+      "primary_role": "web_builder",
+      "fallback_roles": ["delivery_lead"],
+      "evaluation_roles": ["reviewer"]
+    },
+    {
+      "task": "sprint_eval",
+      "primary_role": "reviewer",
+      "fallback_roles": ["product_lead"],
+      "evaluation_roles": ["delivery_lead"]
     },
     {
       "task": "documentation",
       "primary_role": "delivery_lead",
-      "fallback_roles": [
-        "product_lead"
-      ],
-      "evaluation_roles": [
-        "red_team_reviewer"
-      ]
+      "fallback_roles": ["product_lead"],
+      "evaluation_roles": ["reviewer"]
     },
     {
       "task": "arbitration",
       "primary_role": "delivery_lead",
-      "fallback_roles": [
-        "red_team_reviewer"
-      ],
-      "evaluation_roles": [
-        "hig_guardian"
-      ]
+      "fallback_roles": ["reviewer"],
+      "evaluation_roles": ["product_lead"]
     }
   ],
   "fork_policy": {
     "spawn_when": [
       "the task has bounded acceptance criteria",
-      "the write scope is disjoint",
+      "the write scope is disjoint (e.g., frontend vs backend vs schema)",
       "the parent agent can continue independently",
       "the fork returns a concrete verification artifact"
     ],

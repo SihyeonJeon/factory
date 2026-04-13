@@ -1,0 +1,18 @@
+{
+  "role_id": "reviewer",
+  "title": "Reviewer (Evaluator)",
+  "provider_hint": "claude_api",
+  "inputs": [
+    "system_rules",
+    "constraints_input",
+    "acceptance_input",
+    "design_input",
+    "review_report",
+    "team_manifest"
+  ],
+  "output": {
+    "kind": "markdown",
+    "filename_stem": "reviewer_evaluation",
+    "description": "Evaluation report with verdict, file-specific findings, security audit (RLS, XSS), UX compliance, accessibility checks, and actionable remediation steps."
+  }
+}

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-master_router.py - Company-style multi-agent model router.
+master_router.py - Three-agent (Planner-Generator-Evaluator) model router.
 
-Routing policy (2026-04-10):
-- Claude CLI handles all reasoning, planning, review, HIG audit, and visual QA.
-  Model tier scales by task difficulty: opus-4-6 for heavy reasoning,
-  sonnet-4-6 for standard work, haiku-4-5 for ops/compaction.
-- Codex CLI handles iOS implementation (UI + logic) in worktrees.
-- Gemini is no longer used.
+Routing policy (2026-04-12):
+- Claude CLI handles all roles: planning, implementation, review.
+  Model tier scales by task difficulty: opus-4-6 for heavy reasoning + implementation,
+  sonnet-4-6 for standard planning, haiku-4-5 for ops/compaction.
+- Codex CLI is available as secondary implementation provider.
+- Architecture: Planner → Generator → Evaluator (inspired by Anthropic harness design).
 """
 
 from __future__ import annotations
@@ -35,20 +35,18 @@ TASK_ROLE_ORDER: dict[str, list[str]] = {
     "market_research": ["product_lead", "delivery_lead"],
     "planning": ["delivery_lead", "product_lead"],
     "prd_generation": ["delivery_lead", "product_lead"],
-    "architecture": ["ios_architect", "delivery_lead"],
-    "task_allocation": ["delivery_lead", "ios_architect"],
-    "ios_implementation": ["ios_ui_builder", "ios_logic_builder"],
-    "ui_coding": ["ios_ui_builder", "ios_logic_builder"],
-    "business_logic": ["ios_logic_builder", "ios_ui_builder"],
-    "code_review": ["red_team_reviewer", "ios_architect"],
-    "hig_audit": ["hig_guardian", "visual_qa"],
-    "visual_qa": ["visual_qa", "hig_guardian"],
-    "e2e_test_gen": ["ios_logic_builder", "ios_ui_builder"],
-    "bug_fix": ["ios_logic_builder", "ios_ui_builder"],
-    "sprint_eval": ["red_team_reviewer", "visual_qa"],
+    "architecture": ["delivery_lead", "product_lead"],
+    "task_allocation": ["delivery_lead", "product_lead"],
+    "web_implementation": ["web_builder", "delivery_lead"],
+    "frontend_coding": ["web_builder", "delivery_lead"],
+    "backend_coding": ["web_builder", "delivery_lead"],
+    "code_review": ["reviewer", "delivery_lead"],
+    "ux_audit": ["reviewer", "product_lead"],
+    "bug_fix": ["web_builder", "delivery_lead"],
+    "sprint_eval": ["reviewer", "product_lead"],
     "documentation": ["delivery_lead", "product_lead"],
-    "boilerplate": ["ios_ui_builder", "ios_logic_builder"],
-    "arbitration": ["delivery_lead", "ios_architect"],
+    "boilerplate": ["web_builder", "delivery_lead"],
+    "arbitration": ["delivery_lead", "reviewer"],
 }
 
 class TaskType(Enum):
@@ -58,13 +56,11 @@ class TaskType(Enum):
     PRD_GENERATION = "prd_generation"
     ARCHITECTURE = "architecture"
     TASK_ALLOCATION = "task_allocation"
-    IOS_IMPLEMENTATION = "ios_implementation"
-    UI_CODING = "ui_coding"
-    BUSINESS_LOGIC = "business_logic"
+    WEB_IMPLEMENTATION = "web_implementation"
+    FRONTEND_CODING = "frontend_coding"
+    BACKEND_CODING = "backend_coding"
     CODE_REVIEW = "code_review"
-    HIG_AUDIT = "hig_audit"
-    VISUAL_QA = "visual_qa"
-    E2E_TEST_GEN = "e2e_test_gen"
+    UX_AUDIT = "ux_audit"
     BUG_FIX = "bug_fix"
     SPRINT_EVAL = "sprint_eval"
     DOCUMENTATION = "documentation"
@@ -79,13 +75,11 @@ TASK_TIMEOUTS: dict[TaskType, int] = {
     TaskType.PRD_GENERATION: 240,
     TaskType.ARCHITECTURE: 900,
     TaskType.TASK_ALLOCATION: 240,
-    TaskType.IOS_IMPLEMENTATION: 900,
-    TaskType.UI_CODING: 900,
-    TaskType.BUSINESS_LOGIC: 900,
+    TaskType.WEB_IMPLEMENTATION: 900,
+    TaskType.FRONTEND_CODING: 900,
+    TaskType.BACKEND_CODING: 900,
     TaskType.CODE_REVIEW: 720,
-    TaskType.HIG_AUDIT: 600,
-    TaskType.VISUAL_QA: 600,
-    TaskType.E2E_TEST_GEN: 600,
+    TaskType.UX_AUDIT: 600,
     TaskType.BUG_FIX: 1200,
     TaskType.SPRINT_EVAL: 300,
     TaskType.DOCUMENTATION: 180,
@@ -121,12 +115,8 @@ def _resolve_model(role_id: str) -> str:
     overrides = {
         "product_lead": os.environ.get("FACTORY_CLAUDE_STRATEGY_MODEL"),
         "delivery_lead": os.environ.get("FACTORY_CLAUDE_DELIVERY_MODEL"),
-        "ios_architect": os.environ.get("FACTORY_CLAUDE_STRATEGY_MODEL"),
-        "ios_ui_builder": os.environ.get("FACTORY_CODEX_PRIMARY_MODEL"),
-        "ios_logic_builder": os.environ.get("FACTORY_CODEX_PRIMARY_MODEL"),
-        "red_team_reviewer": os.environ.get("FACTORY_CLAUDE_DELIVERY_MODEL"),
-        "hig_guardian": os.environ.get("FACTORY_CLAUDE_DELIVERY_MODEL"),
-        "visual_qa": os.environ.get("FACTORY_CLAUDE_DELIVERY_MODEL"),
+        "web_builder": os.environ.get("FACTORY_CLAUDE_STRATEGY_MODEL"),
+        "reviewer": os.environ.get("FACTORY_CLAUDE_STRATEGY_MODEL"),
         "platform_operator": os.environ.get("FACTORY_CLAUDE_OPS_MODEL"),
     }
     if overrides.get(role_id):
@@ -155,14 +145,20 @@ def _resolve_model(role_id: str) -> str:
     return role.model or "unknown"
 
 
-# Claude model tier by task difficulty. Heavy reasoning → opus, standard → sonnet,
-# ops/compaction → haiku. Codex is not tiered here (codex roles own their model).
+# Claude model tier by task difficulty.
+# Heavy reasoning + implementation + review → opus
+# Standard planning → sonnet
+# Ops/compaction → haiku
 _CLAUDE_HEAVY_TASKS = {
     TaskType.PRODUCT_RESEARCH,
     TaskType.MARKET_RESEARCH,
     TaskType.ARCHITECTURE,
     TaskType.ARBITRATION,
     TaskType.CODE_REVIEW,
+    TaskType.UX_AUDIT,
+    TaskType.WEB_IMPLEMENTATION,
+    TaskType.FRONTEND_CODING,
+    TaskType.BACKEND_CODING,
 }
 _CLAUDE_OPS_TASKS = {
     TaskType.DOCUMENTATION,
@@ -227,6 +223,16 @@ def _run_role(
     provider = PROVIDERS[role.provider]
     model = _resolve_model_for_task(role_id, task_type)
 
+    # Generator tasks need write access to produce code
+    _WRITE_TASKS = {
+        TaskType.WEB_IMPLEMENTATION,
+        TaskType.FRONTEND_CODING,
+        TaskType.BACKEND_CODING,
+        TaskType.BUG_FIX,
+        TaskType.BOILERPLATE,
+    }
+    needs_write = task_type in _WRITE_TASKS
+
     result: ProviderResult
     if provider.provider_id == "claude_api":
         effective_prompt = prompt
@@ -240,6 +246,7 @@ def _run_role(
                 cwd=cwd,
                 json_schema=json_schema,
                 timeout=timeout,
+                allow_write=needs_write,
             )
         else:
             result = run_claude_api(
@@ -382,19 +389,19 @@ def allocate_tasks(prompt: str, **kwargs) -> AgentResult:
     return dispatch(TaskType.TASK_ALLOCATION, prompt, **kwargs)
 
 
-def implement_ios(prompt: str, cwd: Path = None, **kwargs) -> AgentResult:
-    return dispatch(TaskType.IOS_IMPLEMENTATION, prompt, cwd=cwd, **kwargs)
+def implement_web(prompt: str, cwd: Path = None, **kwargs) -> AgentResult:
+    return dispatch(TaskType.WEB_IMPLEMENTATION, prompt, cwd=cwd, **kwargs)
 
 
-def code_ui(prompt: str, cwd: Path = None, **kwargs) -> AgentResult:
-    return dispatch(TaskType.UI_CODING, prompt, cwd=cwd, **kwargs)
+def code_frontend(prompt: str, cwd: Path = None, **kwargs) -> AgentResult:
+    return dispatch(TaskType.FRONTEND_CODING, prompt, cwd=cwd, **kwargs)
 
 
-def code_logic(prompt: str, cwd: Path = None, **kwargs) -> AgentResult:
-    return dispatch(TaskType.BUSINESS_LOGIC, prompt, cwd=cwd, **kwargs)
+def code_backend(prompt: str, cwd: Path = None, **kwargs) -> AgentResult:
+    return dispatch(TaskType.BACKEND_CODING, prompt, cwd=cwd, **kwargs)
 
 
-def review_code(prompt: str = "Review the codebase for bugs, HIG regressions, and release risks.", cwd: Path = None, **kwargs) -> AgentResult:
+def review_code(prompt: str = "Review the codebase for bugs, security issues, and release risks.", cwd: Path = None, **kwargs) -> AgentResult:
     return dispatch(
         TaskType.CODE_REVIEW,
         prompt,
@@ -403,16 +410,12 @@ def review_code(prompt: str = "Review the codebase for bugs, HIG regressions, an
     )
 
 
-def audit_hig(prompt: str, **kwargs) -> AgentResult:
-    return dispatch(TaskType.HIG_AUDIT, prompt, **kwargs)
-
-
-def visual_qa(prompt: str, image_path: str = None, **kwargs) -> AgentResult:
-    return dispatch(TaskType.VISUAL_QA, prompt, image_path=image_path, **kwargs)
+def audit_ux(prompt: str, **kwargs) -> AgentResult:
+    return dispatch(TaskType.UX_AUDIT, prompt, **kwargs)
 
 
 def generate_tests(prompt: str, cwd: Path = None, **kwargs) -> AgentResult:
-    return dispatch(TaskType.E2E_TEST_GEN, prompt, cwd=cwd, **kwargs)
+    return dispatch(TaskType.BUG_FIX, prompt, cwd=cwd, **kwargs)
 
 
 def fix_bug(prompt: str, cwd: Path = None, **kwargs) -> AgentResult:
@@ -436,7 +439,7 @@ def arbitrate(prompt: str, **kwargs) -> AgentResult:
 
 
 if __name__ == "__main__":
-    print("=== Company Harness Routing Table ===\n")
+    print("=== Moment Harness Routing Table (Planner-Generator-Evaluator) ===\n")
     for task_name, role_order in TASK_ROLE_ORDER.items():
         primary = role_order[0]
         fallbacks = ", ".join(role_order[1:]) or "none"

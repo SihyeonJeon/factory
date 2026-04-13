@@ -1,0 +1,20 @@
+{
+  "role_id": "web_builder",
+  "title": "Web Builder (Generator)",
+  "provider_hint": "claude_api",
+  "inputs": [
+    "system_rules",
+    "architecture_report",
+    "planning_report",
+    "product_report",
+    "constraints_input",
+    "acceptance_input",
+    "design_input",
+    "blackboard_compact"
+  ],
+  "output": {
+    "kind": "markdown",
+    "filename_stem": "web_builder_implementation",
+    "description": "Implementation report listing changed files, new routes, Supabase schema changes, and remaining work for the next subtask."
+  }
+}

@@ -68,8 +68,9 @@ def ensure_lane_worktree(
     worktree_dir = deps.worktrees_dir / f"{role_name}-{lane_tag}"
     branch_name = f"harness/{role_name}-{lane_tag}"
     if worktree_dir.exists():
-        sync_workspace_overlay(deps.factory_dir, worktree_dir)
-        return worktree_dir, branch_name
+        # Remove stale worktree so it re-branches from latest start_point.
+        # Any prior uncommitted work is already auto-committed before merge.
+        deps.git("worktree", "remove", "--force", str(worktree_dir), cwd=deps.factory_dir, check=False)
     deps.git("worktree", "add", "-B", branch_name, str(worktree_dir), start_point)
     sync_workspace_overlay(deps.factory_dir, worktree_dir)
     return worktree_dir, branch_name
@@ -102,7 +103,28 @@ def branch_ahead_count(deps: WorktreeDeps, base_ref: str, branch_ref: str, cwd: 
     return int(proc.stdout.strip() or "0")
 
 
+def auto_commit_worktree(deps: WorktreeDeps, branch_name: str) -> bool:
+    """Auto-commit any uncommitted changes in the worktree for the given branch.
+
+    Returns True if a commit was created, False if there was nothing to commit.
+    """
+    worktree = find_worktree_for_branch(deps, branch_name)
+    if not worktree:
+        return False
+    status = deps.git("status", "--short", cwd=worktree).stdout.strip()
+    if not status:
+        return False
+    deps.git("add", "-A", cwd=worktree)
+    deps.git(
+        "commit", "-m", f"fix: auto-commit {branch_name} changes from harness agent",
+        cwd=worktree, check=False,
+    )
+    deps.append_operator_journal(f"Auto-committed worktree changes for {branch_name}")
+    return True
+
+
 def merge_branch_into_integration(deps: WorktreeDeps, branch_name: str) -> tuple[bool, str]:
+    auto_commit_worktree(deps, branch_name)
     integration = ensure_integration_worktree(deps)
     if branch_ahead_count(deps, deps.integration_branch, branch_name, integration) == 0:
         return True, f"{branch_name} already merged or has no unique commits"

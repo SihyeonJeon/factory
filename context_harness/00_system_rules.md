@@ -1,48 +1,59 @@
 # Company Harness Constitution
 
-This repository now follows a company-style harness instead of a flat model router.
+This repository follows a three-agent harness inspired by Anthropic's Planner-Generator-Evaluator architecture for long-running application development.
 
-## 1. Team structure
+## 1. Three-agent architecture
 
-- Product team
-- `market_analyst` uses Claude CLI (sonnet-4-6) for market signal synthesis, competitor scans, and community evidence.
-- `product_strategist` uses Claude CLI (opus-4-6) for PRD synthesis, tradeoffs, and release-scope decisions.
+The harness uses three core agent roles, each with clear separation of concerns:
 
-- Planning team
-- `delivery_planner` uses Claude CLI (sonnet-4-6) to break work into bounded tasks, define ownership, and decide when forks are justified.
+- **Planner** (product_lead + delivery_lead)
+  - `product_lead` uses Claude API (opus-4-6) for market research, product strategy, and PRD synthesis.
+  - `delivery_lead` uses Claude API (sonnet-4-6) for sprint planning, task decomposition, and architecture decisions.
 
-- Engineering team
-- `ios_architect` uses Claude CLI (opus-4-6) for system design, iOS constraints, and HIG-safe architecture.
-- `implementation_lead` uses Codex CLI (gpt-5.4) for long-running code edits, tool use, and parallel implementation.
-- `subagent_executor` uses Codex CLI for bounded, non-blocking subtasks with disjoint ownership.
+- **Generator** (web_builder)
+  - `web_builder` uses Claude CLI (opus-4-6) for full-stack implementation (Next.js frontend + Supabase backend + Edge Functions).
+  - Operates in worktrees for isolated implementation lanes.
+  - Produces concrete code artifacts against acceptance criteria.
 
-- Evaluation team
-- `visual_qa` uses Claude CLI (sonnet-4-6) for screenshot review, visual regressions, and HIG layout checks.
-- `red_team_reviewer` / `code_auditor` uses Claude CLI (opus-4-6) for spec compliance, regression review, and feedback synthesis.
+- **Evaluator** (reviewer)
+  - `reviewer` uses Claude API (opus-4-6) for code review, UX audit, accessibility check, and release gating.
+  - Must not share context with the generator to ensure independent evaluation.
+  - Returns file-specific, actionable feedback.
 
 ## 2. Model assignment policy
 
-- Claude (opus/sonnet/haiku tiered) owns research, planning, architecture, arbitration, review, and screenshot-heavy QA.
-- Codex (gpt-5.4) owns implementation, refactors, and tool-using code execution inside worktrees.
-- Tier routing lives in `master_router.py` `_CLAUDE_HEAVY_TASKS` (opus) vs default (sonnet); ops tasks may use haiku.
-- No single provider may both implement and self-approve a release-critical task without another evaluator.
+- Claude (opus/sonnet/haiku tiered) owns all roles: research, planning, architecture, implementation, review.
+- Tier routing: opus for heavy reasoning + implementation + review, sonnet for standard planning, haiku for ops/compaction.
+- No single agent may both implement and self-approve a release-critical task.
+- Codex CLI is available as a secondary implementation provider when Claude is unavailable.
 
-## 3. HIG release gate
+## 3. Web release gate
 
-- Every screen must respect safe areas, 44 pt targets, contrast, accessibility labels, and dark mode support.
-- AI-generated UI is not considered releasable until it passes both code-level and screenshot-level HIG review.
-- If a custom interaction risks violating native iOS expectations, the architect must replace it with a safer native pattern.
-- Native iOS is the primary release target. Expo web is only a temporary proving ground until a real `workspace/ios` project exists.
+- Every page must be responsive (mobile 375px, tablet 768px, desktop 1280px).
+- Lighthouse Performance >= 90, PWA score >= 80.
+- 카카오톡 OG 미리보기가 커버 이미지 + 제목 + 날짜로 정상 렌더링.
+- Supabase RLS 정책이 모든 테이블에 적용.
+- 접근성: 터치 타겟 44px+, 명암비 4.5:1+, 폰트 크기 16px+ 기본.
+- 개인정보 수집 동의 절차 포함.
 
-## 4. Token efficiency
+## 4. Sprint contract pattern
 
-- Keep product, plans, reports, and code in separate directories so each agent reads only the relevant slice.
-- Use planner-generated task packets instead of replaying the full project history.
-- Fork only when the file ownership is disjoint and the parent can continue working.
-- Archive stale bug reports and screenshots instead of leaving them in the default prompt path.
-- Treat `context_harness/product_inputs/*.md` as the highest-priority user intent inputs during intake.
+Each sprint follows the Anthropic harness contract negotiation pattern:
+1. Planner defines sprint scope with acceptance criteria.
+2. Generator and Evaluator negotiate a testable contract before implementation begins.
+3. Generator implements against the contract.
+4. Evaluator grades against the contract criteria, not subjective taste.
+5. Generator re-enters only after Evaluator provides concrete, localized feedback.
 
-## 5. Evidence loop
+## 5. Context management
+
+- Use `claude-progress.md` to track state between sessions (what's done, what's next, known issues).
+- Structured handoff artifacts between agent turns (compressed, max 800 words).
+- Keep product, plans, reports, and code in separate directories for token efficiency.
+- Archive stale artifacts instead of leaving them in the active context path.
+- Treat `context_harness/product_inputs/*.md` as the highest-priority user intent inputs.
+
+## 6. Evidence loop
 
 - Product generates sources and assumptions.
 - Planning converts them into bounded acceptance criteria.
@@ -50,7 +61,11 @@ This repository now follows a company-style harness instead of a flat model rout
 - Evaluation returns file-specific bugs and release evidence.
 - Engineering only re-enters after feedback is concrete.
 
-## 6. Native strategy
+## 7. Technology strategy
 
-- Follow [`context_harness/architecture/native_ios_strategy.md`](/Users/jeonsihyeon/factory/context_harness/architecture/native_ios_strategy.md) as the default platform plan.
-- Once native project artifacts exist, Xcode evidence outranks Expo-only evidence.
+- Next.js 15+ (App Router) with SSR for OG meta optimization.
+- PWA for zero-install guest experience.
+- Supabase for auth, database, realtime, storage, and edge functions.
+- TypeScript strict mode throughout.
+- Vercel deployment.
+- Follow specification-driven development: PRD in markdown → agent reads → implements.

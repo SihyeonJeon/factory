@@ -1,15 +1,15 @@
 {
   "role_id": "product_lead",
-  "title": "Product Lead",
-  "provider_hint": "gemini_cli",
+  "title": "Product Lead (Planner)",
+  "provider_hint": "claude_api",
   "inputs": [
     "system_rules",
     "idea_input",
     "constraints_input",
     "design_input",
     "acceptance_input",
-    "native_ios_strategy",
-    "hig_guardrails"
+    "debate_log_reference",
+    "idea_full_proposal"
   ],
   "output": {
     "kind": "json",
@@ -19,10 +19,13 @@
       "properties": {
         "summary": {"type": "string"},
         "user_pains": {"type": "array", "items": {"type": "string"}},
-        "hig_risks": {"type": "array", "items": {"type": "string"}},
-        "design_references": {"type": "array", "items": {"type": "string"}}
+        "ux_risks": {"type": "array", "items": {"type": "string"}},
+        "conversion_risks": {"type": "array", "items": {"type": "string"}},
+        "design_references": {"type": "array", "items": {"type": "string"}},
+        "competitive_landscape": {"type": "array", "items": {"type": "string"}},
+        "kakao_integration_notes": {"type": "array", "items": {"type": "string"}}
       },
-      "required": ["summary", "user_pains", "hig_risks", "design_references"],
+      "required": ["summary", "user_pains", "ux_risks", "conversion_risks", "design_references"],
       "additionalProperties": false
     }
   }

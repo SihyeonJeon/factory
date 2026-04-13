@@ -76,14 +76,18 @@ def validate_role_output(
         raise RuntimeError(
             f"{role_name} produced empty output for {task_type.value}"
         )
-    lowered = stripped.lower()
-    for pattern in _ROLE_OUTPUT_ERROR_PATTERNS:
-        if pattern in lowered:
-            raise RuntimeError(
-                f"{role_name} returned provider error payload for "
-                f"{task_type.value}: {stripped[:200]!r}"
-            )
     min_length = 64 if json_schema else 200
+    # Only check for error payload patterns on short outputs.
+    # Long outputs (>500 chars) are real responses that may legitimately
+    # discuss rate limits, service availability, etc. in their review text.
+    lowered = stripped.lower()
+    if len(stripped) < 500:
+        for pattern in _ROLE_OUTPUT_ERROR_PATTERNS:
+            if pattern in lowered:
+                raise RuntimeError(
+                    f"{role_name} returned provider error payload for "
+                    f"{task_type.value}: {stripped[:200]!r}"
+                )
     if len(stripped) < min_length:
         raise RuntimeError(
             f"{role_name} output too short ({len(stripped)} chars, "
@@ -147,22 +151,19 @@ def build_role_prompt(
     artifact_chars = 1600
     TaskType = deps.task_type_enum
     codex_code_tasks = {
-        TaskType.IOS_IMPLEMENTATION,
+        TaskType.WEB_IMPLEMENTATION,
         TaskType.BUG_FIX,
-        TaskType.UI_CODING,
-        TaskType.BUSINESS_LOGIC,
+        TaskType.FRONTEND_CODING,
+        TaskType.BACKEND_CODING,
     }
     if provider == "codex_cli" and task_type in codex_code_tasks:
         preferred_names = [
             "architecture_report",
             "planning_report",
             "product_report",
-            "ui_ux_screen_contract",
             "constraints_input",
             "acceptance_input",
             "design_input",
-            "hig_guardrails",
-            "native_ios_strategy",
             "blackboard_compact",
         ]
         relevant_artifacts = {name: artifacts[name] for name in preferred_names if name in artifacts}

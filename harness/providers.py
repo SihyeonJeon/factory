@@ -17,9 +17,9 @@ from harness.runtime_env import load_project_env
 RATE_LIMIT_PATTERNS = [
     re.compile(r"rate\s*limit", re.IGNORECASE),
     re.compile(r"too\s*many\s*requests", re.IGNORECASE),
-    re.compile(r"429", re.IGNORECASE),
-    re.compile(r"overloaded", re.IGNORECASE),
-    re.compile(r"capacity", re.IGNORECASE),
+    re.compile(r"(?:error|status).*429", re.IGNORECASE),
+    re.compile(r"server\s+(?:is\s+)?overloaded", re.IGNORECASE),
+    re.compile(r"at\s+capacity", re.IGNORECASE),
     re.compile(r"out of extra usage", re.IGNORECASE),
     re.compile(r"credit balance is too low", re.IGNORECASE),
 ]
@@ -133,32 +133,43 @@ def run_claude_cli(
     json_schema: str | dict | None = None,
     timeout: int = 300,
     max_retries: int = 1,
+    allow_write: bool = False,
 ) -> ProviderResult:
     project_root = Path(__file__).resolve().parent.parent
     load_project_env(project_root)
 
-    cmd = [
-        "claude",
-        "-p",
-        prompt,
-        "--model",
-        normalize_claude_cli_model(model),
-        "--output-format",
-        "text",
-        "--permission-mode",
-        "plan",
-        "--setting-sources",
-        "project,local",
-        "--allowedTools",
-        "Read",
-        "Glob",
-        "Grep",
-        "--disallowedTools",
-        "Write",
-        "Edit",
-        "MultiEdit",
-        "Bash",
-    ]
+    if allow_write:
+        cmd = [
+            "claude",
+            "-p",
+            prompt,
+            "--model",
+            normalize_claude_cli_model(model),
+            "--output-format",
+            "text",
+            "--dangerously-skip-permissions",
+            "--setting-sources",
+            "project,local",
+        ]
+    else:
+        cmd = [
+            "claude",
+            "-p",
+            prompt,
+            "--model",
+            normalize_claude_cli_model(model),
+            "--output-format",
+            "text",
+            "--dangerously-skip-permissions",
+            "--setting-sources",
+            "project,local",
+            "--disallowedTools",
+            "Write",
+            "Edit",
+            "MultiEdit",
+            "Bash",
+            "NotebookEdit",
+        ]
     if system_prompt:
         cmd += ["--append-system-prompt", system_prompt]
     if cwd:
@@ -169,9 +180,13 @@ def run_claude_cli(
         cmd[cmd.index("text")] = "json"
         cmd += ["--json-schema", json.dumps(parsed_schema, ensure_ascii=False)]
 
+    # Both read-only and write tasks run from the target CWD so that Glob/Read
+    # resolve relative paths correctly (e.g. public/icons/ → worktree/web/public/icons/).
+    # The --disallowedTools list prevents read-only agents from writing.
+    effective_cwd = cwd or project_root
     result = run_cli(
         cmd,
-        cwd=cwd or project_root,
+        cwd=effective_cwd or project_root,
         timeout=timeout,
         max_retries=max_retries,
         extra_env={"ANTHROPIC_API_KEY": None},
@@ -372,6 +387,14 @@ def run_cli(
             return ProviderResult(False, "", retries=attempt, error=str(exc))
 
         combined = proc.stdout + proc.stderr
+
+        # Check for substantial content BEFORE rate-limit check.
+        # Claude CLI reviews may contain words like "capacity" or "overloaded"
+        # that match rate-limit patterns but are actually valid review content.
+        best_output = proc.stdout.strip() or proc.stderr.strip()
+        if best_output and len(best_output) > 200:
+            return ProviderResult(True, proc.stdout.strip() or proc.stderr, retries=attempt)
+
         limited, wait_seconds = is_rate_limited(combined)
         if limited and attempt < max_retries:
             time.sleep(wait_seconds)

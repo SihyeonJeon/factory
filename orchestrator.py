@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """
-Company-style multi-agent harness orchestrator.
+Moment harness orchestrator — Planner-Generator-Evaluator architecture.
+
+Three-agent pattern inspired by Anthropic's harness design for long-running
+application development. Planner (product_lead + delivery_lead) → Generator
+(web_builder) → Evaluator (reviewer).
 """
 
 from __future__ import annotations
 
 import argparse
-import base64
 import json
 import os
-import plistlib
 import re
-import shutil
 import subprocess
 import time
 from dataclasses import dataclass
@@ -48,7 +49,9 @@ HOST_RUNTIME_BASELINE_FILE = REPORTS_DIR / "host_runtime_baseline.json"
 BLACKBOARD_FILE = CONTEXT_DIR / "blackboard.md"
 BLACKBOARD_COMPACT_FILE = HANDOFFS_DIR / "blackboard_compact.md"
 HANDOFF_LEDGER_FILE = CONTEXT_DIR / "handoff_ledger.jsonl"
+DECISIONS_LOG_FILE = CONTEXT_DIR / "decisions_log.jsonl"
 OPERATOR_JOURNAL_FILE = CONTEXT_DIR / "operator_journal.md"
+PROGRESS_FILE = CONTEXT_DIR / "claude-progress.md"
 INTEGRATION_WORKTREE = WORKTREES_DIR / "_integration"
 INTEGRATION_BRANCH = "harness/integration"
 MANIFEST = load_manifest(TEAM_MANIFEST_FILE)
@@ -69,8 +72,7 @@ class EvaluationSummary:
     blockers: list[str]
     lanes: list[str]
     review_report: Path
-    hig_report: Path
-    visual_report: Path
+    ux_report: Path
 
 
 def ensure_dirs():
@@ -124,6 +126,30 @@ def append_operator_journal(message: str):
         handle.write(f"\n- [{timestamp}] {message}\n")
 
 
+def update_progress(section: str, content: str):
+    """Update claude-progress.md for state tracking between sessions."""
+    PROGRESS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+
+    if PROGRESS_FILE.exists():
+        text = PROGRESS_FILE.read_text(encoding="utf-8")
+    else:
+        text = "# Moment Harness Progress\n\n"
+
+    marker_start = f"## {section}"
+    marker_end = "\n## "
+    if marker_start in text:
+        start = text.index(marker_start)
+        end = text.find(marker_end, start + len(marker_start))
+        if end == -1:
+            text = text[:start]
+        else:
+            text = text[:start] + text[end:]
+
+    text += f"\n{marker_start}\n_Updated: {timestamp}_\n\n{content.strip()}\n"
+    save_text(PROGRESS_FILE, text)
+
+
 def git(*args: str, check: bool = True, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         ["git", *args],
@@ -173,18 +199,6 @@ def _build_probe_deps():
     )
 
 
-def run_xcode_runtime_probe(repo: Path) -> Path:
-    from harness.ops.probes import run_xcode_runtime_probe as _run
-
-    return _run(_build_probe_deps(), repo)
-
-
-def run_xcode_test_probe(repo: Path) -> Path:
-    from harness.ops.probes import run_xcode_test_probe as _run
-
-    return _run(_build_probe_deps(), repo)
-
-
 def _build_doctor_deps():
     from harness.ops.doctor import DoctorDeps
 
@@ -218,10 +232,10 @@ def run_preflight_doctor(*, quick: bool = False) -> Path:
 
 def estimate_complexity(brief: str) -> dict[str, int]:
     return {
-        "files_hint": len(re.findall(r"\b(app/|components/|store/|types/|screen|module)\b", brief, flags=re.IGNORECASE)),
-        "ui_hint": len(re.findall(r"\b(ui|screen|component|layout|animation|hig|design)\b", brief, flags=re.IGNORECASE)),
-        "logic_hint": len(re.findall(r"\b(api|logic|state|auth|sync|database|store)\b", brief, flags=re.IGNORECASE)),
-        "qa_hint": len(re.findall(r"\b(qa|test|review|audit|screenshot|vision)\b", brief, flags=re.IGNORECASE)),
+        "files_hint": len(re.findall(r"\b(app/|components/|lib/|api/|pages/|hooks/)\b", brief, flags=re.IGNORECASE)),
+        "frontend_hint": len(re.findall(r"\b(ui|page|component|layout|css|tailwind|design|responsive)\b", brief, flags=re.IGNORECASE)),
+        "backend_hint": len(re.findall(r"\b(api|edge function|supabase|database|rls|auth|schema|migration)\b", brief, flags=re.IGNORECASE)),
+        "qa_hint": len(re.findall(r"\b(qa|test|review|audit|lighthouse|pwa|og|accessibility)\b", brief, flags=re.IGNORECASE)),
     }
 
 
@@ -232,17 +246,17 @@ def evaluate_fork_policy(brief: str) -> ForkDecision:
     reasons: list[str] = []
     lanes: list[str] = ["planner"]
 
-    if complexity["ui_hint"] > 0:
-        lanes.append("ui")
-    if complexity["logic_hint"] > 0:
-        lanes.append("logic")
+    if complexity["frontend_hint"] > 0:
+        lanes.append("frontend")
+    if complexity["backend_hint"] > 0:
+        lanes.append("backend")
     if complexity["qa_hint"] > 0:
         lanes.append("qa")
 
     if complexity["files_hint"] >= thresholds.get("file_scope_hint", 3):
         reasons.append("multiple file domains are implied")
-    if complexity["ui_hint"] and complexity["logic_hint"]:
-        reasons.append("UI and logic can be split into disjoint lanes")
+    if complexity["frontend_hint"] and complexity["backend_hint"]:
+        reasons.append("frontend and backend can be split into disjoint lanes")
     if complexity["qa_hint"]:
         reasons.append("evaluation can run as an independent lane")
     if len(set(lanes)) >= thresholds.get("lane_count", 3):
@@ -388,15 +402,20 @@ def collect_intake_artifacts() -> dict[str, Path]:
     artifacts: dict[str, Path] = {}
     preferred_files = {
         "system_rules": CONTEXT_DIR / "00_system_rules.md",
-        "native_ios_strategy": CONTEXT_DIR / "architecture" / "native_ios_strategy.md",
-        "hig_guardrails": CONTEXT_DIR / "policies" / "ios_hig_guardrails.md",
-        "ui_ux_screen_contract": CONTEXT_DIR / "prd" / "ui_ux_screen_contract.md",
         "sprint_contract": CONTEXT_DIR / "sprint_contract.json",
         "idea_input": PRODUCT_INPUTS_DIR / "idea.md",
         "constraints_input": PRODUCT_INPUTS_DIR / "constraints.md",
         "design_input": PRODUCT_INPUTS_DIR / "design.md",
         "acceptance_input": PRODUCT_INPUTS_DIR / "acceptance.md",
     }
+    # Include debate log if available for reference
+    debate_log = FACTORY_DIR / "debate_log_20260412_175502.md"
+    if debate_log.exists():
+        preferred_files["debate_log_reference"] = debate_log
+    idea_doc = FACTORY_DIR / "idea_20260412_175502.md"
+    if idea_doc.exists():
+        preferred_files["idea_full_proposal"] = idea_doc
+
     for name, path in preferred_files.items():
         if path.exists():
             artifacts[name] = path
@@ -429,11 +448,11 @@ def select_delivery_lanes(state: dict[str, Any], fallback_lanes: list[str]) -> l
     if plan_path_value:
         plan_payload = load_json(Path(plan_path_value), {})
         ownership = plan_payload.get("lane_ownership", {})
-        lanes = [lane for lane in ("ui", "logic") if ownership.get(lane)]
+        lanes = [lane for lane in ("frontend", "backend") if ownership.get(lane)]
         if lanes:
             return lanes
-    lanes = [lane for lane in fallback_lanes if lane in {"ui", "logic"}]
-    return lanes or ["ui"]
+    lanes = [lane for lane in fallback_lanes if lane in {"frontend", "backend"}]
+    return lanes or ["frontend"]
 
 
 def build_lane_delivery_brief(base_brief: str, lane: str, state: dict[str, Any]) -> str:
@@ -444,10 +463,11 @@ def build_lane_delivery_brief(base_brief: str, lane: str, state: dict[str, Any])
         "",
         "Execution contract:",
         "- Edit only the files required for this lane.",
-        "- Keep the app native to iOS and SwiftUI-first.",
-        "- Follow the architecture contract and HIG guardrails in the attached artifacts.",
+        "- Use Next.js App Router with TypeScript strict mode.",
+        "- Follow Supabase patterns (RLS, Edge Functions, Realtime).",
+        "- Ensure PWA compliance and mobile-first responsive design.",
         "- Make concrete code changes, not only a plan.",
-        "- If the lane depends on a missing shared contract, create the minimal safe contract and note it in the report.",
+        "- If a shared contract is missing, create the minimal safe version and note it.",
     ]
 
     plan_path_value = state.get("planning_report")
@@ -543,29 +563,18 @@ def plan_schema() -> dict[str, Any]:
 
 
 def compact_blackboard(force: bool = False):
-    if not BLACKBOARD_FILE.exists():
-        return
-    text = BLACKBOARD_FILE.read_text(encoding="utf-8")
-    if not force and len(text) < 6000:
-        return
+    from harness.ops.context import compact_blackboard_v2
 
-    timestamp = time.strftime("%Y%m%d-%H%M%S")
-    archive_path = REPORTS_DIR / f"blackboard_archive_{timestamp}.md"
-    save_text(archive_path, text)
-
-    entries = [entry.strip() for entry in text.split("\n---\n") if entry.strip()]
-    recent_entries = entries[-8:]
-    summary_lines = ["# Blackboard Compact", "", "## Recent entries"]
-    for entry in recent_entries:
-        first_line = next((line for line in entry.splitlines() if line.strip()), "")
-        summary_lines.append(f"- {first_line[:180]}")
-    summary = "\n".join(summary_lines)
-    save_text(BLACKBOARD_COMPACT_FILE, summary)
-
-    compacted = "# Blackboard - Agent Shared Context\n\n" + summary + "\n\n---\n" + "\n---\n".join(recent_entries[-4:])
-    save_text(BLACKBOARD_FILE, compacted)
-    append_ledger({"type": "blackboard_compaction", "archive": str(archive_path), "compact": str(BLACKBOARD_COMPACT_FILE)})
-    append_operator_journal(f"Compacted blackboard to {BLACKBOARD_COMPACT_FILE.name}")
+    archive = compact_blackboard_v2(
+        BLACKBOARD_FILE,
+        BLACKBOARD_COMPACT_FILE,
+        REPORTS_DIR,
+        DECISIONS_LOG_FILE,
+        force=force,
+    )
+    if archive:
+        append_ledger({"type": "blackboard_compaction", "archive": str(archive), "compact": str(BLACKBOARD_COMPACT_FILE)})
+        append_operator_journal(f"Compacted blackboard to {BLACKBOARD_COMPACT_FILE.name}")
 
 
 def branch_ahead_count(base_ref: str, branch_ref: str, cwd: Path) -> int:
@@ -587,132 +596,38 @@ def merge_delivery_branches(branches: list[str], phase_label: str) -> Path:
 
 
 
-
 def extract_blockers(text: str) -> tuple[list[str], list[str]]:
-    lowered = text.lower()
-    blockers: list[str] = []
-    lanes: list[str] = []
+    from harness.ops.evaluation import extract_blockers_v2
 
-    verdict_match = re.search(r"verdict:\s*\*\*([^*]+)\*\*", lowered)
-    verdict = verdict_match.group(1).strip() if verdict_match else ""
-    positive_verdict_signals = ["unblocked", "approved", "pass", "provisionally unblocked", "conditionally approved"]
-    negative_verdict_signals = ["blocked", "hard block", "rejected", "qa_fail", "changes requested", "failed"]
-
-    if verdict:
-        if any(signal in verdict for signal in positive_verdict_signals):
-            blockers = []
-        elif any(signal in verdict for signal in negative_verdict_signals):
-            blockers.append("verdict_blocked")
-
-    blocker_signals = [
-        "qa_fail",
-        "changes_requested",
-        "critical",
-        "must fix",
-        "block release",
-        "hig_fail",
-        "failed criteria",
-        "overall verdict\nqa_fail",
-    ]
-    if not verdict or blockers:
-        for signal in blocker_signals:
-            if signal in lowered:
-                blockers.append(signal)
-
-    ui_signals = ["safe area", "touch target", "layout", "screen", "visual", "dark mode", "hig", "spacing"]
-    logic_signals = ["state", "store", "auth", "api", "logic", "network", "data flow"]
-
-    if any(signal in lowered for signal in ui_signals):
-        lanes.append("ui")
-    if any(signal in lowered for signal in logic_signals):
-        lanes.append("logic")
-
-    return blockers, list(dict.fromkeys(lanes))
+    return extract_blockers_v2(text)
 
 
 def summarize_evaluation(
     review_report: Path,
-    hig_report: Path,
-    visual_report: Path,
-    *,
-    xcode_test_probe: Path | None = None,
+    ux_report: Path,
 ) -> EvaluationSummary:
     blockers: list[str] = []
     lanes: list[str] = []
-    for path in (review_report, hig_report, visual_report):
+    for path in (review_report, ux_report):
         content = path.read_text(encoding="utf-8")
         file_blockers, file_lanes = extract_blockers(content)
         blockers.extend([f"{path.name}:{item}" for item in file_blockers])
         lanes.extend(file_lanes)
-    if xcode_test_probe and xcode_test_probe.exists():
-        test_payload = load_json(xcode_test_probe, {})
-        if not test_payload.get("ok", False):
-            blockers.append(f"{xcode_test_probe.name}:test_failed")
     passed = not blockers
     if not lanes:
-        lanes = ["ui", "logic"]
+        lanes = ["frontend", "backend"]
     return EvaluationSummary(
         passed=passed,
         blockers=blockers,
         lanes=list(dict.fromkeys(lanes)),
         review_report=review_report,
-        hig_report=hig_report,
-        visual_report=visual_report,
+        ux_report=ux_report,
     )
 
 
-def run_playwright_smoke(target_workspace: Path) -> Path:
-    load_runtime_env()
-    report_path = REPORTS_DIR / "playwright_smoke.json"
-    native_ios_present = (target_workspace / "ios" / "project.yml").exists() or any(
-        (target_workspace / "ios").glob("*.xcodeproj")
-    ) if (target_workspace / "ios").exists() else False
-    expo_layer_present = (target_workspace / "package.json").exists() and (target_workspace / "app.json").exists()
-    if native_ios_present or not expo_layer_present:
-        payload = {
-            "mode": "playwright_smoke",
-            "status": "skipped",
-            "passed": True,
-            "reason": (
-                "Native iOS xcodeproj present; Expo Playwright smoke suppressed to avoid false HIG noise against stale App.tsx."
-                if native_ios_present
-                else "Expo smoke path retired; native iOS is now the primary evaluation target."
-            ),
-            "workspace": str(target_workspace),
-            "context": str(CONTEXT_DIR),
-        }
-        save_json(report_path, payload)
-        append_ledger({"type": "playwright_smoke", "report": str(report_path), "returncode": 0, "status": "skipped"})
-        append_operator_journal(f"Playwright smoke skipped for native-only workspace -> {report_path.name}")
-        return report_path
-
-    cmd = [
-        str(FACTORY_DIR / "venv" / "bin" / "python"),
-        str(FACTORY_DIR / "modules" / "qa_testing" / "auto_qa_loop.py"),
-        "--workspace",
-        str(target_workspace),
-        "--context",
-        str(CONTEXT_DIR),
-        "--report-file",
-        str(report_path),
-        "--smoke-only",
-    ]
-    result = run_shell(cmd, cwd=FACTORY_DIR, timeout=240)
-    if result.returncode != 0 and not report_path.exists():
-        payload = {
-            "mode": "playwright_smoke",
-            "passed": False,
-            "runner_error": (result.stdout or result.stderr).strip()[:4000],
-            "workspace": str(target_workspace),
-            "context": str(CONTEXT_DIR),
-        }
-        save_json(report_path, payload)
-    append_ledger({"type": "playwright_smoke", "report": str(report_path), "returncode": result.returncode})
-    append_operator_journal(f"Playwright smoke completed with rc={result.returncode} -> {report_path.name}")
-    return report_path
-
-
 def build_feedback_brief(original_brief: str, summary: EvaluationSummary, round_index: int) -> Path:
+    from harness.ops.context import decisions_summary_for_prompt
+
     lines = [
         "# Remediation Packet",
         "",
@@ -728,15 +643,23 @@ def build_feedback_brief(original_brief: str, summary: EvaluationSummary, round_
     lines += [
         "",
         "## Report paths",
-        f"- code review: {summary.review_report}",
-        f"- hig audit: {summary.hig_report}",
-        f"- visual qa: {summary.visual_report}",
+        f"- code review + security: {summary.review_report}",
+        f"- UX + accessibility audit: {summary.ux_report}",
         "",
         "## Required behavior",
         "- Fix only the release blockers first.",
-        "- Preserve HIG-safe and native-feeling interactions.",
+        "- Preserve mobile-first responsive design.",
+        "- Ensure Supabase RLS policies remain intact.",
         "- Prefer the smallest change set that resolves the issue.",
+        "- READ the review reports above for specific file paths and line numbers.",
+        "- COMMIT your changes with descriptive commit messages.",
     ]
+
+    # Layer 1: Include persistent decisions from prior rounds
+    decisions_block = decisions_summary_for_prompt(DECISIONS_LOG_FILE)
+    if decisions_block:
+        lines += ["", decisions_block]
+
     packet = HANDOFFS_DIR / f"remediation_round_{round_index}.md"
     save_text(packet, "\n".join(lines))
     return packet
@@ -762,7 +685,7 @@ def _intake_cache_fresh(state: dict[str, Any], intake_artifacts: dict[str, Path]
 def run_intake(brief: str):
     ensure_dirs()
     load_runtime_env()
-    append_operator_journal("Starting intake")
+    append_operator_journal("Starting intake for Moment")
     fork = evaluate_fork_policy(brief)
     fork_path = HANDOFFS_DIR / "fork_decision.json"
     save_json(fork_path, {"should_fork": fork.should_fork, "reasons": fork.reasons, "lanes": fork.lanes})
@@ -793,7 +716,7 @@ def run_intake(brief: str):
         report_stem="delivery_lead_execution_plan",
     )
     architecture_report = run_role(
-        "ios_architect",
+        "delivery_lead",
         TaskType.ARCHITECTURE,
         brief,
         {**intake_artifacts, "product_report": product_report, "planning_report": planning_report},
@@ -810,6 +733,7 @@ def run_intake(brief: str):
             "architecture_report": str(architecture_report),
         }
     )
+    update_progress("Intake", f"- Product research: {product_report.name}\n- Planning: {planning_report.name}\n- Architecture: {architecture_report.name}")
     print(f"product report: {product_report}")
     print(f"planning report: {planning_report}")
     print(f"architecture report: {architecture_report}")
@@ -832,7 +756,7 @@ def run_delivery(brief: str, phase_tag: str = "delivery") -> Path:
     outputs: dict[str, str] = {}
 
     for lane in lanes:
-        role_name = "ios_ui_builder" if lane == "ui" else "ios_logic_builder"
+        role_name = "web_builder"
         worktree, branch_name = ensure_lane_worktree(role_name, phase_tag, INTEGRATION_BRANCH)
         lane_tasks = get_lane_tasks(state, lane)
         task_reports: list[str] = []
@@ -846,7 +770,7 @@ def run_delivery(brief: str, phase_tag: str = "delivery") -> Path:
                 subtask_brief = build_subtask_delivery_brief(brief, lane, task, state)
                 report_path = run_role(
                     role_name,
-                    TaskType.IOS_IMPLEMENTATION,
+                    TaskType.WEB_IMPLEMENTATION,
                     subtask_brief,
                     artifacts,
                     cwd=worktree,
@@ -859,7 +783,7 @@ def run_delivery(brief: str, phase_tag: str = "delivery") -> Path:
             lane_brief = build_lane_delivery_brief(brief, lane, state)
             report_path = run_role(
                 role_name,
-                TaskType.IOS_IMPLEMENTATION,
+                TaskType.WEB_IMPLEMENTATION,
                 lane_brief,
                 artifacts,
                 cwd=worktree,
@@ -887,114 +811,92 @@ def run_delivery(brief: str, phase_tag: str = "delivery") -> Path:
 
     merge_report = merge_delivery_branches(branch_names, phase_tag)
     write_state({"delivery_complete": True, "delivery_reports": outputs, "merge_report": str(merge_report), "integration_repo": str(integration)})
+    update_progress("Delivery", f"- Phase: {phase_tag}\n- Lanes: {', '.join(lanes)}\n- Merge report: {merge_report.name}")
     return merge_report
 
 
 def run_evaluation(brief: str, image_path: str | None = None) -> EvaluationSummary:
+    from harness.ops.evaluation import build_evaluation_directive
+    from harness.ops.guardrails import take_snapshot
+
     ensure_dirs()
     load_runtime_env()
+    compact_blackboard(force=True)
     append_operator_journal("Starting evaluation")
     repo = current_target_repo()
-    smoke_report = run_playwright_smoke(repo / "workspace")
-    xcode_probe = run_xcode_runtime_probe(repo)
-    xcode_test_probe = run_xcode_test_probe(repo)
-    xcode_probe_summary = REPORTS_DIR / "xcode_runtime_probe.md"
-    xcode_visual_summary = REPORTS_DIR / "xcode_runtime_visual_summary.md"
-    probe_payload = load_json(xcode_probe, {})
-    visual_image = image_path or probe_payload.get("screenshot") or probe_payload.get("runtime_verification", {}).get("screenshot")
-    supplementary_artifacts = {}
-    for name, path in {
-        "runtime_release_closure_evidence": REPORTS_DIR / "runtime_release_closure_evidence.md",
-        "permission_flow_audit": REPORTS_DIR / "permission_flow_audit_20260408.md",
-        "accessibility_readiness": REPORTS_DIR / "accessibility_readiness_20260408.md",
-    }.items():
-        if path.exists():
-            supplementary_artifacts[name] = path
-    review_report = run_role(
-        "red_team_reviewer",
-        TaskType.CODE_REVIEW,
+    # Web project root is inside repo/web/ — reviewer needs this as CWD
+    # so that relative paths like public/icons/ resolve correctly.
+    web_root = repo / "web" if (repo / "web").exists() else repo
+
+    # Layer 2: Pre-dispatch snapshot for crash recovery
+    snapshot = take_snapshot(git, cwd=repo, role="reviewer", task_type="evaluation")
+    append_ledger({"type": "snapshot", "sha": snapshot.commit_sha, "role": "reviewer", "worktree": str(repo)})
+
+    # Layer 3: Calibrated evaluation directive with structured output + few-shot examples
+    acceptance_file = PRODUCT_INPUTS_DIR / "acceptance.md"
+    few_shot_dir = AGENTS_DIR / "reviewer" / "examples"
+
+    eval_brief = build_evaluation_directive(
         brief,
+        acceptance_file=acceptance_file if acceptance_file.exists() else None,
+        few_shot_dir=few_shot_dir if few_shot_dir.exists() else None,
+        repo_path=repo,
+    )
+
+    # Code review + security audit
+    review_report = run_role(
+        "reviewer",
+        TaskType.CODE_REVIEW,
+        eval_brief,
         {
             "team_manifest": TEAM_MANIFEST_FILE,
-            "playwright_smoke": smoke_report,
-            "xcode_runtime_probe": xcode_probe,
-            "xcode_test_probe": xcode_test_probe,
-            "xcode_runtime_summary": xcode_probe_summary,
-            "xcode_runtime_visual_summary": xcode_visual_summary,
-            **supplementary_artifacts,
         },
-        cwd=repo,
+        cwd=web_root,
+        timeout=1200,
     )
-    hig_report = run_role(
-        "hig_guardian",
-        TaskType.HIG_AUDIT,
-        brief,
+    # UX + accessibility audit — same calibrated format
+    ux_brief = build_evaluation_directive(
+        f"{brief}\n\nFOCUS: UX and accessibility audit. "
+        "Check responsive design, accessibility (touch targets, contrast, ARIA), PWA compliance, "
+        "카카오톡 OG rendering, and 카카오 인앱 브라우저 handling.",
+        acceptance_file=acceptance_file if acceptance_file.exists() else None,
+        few_shot_dir=few_shot_dir if few_shot_dir.exists() else None,
+        repo_path=repo,
+    )
+    ux_report = run_role(
+        "reviewer",
+        TaskType.UX_AUDIT,
+        ux_brief,
         {
             "review_report": review_report,
-            "playwright_smoke": smoke_report,
-            "xcode_runtime_probe": xcode_probe,
-            "xcode_test_probe": xcode_test_probe,
-            "xcode_runtime_summary": xcode_probe_summary,
-            "xcode_runtime_visual_summary": xcode_visual_summary,
-            **supplementary_artifacts,
         },
-        cwd=repo,
+        cwd=web_root,
+        image_path=image_path,
+        timeout=900,
     )
-    visual_report = run_role(
-        "visual_qa",
-        TaskType.VISUAL_QA,
-        brief,
-        {
-            "review_report": review_report,
-            "hig_report": hig_report,
-            "playwright_smoke": smoke_report,
-            "xcode_runtime_probe": xcode_probe,
-            "xcode_test_probe": xcode_test_probe,
-            "xcode_runtime_summary": xcode_probe_summary,
-            "xcode_runtime_visual_summary": xcode_visual_summary,
-            **supplementary_artifacts,
-        },
-        cwd=repo,
-        image_path=visual_image,
-    )
-    summary = summarize_evaluation(
-        review_report,
-        hig_report,
-        visual_report,
-        xcode_test_probe=xcode_test_probe,
-    )
+
+    summary = summarize_evaluation(review_report, ux_report)
     save_json(
         REPORTS_DIR / "evaluation_summary.json",
         {
             "passed": summary.passed,
             "blockers": summary.blockers,
             "lanes": summary.lanes,
-            "playwright_smoke": str(smoke_report),
-            "xcode_runtime_probe": str(xcode_probe),
-            "xcode_test_probe": str(xcode_test_probe),
             "review_report": str(review_report),
-            "hig_report": str(hig_report),
-            "visual_report": str(visual_report),
+            "ux_report": str(ux_report),
         },
     )
     write_state(
         {
             "evaluation_complete": True,
-            "playwright_smoke": str(smoke_report),
-            "xcode_runtime_probe": str(xcode_probe),
-            "xcode_test_probe": str(xcode_test_probe),
             "review_report": str(review_report),
-            "hig_report": str(hig_report),
-            "visual_report": str(visual_report),
+            "ux_report": str(ux_report),
             "evaluation_passed": summary.passed,
         }
     )
-    print(f"playwright smoke: {smoke_report}")
-    print(f"xcode runtime probe: {xcode_probe}")
-    print(f"xcode test probe: {xcode_test_probe}")
+    update_progress("Evaluation", f"- Passed: {summary.passed}\n- Blockers: {len(summary.blockers)}\n- Review: {review_report.name}\n- UX: {ux_report.name}")
     print(f"review report: {review_report}")
-    print(f"hig report: {hig_report}")
-    print(f"visual report: {visual_report}")
+    print(f"UX report: {ux_report}")
     print(f"evaluation passed: {summary.passed}")
     append_ledger(
         {
@@ -1002,27 +904,32 @@ def run_evaluation(brief: str, image_path: str | None = None) -> EvaluationSumma
             "passed": summary.passed,
             "blockers": summary.blockers,
             "lanes": summary.lanes,
-            "playwright_smoke": str(smoke_report),
-            "xcode_runtime_probe": str(xcode_probe),
-            "xcode_test_probe": str(xcode_test_probe),
             "review_report": str(review_report),
-            "hig_report": str(hig_report),
-            "visual_report": str(visual_report),
-            "evaluator_mode": "playwright_e2e_plus_visual_qa",
+            "ux_report": str(ux_report),
+            "evaluator_mode": "code_review_plus_ux_audit",
         }
     )
     append_operator_journal(f"Evaluation completed with passed={summary.passed}")
     return summary
 
 
-def run_feedback_loop(brief: str, image_path: str | None = None, max_rounds: int = 2):
+def run_feedback_loop(brief: str, image_path: str | None = None, max_rounds: int = 2, *, resume: bool = False):
     ensure_dirs()
     load_runtime_env()
     doctor_report = run_preflight_doctor(quick=True)
     append_operator_journal(f"Autopilot starting with doctor report {doctor_report.name}")
-    run_intake(brief)
-    run_delivery(brief, phase_tag="delivery")
-    summary = run_evaluation(brief, image_path=image_path)
+
+    state = load_json(STATE_FILE, {})
+    if resume and state.get("evaluation_complete") and not state.get("evaluation_passed"):
+        append_operator_journal("Resuming from completed evaluation — re-running evaluation with fixed extract_blockers")
+        summary = run_evaluation(brief, image_path=image_path)
+    else:
+        run_intake(brief)
+        run_delivery(brief, phase_tag="delivery")
+        summary = run_evaluation(brief, image_path=image_path)
+
+    from harness.ops.context import append_decision
+    from harness.ops.guardrails import post_agent_audit, take_snapshot
 
     round_index = 0
     while not summary.passed and round_index < max_rounds:
@@ -1031,90 +938,74 @@ def run_feedback_loop(brief: str, image_path: str | None = None, max_rounds: int
         packet = build_feedback_brief(brief, summary, round_index)
         append_ledger({"type": "remediation_packet", "round": round_index, "packet": str(packet), "lanes": summary.lanes})
         append_operator_journal(f"Starting remediation round {round_index}")
+
+        # Layer 1: Record evaluation blockers as persistent decisions
+        append_decision(
+            DECISIONS_LOG_FILE,
+            round_index=round_index,
+            entry_type="constraint",
+            summary=f"Round {round_index} blockers: {', '.join(summary.blockers[:5])}",
+            rationale=f"Evaluation verdict required remediation. Lanes: {summary.lanes}",
+            source_role="reviewer",
+            references=[str(summary.review_report), str(summary.ux_report)],
+        )
+
+        # Layer 1: Include persistent decisions in artifacts
         artifacts = {
             "feedback_packet": packet,
             "evaluation_summary": REPORTS_DIR / "evaluation_summary.json",
             "blackboard_compact": BLACKBOARD_COMPACT_FILE if BLACKBOARD_COMPACT_FILE.exists() else BLACKBOARD_FILE,
         }
+        if DECISIONS_LOG_FILE.exists():
+            artifacts["decisions_log"] = DECISIONS_LOG_FILE
+
         branch_names: list[str] = []
         for lane in summary.lanes:
-            role_name = "ios_ui_builder" if lane == "ui" else "ios_logic_builder"
+            role_name = "web_builder"
             worktree, branch_name = ensure_lane_worktree(role_name, f"fix-{round_index}", INTEGRATION_BRANCH)
-            run_role(role_name, TaskType.BUG_FIX, brief, artifacts, cwd=worktree, report_stem=f"{role_name}_bug_fix_round_{round_index}")
+
+            # Layer 2: Pre-dispatch snapshot for crash recovery
+            snapshot = take_snapshot(git, cwd=worktree, role=role_name, task_type="bug_fix")
+
+            try:
+                run_role(role_name, TaskType.BUG_FIX, brief, artifacts, cwd=worktree, report_stem=f"{role_name}_bug_fix_round_{round_index}")
+            except RuntimeError as exc:
+                append_operator_journal(f"Round {round_index} {role_name} failed: {exc}")
+                # Don't rollback — auto_commit_worktree will handle partial changes
+                continue
+
+            # Layer 2: Post-agent ownership audit
+            violations = post_agent_audit(git, snapshot, role_name, TEAM_MANIFEST_FILE, journal_fn=append_operator_journal)
+            if violations:
+                append_ledger({"type": "ownership_violation", "role": role_name, "round": round_index, "files": violations[:10]})
+
             branch_names.append(branch_name)
+
+        if not branch_names:
+            append_operator_journal(f"Round {round_index}: no successful fixes, skipping merge")
+            break
+
         merge_report = merge_delivery_branches(branch_names, f"fix-{round_index}")
         write_state({"latest_feedback_packet": str(packet), "latest_fix_merge_report": str(merge_report)})
+
+        # Layer 1: Record successful merge as decision
+        append_decision(
+            DECISIONS_LOG_FILE,
+            round_index=round_index,
+            entry_type="decision",
+            summary=f"Round {round_index} fixes merged into integration ({len(branch_names)} branches)",
+            rationale=f"Merge report: {merge_report}",
+            source_role="platform_operator",
+        )
+
         summary = run_evaluation(brief, image_path=image_path)
 
+    update_progress("Feedback Loop", f"- Rounds: {round_index}\n- Final verdict: {'PASSED' if summary.passed else 'BLOCKED'}")
     return summary
 
 
-def explain_evaluator_mode() -> Path:
-    path = REPORTS_DIR / "evaluator_mode.md"
-    body = """# Evaluator Mode
-
-The evaluator lane is intended to test the real app surface, not only static code.
-
-## Current mode
-
-- Native iOS is the primary evaluation path
-- Xcode project discovery and native build evidence are the main release signals
-- Claude review lane for code and regression checks
-- HIG audit lane for iOS-native risk review
-- Playwright-style Expo smoke is optional and skipped when the Expo scaffold is absent
-
-## Limits
-
-- Full simulator-driving artifact capture is still being strengthened.
-- Expo web is no longer required once the native project becomes the sole source of truth.
-"""
-    save_text(path, body)
-    append_ledger({"type": "evaluator_mode", "report": str(path), "mode": "playwright_e2e_plus_visual_qa"})
-    return path
-
-
-def write_change_record():
-    body = """# Change Record
-
-## Before this conversation
-
-- The machine had Codex CLI, Claude Code, and Gemini CLI installed, but the harness behavior was still centered on older triad assumptions.
-- Claude was configured mainly as a CLI participant, not as the planning and review API backend.
-- The router and runner mixed outdated task names, old model assumptions, and incomplete worktree orchestration.
-- iOS tooling was incomplete because full `Xcode.app` was not active, and no explicit release-gate policy tied AI output to Apple HIG review.
-- Context separation for token efficiency existed only partially and was not enforced across product, planning, engineering, and evaluation lanes.
-
-## Current state
-
-- The harness is now organized as a company-style team with operations, product, planning, engineering, and evaluation roles.
-- Claude is assigned to API-driven planning, architecture, arbitration, review, and operator duties.
-- The Claude provider now prefers `claude-agent-sdk`, enabling adaptive thinking, structured outputs, project settings loading, and future MCP/subagent expansion.
-- Codex CLI is assigned to implementation and parallel execution work.
-- Gemini CLI is assigned to market research and screenshot-heavy visual QA.
-- The router now supports explicit preferred-role dispatch instead of only task-type routing.
-- The orchestrator now writes structured handoffs, runs delivery in isolated worktrees, merges into a dedicated integration worktree, compacts blackboard context, and supports evaluation-to-remediation loops.
-- The orchestrator now includes a preflight doctor, handoff ledger, operator journal, and explicit evaluator-mode documentation.
-- The orchestrator now loads project `.env` at runtime so provider authentication survives new subprocesses and restarted sessions.
-- The evaluator lane now runs a Playwright-style smoke pass before review and HIG arbitration, and stores the result as a reusable artifact.
-- Policy files now define HIG release gates, fork criteria, and install steps.
-- User-level shell and CLI settings were aligned for the new harness shape.
-- Recommended frontline tools were partially installed; `swiftlint` still awaits full Xcode installation.
-
-## Intent
-
-- Reduce hallucination by separating implementation from evaluation.
-- Reduce self-approval bias by requiring an external review lane before release confidence.
-- Reduce token waste by passing short handoffs through dedicated directories rather than replaying full history.
-- Keep iOS output closer to App Store expectations by treating HIG as a blocking gate instead of a soft guideline.
-- Move merge-back and autonomous remediation into the operator lane instead of leaving them implicit.
-- Make subagent spawning predictable by enforcing bounded scope, disjoint ownership, and explicit verification artifacts.
-"""
-    save_text(CHANGE_RECORD_FILE, body)
-    print(f"change record: {CHANGE_RECORD_FILE}")
-
-
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Company-style frontier app harness")
+    parser = argparse.ArgumentParser(description="Moment harness — Planner-Generator-Evaluator")
     sub = parser.add_subparsers(dest="command", required=True)
 
     team_report = sub.add_parser("team-report")
@@ -1139,18 +1030,18 @@ def build_parser() -> argparse.ArgumentParser:
     autopilot.add_argument("--max-rounds", type=int, default=2)
     autopilot.set_defaults(func=lambda args: run_feedback_loop(args.brief, args.image_path, args.max_rounds))
 
+    remediate = sub.add_parser("remediate")
+    remediate.add_argument("brief")
+    remediate.add_argument("--image-path")
+    remediate.add_argument("--max-rounds", type=int, default=2)
+    remediate.set_defaults(func=lambda args: run_feedback_loop(args.brief, args.image_path, args.max_rounds, resume=True))
+
     compact = sub.add_parser("compact-blackboard")
     compact.set_defaults(func=lambda args: compact_blackboard(force=True))
 
     doctor = sub.add_parser("doctor")
     doctor.add_argument("--quick", action="store_true")
     doctor.set_defaults(func=lambda args: print(run_preflight_doctor(quick=args.quick)))
-
-    evaluator_mode = sub.add_parser("evaluator-mode")
-    evaluator_mode.set_defaults(func=lambda args: print(explain_evaluator_mode()))
-
-    record = sub.add_parser("record-changes")
-    record.set_defaults(func=lambda args: write_change_record())
 
     return parser
 

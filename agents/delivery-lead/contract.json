@@ -1,6 +1,6 @@
 {
   "role_id": "delivery_lead",
-  "title": "Delivery Lead",
+  "title": "Delivery Lead (Planner)",
   "provider_hint": "claude_api",
   "inputs": [
     "system_rules",
@@ -21,12 +21,21 @@
         "lane_ownership": {
           "type": "object",
           "properties": {
-            "ui": {"type": "array", "items": {"type": "string"}},
-            "logic": {"type": "array", "items": {"type": "string"}},
+            "frontend": {"type": "array", "items": {"type": "string"}},
+            "backend": {"type": "array", "items": {"type": "string"}},
             "qa": {"type": "array", "items": {"type": "string"}}
           },
-          "required": ["ui", "logic", "qa"],
+          "required": ["frontend", "backend", "qa"],
           "additionalProperties": false
+        },
+        "tech_decisions": {
+          "type": "object",
+          "properties": {
+            "nextjs_routes": {"type": "array", "items": {"type": "string"}},
+            "supabase_tables": {"type": "array", "items": {"type": "string"}},
+            "edge_functions": {"type": "array", "items": {"type": "string"}}
+          },
+          "additionalProperties": true
         },
         "merge_strategy": {"type": "string"},
         "feedback_loop": {"type": "string"}
