@@ -1,119 +1,73 @@
 # Acceptance Criteria
 
-## MVP scope
+## MVP scope (8주)
 
-### Epic 1: Group creation and invitations
+### Epic 1: 이벤트 페이지 생성 + 카카오톡 공유
 
-- Create a group with required name, mode selection (`couple` or `general_group`), and optional image and intro.
-- Invite members by code or link.
-- Allow one user to join multiple groups.
+- 호스트가 모임 목적(생일·러닝·와인·독서·하우스파티·브랜드 살롱) 선택 후 이벤트 페이지 생성
+- 제목, 날짜/시간, 장소, 설명, 커버 이미지 입력
+- 무드 컬러 자동 적용 또는 수동 선택
+- 카카오톡 공유 시 SSR 기반 OG 카드가 커버 이미지 + 제목 + 날짜로 렌더링
+- 이벤트 고유 URL 생성 (/event/[id])
+- 이벤트 생성 전체 흐름 60초 이내 완료
 
-### Epic 2: Event containers, place pins, and memory records
+### Epic 2: PWA RSVP (앱 설치 불필요)
 
-- Create or select an event container for a date, meetup, or trip span.
-- Allow inline event creation when the user uploads the first memory and no current event exists for that time.
-- Default new events to a single day and allow explicit promotion to a multi-day trip.
-- Create pins from first-photo metadata, search, direct map interaction, or current-location quick action.
-- Attach time from first-photo metadata when available, with an option to replace with current time.
-- Attach multiple photos, short note, and emotion tags to a memory.
-- Support multiple user posts under a single memory.
-- Suggest merging when the same place is revisited.
-- Allow reactions to other members' memory records.
+- 게스트가 카카오톡 링크 탭으로 이벤트 페이지에 진입
+- 앱 설치 없이 모바일 웹(PWA)에서 즉시 동작
+- 카카오 로그인 원탭으로 프로필 자동 연동
+- 참석/불참/대기 3가지 응답
+- 동행 여부 선택 (선택 사항)
+- 회비 납부 의사 표시 (선택 사항)
+- RSVP 완료 후 참석자 리스트 미리보기
+- PWA manifest + service worker 기본 설정
 
-### Epic 3: Shared memory map
+### Epic 3: 참석 상태 대시보드 + 리마인더
 
-- Show group memory pins on a map with clustering.
-- Support time filtering.
-- Show filtered event and memory history when opening a marker or cluster.
-- Keep marker selection and bottom-sheet content synchronized.
-- Use adaptive curation in the default bottom sheet based on available memory density and relevance rather than a fixed mandatory section order.
+- 호스트 대시보드에서 참석/불참/대기/미응답 실시간 카운트
+- 참석자 카드 리스트 (프로필, 이름, 상태, 동행)
+- Supabase Realtime으로 실시간 상태 업데이트
+- D-1 리마인더 자동 발송 (Firebase Push)
+- 호스트가 수동으로 리마인더 재발송 가능
 
-### Epic 4: Rewind reminders
+### Epic 4: 사진 업로드 + 타임라인
 
-- Support "N years ago today" reminders.
-- Support optional location-based reminders.
-- Show a shareable rewind card with photo, place, people, and emotion context.
+- 참석자가 이벤트 페이지에서 사진 업로드 (최대 10장)
+- 업로드된 사진이 시간순 타임라인으로 자동 정렬
+- 사진 뷰어 (스와이프, 확대)
+- 업로더 프로필 표시
+
+### Epic 5: 정산
+
+- 호스트가 총 금액 입력 + 1/N 자동 계산
+- 토스/카카오페이 딥링크 생성
+- 참석자별 정산 상태 표시 (완료/미완료)
+- 호스트가 수동으로 정산 완료 표시 가능
 
 ## Release blockers
 
-- Any unresolved HIG violation.
-- Any screen that breaks safe-area handling or conflicts with iPhone gestures.
-- Any primary interactive element smaller than 44 x 44 pt.
-- Any unreadable text contrast or dark-mode failure in core flows.
-- Any unfinished spacing, placeholder-heavy layout, fake CTA, or obvious AI-draft visual state.
-- Missing QA evidence, screenshot evidence, or accessibility-sensitive review notes.
-- Missing native iOS evidence once the native project exists.
-- Any bottom-sheet interaction that feels janky, desynchronized from map state, or non-native.
+- 카카오톡 OG 공유가 깨지는 경우
+- PWA에서 RSVP가 동작하지 않는 경우
+- 모바일 브라우저 호환성 문제 (Safari, Chrome, Samsung Internet)
+- Supabase RLS 미적용 상태로 배포
+- 개인정보 수집 동의 절차 누락
+- 접근성 기본 요건 미충족 (폰트 크기, 터치 타겟, 명암비)
 
 ## Evaluation evidence
 
-- Code review with concrete file-level findings.
-- Screenshot-level visual QA with explicit pass/fail reasoning.
-- HIG audit tied to visible behavior, not generic taste.
-- Interaction evidence for marker-to-sheet synchronization, cluster filtering, and memory-detail navigation.
-- Native Xcode evidence once native project exists:
-  - `xcodebuild -list`
-  - successful simulator build
-  - simulator or preview evidence when available
-- Expo-web evidence may still be used as supporting smoke-test evidence, but it cannot outrank native evidence after native artifacts exist.
+- 카카오톡 OG 미리보기 캡처 (iOS/Android 카카오톡)
+- 모바일 브라우저 RSVP 흐름 캡처 (Safari, Chrome)
+- Lighthouse PWA 점수 (80+ 목표)
+- Lighthouse Performance 점수 (90+ 목표)
+- Supabase RLS 정책 검증 로그
+- 반응형 레이아웃 캡처 (모바일 375px, 태블릿 768px, 데스크톱 1280px)
 
-## Nice to have
+## Phase 2 scope (MVP 이후)
 
-- Group timeline and yearly recap statistics.
-- Auto-generated year-end memory reports.
-- Diary cover customization, richer map themes, and premium icon packs.
-- Premium customization and advanced rewind behavior under subscription.
-
-## Detailed acceptance rules
-
-- Group creation requires a name; image and intro are optional.
-- Group creation requires explicit mode selection between `couple` and `general_group`.
-- Invite links expire after 24 hours and can be reissued.
-- One user may belong to up to 20 groups.
-- Group owners can remove members and delete the group.
-- Event containers support a single day by default and may optionally span multiple days.
-- Multi-day behavior should require explicit user intent rather than being inferred automatically.
-- If no active event exists for the selected time, the upload flow must support creating a new event inline.
-- A visit record can contain up to 10 photos.
-- Photo input sources must include photo library, document picker, and in-app capture.
-- In-app capture should attach capture time metadata and attach location metadata whenever location permission is granted.
-- The first uploaded photo's metadata should prefill place and time when available.
-- The representative coordinate should remain stable unless the user explicitly changes the place.
-- The place field shown to the user should default to a readable address or place label, not raw coordinates.
-- Users must be able to confirm or override the auto-filled place through at least one friendly method such as search or manual place naming.
-- Saving must require explicit confirmation of the final place value.
-- If the suggested place is incorrect, users must be able to switch to direct place selection or set the device's current location before saving.
-- Cost entry must remain optional in all modes.
-- Emotion tags come from a predefined set of 6 and allow multi-select.
-- Revisiting a place suggests merging into existing history.
-- Initial map load auto-fits visible pins.
-- Cluster taps zoom into the selected area.
-- Cluster taps must also filter bottom-sheet content to the memories represented by that cluster.
-- Time filters animate pin appearance and disappearance.
-- Marker selection should automatically raise the bottom sheet to its default browsing height.
-- The default bottom sheet shows curated groupings when no marker is selected.
-- The selected marker or cluster state must replace the default curation with filtered event and memory content.
-- The newest visit appears first in the selected context detail.
-- Memory cards in the bottom sheet must open a dedicated memory detail page.
-- The memory detail page should support moving to other nearby or related memories when this improves browsing continuity.
-- The bottom-sheet memory list must visibly group content under a parent date or meetup.
-- Date-based rewind defaults to 10 AM and must be user-configurable.
-- Location-based reminders must be individually switchable.
-- Default location reminder radius is 200 m, adjustable from 100 m to 500 m.
-- Rewind cards must support external sharing.
-
-## Main-screen interaction contract
-
-- The main screen must contain four visual layers:
-  - full-screen map
-  - floating top header
-  - floating add-memory action
-  - foreground animated bottom sheet
-- The bottom sheet must support three snap states:
-  - collapsed summary
-  - default browsing
-  - expanded detail browsing
-- Default collapsed content should present curated memory groupings or recommendations.
-- Default curation should be algorithmically adaptive to the actual memory set rather than hard-coded to one static sequence.
-- Selected marker content and selected cluster content must be distinguishable in the sheet header and content list.
-- The bottom sheet should feel close to iPhone Photos event-grouped browsing, not a generic modal drawer.
+- 관계 인텔리전스 레이어 활성화 (공동 참석 관계 테이블, 재연결 넛지, 월간 소셜 리캡)
+- 카카오 알림톡 연동
+- B2B 소셜 공간 계정
+- 호스트 React Native 앱
+- 유료 티켓팅
+- 다크 모드
+- 영어 지원

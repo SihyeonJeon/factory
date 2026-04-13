@@ -1,0 +1,15 @@
+{
+  "integration_branch": "harness/integration",
+  "results": [
+    {
+      "branch": "harness/web_builder-delivery",
+      "success": true,
+      "detail": "harness/web_builder-delivery already merged or has no unique commits"
+    },
+    {
+      "branch": "harness/web_builder-delivery",
+      "success": true,
+      "detail": "harness/web_builder-delivery already merged or has no unique commits"
+    }
+  ]
+}

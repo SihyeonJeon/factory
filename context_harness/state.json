@@ -1,36 +1,37 @@
 {
-  "phase_1_research": true,
-  "phase_2_architecture": true,
-  "phase_2_review": false,
-  "phase_3_qa": false,
-  "qa_rollback_count": 0,
+  "project": "moment",
+  "harness_version": "2026-04-12",
+  "architecture": "planner-generator-evaluator",
   "intake_complete": true,
-  "last_brief": "Resume from 2026-04-08 release baseline. Read all context_harness/product_inputs/*.md as the spec. Run intake -> delivery -> evaluation end-to-end.",
+  "last_brief": "모먼트(Moment) MVP 개발: 한국 2030세대 반복 개최자를 위한 프라이빗 모임 운영 플랫폼. Next.js 15 SSR + PWA + Supabase + Vercel. 8주 MVP: 이벤트 페이지 생성 + 카카오톡 OG 공유, PWA RSVP, 참석 대시보드 + D-1 리마인더, 사진 타임라인, 정산. debate_log_20260412_175502.md 참조.",
   "fork_lanes": [
-    "planner"
+    "planner",
+    "backend",
+    "qa"
   ],
   "intake_artifacts": {
-    "system_rules": "/Users/jeonsihyeon/factory/context_harness/00_system_rules.md",
-    "native_ios_strategy": "/Users/jeonsihyeon/factory/context_harness/architecture/native_ios_strategy.md",
-    "hig_guardrails": "/Users/jeonsihyeon/factory/context_harness/policies/ios_hig_guardrails.md",
-    "ui_ux_screen_contract": "/Users/jeonsihyeon/factory/context_harness/prd/ui_ux_screen_contract.md",
-    "sprint_contract": "/Users/jeonsihyeon/factory/context_harness/sprint_contract.json",
-    "idea_input": "/Users/jeonsihyeon/factory/context_harness/product_inputs/idea.md",
-    "constraints_input": "/Users/jeonsihyeon/factory/context_harness/product_inputs/constraints.md",
-    "design_input": "/Users/jeonsihyeon/factory/context_harness/product_inputs/design.md",
-    "acceptance_input": "/Users/jeonsihyeon/factory/context_harness/product_inputs/acceptance.md"
+    "system_rules": "/Users/jeonsihyeon/ideafactory/factory/context_harness/00_system_rules.md",
+    "idea_input": "/Users/jeonsihyeon/ideafactory/factory/context_harness/product_inputs/idea.md",
+    "constraints_input": "/Users/jeonsihyeon/ideafactory/factory/context_harness/product_inputs/constraints.md",
+    "design_input": "/Users/jeonsihyeon/ideafactory/factory/context_harness/product_inputs/design.md",
+    "acceptance_input": "/Users/jeonsihyeon/ideafactory/factory/context_harness/product_inputs/acceptance.md",
+    "debate_log_reference": "/Users/jeonsihyeon/ideafactory/factory/debate_log_20260412_175502.md",
+    "idea_full_proposal": "/Users/jeonsihyeon/ideafactory/factory/idea_20260412_175502.md"
   },
+  "product_report": "/Users/jeonsihyeon/ideafactory/factory/context_harness/reports/product_lead_product_packet.json",
+  "planning_report": "/Users/jeonsihyeon/ideafactory/factory/context_harness/reports/delivery_lead_execution_plan.json",
+  "architecture_report": "/Users/jeonsihyeon/ideafactory/factory/context_harness/reports/delivery_lead_architecture.md",
+  "delivery_complete": true,
+  "delivery_reports": {
+    "frontend": "/Users/jeonsihyeon/ideafactory/factory/context_harness/reports/web_builder_delivery_frontend_summary.md",
+    "backend": "/Users/jeonsihyeon/ideafactory/factory/context_harness/reports/web_builder_delivery_backend_summary.md"
+  },
+  "merge_report": "/Users/jeonsihyeon/ideafactory/factory/context_harness/reports/platform_operator_merge_delivery.json",
+  "integration_repo": "/Users/jeonsihyeon/ideafactory/factory/.worktrees/_integration",
   "evaluation_complete": true,
-  "playwright_smoke": "/Users/jeonsihyeon/factory/context_harness/reports/playwright_smoke.json",
-  "xcode_runtime_probe": "/Users/jeonsihyeon/factory/context_harness/reports/xcode_runtime_probe.json",
-  "review_report": "/Users/jeonsihyeon/factory/context_harness/reports/red_team_reviewer_code_review.md",
-  "hig_report": "/Users/jeonsihyeon/factory/context_harness/reports/hig_guardian_hig_audit.md",
-  "visual_report": "/Users/jeonsihyeon/factory/context_harness/reports/visual_qa_visual_qa.md",
-  "evaluation_passed": false,
-  "integration_repo": "/Users/jeonsihyeon/factory/.worktrees/_integration",
-  "xcode_test_probe": "/Users/jeonsihyeon/factory/context_harness/reports/xcode_test_probe.json",
-  "product_report": "/Users/jeonsihyeon/factory/context_harness/reports/product_lead_product_packet.json",
-  "planning_report": "/Users/jeonsihyeon/factory/context_harness/reports/delivery_lead_execution_plan.json",
-  "architecture_report": "/Users/jeonsihyeon/factory/context_harness/reports/ios_architect_architecture.md",
-  "latest_feedback_packet": "/Users/jeonsihyeon/factory/context_harness/handoffs/remediation_round_1.md"
+  "review_report": "/Users/jeonsihyeon/ideafactory/factory/context_harness/reports/reviewer_code_review.md",
+  "ux_report": "/Users/jeonsihyeon/ideafactory/factory/context_harness/reports/reviewer_ux_audit.md",
+  "evaluation_passed": true,
+  "latest_feedback_packet": "/Users/jeonsihyeon/ideafactory/factory/context_harness/handoffs/remediation_round_2.md",
+  "latest_fix_merge_report": "/Users/jeonsihyeon/ideafactory/factory/context_harness/reports/platform_operator_merge_fix-2.json"
 }

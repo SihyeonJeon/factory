@@ -1,4 +1,24 @@
-# Blackboard Compact
+# Remediation Packet
+
+Round: 2
+
+## Original brief
+모먼트(Moment) MVP 개발: 한국 2030세대 반복 개최자를 위한 프라이빗 모임 운영 플랫폼. Next.js 15 SSR + PWA + Supabase + Vercel. 8주 MVP: 이벤트 페이지 생성 + 카카오톡 OG 공유, PWA RSVP, 참석 대시보드 + D-1 리마인더, 사진 타임라인, 정산.
+
+## Blockers
+- reviewer_code_review.md:H-1:high:security:release-blocker-security
+
+## Report paths
+- code review + security: /Users/jeonsihyeon/ideafactory/factory/context_harness/reports/reviewer_code_review.md
+- UX + accessibility audit: /Users/jeonsihyeon/ideafactory/factory/context_harness/reports/reviewer_ux_audit.md
+
+## Required behavior
+- Fix only the release blockers first.
+- Preserve mobile-first responsive design.
+- Ensure Supabase RLS policies remain intact.
+- Prefer the smallest change set that resolves the issue.
+- READ the review reports above for specific file paths and line numbers.
+- COMMIT your changes with descriptive commit messages.
 
 ## Persistent Decisions & Constraints
 
@@ -18,17 +38,3 @@
   Rationale: Evaluation verdict required remediation. Lanes: ['frontend', 'backend']
 - [DECISION] (R1) Round 1 fixes merged into integration (2 branches)
   Rationale: Merge report: /Users/jeonsihyeon/ideafactory/factory/context_harness/reports/platform_operator_merge_fix-1.json
-- [CONSTRAINT] (R2) Round 2 blockers: reviewer_code_review.md:H-1:high:security:release-blocker-security
-  Rationale: Evaluation verdict required remediation. Lanes: ['frontend', 'backend']
-- [DECISION] (R2) Round 2 fixes merged into integration (2 branches)
-  Rationale: Merge report: /Users/jeonsihyeon/ideafactory/factory/context_harness/reports/platform_operator_merge_fix-2.json
-
-## Recent entries
-- **[2026-04-13 22:36:39]** `code_review` via `reviewer:claude-opus-4-6`
-- # Moment MVP — Fresh Code Review (Round 15)
-- **[2026-04-13 22:39:05]** `ux_audit` via `reviewer:claude-opus-4-6`
-- # Moment MVP — Fresh Code Review (Round 16)
-- **[2026-04-13 22:42:26]** `code_review` via `reviewer:claude-opus-4-6`
-- # Moment MVP — Fresh Code Review (Round 17)
-- **[2026-04-13 22:45:22]** `ux_audit` via `reviewer:claude-opus-4-6`
-- # Moment MVP — Fresh Code Review (Round 18)

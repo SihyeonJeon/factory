@@ -1,0 +1,12 @@
+{
+  "should_fork": true,
+  "reasons": [
+    "evaluation can run as an independent lane",
+    "parallel specialist lanes are justified"
+  ],
+  "lanes": [
+    "planner",
+    "backend",
+    "qa"
+  ]
+}

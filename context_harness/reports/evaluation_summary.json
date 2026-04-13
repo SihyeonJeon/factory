@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "blockers": [],
+  "lanes": [
+    "frontend",
+    "backend"
+  ],
+  "review_report": "/Users/jeonsihyeon/ideafactory/factory/context_harness/reports/reviewer_code_review.md",
+  "ux_report": "/Users/jeonsihyeon/ideafactory/factory/context_harness/reports/reviewer_ux_audit.md"
+}

@@ -2,59 +2,51 @@
 
 ## Overall feeling
 
-The product should feel intimate, reflective, and warm, while still clearly belonging to modern iOS. It should never feel noisy, gimmicky, or like an AI-generated placeholder interface.
-
-The main map screen should feel closer to an iPhone-native maps product than to a social feed. The bottom sheet should feel as fluid and trustworthy as the iPhone Photos app or a best-in-class map result panel.
+제품은 따뜻하고, 감성적이며, 한국 2030세대의 소셜 감수성에 부합해야 한다. Partiful 수준의 이벤트 페이지 미학을 목표로 하되, 한국 사용자의 카카오톡 공유 맥락에 최적화한다.
 
 ## Reference products
 
-- Borrow the emotional clarity of a private diary.
-- Borrow the spatial confidence and calm hierarchy of a strong native map experience.
-- Borrow the bottom-sheet confidence of Naver Map or Google Maps result panels.
-- Borrow the content grouping clarity of the iPhone Photos app when listing photos under a date or event.
-- Borrow the polish level expected from top-tier iOS productivity or memory products.
+- Partiful: 감성 이벤트 페이지, 무드 컬러, 커버 이미지 자동 생성
+- 카카오톡 OG 미리보기: 단톡방에서 즉시 눈에 띄는 카드 렌더링
+- 토스: 깔끔한 한국어 UI, 정산/송금 UX
+- 당근마켓: 한국 로컬 서비스의 따뜻한 톤앤매너
+- Instagram Stories: 비주얼 중심 소셜 경험
 
 ## Visual rules
 
-- Typography: clear hierarchy between titles, place names, body copy, and metadata.
-- Color: warm, memory-oriented, and expressive without losing readability or dark-mode quality.
-- Motion: restrained and purposeful. Cluster zoom, bottom-sheet snapping, filter changes, and rewind reveal should feel smooth, not flashy.
-- Density: avoid cramped cards, oversized floating controls, and cluttered overlays.
-- Emphasize map pins, date headers, memory cards, event summaries, group headers, and emotion tags.
-- Avoid overdecorated chrome, fake system elements, excessive gradients, or novelty-first UI.
+- Typography: 한국어 최적화 (Pretendard 또는 Noto Sans KR), 명확한 위계
+- Color: 따뜻하고 감성적인 팔레트, 모임 무드별 커스텀 컬러 지원
+- Motion: 절제되고 목적 있는 트랜지션 (참석 상태 변경, 리스트 업데이트)
+- Density: 모바일에서 편안한 여백, 터치 타겟 충분히 확보
+- Dark mode: 지원 (Phase 2)
 
-## Native expectations
+## Event page design
 
-- Preserve safe areas, native gestures, and predictable navigation.
-- Prefer native patterns when custom behavior would increase review risk.
-- Maintain obviously iOS-like spacing, hit targets, and interaction rhythm.
-- If a screen still looks like an unfinished AI draft, it must fail review even if technically functional.
+- 커버 이미지 + 무드 컬러가 페이지 전체 분위기를 결정
+- 모임 목적별 템플릿 (생일, 러닝, 와인, 독서, 하우스파티, 브랜드 살롱)
+- 핵심 정보 순서: 제목 → 날짜/시간 → 장소 → RSVP 버튼 → 상세 설명
+- 카카오톡 OG 카드에서 커버 이미지 + 제목 + 날짜가 즉시 보여야 함
 
-## Mode-aware presentation
+## RSVP flow design
 
-- `couple` mode may use more intimate wording, anniversary-oriented cues, softer memory curation labels, and more romantic summary language.
-- `general_group` mode should use neutral group-oriented wording, group travel or meetup framing, and shared-history cues.
-- The mode difference should be obvious in copy, keywords, and curation emphasis, but the underlying navigation and interaction model must stay consistent.
+- 게스트 진입: 카카오톡 링크 탭 → 이벤트 페이지 로드 → RSVP 버튼
+- 로그인: 카카오 로그인 원탭 (프로필 자동 연동)
+- 응답: 참석/불참/대기 3버튼 + 동행 여부 + 회비 의사 (선택)
+- 완료: "응답 완료" 확인 + 참석자 리스트 미리보기
+- 전체 흐름 5초 이내 완료 목표
 
-## Main screen interaction direction
+## Host dashboard design
 
-- The global layout should behave as four layers:
-  - full-screen map background
-  - floating header with search and group selector
-  - floating add-memory action
-  - foreground animated bottom sheet
-- The bottom sheet should support three snap points:
-  - collapsed summary state
-  - default half-open browsing state
-  - expanded gallery state
-- Default bottom-sheet content should show curated and recommended memory groupings.
-- Curation should adapt to available memories rather than follow a rigid fixed section order.
-- The curation logic may borrow from the iPhone Photos app approach:
-  - resurfacing meaningful recency
-  - anniversary or rewind moments
-  - place-based bundles
-  - trip or event-based bundles
-  - socially meaningful groupings when multiple members contributed
-- When a marker or cluster is selected, the sheet should automatically rise and switch to filtered content for that selected geographic context.
-- The bottom sheet should function as the primary gallery browser, not just as a preview strip.
-- Tapping a memory card should open a memory detail page, and that detail page should support moving to adjacent related memories when it improves browsing efficiency.
+- 참석 상태 실시간 대시보드 (참석/불참/대기/미응답 카운트)
+- 참석자 카드 리스트 (프로필 사진, 이름, 응답 상태, 동행 여부)
+- 리마인더 발송 상태
+- 정산 현황 (입금/미입금)
+- 사진 타임라인 미리보기
+
+## Mobile-first principles
+
+- 모든 핵심 흐름은 모바일에서 먼저 설계
+- 데스크톱은 호스트 대시보드 중심으로 반응형 확장
+- 터치 타겟 최소 44px
+- 스크롤 기반 단일 페이지 구조 (이벤트 상세)
+- Bottom sheet 패턴 활용 (참석자 목록, 사진 갤러리)

@@ -1,0 +1,68 @@
+{
+  "execution_summary": "모먼트 MVP 8주 스프린트: 3개 병렬 레인(frontend/backend/qa)으로 5개 에픽을 2주 단위 4스프린트로 분해. W1-2 파운데이션(스키마+RLS+PWA 스캐폴드+카카오 OAuth), W3-4 이벤트 생성+RSVP(60초 생성·OG 카드·카카오톡 인앱 브라우저 호환), W5-6 대시보드+사진(Realtime·FCM 리마인더·스토리지 타임라인), W7-8 정산+릴리즈 게이트(토스·카카오페이 딥링크·Lighthouse·RLS 감사). 핵심 기술 리스크: iOS 카카오톡 WebView에서 OAuth 리다이렉트 격리 문제 — W4 마일스톤 전 실기기 검증 필수.",
+  "milestones": [
+    "W2: Supabase 스키마+RLS 완료, Next.js 15 App Router 스캐폴드+PWA manifest, 카카오 OAuth 연동, /event/[id] SSR OG meta curl 검증",
+    "W4: 이벤트 생성 60초 이내 완료 측정, 카카오톡 iOS 실기기 RSVP E2E 통과, OG 카드 iOS/Android 미리보기 캡처",
+    "W6: Lighthouse PWA ≥80, 사진 업로드+타임라인 모바일 렌더링, D-1 FCM 리마인더 Edge Function 배포",
+    "W8: Lighthouse Performance ≥90, 정산 딥링크 완성, RLS 정책 감사 로그 클린, Safari/Chrome/Samsung Internet 호환성 캡처, 릴리즈 게이트 통과"
+  ],
+  "lane_ownership": {
+    "frontend": [
+      "이벤트 생성 위저드 UI (무드 템플릿·커버 이미지·60초 흐름)",
+      "게스트 RSVP 플로우 (3상태·동행·회비 의사)",
+      "호스트 대시보드 Realtime UI (참석 카운트·카드 리스트)",
+      "사진 타임라인 + 스와이프 뷰어",
+      "모바일 퍼스트 반응형 레이아웃 (375/768/1280px)",
+      "PWA service worker + install prompt",
+      "카카오톡 인앱 브라우저 UX 핸들링"
+    ],
+    "backend": [
+      "Supabase 스키마 마이그레이션 + RLS 정책 전체",
+      "카카오 OAuth Supabase Auth 연동 (Apple 폴백)",
+      "Supabase Realtime 구독 (guest_states)",
+      "FCM 연동 + send-reminder Edge Function (D-1 cron)",
+      "Supabase Storage 정책 + media_timeline 업로드 파이프라인",
+      "settlement-calc Edge Function (1/N + 딥링크)",
+      "og-image Edge Function (Satori 폴백)"
+    ],
+    "qa": [
+      "카카오톡 iOS/Android 인앱 브라우저 OAuth·RSVP 흐름 실기기 테스트",
+      "Lighthouse PWA(≥80)·Performance(≥90) 측정 및 회귀 추적",
+      "Supabase RLS 정책 감사 (크로스 유저 데이터 누출 검증)",
+      "OG 미리보기 캡처 증거 (iOS·Android 카카오톡)",
+      "Safari·Chrome·Samsung Internet 호환성 체크리스트",
+      "터치 타겟 44px·명암비·폰트 크기 접근성 기본 요건 검증"
+    ]
+  },
+  "tech_decisions": {
+    "nextjs_routes": [
+      "/ — 랜딩",
+      "/create — 이벤트 생성 위저드 (호스트)",
+      "/event/[id] — 이벤트 페이지 SSR (OG meta, 공개)",
+      "/event/[id]/rsvp — RSVP 플로우 (게스트, PWA)",
+      "/event/[id]/photos — 사진 타임라인",
+      "/dashboard/[id] — 호스트 대시보드 (Realtime)",
+      "/dashboard/[id]/settlement — 정산",
+      "/api/og/[id] — OG 이미지 생성 엔드포인트"
+    ],
+    "supabase_tables": [
+      "profiles (id, kakao_id, display_name, avatar_url, created_at)",
+      "events (id, host_id, title, datetime, location, mood, cover_image_url, color_theme, description, created_at)",
+      "guest_states (id, event_id, user_id, status[attend|absent|waitlist], companion, fee_intent, responded_at)",
+      "media_timeline (id, event_id, uploader_id, storage_path, uploaded_at)",
+      "settlements (id, event_id, total_amount, per_person, participant_statuses jsonb, created_at)",
+      "reminders (id, event_id, type[d1|manual], sent_at, fcm_batch_id)"
+    ],
+    "edge_functions": [
+      "send-reminder — D-1 FCM 배치 푸시, cron 트리거 (이벤트 datetime - 24h)",
+      "settlement-calc — 1/N 분할 계산 + 토스/카카오페이 딥링크 생성",
+      "og-image — Satori 기반 OG 이미지 생성 (Next.js /api/og 폴백)"
+    ],
+    "auth": "카카오 로그인 (Supabase OAuth provider) + Apple 로그인 대체. iOS 카카오톡 WebView OAuth redirect_uri Kakao Developer Console 사전 등록 필수.",
+    "push": "Firebase Cloud Messaging MVP. 카카오 알림톡 Phase 2.",
+    "payment": "토스/카카오페이 딥링크 (PG 라이선스 불필요). 실제 결제 처리 없음.",
+    "styling": "Tailwind CSS + shadcn/ui. 폰트: Pretendard 우선 (Noto Sans KR 폴백). 모임 무드별 컬러 테마 tokens."
+  },
+  "merge_strategy": "에픽 단위 feature 브랜치 → reviewer 레인 sign-off 후 squash merge to main. main 직접 푸시 금지. 각 W2/W4/W6/W8 마일스톤에서 reviewer가 릴리즈 게이트 체크리스트 실행 후 merge 승인. 릴리즈 블로커(OG 깨짐·PWA RSVP 불동작·RLS 미적용·개인정보 동의 누락) 발생 시 해당 에픽 브랜치 merge 차단.",
+  "feedback_loop": "Reviewer가 에픽 merge마다 파일 단위 액션어블 피드백 반환 → Delivery Lead가 릴리즈 블로커 vs. Phase 2 deferred 트리아지 → Web Builder 24h 이내 반영 → QA가 Lighthouse + 모바일 호환성 재측정. W4 체크포인트: Product Lead가 OG 미리보기 품질 + RSVP 전환 UX 검토. W8 최종 게이트: Lighthouse PWA≥80·Performance≥90·RLS 감사 로그 클린·실기기 OG 캡처 4종(iOS Safari·Android Chrome·iOS 카카오톡·Android 카카오톡) 전부 통과 시 릴리즈 승인."
+}

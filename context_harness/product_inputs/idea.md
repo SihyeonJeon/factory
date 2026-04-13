@@ -2,56 +2,74 @@
 
 ## One-line product
 
-Unfading is a private iOS map diary for couples and recurring groups that turns shared dates, trips, and meetups into place-based memory collections with a synchronized bottom sheet gallery.
+모먼트(Moment)는 반복 개최자를 위한 프라이빗 모임 운영 레이어로, 오프라인 모임의 기획·운영·관계 관리를 하나의 흐름으로 연결하는 이벤트 플랫폼이다.
 
 ## Problem
 
-People already capture moments, but they do not preserve the place-based and event-based emotional context around those moments. Chat albums, photo feeds, and map reviews fail at one critical question: "What happened here with us?" Users should not have to search years of chat logs just to remember a date course, a trip stop, or a birthday location.
+한국 2030세대의 지인 기반 오프라인 모임(러닝크루·와인모임·독서모임·생일파티·하우스파티·브랜드 살롱)이 카카오톡 단톡방에서 참석 확인·장소 공지·회비 정산·사진 수집·재초대를 모두 수작업으로 처리한다. 반복 개최자가 매번 동일한 운영 노동(참석 확인 → 장소 공유 → 리마인더 → 정산 → 사진 정리 → 다음 모임 기획)을 반복하면서 시간을 낭비하고, 좋은 관계가 소홀해지는 타이밍을 놓친다.
+
+"프라이빗 모임 전용 RSVP + 관계 인텔리전스"를 통합한 한국 서비스는 부재하다.
 
 ## Target user
 
-- Primary users:
-  - a couple who wants a private shared place-memory diary
-  - a recurring group organizer in their 20s or 30s who manages meetups, dinners, or trips
-- Secondary users:
-  - emotionally motivated friend groups who want a shared travel or social diary
-  - couples who want richer rewind, anniversary, and cost-aware memory tracking
-- Mode assumption:
-  - group creation must support both `couple` and `general_group`
-  - the product must not collapse into couple-only positioning
-  - the UI layer, wording, curation, and emphasis should adapt to the selected mode
+- Primary: 반복 개최자 (러닝크루 캡틴, 와인/독서 모임 호스트, 브랜드 커뮤니티 매니저)
+- Secondary: 독립서점·팝업 공간·요가 스튜디오 운영자 (B2B 소셜 공간)
+- Tertiary: 모임에 초대받는 게스트 (앱 설치 없이 PWA로 RSVP)
 
 ## Why now
 
-- Memory logging, photo journaling, and location-based behavior are already mainstream, but the market still lacks a strong private spatial memory product that handles both couples and small groups well.
-- Existing tools are optimized for public sharing, place discovery, or flat gallery browsing, not for preserving shared memory through place plus event context.
-- Native iOS features such as MapKit, location permissions, camera capture, photo metadata, notifications, and polished interaction patterns make this category especially strong as a native product.
+- Partiful(미국, 시리즈A $20M+)이 프라이빗 이벤트 RSVP 시장을 검증했으나 한국 진출 없음
+- 카카오톡 단톡방은 RSVP 구조화 불가, 정산·사진·관계 추적 전무
+- 이벤터스/Festa는 공개 행사 중심, 네이버 밴드는 2030세대 기피, 소모임/문토는 낯선 사람 매칭
+- PWA + Next.js SSR + Supabase 조합으로 MVP 8주 내 구현 가능한 기술 성숙도
 
 ## Market gap
 
-- Instagram / Band-style feeds: good for posting, weak for place-specific recall and event grouping.
-- Map review apps: good for discovery, weak for shared memory preservation.
-- Couple diary apps: good for 2-person intimacy, weak for map-first exploration and multi-post collaboration.
-- General diary apps: good for private journaling, weak for shared history and place filtering.
-- Photo gallery apps: good for asset browsing, weak for "which memories happened around this place or cluster?" exploration.
+- 카카오톡 단톡방: RSVP 구조화 불가, 정산·사진·관계 추적 전무
+- 이벤터스/Festa: 공개 행사(개발자 밋업·강연) 중심, 지인 프라이빗 모임 도구가 아님
+- 네이버 밴드: 2030세대 기피 브랜드, RSVP·정산·관계 인텔리전스 없음
+- 소모임/문토: 낯선 사람 매칭 플랫폼, 지인 기반 프라이빗 이벤트와 다른 카테고리
 
 ## Product vision
 
-"Leave our stories in the places we shared."
+"우리의 모임을 하나의 흐름으로."
 
-The product should turn repeated visits, photos, short notes, emotion tags, and event-level memory groupings into a visible shared archive. Over time, a couple or group should feel like it has built a living memory map, not just a pile of images.
+60초 만에 감성 이벤트 페이지를 만들고, 카카오톡으로 공유하면 게스트가 앱 설치 없이 1초 만에 RSVP. 모임 전 리마인더·정산 자동화, 모임 후 사진 타임라인·관계 리캡까지. 6개월 이상 관계 데이터가 쌓이면 "오래된 친구 재연결 넛지"로 관계 관리 인프라가 된다.
 
-The core interaction should feel like opening memory drawers on a map:
-- pan the map
-- tap a marker or cluster
-- see the bottom sheet filter instantly
-- browse memories grouped under the relevant date, trip, or meetup
-- open a detail page for a specific memory
+## Solution flow
+
+1. 60초 이벤트 페이지 생성 (AI 감성 페이지 + 카카오톡 OG 카드)
+2. 앱 설치 없는 PWA RSVP (참석/불참/대기 + 회비 의사 + 선호 시간대)
+3. 모임 전 자동화 (D-1 리마인더·입금 상태·준비물 분담)
+4. 모임 중·후 운영 (출석·사진 업로드·2차 투표·사진 타임라인)
+5. 관계 인텔리전스 (공동 참석 기반 재연결 넛지 + 월간 소셜 리캡) — Phase 2
+6. B2B 소셜 공간 채널 (독립서점·팝업·스튜디오) — Phase 2
 
 ## Success condition
 
-- A user can create either a couple space or a general group space without friction.
-- Shared places become the main exploratory surface for memories.
-- Dates or meetups become the main event-level container above individual memories.
-- Users can rediscover old moments through map exploration, cluster filtering, event grouping, and rewind reminders.
-- The product feels intimate, native, mode-aware, and safe for App Store review.
+- 호스트가 60초 이내에 이벤트 페이지를 생성하고 카카오톡으로 공유할 수 있다.
+- 게스트가 앱 설치 없이 PWA에서 1탭으로 RSVP에 응답할 수 ��다.
+- 참석 상태 대시보드에서 호스트가 실시간으로 참석자를 확인할 수 있다.
+- D-1 리마인더가 자동 발송된다.
+- 토스/카카오페이 딥링크로 정산이 완료된다.
+- 모임 사진이 타임라인으로 자동 정리된다.
+
+## Revenue model
+
+- 무료: 월 3회 이벤트, 기본 RSVP·리마인더·사진
+- 프리미엄 호스트: ₩4,900/월 — 무제한 이벤트, 유료 티켓팅, 참석자 분석, 브랜드 템플릿, 관계 리캡
+- B2B 소셜 공간: ₩19,900/월 — 다중 이벤트 대시보드, 재방문율 분석, 커스텀 브랜딩
+
+## Global benchmarks
+
+- Partiful (미국, 시리즈A $20M+): 감성 이벤트 페이지 + RSVP. 관계 인텔리전스 없음
+- Luma (미국): 공개 행사 중심 이벤트 + 티켓팅 + CRM
+- IRL (미국, 종료): 범용 소셜 확장 후 실패. 반면교사
+- Fever (유럽): B2C 체험형 이벤트 마켓플레이스
+
+## Differentiation
+
+1. Partiful 모델을 한국 카카오 생태계에 최적화 (OG 공유·카카오 로그인·토스/카카오페이)
+2. Partiful에 없는 관계 인텔리전스 레이어
+3. 반복 개최자 생산성 특화 (범용 소셜 앱이 아닌 운영 도구)
+4. B2B 로컬 비즈니스 배포망 (무비용 성장 엔진)
