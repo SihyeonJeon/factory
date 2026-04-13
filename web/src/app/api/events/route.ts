@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { mood, title, datetime, location, description, coverImageUrl } =
+  const { mood, title, datetime, location, description, coverImageUrl, hasFee } =
     body as {
       mood: EventMoodEnum;
       title: string;
@@ -30,6 +30,7 @@ export async function POST(request: Request) {
       location: string;
       description: string;
       coverImageUrl: string | null;
+      hasFee?: boolean;
     };
 
   if (!title || !datetime) {
@@ -115,7 +116,7 @@ export async function POST(request: Request) {
       cover_image_url: coverImageUrl,
       color_theme: colorTheme,
       description: description || "",
-      has_fee: false,
+      has_fee: hasFee === true,
     })
     .select("id")
     .single();

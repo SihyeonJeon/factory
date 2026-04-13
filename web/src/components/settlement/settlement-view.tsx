@@ -200,6 +200,7 @@ export function SettlementView({ event, initialSettlement }: SettlementViewProps
               <div className="flex gap-3">
                 <a
                   href={`supertoss://send?amount=${settlement.per_person}&msg=${encodeURIComponent(`${event.title} 정산`)}`}
+                  rel="noopener noreferrer"
                   className="flex-1 flex items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-colors hover:bg-blue-50"
                   style={{ borderColor: "#0064FF", color: "#0064FF" }}
                 >
@@ -207,6 +208,7 @@ export function SettlementView({ event, initialSettlement }: SettlementViewProps
                 </a>
                 <a
                   href={`kakaotalk://kakaopay/money/to/send?amount=${settlement.per_person}`}
+                  rel="noopener noreferrer"
                   className="flex-1 flex items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-colors hover:bg-yellow-50"
                   style={{ borderColor: "#FEE500", color: "#191919" }}
                 >

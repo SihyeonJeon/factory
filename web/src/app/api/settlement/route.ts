@@ -158,39 +158,24 @@ export async function POST(request: Request) {
       );
     }
 
-    // Use select-for-update pattern with optimistic locking to prevent race condition
-    const { data: settlement } = await supabase
-      .from("settlements")
-      .select("id, participant_statuses")
-      .eq("event_id", eventId)
-      .single();
-
-    if (!settlement) {
-      return NextResponse.json({ error: "정산을 찾을 수 없습니다" }, { status: 404 });
-    }
-
-    const statuses = settlement.participant_statuses as unknown as ParticipantStatus[];
-    const updated = statuses.map((p) =>
-      p.user_id === targetUserId ? { ...p, paid: true } : p,
+    // Atomic mark_paid via Postgres RPC (row-level lock prevents race conditions)
+    const { data: updatedStatuses, error: rpcError } = await supabase.rpc(
+      "mark_participant_paid",
+      { p_event_id: eventId, p_user_id: targetUserId },
     );
 
-    // Update with ID match to narrow the update scope
-    const { error: updateError } = await supabase
-      .from("settlements")
-      .update({
-        participant_statuses: updated,
-      })
-      .eq("id", settlement.id);
-
-    if (updateError) {
-      console.error("Settlement update error:", updateError);
+    if (rpcError) {
+      console.error("Settlement mark_paid error:", rpcError);
+      if (rpcError.message?.includes("settlement_not_found")) {
+        return NextResponse.json({ error: "정산을 찾을 수 없습니다" }, { status: 404 });
+      }
       return NextResponse.json(
         { error: "상태 변경에 실패했습니다" },
         { status: 500 },
       );
     }
 
-    return NextResponse.json({ participant_statuses: updated });
+    return NextResponse.json({ participant_statuses: updatedStatuses });
   }
 
   return NextResponse.json({ error: "알 수 없는 action입니다" }, { status: 400 });

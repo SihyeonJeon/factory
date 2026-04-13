@@ -107,6 +107,7 @@ export function CreateEventWizard() {
           location: form.location,
           description: form.description,
           coverImageUrl,
+          hasFee: form.hasFee,
         }),
       });
 

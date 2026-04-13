@@ -302,7 +302,12 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      mark_participant_paid: {
+        Args: { p_event_id: string; p_user_id: string };
+        Returns: ParticipantStatus[];
+      };
+    };
     Enums: {
       event_mood: EventMoodEnum;
       rsvp_status: RsvpStatusEnum;

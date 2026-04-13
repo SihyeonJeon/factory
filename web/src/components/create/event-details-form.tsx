@@ -65,6 +65,33 @@ export function EventDetailsForm({ data, onUpdate }: EventDetailsFormProps) {
             maxLength={500}
           />
         </div>
+
+        <div className="flex items-center justify-between rounded-lg border p-4">
+          <div>
+            <Label htmlFor="hasFee" className="text-sm font-medium">
+              참석비가 있나요?
+            </Label>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              게스트에게 회비 납부 의향을 확인합니다
+            </p>
+          </div>
+          <button
+            id="hasFee"
+            type="button"
+            role="switch"
+            aria-checked={data.hasFee}
+            onClick={() => onUpdate({ hasFee: !data.hasFee })}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+              data.hasFee ? "bg-violet-600" : "bg-gray-200"
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform ${
+                data.hasFee ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
       </div>
     </div>
   );

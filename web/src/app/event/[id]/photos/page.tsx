@@ -24,6 +24,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+// Photos are intentionally public — event pages are shared via link (no auth required)
+// so photos follow the same access model. Upload is auth-gated at the API level.
 export default async function PhotosPage({ params }: Props) {
   const { id } = await params;
   const supabase = await createServerSupabaseClient();

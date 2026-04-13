@@ -2,7 +2,6 @@
 
 const CACHE_NAME = "moment-v1";
 const STATIC_ASSETS = [
-  "/",
   "/manifest.json",
   "/icons/icon-192.svg",
   "/icons/icon-512.svg",

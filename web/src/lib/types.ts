@@ -26,6 +26,7 @@ export interface EventFormData {
   datetime: string;
   location: string;
   description: string;
+  hasFee: boolean;
 }
 
 export const INITIAL_EVENT_FORM: EventFormData = {
@@ -36,6 +37,7 @@ export const INITIAL_EVENT_FORM: EventFormData = {
   datetime: "",
   location: "",
   description: "",
+  hasFee: false,
 };
 
 // ── RSVP types ──
