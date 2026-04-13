@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import type { EventDetail } from "@/lib/types";
 import type { MoodTemplate } from "@/lib/types";
 import { getMoodTemplate } from "@/lib/mood-templates";
@@ -51,6 +51,26 @@ function ChevronRightIcon() {
 export function DashboardView({ event }: DashboardViewProps) {
   const mood = useMemo(() => getMoodTemplate(event.mood), [event.mood]);
   const { guests, counts, isLoading } = useRealtimeGuests(event.id);
+  const [reminderStatus, setReminderStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  const handleSendReminder = useCallback(async () => {
+    if (!window.confirm("참석 미응답 게스트에게 리마인더를 보낼까요?")) return;
+    setReminderStatus("sending");
+    try {
+      const res = await fetch("/api/reminders/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId: event.id }),
+      });
+      if (!res.ok) {
+        setReminderStatus("error");
+        return;
+      }
+      setReminderStatus("sent");
+    } catch {
+      setReminderStatus("error");
+    }
+  }, [event.id]);
 
   if (!mood) return null;
 
@@ -124,6 +144,32 @@ export function DashboardView({ event }: DashboardViewProps) {
                   </div>
                   <ChevronRightIcon />
                 </a>
+              </section>
+
+              {/* Reminder send */}
+              <section>
+                <button
+                  type="button"
+                  onClick={handleSendReminder}
+                  disabled={reminderStatus === "sending" || reminderStatus === "sent"}
+                  className="flex w-full items-center justify-between rounded-xl border p-4 transition-colors hover:bg-gray-50 disabled:opacity-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg">🔔</span>
+                    <div className="text-left">
+                      <p className="text-sm font-semibold">리마인더 보내기</p>
+                      <p className="text-xs text-gray-400">
+                        {reminderStatus === "sending"
+                          ? "발송 중..."
+                          : reminderStatus === "sent"
+                            ? "발송 완료!"
+                            : reminderStatus === "error"
+                              ? "발송 실패 — 다시 시도해주세요"
+                              : "미응답 게스트에게 알림 발송"}
+                      </p>
+                    </div>
+                  </div>
+                </button>
               </section>
 
             </div>

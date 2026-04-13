@@ -250,8 +250,12 @@ export function SettlementView({ event, initialSettlement }: SettlementViewProps
                     ) : (
                       <button
                         type="button"
-                        onClick={() => handleMarkPaid(p.user_id)}
-                        className="rounded-full border px-3 py-1 text-xs font-semibold text-gray-500 transition-colors hover:border-gray-400 hover:text-gray-700"
+                        onClick={() => {
+                          if (window.confirm(`${p.display_name}님을 납부 완료로 변경할까요?`)) {
+                            handleMarkPaid(p.user_id);
+                          }
+                        }}
+                        className="min-h-[44px] min-w-[44px] rounded-full border px-3 py-1 text-xs font-semibold text-gray-500 transition-colors hover:border-gray-400 hover:text-gray-700"
                       >
                         미완료
                       </button>
