@@ -161,10 +161,13 @@ def run_preflight_doctor(deps: DoctorDeps, *, quick: bool = False) -> Path:
     codex = deps.run_shell(["codex", "--version"])
     add_check("codex_cli", codex.returncode == 0, (codex.stdout or codex.stderr).strip()[:200])
 
-    claude_sdk = deps.run_shell([str(deps.factory_dir / "venv" / "bin" / "python"), "-c", "import claude_agent_sdk; print('ok')"])
+    venv_python = deps.factory_dir / "venv" / "bin" / "python"
+    python_bin = str(venv_python) if venv_python.exists() else "python3"
+
+    claude_sdk = deps.run_shell([python_bin, "-c", "import claude_agent_sdk; print('ok')"])
     add_check("claude_agent_sdk", claude_sdk.returncode == 0, (claude_sdk.stdout or claude_sdk.stderr).strip()[:200])
 
-    playwright = deps.run_shell([str(deps.factory_dir / "venv" / "bin" / "python"), "-c", "from playwright.sync_api import sync_playwright; print('ok')"])
+    playwright = deps.run_shell([python_bin, "-c", "from playwright.sync_api import sync_playwright; print('ok')"])
     add_check("playwright_python", playwright.returncode == 0, (playwright.stdout or playwright.stderr).strip()[:200])
 
     anthropic_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
