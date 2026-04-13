@@ -21,6 +21,7 @@ export function EventRsvpFlow({ event }: EventRsvpFlowProps) {
   const [phase, setPhase] = useState<FlowPhase>("view");
   const [rsvp, setRsvp] = useState<GuestRsvp>(INITIAL_GUEST_RSVP);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const updateRsvp = useCallback((partial: Partial<GuestRsvp>) => {
     setRsvp((prev) => ({ ...prev, ...partial }));
@@ -40,8 +41,10 @@ export function EventRsvpFlow({ event }: EventRsvpFlowProps) {
   );
 
   const handleSubmit = useCallback(async () => {
+    setErrorMessage(null);
+
     if (event.hasFee && rsvp.status === "attending" && !rsvp.feeIntention) {
-      alert("참석비 납부 의향을 선택해주세요");
+      setErrorMessage("참석비 납부 의향을 선택해주세요");
       return;
     }
 
@@ -60,13 +63,13 @@ export function EventRsvpFlow({ event }: EventRsvpFlowProps) {
 
       if (!res.ok) {
         const body = await res.json();
-        alert(body.error ?? "응답 제출에 실패했습니다");
+        setErrorMessage(body.error ?? "응답 제출에 실패했습니다");
         return;
       }
 
       setPhase("confirmed");
     } catch {
-      alert("네트워크 오류가 발생했습니다");
+      setErrorMessage("네트워크 오류가 발생했습니다");
     } finally {
       setIsSubmitting(false);
     }
@@ -119,6 +122,7 @@ export function EventRsvpFlow({ event }: EventRsvpFlowProps) {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 className="text-gray-300"
+                aria-hidden="true"
               >
                 <path d="m9 18 6-6-6-6" />
               </svg>
@@ -163,6 +167,15 @@ export function EventRsvpFlow({ event }: EventRsvpFlowProps) {
           </div>
         </div>
       </main>
+
+      {/* Error message */}
+      {errorMessage && (
+        <div className="mx-auto max-w-lg px-4 xl:max-w-6xl">
+          <p role="alert" className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">
+            {errorMessage}
+          </p>
+        </div>
+      )}
 
       {/* Bottom action bar */}
       <div className="sticky bottom-0 border-t bg-background/80 backdrop-blur-sm">

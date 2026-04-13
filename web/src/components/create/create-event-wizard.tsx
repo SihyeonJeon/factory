@@ -177,7 +177,7 @@ export function CreateEventWizard() {
       {/* Error message */}
       {submitError && (
         <div className="mx-auto max-w-lg px-4 md:max-w-2xl xl:max-w-3xl">
-          <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">
+          <p role="alert" className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">
             {submitError}
           </p>
         </div>

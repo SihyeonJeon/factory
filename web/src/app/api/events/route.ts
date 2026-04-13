@@ -3,6 +3,13 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getMoodTemplate } from "@/lib/mood-templates";
 import type { EventMoodEnum } from "@/lib/database.types";
 
+const VALID_MOODS: ReadonlySet<string> = new Set<string>([
+  "birthday", "running", "wine", "book", "houseparty", "salon",
+]);
+const MAX_TITLE_LENGTH = 100;
+const MAX_DESCRIPTION_LENGTH = 2000;
+const MAX_LOCATION_LENGTH = 200;
+
 export async function POST(request: Request) {
   const supabase = await createServerSupabaseClient();
 
@@ -30,6 +37,54 @@ export async function POST(request: Request) {
       { error: "title and datetime are required" },
       { status: 400 },
     );
+  }
+
+  // Validate mood enum
+  if (mood && !VALID_MOODS.has(mood)) {
+    return NextResponse.json(
+      { error: "유효하지 않은 무드입니다" },
+      { status: 400 },
+    );
+  }
+
+  // Validate field lengths
+  if (typeof title !== "string" || title.length > MAX_TITLE_LENGTH) {
+    return NextResponse.json(
+      { error: `제목은 ${MAX_TITLE_LENGTH}자 이하여야 합니다` },
+      { status: 400 },
+    );
+  }
+
+  if (description && typeof description === "string" && description.length > MAX_DESCRIPTION_LENGTH) {
+    return NextResponse.json(
+      { error: `설명은 ${MAX_DESCRIPTION_LENGTH}자 이하여야 합니다` },
+      { status: 400 },
+    );
+  }
+
+  if (location && typeof location === "string" && location.length > MAX_LOCATION_LENGTH) {
+    return NextResponse.json(
+      { error: `장소는 ${MAX_LOCATION_LENGTH}자 이하여야 합니다` },
+      { status: 400 },
+    );
+  }
+
+  // Validate datetime is valid ISO string
+  if (typeof datetime !== "string" || isNaN(Date.parse(datetime))) {
+    return NextResponse.json(
+      { error: "유효한 날짜/시간을 입력해주세요" },
+      { status: 400 },
+    );
+  }
+
+  // Validate coverImageUrl type and length
+  if (coverImageUrl !== null && coverImageUrl !== undefined) {
+    if (typeof coverImageUrl !== "string" || coverImageUrl.length > 2048) {
+      return NextResponse.json(
+        { error: "유효하지 않은 커버 이미지 URL입니다" },
+        { status: 400 },
+      );
+    }
   }
 
   const template = getMoodTemplate(mood);

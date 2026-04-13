@@ -29,6 +29,7 @@ export function RsvpDetailsForm({
         <div className="flex items-center gap-3">
           <button
             type="button"
+            aria-label="동행 인원 감소"
             onClick={() =>
               onUpdate({
                 companionCount: Math.max(0, rsvp.companionCount - 1),
@@ -49,6 +50,7 @@ export function RsvpDetailsForm({
           </span>
           <button
             type="button"
+            aria-label="동행 인원 추가"
             onClick={() =>
               onUpdate({
                 companionCount: Math.min(10, rsvp.companionCount + 1),

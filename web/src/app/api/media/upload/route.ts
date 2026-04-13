@@ -145,7 +145,6 @@ export async function POST(request: Request) {
     eventId,
     url: signedUrl,
     thumbnailUrl: signedUrl,
-    storagePath,
     uploaderName: profile?.display_name ?? "",
     uploaderAvatar: profile?.avatar_url ?? null,
     uploadedAt: data.uploaded_at,

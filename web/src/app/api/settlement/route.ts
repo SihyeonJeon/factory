@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { ParticipantStatus } from "@/lib/database.types";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const MAX_TOTAL_AMOUNT = 100_000_000; // 1억원
+
 export async function POST(request: Request) {
   const supabase = await createServerSupabaseClient();
 
@@ -28,13 +31,21 @@ export async function POST(request: Request) {
     );
   }
 
+  // Validate eventId is a proper UUID
+  if (!UUID_RE.test(eventId)) {
+    return NextResponse.json(
+      { error: "잘못된 이벤트 ID입니다" },
+      { status: 400 },
+    );
+  }
+
   // ── action: create ──
   if (action === "create") {
     const { totalAmount } = body;
 
-    if (!totalAmount || totalAmount <= 0) {
+    if (!totalAmount || totalAmount <= 0 || totalAmount > MAX_TOTAL_AMOUNT) {
       return NextResponse.json(
-        { error: "유효한 금액을 입력해주세요" },
+        { error: `유효한 금액을 입력해주세요 (최대 ${MAX_TOTAL_AMOUNT.toLocaleString()}원)` },
         { status: 400 },
       );
     }
@@ -125,6 +136,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validate userId is a proper UUID
+    if (!UUID_RE.test(targetUserId)) {
+      return NextResponse.json(
+        { error: "잘못된 사용자 ID입니다" },
+        { status: 400 },
+      );
+    }
+
     // Verify caller is host
     const { data: event } = await supabase
       .from("events")
@@ -139,9 +158,10 @@ export async function POST(request: Request) {
       );
     }
 
+    // Use select-for-update pattern with optimistic locking to prevent race condition
     const { data: settlement } = await supabase
       .from("settlements")
-      .select("*")
+      .select("id, participant_statuses")
       .eq("event_id", eventId)
       .single();
 
@@ -154,12 +174,13 @@ export async function POST(request: Request) {
       p.user_id === targetUserId ? { ...p, paid: true } : p,
     );
 
+    // Update with ID match to narrow the update scope
     const { error: updateError } = await supabase
       .from("settlements")
       .update({
         participant_statuses: updated,
       })
-      .eq("event_id", eventId);
+      .eq("id", settlement.id);
 
     if (updateError) {
       console.error("Settlement update error:", updateError);

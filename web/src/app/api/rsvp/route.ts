@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { RsvpStatusEnum, FeeIntentionEnum } from "@/lib/database.types";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const VALID_STATUSES: ReadonlySet<string> = new Set(["attending", "declined", "maybe"]);
+const VALID_FEE_INTENTIONS: ReadonlySet<string> = new Set(["will_pay", "undecided"]);
+
 export async function POST(request: Request) {
   const supabase = await createServerSupabaseClient();
 
@@ -28,6 +32,33 @@ export async function POST(request: Request) {
     );
   }
 
+  // Validate eventId is a proper UUID
+  if (!UUID_RE.test(eventId)) {
+    return NextResponse.json(
+      { error: "잘못된 이벤트 ID입니다" },
+      { status: 400 },
+    );
+  }
+
+  // Validate status enum
+  if (!VALID_STATUSES.has(status)) {
+    return NextResponse.json(
+      { error: "유효하지 않은 참석 상태입니다" },
+      { status: 400 },
+    );
+  }
+
+  // Validate and clamp companionCount (0-10, matching client UI)
+  const clampedCompanionCount = Math.max(0, Math.min(10, Math.floor(Number(companionCount) || 0)));
+
+  // Validate feeIntention if provided
+  if (feeIntention !== null && feeIntention !== undefined && !VALID_FEE_INTENTIONS.has(feeIntention)) {
+    return NextResponse.json(
+      { error: "유효하지 않은 회비 납부 의사입니다" },
+      { status: 400 },
+    );
+  }
+
   // Verify the event exists
   const { data: event } = await supabase
     .from("events")
@@ -45,7 +76,7 @@ export async function POST(request: Request) {
       event_id: eventId,
       user_id: user.id,
       status,
-      companion_count: companionCount ?? 0,
+      companion_count: clampedCompanionCount,
       fee_intention: feeIntention,
     },
     { onConflict: "event_id,user_id" },
