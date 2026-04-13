@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * POST /api/reminders/send
  * Host-triggered manual reminder for a specific event.
@@ -21,9 +23,9 @@ export async function POST(request: Request) {
   const body = await request.json();
   const eventId = body.event_id;
 
-  if (typeof eventId !== "string" || eventId.length === 0) {
+  if (typeof eventId !== "string" || !UUID_RE.test(eventId)) {
     return NextResponse.json(
-      { error: "Missing event_id" },
+      { error: "Invalid event_id" },
       { status: 400 },
     );
   }

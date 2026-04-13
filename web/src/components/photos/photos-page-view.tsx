@@ -49,6 +49,7 @@ export function PhotosPageView({ event, initialPhotos }: PhotosPageViewProps) {
             className="flex items-center gap-1 text-sm text-gray-500 transition-colors hover:text-gray-800"
           >
             <svg
+              aria-hidden="true"
               width="16"
               height="16"
               viewBox="0 0 24 24"
