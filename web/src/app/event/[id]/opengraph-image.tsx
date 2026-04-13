@@ -26,16 +26,21 @@ export default async function OgImage({
     .eq("id", id)
     .single();
 
-  // Fallback if event not found
-  const title = event?.title ?? "모먼트";
-  const mood = event?.mood ?? "wine";
-  const location = event?.location ?? "";
-  const datetime = event?.datetime ?? "";
+  // Return null (404) if event not found — prevents misleading OG images for non-existent events
+  if (!event) {
+    return new Response(null, { status: 404 });
+  }
+
+  const title = event.title;
+  const mood = event.mood;
+  const location = event.location ?? "";
+  const datetime = event.datetime ?? "";
 
   const template = getMoodTemplate(mood);
-  const primaryColor = event?.color_theme?.primary ?? template?.colorTheme.primary ?? "#8B5CF6";
-  const bgColor = event?.color_theme?.bg ?? template?.colorTheme.bg ?? "#F5F0FF";
-  const accentColor = event?.color_theme?.accent ?? template?.colorTheme.accent ?? "#6D28D9";
+  const colorTheme = event.color_theme as Record<string, string> | null;
+  const primaryColor = colorTheme?.primary ?? template?.colorTheme.primary ?? "#8B5CF6";
+  const bgColor = colorTheme?.bg ?? template?.colorTheme.bg ?? "#F5F0FF";
+  const accentColor = colorTheme?.accent ?? template?.colorTheme.accent ?? "#6D28D9";
   const emoji = template?.emoji ?? "";
 
   // Format date for display

@@ -8,7 +8,7 @@ import type {
 } from "@/lib/types";
 import type { Database } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/client";
-import { calcAttendanceCounts } from "@/lib/mock-dashboard";
+import { calcAttendanceCounts } from "@/lib/attendance";
 
 type GuestStateRow = Database["public"]["Tables"]["guest_states"]["Row"];
 
