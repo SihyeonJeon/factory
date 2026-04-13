@@ -42,9 +42,26 @@ export function EventRsvpFlow({ event }: EventRsvpFlowProps) {
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
     try {
-      // TODO: Submit to Supabase guest_states table when backend lane delivers
-      console.log("RSVP submitted:", { eventId: event.id, ...rsvp });
+      const res = await fetch("/api/rsvp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventId: event.id,
+          status: rsvp.status,
+          companionCount: rsvp.companionCount,
+          feeIntention: rsvp.feeIntention,
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json();
+        alert(body.error ?? "응답 제출에 실패했습니다");
+        return;
+      }
+
       setPhase("confirmed");
+    } catch {
+      alert("네트워크 오류가 발생했습니다");
     } finally {
       setIsSubmitting(false);
     }

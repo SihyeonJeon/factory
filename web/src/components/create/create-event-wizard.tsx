@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { StepIndicator } from "./step-indicator";
 import { MoodSelector } from "./mood-selector";
@@ -10,13 +11,16 @@ import { EventPreview } from "./event-preview";
 import type { EventFormData, EventMood } from "@/lib/types";
 import { INITIAL_EVENT_FORM } from "@/lib/types";
 import { getMoodTemplate } from "@/lib/mood-templates";
+import { createClient } from "@/lib/supabase/client";
 
 const TOTAL_STEPS = 4;
 
 export function CreateEventWizard() {
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<EventFormData>(INITIAL_EVENT_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const mood = useMemo(
     () => (form.mood ? getMoodTemplate(form.mood) : undefined),
@@ -70,16 +74,58 @@ export function CreateEventWizard() {
 
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
-      // TODO: Submit to Supabase when backend lane is ready
-      // For now, log the form data
-      console.log("Event created:", form);
-      // Will redirect to /event/[id] after creation
-      alert("이벤트가 생성되었습니다! (백엔드 연동 대기 중)");
+      let coverImageUrl: string | null = null;
+
+      // Upload cover image if a file was selected
+      if (form.coverFile) {
+        const supabase = createClient();
+        const ext = form.coverFile.name.split(".").pop()?.toLowerCase() ?? "jpg";
+        const path = `covers/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("event-media")
+          .upload(path, form.coverFile, { contentType: form.coverFile.type });
+        if (uploadError) {
+          setSubmitError(`이미지 업로드 실패: ${uploadError.message}`);
+          return;
+        }
+        const { data: urlData } = await supabase.storage
+          .from("event-media")
+          .createSignedUrl(path, 60 * 60 * 24 * 365);
+        coverImageUrl = urlData?.signedUrl ?? null;
+      } else if (form.coverImage) {
+        // Default cover (SVG path or null)
+        coverImageUrl = form.coverImage;
+      }
+
+      const res = await fetch("/api/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mood: form.mood,
+          title: form.title,
+          datetime: form.datetime,
+          location: form.location,
+          description: form.description,
+          coverImageUrl,
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json();
+        setSubmitError(body.error ?? "이벤트 생성에 실패했습니다");
+        return;
+      }
+
+      const { id } = await res.json();
+      router.push(`/dashboard/${id}`);
+    } catch {
+      setSubmitError("네트워크 오류가 발생했습니다");
     } finally {
       setIsSubmitting(false);
     }
-  }, [form]);
+  }, [form, router]);
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -127,6 +173,15 @@ export function CreateEventWizard() {
           <EventPreview data={form} mood={mood} />
         )}
       </main>
+
+      {/* Error message */}
+      {submitError && (
+        <div className="mx-auto max-w-lg px-4 md:max-w-2xl xl:max-w-3xl">
+          <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">
+            {submitError}
+          </p>
+        </div>
+      )}
 
       {/* Bottom action bar */}
       <div className="sticky bottom-0 border-t bg-background/80 backdrop-blur-sm">
