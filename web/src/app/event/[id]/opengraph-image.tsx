@@ -37,7 +37,7 @@ export default async function OgImage({
   const datetime = event.datetime ?? "";
 
   const template = getMoodTemplate(mood);
-  const colorTheme = event.color_theme as Record<string, string> | null;
+  const colorTheme = event.color_theme as unknown as Record<string, string> | null;
   const primaryColor = colorTheme?.primary ?? template?.colorTheme.primary ?? "#8B5CF6";
   const bgColor = colorTheme?.bg ?? template?.colorTheme.bg ?? "#F5F0FF";
   const accentColor = colorTheme?.accent ?? template?.colorTheme.accent ?? "#6D28D9";
