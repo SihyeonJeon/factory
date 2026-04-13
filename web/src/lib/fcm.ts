@@ -5,7 +5,7 @@
  * - Firebase app initialization (lazy singleton)
  * - Requesting notification permission
  * - Getting FCM token
- * - Saving token to Supabase profiles.fcm_token
+ * - Saving token to Supabase fcm_tokens table
  *
  * Required env vars:
  *   NEXT_PUBLIC_FIREBASE_API_KEY
@@ -103,12 +103,12 @@ async function saveFCMToken(token: string): Promise<void> {
   if (!user) return;
 
   await supabase
-    .from("profiles")
-    .update({
-      fcm_token: token,
-      fcm_token_updated_at: new Date().toISOString(),
-    })
-    .eq("id", user.id);
+    .from("fcm_tokens")
+    .upsert({
+      user_id: user.id,
+      token,
+      updated_at: new Date().toISOString(),
+    });
 }
 
 /**

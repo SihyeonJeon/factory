@@ -26,14 +26,18 @@ interface FCMMessage {
   };
 }
 
+function base64url(str: string): string {
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
 // Google OAuth2 token for FCM v1 API
 async function getAccessToken(
   clientEmail: string,
   privateKey: string,
 ): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
-  const header = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" }));
-  const payload = btoa(
+  const header = base64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const payload = base64url(
     JSON.stringify({
       iss: clientEmail,
       scope: "https://www.googleapis.com/auth/firebase.messaging",
@@ -66,7 +70,7 @@ async function getAccessToken(
     new TextEncoder().encode(signInput),
   );
 
-  const jwt = `${signInput}.${btoa(
+  const jwt = `${signInput}.${base64url(
     String.fromCharCode(...new Uint8Array(signature)),
   )}`;
 
@@ -205,10 +209,10 @@ Deno.serve(async (req) => {
 
     if (!event) continue;
 
-    // Get attending guests with FCM tokens
+    // Get attending guest user IDs
     const { data: guests } = await supabase
       .from("guest_states")
-      .select("user_id, profiles!inner(fcm_token, display_name)")
+      .select("user_id")
       .eq("event_id", eventId)
       .eq("status", "attending");
 
@@ -217,10 +221,10 @@ Deno.serve(async (req) => {
       continue;
     }
 
-    // Also notify the host
-    const { data: eventWithHost } = await supabase
+    // Get host ID
+    const { data: eventHost } = await supabase
       .from("events")
-      .select("host_id, profiles!inner(fcm_token)")
+      .select("host_id")
       .eq("id", eventId)
       .single();
 
@@ -228,20 +232,21 @@ Deno.serve(async (req) => {
     const dateStr = `${eventDate.getMonth() + 1}/${eventDate.getDate()}`;
     const timeStr = `${eventDate.getHours().toString().padStart(2, "0")}:${eventDate.getMinutes().toString().padStart(2, "0")}`;
 
-    // Collect all FCM tokens (guests + host)
-    const tokenSet = new Set<string>();
-    for (const g of guests) {
-      const profile = g.profiles as unknown as { fcm_token: string | null };
-      if (profile?.fcm_token) {
-        tokenSet.add(profile.fcm_token);
-      }
+    // Collect all user IDs (guests + host) and fetch their FCM tokens
+    const userIds = new Set(guests.map((g) => g.user_id));
+    if (eventHost?.host_id) {
+      userIds.add(eventHost.host_id);
     }
-    if (eventWithHost) {
-      const hostProfile = eventWithHost.profiles as unknown as {
-        fcm_token: string | null;
-      };
-      if (hostProfile?.fcm_token) {
-        tokenSet.add(hostProfile.fcm_token);
+
+    const { data: fcmRecords } = await supabase
+      .from("fcm_tokens")
+      .select("token")
+      .in("user_id", Array.from(userIds));
+
+    const tokenSet = new Set<string>();
+    for (const record of fcmRecords ?? []) {
+      if (record.token) {
+        tokenSet.add(record.token);
       }
     }
 

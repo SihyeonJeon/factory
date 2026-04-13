@@ -27,15 +27,16 @@ export async function POST(request: Request) {
   }
 
   const { error } = await supabase
-    .from("profiles")
-    .update({
-      fcm_token: token,
-      fcm_token_updated_at: new Date().toISOString(),
-    })
-    .eq("id", user.id);
+    .from("fcm_tokens")
+    .upsert({
+      user_id: user.id,
+      token,
+      updated_at: new Date().toISOString(),
+    });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("FCM token save error:", error);
+    return NextResponse.json({ error: "토큰 저장에 실패했습니다" }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

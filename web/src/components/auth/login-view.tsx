@@ -108,9 +108,9 @@ export function LoginView({ error, redirectTo }: LoginViewProps) {
         {/* Terms notice */}
         <p className="text-center text-xs text-muted-foreground leading-relaxed">
           로그인하면{" "}
-          <span className="underline underline-offset-2">서비스 이용약관</span>
+          <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">서비스 이용약관</a>
           {" "}및{" "}
-          <span className="underline underline-offset-2">개인정보처리방침</span>
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">개인정보처리방침</a>
           에 동의하게 됩니다.
         </p>
       </div>

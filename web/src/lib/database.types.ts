@@ -1,6 +1,6 @@
 /**
  * Supabase Database Types for Moment MVP
- * Generated from schema: 00001_initial_schema.sql + 00004_fcm_tokens.sql
+ * Generated from schema: 00001-00006 migrations
  *
  * In production, regenerate via: npx supabase gen types typescript --local
  */
@@ -38,8 +38,6 @@ export interface Database {
           kakao_id: string | null;
           display_name: string;
           avatar_url: string | null;
-          fcm_token: string | null;
-          fcm_token_updated_at: string | null;
           created_at: string;
         };
         Insert: {
@@ -47,8 +45,6 @@ export interface Database {
           kakao_id?: string | null;
           display_name?: string;
           avatar_url?: string | null;
-          fcm_token?: string | null;
-          fcm_token_updated_at?: string | null;
           created_at?: string;
         };
         Update: {
@@ -56,14 +52,38 @@ export interface Database {
           kakao_id?: string | null;
           display_name?: string;
           avatar_url?: string | null;
-          fcm_token?: string | null;
-          fcm_token_updated_at?: string | null;
           created_at?: string;
         };
         Relationships: [
           {
             foreignKeyName: "profiles_id_fkey";
             columns: ["id"];
+            isOneToOne: true;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      fcm_tokens: {
+        Row: {
+          user_id: string;
+          token: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          token: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          token?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fcm_tokens_user_id_fkey";
+            columns: ["user_id"];
             isOneToOne: true;
             referencedRelation: "users";
             referencedColumns: ["id"];

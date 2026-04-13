@@ -35,13 +35,20 @@ self.addEventListener("fetch", (event) => {
   // Skip non-GET and cross-origin requests
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
 
-  // Network-first for API routes and Next.js data
-  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/_next/data/")) {
+  // Never cache API routes — they contain auth-dependent and sensitive data
+  if (url.pathname.startsWith("/api/")) {
+    return;
+  }
+
+  // Network-first for Next.js data routes
+  if (url.pathname.startsWith("/_next/data/")) {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
           return response;
         })
         .catch(() => caches.match(request))

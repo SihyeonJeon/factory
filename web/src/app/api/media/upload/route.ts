@@ -84,8 +84,9 @@ export async function POST(request: Request) {
     });
 
   if (uploadError) {
+    console.error("Storage upload error:", uploadError);
     return NextResponse.json(
-      { error: `업로드 실패: ${uploadError.message}` },
+      { error: "이미지 업로드에 실패했습니다" },
       { status: 500 },
     );
   }
@@ -115,10 +116,11 @@ export async function POST(request: Request) {
     .single();
 
   if (insertError) {
+    console.error("Media record insert error:", insertError);
     // Clean up on failure
     await supabase.storage.from("event-media").remove([storagePath]);
     return NextResponse.json(
-      { error: `기록 저장 실패: ${insertError.message}` },
+      { error: "사진 기록 저장에 실패했습니다" },
       { status: 500 },
     );
   }
