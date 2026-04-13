@@ -242,7 +242,7 @@ export function PhotoSwipeViewer({
         </div>
 
         {/* Dot indicators */}
-        {photos.length <= 20 && (
+        {photos.length <= 10 && (
           <div className="mt-4 flex justify-center gap-1.5">
             {photos.map((_, i) => (
               <button

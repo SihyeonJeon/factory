@@ -24,10 +24,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // Photos are intentionally public — event pages are shared via link (no auth required)
 // so photos follow the same access model. Upload is auth-gated at the API level.
 export default async function PhotosPage({ params }: Props) {
   const { id } = await params;
+  if (!UUID_RE.test(id)) notFound();
   const supabase = await createServerSupabaseClient();
 
   const event = await getEventById(supabase, id);

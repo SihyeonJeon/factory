@@ -24,11 +24,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export default async function DashboardPage({ params }: Props) {
   const { id } = await params;
+  if (!UUID_RE.test(id)) notFound();
+
   const supabase = await createServerSupabaseClient();
 
-  // Verify the current user is the host of this event
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -37,26 +40,22 @@ export default async function DashboardPage({ params }: Props) {
     redirect("/login");
   }
 
-  // Fetch event and verify host ownership
-  const { data: event } = await supabase
+  // Single query: fetch event detail and verify host ownership
+  const eventDetail = await getEventById(supabase, id);
+
+  if (!eventDetail) {
+    notFound();
+  }
+
+  // Check host ownership from the already-fetched event
+  const { data: hostCheck } = await supabase
     .from("events")
     .select("host_id")
     .eq("id", id)
     .single();
 
-  if (!event) {
-    notFound();
-  }
-
-  if (event.host_id !== user.id) {
-    // Not the host — redirect to the guest-facing event page
+  if (hostCheck && hostCheck.host_id !== user.id) {
     redirect(`/event/${id}`);
-  }
-
-  const eventDetail = await getEventById(supabase, id);
-
-  if (!eventDetail) {
-    notFound();
   }
 
   return <DashboardView event={eventDetail} />;
