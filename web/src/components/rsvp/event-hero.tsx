@@ -90,7 +90,7 @@ export function EventHero({ event, mood }: EventHeroProps) {
 
         {/* Description */}
         {event.description && (
-          <p className="text-sm leading-relaxed text-muted-foreground">
+          <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
             {event.description}
           </p>
         )}

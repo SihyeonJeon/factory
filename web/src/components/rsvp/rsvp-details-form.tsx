@@ -37,7 +37,7 @@ export function RsvpDetailsForm({
             }
             disabled={rsvp.companionCount === 0}
             className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-full border-2 text-lg font-semibold transition-colors",
+              "flex h-11 w-11 items-center justify-center rounded-full border-2 text-lg font-semibold transition-colors",
               rsvp.companionCount === 0
                 ? "border-muted text-muted-foreground"
                 : "border-border hover:bg-muted"
@@ -58,7 +58,7 @@ export function RsvpDetailsForm({
             }
             disabled={rsvp.companionCount >= 10}
             className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-full border-2 text-lg font-semibold transition-colors",
+              "flex h-11 w-11 items-center justify-center rounded-full border-2 text-lg font-semibold transition-colors",
               rsvp.companionCount >= 10
                 ? "border-muted text-muted-foreground"
                 : "border-border hover:bg-muted"

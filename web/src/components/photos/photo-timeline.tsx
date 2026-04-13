@@ -93,7 +93,7 @@ export function PhotoTimeline({
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <div className="mb-3 text-4xl">📷</div>
         <p className="text-sm font-medium text-gray-500">아직 사진이 없어요</p>
-        <p className="mt-1 text-xs text-gray-400">
+        <p className="mt-1 text-xs text-gray-500">
           모임의 순간을 공유해보세요
         </p>
       </div>
