@@ -77,11 +77,21 @@ export async function POST(request: Request) {
     );
   }
 
-  // Validate coverImageUrl type and length
+  // Validate coverImageUrl: must be a Supabase storage path or null
   if (coverImageUrl !== null && coverImageUrl !== undefined) {
     if (typeof coverImageUrl !== "string" || coverImageUrl.length > 2048) {
       return NextResponse.json(
         { error: "유효하지 않은 커버 이미지 URL입니다" },
+        { status: 400 },
+      );
+    }
+    // Only allow Supabase storage paths (covers/xxx.ext) or Supabase storage URLs
+    const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+    const isStoragePath = /^covers\/[a-f0-9-]+\.\w+$/i.test(coverImageUrl);
+    const isSupabaseUrl = supabaseHost && coverImageUrl.startsWith(supabaseHost);
+    if (!isStoragePath && !isSupabaseUrl) {
+      return NextResponse.json(
+        { error: "커버 이미지는 업로드된 파일만 사용할 수 있습니다" },
         { status: 400 },
       );
     }

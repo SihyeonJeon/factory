@@ -231,7 +231,7 @@ export function PhotoSwipeViewer({
       <div className="px-4 pb-6 pt-3">
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-xs font-semibold text-white">
-            {photo.uploaderName[0]}
+            {photo.uploaderName[0] || "?"}
           </div>
           <div>
             <p className="text-sm font-medium text-white">

@@ -4,6 +4,14 @@
       "command": "uvx",
       "args": ["git+https://github.com/googlecolab/colab-mcp"],
       "timeout": 30000
+    },
+    "supabase": {
+      "command": "npx",
+      "args": ["-y", "@supabase/mcp-server-supabase@latest", "--read-only"],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "sbp_52e698204f549376b796ca9c68cd48a8a5a151c8"
+      },
+      "timeout": 30000
     }
   }
 }

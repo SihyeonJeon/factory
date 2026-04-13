@@ -65,7 +65,17 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Stale-while-revalidate for HTML pages
+  // Network-only for protected routes (auth-dependent content)
+  if (
+    url.pathname.startsWith("/dashboard") ||
+    url.pathname.startsWith("/create") ||
+    url.pathname.startsWith("/login") ||
+    url.pathname.startsWith("/auth")
+  ) {
+    return;
+  }
+
+  // Stale-while-revalidate for public HTML pages (event pages, home, etc.)
   event.respondWith(
     caches.match(request).then((cached) => {
       const fetchPromise = fetch(request)

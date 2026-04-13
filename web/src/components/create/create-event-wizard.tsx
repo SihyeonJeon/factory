@@ -90,10 +90,8 @@ export function CreateEventWizard() {
           setSubmitError(`이미지 업로드 실패: ${uploadError.message}`);
           return;
         }
-        const { data: urlData } = await supabase.storage
-          .from("event-media")
-          .createSignedUrl(path, 60 * 60 * 24 * 365);
-        coverImageUrl = urlData?.signedUrl ?? null;
+        // Store the storage path, not a signed URL (avoids expiry issues)
+        coverImageUrl = path;
       } else if (form.coverImage) {
         // Default cover (SVG path or null)
         coverImageUrl = form.coverImage;

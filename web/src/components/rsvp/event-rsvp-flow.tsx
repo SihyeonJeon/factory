@@ -63,6 +63,10 @@ export function EventRsvpFlow({ event }: EventRsvpFlowProps) {
 
       if (!res.ok) {
         const body = await res.json();
+        if (res.status === 401) {
+          window.location.href = `/login?next=/event/${event.id}`;
+          return;
+        }
         setErrorMessage(body.error ?? "응답 제출에 실패했습니다");
         return;
       }
