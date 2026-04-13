@@ -40,19 +40,8 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Network-first for Next.js data routes
+  // Network-only for Next.js data routes (may contain auth-dependent page data)
   if (url.pathname.startsWith("/_next/data/")) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          }
-          return response;
-        })
-        .catch(() => caches.match(request))
-    );
     return;
   }
 
