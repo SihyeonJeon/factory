@@ -17,9 +17,9 @@ export const MOOD_TEMPLATES: MoodTemplate[] = [
     label: "러닝 크루",
     emoji: "🏃",
     colorTheme: {
-      primary: "#4ECDC4",
+      primary: "#2BA69E",
       bg: "#F0FFFE",
-      accent: "#2AB7AD",
+      accent: "#1E8C85",
     },
     defaultCover: "/covers/running.svg",
   },
@@ -39,9 +39,9 @@ export const MOOD_TEMPLATES: MoodTemplate[] = [
     label: "독서 모임",
     emoji: "📚",
     colorTheme: {
-      primary: "#F59E0B",
+      primary: "#B87708",
       bg: "#FFFBF0",
-      accent: "#D97706",
+      accent: "#92600A",
     },
     defaultCover: "/covers/book.svg",
   },
