@@ -53,13 +53,39 @@ export function PhotoSwipeViewer({
     return () => window.removeEventListener("keydown", handleKey);
   }, [currentIndex, goTo, onClose]);
 
-  // Lock body scroll when viewer is open
+  // Lock body scroll and trap focus when viewer is open
+  const dialogRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const original = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    // Move focus into dialog
+    const firstButton = dialogRef.current?.querySelector<HTMLElement>("button");
+    firstButton?.focus();
     return () => {
       document.body.style.overflow = original;
     };
+  }, []);
+
+  // Focus trap — keep Tab within dialog
+  useEffect(() => {
+    function handleTab(e: KeyboardEvent) {
+      if (e.key !== "Tab" || !dialogRef.current) return;
+      const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    window.addEventListener("keydown", handleTab);
+    return () => window.removeEventListener("keydown", handleTab);
   }, []);
 
   const handleTouchStart = (e: ReactTouchEvent) => {
@@ -115,6 +141,7 @@ export function PhotoSwipeViewer({
 
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-50 flex flex-col bg-black"
       role="dialog"
       aria-modal="true"

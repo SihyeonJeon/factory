@@ -21,11 +21,13 @@ export function MoodSelector({ selected, onSelect }: MoodSelectorProps) {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4" role="radiogroup" aria-label="모임 분위기 선택">
         {MOOD_TEMPLATES.map((mood) => (
           <button
             key={mood.id}
             type="button"
+            role="radio"
+            aria-checked={selected === mood.id}
             onClick={() => onSelect(mood.id)}
             className={cn(
               "flex flex-col items-center gap-2 rounded-2xl border-2 p-5 transition-all active:scale-[0.97]",

@@ -84,7 +84,7 @@ export async function POST(request: Request) {
     }
     // Only allow Supabase storage paths (covers/xxx.ext) or Supabase storage URLs
     const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-    const isStoragePath = /^covers\/[\w-]+\.\w+$/i.test(coverImageUrl);
+    const isStoragePath = /^\/?covers\/[\w-]+\.\w+$/i.test(coverImageUrl);
     const isSupabaseUrl = supabaseHost && coverImageUrl.startsWith(supabaseHost + "/storage/v1/");
     if (!isStoragePath && !isSupabaseUrl) {
       return NextResponse.json(

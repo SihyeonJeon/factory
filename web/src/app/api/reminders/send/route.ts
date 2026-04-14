@@ -20,7 +20,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await request.json();
+  let body: { event_id: string };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "잘못된 요청입니다" }, { status: 400 });
+  }
   const eventId = body.event_id;
 
   if (typeof eventId !== "string" || !UUID_RE.test(eventId)) {

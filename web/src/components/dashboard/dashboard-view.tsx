@@ -60,7 +60,7 @@ export function DashboardView({ event }: DashboardViewProps) {
       const res = await fetch("/api/reminders/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId: event.id }),
+        body: JSON.stringify({ event_id: event.id }),
       });
       if (!res.ok) {
         setReminderStatus("error");
