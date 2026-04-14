@@ -33,7 +33,8 @@ export async function getMyEvents(
         guest_states ( id )
       `)
       .eq("host_id", userId)
-      .order("datetime", { ascending: false }),
+      .order("datetime", { ascending: false })
+      .limit(50),
     supabase
       .from("guest_states")
       .select(`
@@ -44,7 +45,8 @@ export async function getMyEvents(
           guest_states ( id )
         )
       `)
-      .eq("user_id", userId),
+      .eq("user_id", userId)
+      .limit(50),
   ]);
 
   if (hostedResult.error) {

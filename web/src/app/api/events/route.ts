@@ -9,6 +9,10 @@ const VALID_MOODS: ReadonlySet<string> = new Set<string>([
 const MAX_TITLE_LENGTH = 100;
 const MAX_DESCRIPTION_LENGTH = 2000;
 const MAX_LOCATION_LENGTH = 200;
+const MAX_COVER_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_IMAGE_TYPES = new Set([
+  "image/jpeg", "image/png", "image/webp", "image/heic",
+]);
 
 export async function POST(request: Request) {
   const supabase = await createServerSupabaseClient();
@@ -18,80 +22,91 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "로그인이 필요합니다" }, { status: 401 });
   }
 
-  let body: { mood: EventMoodEnum; title: string; datetime: string; location: string; description: string; coverImageUrl: string | null; hasFee?: boolean };
+  // Parse FormData (cover file uploaded server-side for Storage RLS compliance)
+  let formData: FormData;
   try {
-    body = await request.json();
+    formData = await request.formData();
   } catch {
     return NextResponse.json({ error: "잘못된 요청입니다" }, { status: 400 });
   }
-  const { mood, title, datetime, location, description, coverImageUrl, hasFee } = body;
 
+  const mood = (formData.get("mood") as string) || "wine";
+  const title = ((formData.get("title") as string) ?? "").trim();
+  const datetime = (formData.get("datetime") as string) ?? "";
+  const location = ((formData.get("location") as string) ?? "").trim();
+  const description = ((formData.get("description") as string) ?? "").trim();
+  const hasFee = formData.get("hasFee") === "true";
+  const coverFile = formData.get("coverFile") as File | null;
+  const coverImageUrl = (formData.get("coverImageUrl") as string) || null;
+
+  // Validate required fields
   if (!title || !datetime) {
     return NextResponse.json(
-      { error: "title and datetime are required" },
+      { error: "제목과 날짜/시간은 필수입니다" },
       { status: 400 },
     );
   }
 
-  // Validate mood enum
-  if (mood && !VALID_MOODS.has(mood)) {
+  if (!VALID_MOODS.has(mood)) {
     return NextResponse.json(
       { error: "유효하지 않은 무드입니다" },
       { status: 400 },
     );
   }
 
-  // Validate field lengths
-  if (typeof title !== "string" || title.length > MAX_TITLE_LENGTH) {
+  if (title.length > MAX_TITLE_LENGTH) {
     return NextResponse.json(
       { error: `제목은 ${MAX_TITLE_LENGTH}자 이하여야 합니다` },
       { status: 400 },
     );
   }
 
-  if (description && typeof description === "string" && description.length > MAX_DESCRIPTION_LENGTH) {
+  if (description.length > MAX_DESCRIPTION_LENGTH) {
     return NextResponse.json(
       { error: `설명은 ${MAX_DESCRIPTION_LENGTH}자 이하여야 합니다` },
       { status: 400 },
     );
   }
 
-  if (location && typeof location === "string" && location.length > MAX_LOCATION_LENGTH) {
+  if (location.length > MAX_LOCATION_LENGTH) {
     return NextResponse.json(
       { error: `장소는 ${MAX_LOCATION_LENGTH}자 이하여야 합니다` },
       { status: 400 },
     );
   }
 
-  // Validate datetime is valid ISO string
-  if (typeof datetime !== "string" || isNaN(Date.parse(datetime))) {
+  if (isNaN(Date.parse(datetime))) {
     return NextResponse.json(
       { error: "유효한 날짜/시간을 입력해주세요" },
       { status: 400 },
     );
   }
 
-  // Validate coverImageUrl: must be a Supabase storage path or null
-  if (coverImageUrl !== null && coverImageUrl !== undefined) {
-    if (typeof coverImageUrl !== "string" || coverImageUrl.length > 2048) {
+  // Validate cover file if provided
+  if (coverFile && coverFile.size > 0) {
+    if (coverFile.size > MAX_COVER_SIZE) {
       return NextResponse.json(
-        { error: "유효하지 않은 커버 이미지 URL입니다" },
+        { error: "커버 이미지는 10MB 이하여야 합니다" },
         { status: 400 },
       );
     }
-    // Only allow Supabase storage paths (covers/xxx.ext) or Supabase storage URLs
-    const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-    const isStoragePath = /^\/?covers\/[\w-]+\.\w+$/i.test(coverImageUrl);
-    const isSupabaseUrl = supabaseHost && coverImageUrl.startsWith(supabaseHost + "/storage/v1/");
-    if (!isStoragePath && !isSupabaseUrl) {
+    if (!ALLOWED_IMAGE_TYPES.has(coverFile.type)) {
       return NextResponse.json(
-        { error: "커버 이미지는 업로드된 파일만 사용할 수 있습니다" },
+        { error: "지원하지 않는 이미지 형식입니다 (JPEG, PNG, WebP, HEIC만 가능)" },
         { status: 400 },
       );
     }
+  }
+
+  // Validate default cover path if provided (SVG from public/)
+  if (coverImageUrl && !/^\/?covers\/[\w-]+\.\w+$/i.test(coverImageUrl)) {
+    return NextResponse.json(
+      { error: "유효하지 않은 커버 이미지입니다" },
+      { status: 400 },
+    );
   }
 
   const template = getMoodTemplate(mood);
@@ -101,18 +116,19 @@ export async function POST(request: Request) {
     accent: "#6D28D9",
   };
 
+  // 1. Create event first (need event ID for storage path)
   const { data, error } = await supabase
     .from("events")
     .insert({
       host_id: user.id,
       title,
       datetime,
-      location: location || "",
-      mood: mood || "wine",
-      cover_image_url: coverImageUrl,
+      location,
+      mood: mood as EventMoodEnum,
+      cover_image_url: coverImageUrl, // default cover or null initially
       color_theme: colorTheme,
-      description: description || "",
-      has_fee: hasFee === true,
+      description,
+      has_fee: hasFee,
     })
     .select("id")
     .single();
@@ -122,5 +138,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "이벤트 생성에 실패했습니다" }, { status: 500 });
   }
 
-  return NextResponse.json({ id: data.id });
+  const eventId = data.id;
+
+  // 2. Upload cover file server-side if provided
+  // Path: {event_id}/{host_id}/cover.{ext} — matches Storage RLS policy
+  if (coverFile && coverFile.size > 0) {
+    const ext = coverFile.name.split(".").pop()?.toLowerCase() ?? "jpg";
+    const storagePath = `${eventId}/${user.id}/cover.${ext}`;
+    const buffer = Buffer.from(await coverFile.arrayBuffer());
+
+    const { error: uploadError } = await supabase.storage
+      .from("event-media")
+      .upload(storagePath, buffer, {
+        contentType: coverFile.type,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error("Cover upload error:", uploadError);
+      // Event created but cover failed — update with null and continue
+    } else {
+      // Update event with the storage path
+      await supabase
+        .from("events")
+        .update({ cover_image_url: storagePath })
+        .eq("id", eventId);
+    }
+  }
+
+  return NextResponse.json({ id: eventId });
 }

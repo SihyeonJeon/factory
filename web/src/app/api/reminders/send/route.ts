@@ -66,20 +66,38 @@ export async function POST(request: Request) {
 
   const edgeFnUrl = `${supabaseUrl}/functions/v1/send-reminder`;
 
-  const edgeResponse = await fetch(edgeFnUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${serviceRoleKey}`,
-    },
-    body: JSON.stringify({ event_id: eventId }),
-  });
+  let edgeResponse: Response;
+  try {
+    edgeResponse = await fetch(edgeFnUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${serviceRoleKey}`,
+      },
+      body: JSON.stringify({ event_id: eventId }),
+    });
+  } catch (err) {
+    console.error("Edge Function fetch error:", err);
+    return NextResponse.json(
+      { error: "리마인더 전송에 실패했습니다" },
+      { status: 502 },
+    );
+  }
 
-  const result = await edgeResponse.json();
+  let result: Record<string, unknown>;
+  try {
+    result = await edgeResponse.json();
+  } catch {
+    console.error("Edge Function returned non-JSON response, status:", edgeResponse.status);
+    return NextResponse.json(
+      { error: "리마인더 전송에 실패했습니다" },
+      { status: 502 },
+    );
+  }
 
   if (!edgeResponse.ok) {
     return NextResponse.json(
-      { error: result.error ?? "Failed to send reminder" },
+      { error: "리마인더 전송에 실패했습니다" },
       { status: edgeResponse.status },
     );
   }

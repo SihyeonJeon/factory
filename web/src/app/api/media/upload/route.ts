@@ -163,6 +163,23 @@ export async function POST(request: Request) {
     );
   }
 
+  // Secondary photo cap check: guard against race conditions where
+  // concurrent uploads passed the initial count check simultaneously.
+  const { count: postInsertCount } = await supabase
+    .from("media_timeline")
+    .select("id", { count: "exact", head: true })
+    .eq("event_id", eventId);
+
+  if (postInsertCount !== null && postInsertCount > MAX_PHOTOS_PER_EVENT) {
+    // Over limit — roll back the just-inserted record and storage file
+    await supabase.from("media_timeline").delete().eq("id", data.id);
+    await supabase.storage.from("event-media").remove([storagePath]);
+    return NextResponse.json(
+      { error: "이 이벤트의 최대 사진 수에 도달했어요" },
+      { status: 409 },
+    );
+  }
+
   // Fetch uploader profile for response
   const { data: profile } = await supabase
     .from("profiles")

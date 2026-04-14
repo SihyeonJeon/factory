@@ -11,7 +11,6 @@ import { EventPreview } from "./event-preview";
 import type { EventFormData, EventMood } from "@/lib/types";
 import { INITIAL_EVENT_FORM } from "@/lib/types";
 import { getMoodTemplate } from "@/lib/mood-templates";
-import { createClient } from "@/lib/supabase/client";
 
 const TOTAL_STEPS = 4;
 
@@ -76,39 +75,24 @@ export function CreateEventWizard() {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      let coverImageUrl: string | null = null;
-
-      // Upload cover image if a file was selected
+      // Build FormData: cover file is uploaded server-side after event creation
+      // to comply with Storage RLS path pattern {event_id}/{host_id}/cover.{ext}
+      const formData = new FormData();
+      formData.append("mood", form.mood ?? "");
+      formData.append("title", form.title);
+      formData.append("datetime", form.datetime);
+      formData.append("location", form.location);
+      formData.append("description", form.description);
+      formData.append("hasFee", form.hasFee ? "true" : "false");
       if (form.coverFile) {
-        const supabase = createClient();
-        const ext = form.coverFile.name.split(".").pop()?.toLowerCase() ?? "jpg";
-        const path = `covers/${crypto.randomUUID()}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from("event-media")
-          .upload(path, form.coverFile, { contentType: form.coverFile.type });
-        if (uploadError) {
-          setSubmitError(`이미지 업로드 실패: ${uploadError.message}`);
-          return;
-        }
-        // Store the storage path, not a signed URL (avoids expiry issues)
-        coverImageUrl = path;
+        formData.append("coverFile", form.coverFile);
       } else if (form.coverImage) {
-        // Default cover (SVG path or null)
-        coverImageUrl = form.coverImage;
+        formData.append("coverImageUrl", form.coverImage);
       }
 
       const res = await fetch("/api/events", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mood: form.mood,
-          title: form.title,
-          datetime: form.datetime,
-          location: form.location,
-          description: form.description,
-          coverImageUrl,
-          hasFee: form.hasFee,
-        }),
+        body: formData,
       });
 
       if (!res.ok) {

@@ -65,6 +65,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "호스트만 정산을 생성할 수 있습니다" }, { status: 403 });
     }
 
+    // Check if settlement already exists for this event
+    const { data: existing } = await supabase
+      .from("settlements")
+      .select("id")
+      .eq("event_id", eventId)
+      .single();
+
+    if (existing) {
+      return NextResponse.json(
+        { error: "이 이벤트에 이미 정산이 존재합니다" },
+        { status: 409 },
+      );
+    }
+
     // Get attending guests
     const { data: guests } = await supabase
       .from("guest_states")
@@ -98,22 +112,26 @@ export async function POST(request: Request) {
 
     const perPerson = Math.ceil(totalAmount / participants.length);
 
-    const { data: settlement, error: upsertError } = await supabase
+    const { data: settlement, error: insertError } = await supabase
       .from("settlements")
-      .upsert(
-        {
-          event_id: eventId,
-          total_amount: totalAmount,
-          per_person: perPerson,
-          participant_statuses: participants,
-        },
-        { onConflict: "event_id" },
-      )
+      .insert({
+        event_id: eventId,
+        total_amount: totalAmount,
+        per_person: perPerson,
+        participant_statuses: participants,
+      })
       .select()
       .single();
 
-    if (upsertError) {
-      console.error("Settlement create error:", upsertError);
+    if (insertError) {
+      console.error("Settlement create error:", insertError);
+      // Handle unique constraint violation as a race condition fallback
+      if (insertError.code === "23505") {
+        return NextResponse.json(
+          { error: "이 이벤트에 이미 정산이 존재합니다" },
+          { status: 409 },
+        );
+      }
       return NextResponse.json(
         { error: "정산 생성에 실패했습니다" },
         { status: 500 },
