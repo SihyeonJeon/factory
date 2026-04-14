@@ -259,6 +259,7 @@ export function SettlementView({ event, initialSettlement }: SettlementViewProps
                             handleMarkPaid(p.user_id);
                           }
                         }}
+                        aria-label={`${p.display_name} 정산 완료 표시`}
                         className="min-h-[44px] min-w-[44px] rounded-full border px-3 py-1 text-xs font-semibold text-gray-500 transition-colors hover:border-gray-400 hover:text-gray-700"
                       >
                         미완료
