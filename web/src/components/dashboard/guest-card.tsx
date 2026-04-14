@@ -50,6 +50,7 @@ export function GuestCard({ guest }: GuestCardProps) {
         <img
           src={guest.avatar}
           alt={guest.name}
+          loading="lazy"
           className="h-10 w-10 shrink-0 rounded-full object-cover"
         />
       ) : (

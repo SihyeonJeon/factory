@@ -54,7 +54,7 @@ export async function POST(request: Request) {
 
   if (!serviceRoleKey) {
     return NextResponse.json(
-      { error: "Server configuration error: missing service role key" },
+      { error: "서버 오류가 발생했습니다" },
       { status: 500 },
     );
   }
