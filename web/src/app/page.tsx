@@ -26,6 +26,14 @@ export default function Home() {
             내 이벤트
           </Link>
         </div>
+        <div className="mt-2">
+          <Link
+            href="/crew/create"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 transition-colors hover:text-gray-700"
+          >
+            👥 아크 만들기
+          </Link>
+        </div>
       </div>
     </div>
   );

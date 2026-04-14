@@ -3,7 +3,10 @@ import { updateSession } from "@/lib/supabase/middleware";
 import { createServerClient } from "@supabase/ssr";
 
 /** Routes that require authentication — redirect to /login if no session */
-const PROTECTED_PREFIXES = ["/create", "/dashboard", "/my"];
+const PROTECTED_PREFIXES = ["/create", "/dashboard", "/my", "/crew"];
+
+/** Public sub-routes under protected prefixes (no auth required to view) */
+const PUBLIC_EXCEPTIONS = ["/crew/join"];
 
 export async function middleware(request: NextRequest) {
   // Always refresh the session cookie
@@ -11,7 +14,12 @@ export async function middleware(request: NextRequest) {
 
   // Check if this is a protected route
   const { pathname } = request.nextUrl;
-  const isProtected = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
+  const isPublicException = PUBLIC_EXCEPTIONS.some((p) =>
+    pathname.startsWith(p),
+  );
+  const isProtected =
+    !isPublicException &&
+    PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
 
   if (!isProtected) {
     return response;

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
-import type { EventDetail, EventMood } from "./types";
+import type { EventComment, EventDetail, EventMood } from "./types";
 
 /** Lightweight event summary for list views (no signed URLs). */
 export interface EventSummary {
@@ -179,4 +179,50 @@ export async function getEventById(
     guestCount: count ?? 0,
     hasFee: event.has_fee,
   };
+}
+
+/**
+ * Fetch all comments for an event, joined with author profiles.
+ * Returns comments sorted by created_at ascending (oldest first).
+ */
+export async function getEventComments(
+  supabase: SupabaseClient<Database>,
+  eventId: string,
+): Promise<EventComment[]> {
+  const { data, error } = await supabase
+    .from("event_comments")
+    .select(
+      `
+      id,
+      event_id,
+      author_id,
+      body,
+      created_at,
+      profiles:author_id ( display_name, avatar_url )
+    `,
+    )
+    .eq("event_id", eventId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("[getEventComments] error:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) => {
+    const profile = row.profiles as unknown as {
+      display_name: string;
+      avatar_url: string | null;
+    } | null;
+
+    return {
+      id: row.id,
+      eventId: row.event_id,
+      authorId: row.author_id,
+      authorName: profile?.display_name ?? "게스트",
+      authorAvatar: profile?.avatar_url ?? null,
+      body: row.body,
+      createdAt: row.created_at,
+    };
+  });
 }

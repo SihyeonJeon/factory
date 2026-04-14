@@ -9,14 +9,17 @@ import { RsvpConfirmation } from "./rsvp-confirmation";
 import type { EventDetail, GuestRsvp, RsvpStatus } from "@/lib/types";
 import { INITIAL_GUEST_RSVP } from "@/lib/types";
 import { getMoodTemplate } from "@/lib/mood-templates";
+import { CommentSection } from "@/components/comments/comment-section";
 
 type FlowPhase = "view" | "respond" | "confirmed";
 
 interface EventRsvpFlowProps {
   event: EventDetail;
+  currentUserId: string | null;
+  isHost: boolean;
 }
 
-export function EventRsvpFlow({ event }: EventRsvpFlowProps) {
+export function EventRsvpFlow({ event, currentUserId, isHost }: EventRsvpFlowProps) {
   const mood = useMemo(() => getMoodTemplate(event.mood), [event.mood]);
   const [phase, setPhase] = useState<FlowPhase>("view");
   const [rsvp, setRsvp] = useState<GuestRsvp>(INITIAL_GUEST_RSVP);
@@ -131,6 +134,13 @@ export function EventRsvpFlow({ event }: EventRsvpFlowProps) {
                 <path d="m9 18 6-6-6-6" />
               </svg>
             </a>
+
+            {/* Comment section */}
+            <CommentSection
+              eventId={event.id}
+              currentUserId={currentUserId}
+              isHost={isHost}
+            />
           </div>
 
           {/* Right column (desktop) / below hero (mobile): RSVP area */}

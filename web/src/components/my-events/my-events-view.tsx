@@ -3,10 +3,12 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import type { EventSummary } from "@/lib/queries";
+import type { Crew } from "@/lib/types";
 import { getMoodTemplate } from "@/lib/mood-templates";
 
 interface MyEventsViewProps {
   events: EventSummary[];
+  crews: Crew[];
 }
 
 function formatDate(iso: string): string {
@@ -80,7 +82,55 @@ function EventCard({ event }: { event: EventSummary }) {
   );
 }
 
-export function MyEventsView({ events }: MyEventsViewProps) {
+function CrewCard({ crew }: { crew: Crew }) {
+  return (
+    <Link
+      href={`/crew/${crew.id}`}
+      className="group block rounded-2xl border bg-white p-4 transition-all hover:shadow-md"
+    >
+      <div className="flex items-start gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-lg">
+          👥
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <h3 className="truncate text-sm font-semibold group-hover:underline">
+              {crew.name}
+            </h3>
+            <span
+              className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                crew.role === "admin"
+                  ? "bg-primary/10 text-primary"
+                  : "bg-gray-100 text-gray-500"
+              }`}
+            >
+              {crew.role === "admin" ? "관리자" : "멤버"}
+            </span>
+          </div>
+          <p className="mt-0.5 text-xs text-gray-400">
+            멤버 {crew.memberCount}명 · 이벤트 {crew.eventCount}개
+          </p>
+        </div>
+
+        <svg
+          aria-hidden="true"
+          className="mt-1 h-4 w-4 shrink-0 text-gray-300 transition-colors group-hover:text-gray-500"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      </div>
+    </Link>
+  );
+}
+
+export function MyEventsView({ events, crews }: MyEventsViewProps) {
   const now = useMemo(() => new Date(), []);
   const upcoming = useMemo(
     () => events.filter((e) => new Date(e.datetime) >= now),
@@ -103,6 +153,38 @@ export function MyEventsView({ events }: MyEventsViewProps) {
           + 새 이벤트
         </Link>
       </div>
+
+      {/* Crews section */}
+      <section className="mb-8">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-gray-500">
+            내 아크 ({crews.length})
+          </h2>
+          <Link
+            href="/crew/create"
+            className="inline-flex h-8 items-center rounded-lg border px-3 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
+          >
+            + 아크 만들기
+          </Link>
+        </div>
+        {crews.length === 0 ? (
+          <div className="rounded-2xl border bg-gray-50 py-8 text-center">
+            <p className="text-sm text-gray-400">아직 아크가 없어요</p>
+            <Link
+              href="/crew/create"
+              className="mt-3 inline-flex h-9 items-center rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              아크 만들기
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {crews.map((crew) => (
+              <CrewCard key={crew.id} crew={crew} />
+            ))}
+          </div>
+        )}
+      </section>
 
       {events.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">

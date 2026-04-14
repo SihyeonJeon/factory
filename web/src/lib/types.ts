@@ -117,3 +117,54 @@ export interface TimelinePhoto {
   width: number;
   height: number;
 }
+
+// ── Crew types ──
+
+export type CrewRole = "admin" | "member";
+
+export interface Crew {
+  id: string;
+  name: string;
+  description: string;
+  coverImageUrl: string | null;
+  inviteCode: string;
+  createdBy: string;
+  memberCount: number;
+  eventCount: number;
+  role: CrewRole;
+}
+
+export interface CrewMember {
+  id: string;
+  userId: string;
+  name: string;
+  avatar: string | null;
+  role: CrewRole;
+  joinedAt: string;
+}
+
+export interface CrewFeedEvent {
+  id: string;
+  title: string;
+  datetime: string;
+  location: string;
+  mood: EventMood;
+  coverImage: string | null;
+  hostName: string;
+  guestCount: number;
+  commentCount: number;
+  photoCount: number;
+  photos: string[]; // first 4 thumbnail URLs
+}
+
+// ── Comment types ──
+
+export interface EventComment {
+  id: string;
+  eventId: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar: string | null;
+  body: string;
+  createdAt: string;
+}

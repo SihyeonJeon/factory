@@ -25,7 +25,7 @@ export function EventDetailsForm({ data, onUpdate }: EventDetailsFormProps) {
           <Label htmlFor="title">모임 이름</Label>
           <Input
             id="title"
-            placeholder="예: 4월 러닝크루 정기런"
+            placeholder="예: 4월 러닝 아크 정기런"
             value={data.title}
             onChange={(e) => onUpdate({ title: e.target.value })}
             maxLength={100}

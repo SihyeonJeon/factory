@@ -16,6 +16,7 @@ export type EventMoodEnum =
 export type RsvpStatusEnum = "attending" | "declined" | "maybe";
 export type FeeIntentionEnum = "will_pay" | "undecided";
 export type ReminderTypeEnum = "d1" | "manual";
+export type CrewRoleEnum = "admin" | "member";
 
 export interface ColorTheme {
   primary: string;
@@ -102,6 +103,7 @@ export interface Database {
           color_theme: ColorTheme;
           description: string;
           has_fee: boolean;
+          crew_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -115,6 +117,7 @@ export interface Database {
           color_theme?: ColorTheme;
           description?: string;
           has_fee?: boolean;
+          crew_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -128,6 +131,7 @@ export interface Database {
           color_theme?: ColorTheme;
           description?: string;
           has_fee?: boolean;
+          crew_id?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -136,6 +140,13 @@ export interface Database {
             columns: ["host_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "events_crew_id_fkey";
+            columns: ["crew_id"];
+            isOneToOne: false;
+            referencedRelation: "crews";
             referencedColumns: ["id"];
           },
         ];
@@ -300,6 +311,122 @@ export interface Database {
           },
         ];
       };
+      crews: {
+        Row: {
+          id: string;
+          name: string;
+          description: string;
+          cover_image_url: string | null;
+          invite_code: string;
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string;
+          cover_image_url?: string | null;
+          invite_code?: string;
+          created_by: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string;
+          cover_image_url?: string | null;
+          invite_code?: string;
+          created_by?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "crews_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      crew_members: {
+        Row: {
+          id: string;
+          crew_id: string;
+          user_id: string;
+          role: CrewRoleEnum;
+          joined_at: string;
+        };
+        Insert: {
+          id?: string;
+          crew_id: string;
+          user_id: string;
+          role?: CrewRoleEnum;
+          joined_at?: string;
+        };
+        Update: {
+          id?: string;
+          crew_id?: string;
+          user_id?: string;
+          role?: CrewRoleEnum;
+          joined_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "crew_members_crew_id_fkey";
+            columns: ["crew_id"];
+            isOneToOne: false;
+            referencedRelation: "crews";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "crew_members_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      event_comments: {
+        Row: {
+          id: string;
+          event_id: string;
+          author_id: string;
+          body: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_id: string;
+          author_id: string;
+          body: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_id?: string;
+          author_id?: string;
+          body?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "event_comments_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "event_comments_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -307,12 +434,38 @@ export interface Database {
         Args: { p_event_id: string; p_user_id: string };
         Returns: ParticipantStatus[];
       };
+      create_crew: {
+        Args: { p_name: string; p_description?: string };
+        Returns: string;
+      };
+      join_crew_by_invite: {
+        Args: { p_invite_code: string };
+        Returns: string;
+      };
+      is_crew_member: {
+        Args: { p_crew_id: string; p_user_id: string };
+        Returns: boolean;
+      };
+      is_crew_admin: {
+        Args: { p_crew_id: string; p_user_id: string };
+        Returns: boolean;
+      };
+      get_crew_preview: {
+        Args: { p_invite_code: string };
+        Returns: {
+          id: string;
+          name: string;
+          description: string;
+          member_count: number;
+        }[];
+      };
     };
     Enums: {
       event_mood: EventMoodEnum;
       rsvp_status: RsvpStatusEnum;
       fee_intention: FeeIntentionEnum;
       reminder_type: ReminderTypeEnum;
+      crew_role: CrewRoleEnum;
     };
     CompositeTypes: Record<string, never>;
   };

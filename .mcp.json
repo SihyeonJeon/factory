@@ -7,9 +7,9 @@
     },
     "supabase": {
       "command": "npx",
-      "args": ["-y", "@supabase/mcp-server-supabase@latest", "--read-only"],
+      "args": ["-y", "@supabase/mcp-server-supabase@latest"],
       "env": {
-        "SUPABASE_ACCESS_TOKEN": "sbp_52e698204f549376b796ca9c68cd48a8a5a151c8"
+        "SUPABASE_ACCESS_TOKEN": "sbp_586b23d357a49a40e852c26a7c778181f89a0518"
       },
       "timeout": 30000
     }

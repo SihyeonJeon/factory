@@ -56,5 +56,17 @@ export default async function EventPage({ params }: Props) {
     notFound();
   }
 
-  return <EventRsvpFlow event={event} />;
+  // Fetch current user
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const currentUserId = user?.id ?? null;
+  const isHost = currentUserId === event.hostId;
+
+  return (
+    <EventRsvpFlow
+      event={event}
+      currentUserId={currentUserId}
+      isHost={isHost}
+    />
+  );
 }

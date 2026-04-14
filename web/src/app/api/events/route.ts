@@ -3,6 +3,8 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getMoodTemplate } from "@/lib/mood-templates";
 import type { EventMoodEnum } from "@/lib/database.types";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const VALID_MOODS: ReadonlySet<string> = new Set<string>([
   "birthday", "running", "wine", "book", "houseparty", "salon",
 ]);
@@ -41,6 +43,7 @@ export async function POST(request: Request) {
   const hasFee = formData.get("hasFee") === "true";
   const coverFile = formData.get("coverFile") as File | null;
   const coverImageUrl = (formData.get("coverImageUrl") as string) || null;
+  const crewId = (formData.get("crewId") as string) || null;
 
   // Validate required fields
   if (!title || !datetime) {
@@ -109,6 +112,26 @@ export async function POST(request: Request) {
     );
   }
 
+  // Validate crewId if provided
+  if (crewId) {
+    if (!UUID_RE.test(crewId)) {
+      return NextResponse.json(
+        { error: "잘못된 아크 ID입니다" },
+        { status: 400 },
+      );
+    }
+    const { data: isMember } = await supabase.rpc("is_crew_member", {
+      p_crew_id: crewId,
+      p_user_id: user.id,
+    });
+    if (!isMember) {
+      return NextResponse.json(
+        { error: "해당 아크의 멤버가 아닙니다" },
+        { status: 403 },
+      );
+    }
+  }
+
   const template = getMoodTemplate(mood);
   const colorTheme = template?.colorTheme ?? {
     primary: "#8B5CF6",
@@ -129,6 +152,7 @@ export async function POST(request: Request) {
       color_theme: colorTheme,
       description,
       has_fee: hasFee,
+      crew_id: crewId,
     })
     .select("id")
     .single();

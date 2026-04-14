@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getMyEvents } from "@/lib/queries";
+import { getMyCrews } from "@/lib/crew-queries";
 import { MyEventsView } from "@/components/my-events/my-events-view";
 
 export const metadata: Metadata = {
@@ -17,7 +18,10 @@ export default async function MyEventsPage() {
 
   if (!user) redirect("/login?next=/my");
 
-  const events = await getMyEvents(supabase, user.id);
+  const [events, crews] = await Promise.all([
+    getMyEvents(supabase, user.id),
+    getMyCrews(supabase, user.id),
+  ]);
 
-  return <MyEventsView events={events} />;
+  return <MyEventsView events={events} crews={crews} />;
 }

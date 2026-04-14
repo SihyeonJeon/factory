@@ -14,7 +14,7 @@ export const MOOD_TEMPLATES: MoodTemplate[] = [
   },
   {
     id: "running",
-    label: "러닝 크루",
+    label: "러닝 아크",
     emoji: "🏃",
     colorTheme: {
       primary: "#2BA69E",

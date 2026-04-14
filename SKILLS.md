@@ -83,6 +83,12 @@
 - **해결**: 기존 정산 존재 시 409 Conflict 반환
 - **교훈**: upsert는 "마지막 쓰기 승리" — 상태가 있는 데이터에는 사용 금지
 
+### S-017: RLS 정책에서 자기 테이블 SELECT 금지 — 무한 재귀
+- **상황**: `guest_states` SELECT 정책이 같은 테이블을 `exists(select from guest_states)` 로 조회 → 무한 재귀
+- **해결**: SECURITY DEFINER 함수 `is_event_participant()`로 RLS 우회 조회
+- **교훈**: RLS 정책 작성 시 대상 테이블 자체를 참조하면 무한 루프. SECURITY DEFINER 함수로 분리 필수
+- **파급**: 같은 패턴의 `media_timeline`, `settlements` 정책도 동시 수정
+
 ### S-009: 기존 마이그레이션 수정 금지 — 새 파일로 생성
 - **상황**: migration 00007 수정 후 되돌리고 00008 새로 생성
 - **교훈**: 이미 적용된 마이그레이션은 절대 수정하지 않음. `CREATE OR REPLACE`로 새 마이그레이션 추가
