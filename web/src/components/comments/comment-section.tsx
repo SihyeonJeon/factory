@@ -37,14 +37,18 @@ function CommentItem({
 }: {
   comment: EventComment;
   canDelete: boolean;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<void>;
 }) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = useCallback(async () => {
     if (isDeleting) return;
     setIsDeleting(true);
-    onDelete(comment.id);
+    try {
+      await onDelete(comment.id);
+    } finally {
+      setIsDeleting(false);
+    }
   }, [comment.id, isDeleting, onDelete]);
 
   return (

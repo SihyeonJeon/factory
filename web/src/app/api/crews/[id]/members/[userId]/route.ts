@@ -47,6 +47,27 @@ export async function DELETE(_request: Request, { params }: Props) {
     }
   }
 
+  // Prevent removing the last admin — would lock out the crew
+  const { data: isTargetAdmin } = await supabase.rpc("is_crew_admin", {
+    p_crew_id: crewId,
+    p_user_id: targetUserId,
+  });
+
+  if (isTargetAdmin) {
+    const { count: adminCount } = await supabase
+      .from("crew_members")
+      .select("id", { count: "exact", head: true })
+      .eq("crew_id", crewId)
+      .eq("role", "admin");
+
+    if ((adminCount ?? 0) <= 1) {
+      return NextResponse.json(
+        { error: "마지막 관리자는 제거할 수 없습니다. 다른 멤버를 관리자로 지정한 후 시도해주세요." },
+        { status: 400 },
+      );
+    }
+  }
+
   const { error, count } = await supabase
     .from("crew_members")
     .delete({ count: "exact" })
