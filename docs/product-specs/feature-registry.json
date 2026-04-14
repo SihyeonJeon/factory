@@ -1,5 +1,5 @@
 {
-  "version": "2026-04-14-r37",
+  "version": "2026-04-14-r39",
   "description": "기계 판독 가능한 기능 레지스트리 — Anthropic feature_list.json 패턴",
   "note": "JSON이므로 에이전트가 임의로 편집/삭제하기 어려움 (Markdown 대비 무결성 우수)",
   "features": [
@@ -96,6 +96,33 @@
       "passes": true,
       "last_verified": "2026-04-14",
       "notes": "Round 37에서 구현 + Codex 검증 후 수정"
+    },
+    {
+      "id": "E6-01",
+      "epic": "내 이벤트",
+      "description": "로그인 유저의 호스트/게스트 이벤트 목록 (upcoming/past 분리)",
+      "test_steps": ["GET /my", "로그인 리다이렉트 확인", "호스트 이벤트 표시", "게스트 이벤트 표시", "upcoming/past 분리"],
+      "passes": true,
+      "last_verified": "2026-04-14",
+      "notes": "Round 39에서 구현"
+    },
+    {
+      "id": "E7-01",
+      "epic": "이벤트 수정",
+      "description": "호스트가 제목/날짜/장소/설명 수정 (PATCH /api/events/[id])",
+      "test_steps": ["대시보드에서 수정 폼 열기", "필드 변경", "저장", "변경 반영 확인"],
+      "passes": true,
+      "last_verified": "2026-04-14",
+      "notes": "Round 39에서 구현, Codex 검증으로 trim/type 검증 보강"
+    },
+    {
+      "id": "E8-01",
+      "epic": "공유",
+      "description": "Web Share API + 클립보드 폴백 공유 버튼",
+      "test_steps": ["이벤트 페이지에서 공유 클릭", "모바일: 네이티브 공유 시트", "데스크톱: 링크 복사 + 토스트"],
+      "passes": true,
+      "last_verified": "2026-04-14",
+      "notes": "Round 39에서 구현"
     },
     {
       "id": "RB-SEC",

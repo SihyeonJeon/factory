@@ -58,8 +58,10 @@ self.addEventListener("fetch", (event) => {
         (cached) =>
           cached ||
           fetch(request).then((response) => {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            if (response.ok && response.type === "basic") {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            }
             return response;
           })
       )
@@ -72,6 +74,7 @@ self.addEventListener("fetch", (event) => {
   if (
     url.pathname.startsWith("/dashboard") ||
     url.pathname.startsWith("/create") ||
+    url.pathname.startsWith("/my") ||
     url.pathname.startsWith("/login") ||
     url.pathname.startsWith("/auth")
   ) {

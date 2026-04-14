@@ -62,6 +62,16 @@
 - **상황**: `notificationclick` 핸들러가 `event.notification.data.url`을 검증 없이 `openWindow()`에 전달
 - **해결**: `new URL()` 파싱 + same-origin 검증, pathname 기반 매칭
 
+### S-013: 서버 입력 검증 시 trim 후 길이 체크
+- **상황**: PATCH /api/events/[id] 에서 whitespace-only 제목이 통과
+- **해결**: `body.title.trim()` 후 길이 검증
+- **교훈**: 모든 텍스트 입력은 trim → 빈값 체크 → 길이 체크 순서
+
+### S-014: Boolean 파라미터도 typeof 체크
+- **상황**: `hasFee: "true"` 가 `=== true` 비교로 false로 변환됨 (의도와 다른 결과)
+- **해결**: `typeof body.hasFee !== "boolean"` 이면 400 반환
+- **교훈**: 암묵적 coercion에 의존하지 말고 타입을 명시적으로 검증
+
 ### S-009: 기존 마이그레이션 수정 금지 — 새 파일로 생성
 - **상황**: migration 00007 수정 후 되돌리고 00008 새로 생성
 - **교훈**: 이미 적용된 마이그레이션은 절대 수정하지 않음. `CREATE OR REPLACE`로 새 마이그레이션 추가

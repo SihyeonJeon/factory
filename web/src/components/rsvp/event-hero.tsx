@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { ShareButton } from "@/components/ui/share-button";
 import type { EventDetail, MoodTemplate } from "@/lib/types";
 
 interface EventHeroProps {
@@ -50,9 +51,17 @@ export function EventHero({ event, mood }: EventHeroProps) {
 
       {/* Event info */}
       <div className="space-y-3">
-        <h1 className="text-2xl font-bold leading-tight tracking-tight md:text-3xl">
-          {event.title}
-        </h1>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-2xl font-bold leading-tight tracking-tight md:text-3xl">
+            {event.title}
+          </h1>
+          <ShareButton
+            title={event.title}
+            text={`${event.title} — 모먼트`}
+            url={`/event/${event.id}`}
+            accentColor={mood.colorTheme.primary}
+          />
+        </div>
 
         {/* Host */}
         <div className="flex items-center gap-2">

@@ -7,6 +7,8 @@ import { getMoodTemplate } from "@/lib/mood-templates";
 import { useRealtimeGuests } from "@/hooks/use-realtime-guests";
 import { AttendanceSummary } from "./attendance-summary";
 import { GuestList } from "./guest-list";
+import { EventEditForm } from "./event-edit-form";
+import { ShareButton } from "@/components/ui/share-button";
 
 interface DashboardViewProps {
   event: EventDetail;
@@ -48,10 +50,15 @@ function ChevronRightIcon() {
   );
 }
 
-export function DashboardView({ event }: DashboardViewProps) {
+export function DashboardView({ event: initialEvent }: DashboardViewProps) {
+  const [event, setEvent] = useState(initialEvent);
   const mood = useMemo(() => getMoodTemplate(event.mood), [event.mood]);
   const { guests, counts, isLoading } = useRealtimeGuests(event.id);
   const [reminderStatus, setReminderStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  const handleEventSaved = useCallback((updated: Partial<EventDetail>) => {
+    setEvent((prev) => ({ ...prev, ...updated }));
+  }, []);
 
   const handleSendReminder = useCallback(async () => {
     if (!window.confirm("참석 미응답 게스트에게 리마인더를 보낼까요?")) return;
@@ -97,8 +104,17 @@ export function DashboardView({ event }: DashboardViewProps) {
           <div className="xl:grid xl:grid-cols-[340px_1fr] xl:gap-10">
             {/* Left sidebar (desktop) / top section (mobile): event info + summary */}
             <div className="space-y-8 xl:sticky xl:top-20 xl:self-start">
-              {/* Event info */}
-              <EventHeader event={event} mood={mood} />
+              {/* Event info + share */}
+              <div className="flex items-start justify-between gap-3">
+                <EventHeader event={event} mood={mood} />
+                <ShareButton
+                  title={event.title}
+                  text={`${event.title} — 모먼트`}
+                  url={`/event/${event.id}`}
+                  accentColor={mood.colorTheme.primary}
+                  className="shrink-0"
+                />
+              </div>
 
               {/* Attendance counts */}
               <section>
@@ -170,6 +186,15 @@ export function DashboardView({ event }: DashboardViewProps) {
                     </div>
                   </div>
                 </button>
+              </section>
+
+              {/* Event edit */}
+              <section>
+                <EventEditForm
+                  event={event}
+                  accentColor={mood.colorTheme.primary}
+                  onSaved={handleEventSaved}
+                />
               </section>
 
             </div>

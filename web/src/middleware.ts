@@ -3,7 +3,7 @@ import { updateSession } from "@/lib/supabase/middleware";
 import { createServerClient } from "@supabase/ssr";
 
 /** Routes that require authentication — redirect to /login if no session */
-const PROTECTED_PREFIXES = ["/create", "/dashboard"];
+const PROTECTED_PREFIXES = ["/create", "/dashboard", "/my"];
 
 export async function middleware(request: NextRequest) {
   // Always refresh the session cookie
