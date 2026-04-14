@@ -129,6 +129,21 @@
 6. 커밋 → 다음 라운드
 ```
 
+### W-003: 하네스 v3 — Playwright 통합 루프
+```
+1. 구현 (에이전트 N개 병렬)
+2. Layer 1 게이트: tsc --noEmit + next build + playwright test
+   → 실패 시 수정 후 재실행
+3. 커밋 + 푸시
+4. Layer 2 교차 검증: Explore/Codex 에이전트가 전체 코드 리뷰
+   → Critical/High 발견 시 즉시 수정 → Layer 1 재실행 → 재커밋
+5. 새 기능에 대한 Playwright 테스트 추가 (테스트 없는 기능은 미완료)
+6. SKILLS.md 업데이트 (새 교훈 발견 시)
+```
+- **핵심**: 자동 테스트(Layer 1) + 교차 리뷰(Layer 2)가 상보적
+- **Layer 1**: 회귀 방지, 빠른 피드백 (30초 이내)
+- **Layer 2**: 설계 결함, 보안, 엣지 케이스 발견 (에이전트 3-5분)
+
 ### W-002: 커밋 메시지 패턴
 ```
 fix: resolve Round {N} review findings ({finding-ids})

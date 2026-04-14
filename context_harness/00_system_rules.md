@@ -14,12 +14,15 @@
 ## 2. 워크플로
 
 ```
-공동 계획 → Codex 설계 → Claude Code 구현 → Codex 1차 검증 → Claude Code 2차 검증
+계획 → 병렬 구현 (에이전트 N개) → Layer 1 게이트 (tsc+build+playwright)
+  → 커밋 → Layer 2 교차 검증 → 수정 → Layer 1 재실행 → 재커밋
+  → Layer 4 Rubric 평가 (라운드 완료 시)
 ```
 
 - 모호한 구현 계획 → Human에게 질문
 - 의견 불일치 → Human 에스컬레이션
 - 검증 통과 → 머지 + SKILLS.md 업데이트
+- 새 기능 추가 시 E2E 테스트 동시 작성 (테스트 없는 기능은 미완료)
 
 ## 3. 컨텍스트 원칙 — High Signal
 
@@ -30,16 +33,27 @@
 
 ## 4. 검증 체계
 
-### 자동 (하네스 내장)
+### Layer 1: 자동 게이트 (구현 직후, 커밋 전)
 - `npx tsc --noEmit` — 타입 체크
 - `npx next build` — 빌드 검증
-- SECURITY.md 체크리스트 — 보안 검증
-- WCAG 명암비 계산 — 접근성 검증
+- `npx playwright test` — E2E 스모크 테스트 (smoke, auth, API, a11y, console)
+- 3개 모두 통과해야 커밋 가능
 
-### 수동 (교차 에이전트)
+### Layer 2: 교차 검증 에이전트 (커밋 후)
+- 구현한 에이전트 ≠ 검증 에이전트 (Explore 또는 Codex)
+- 전체 파일 리뷰: 보안/RLS/입력검증/키 일치/타입/경쟁조건/Next.js 15
+- 발견사항: Critical/High/Medium/Low 분류 + 라인 번호 + 수정안
+- Critical/High → 즉시 수정 → Layer 1 재실행 → 재커밋
+
+### Layer 3: Playwright 회귀 테스트 (수정 후)
+- 수정 사항이 기존 테스트를 깨뜨리지 않는지 확인
+- 새 기능 추가 시 해당 기능의 E2E 테스트도 추가
+- 테스트 위치: `web/e2e/`
+
+### Layer 4: Rubric 평가 (라운드 완료 시)
 - Grader rubric 기반 점수화: 보안/기능/접근성/성능/코드품질 각 0-10
 - 프로세스 품질 측정: 커밋 명확성, 변경 범위, 테스트 커버리지
-- UI 변경은 스크린샷 또는 실제 브라우저 확인
+- Playwright 테스트 커버리지 + 통과율 반영
 
 ## 5. 산출물 위치
 

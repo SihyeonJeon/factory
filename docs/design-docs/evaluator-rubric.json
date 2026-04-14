@@ -37,7 +37,9 @@
         "에러 핸들링 (try-catch, 사용자 피드백)",
         "엣지 케이스 처리 (빈 입력, 존재하지 않는 ID)",
         "상태 관리 일관성",
-        "feature-registry.json의 모든 기능 passes=true"
+        "feature-registry.json의 모든 기능 passes=true",
+        "Playwright E2E 테스트 전체 통과",
+        "새 기능에 대한 E2E 테스트 존재"
       ],
       "few_shot_scores": {
         "10": "모든 기능 정상 + 엣지 케이스 처리",
@@ -107,8 +109,10 @@
     "criteria": [
       "계획 대비 구현 범위 일치도",
       "커밋 단위 적절성 (한 커밋에 하나의 논리적 변경)",
-      "검증 단계 누락 없음 (빌드 확인 후 커밋)",
-      "SKILLS.md 업데이트 여부 (새 교훈 발견 시)"
+      "Layer 1 게이트 통과 후 커밋 (tsc + build + playwright)",
+      "Layer 2 교차 검증 수행 여부",
+      "SKILLS.md 업데이트 여부 (새 교훈 발견 시)",
+      "새 기능에 E2E 테스트 동반 여부"
     ]
   }
 }
