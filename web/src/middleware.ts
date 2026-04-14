@@ -3,7 +3,7 @@ import { updateSession } from "@/lib/supabase/middleware";
 import { createServerClient } from "@supabase/ssr";
 
 /** Routes that require authentication — redirect to /login if no session */
-const PROTECTED_PREFIXES = ["/create", "/dashboard", "/my", "/crew"];
+const PROTECTED_PREFIXES = ["/create", "/dashboard", "/my", "/crew", "/profile"];
 
 /** Public sub-routes under protected prefixes (no auth required to view) */
 const PUBLIC_EXCEPTIONS = ["/crew/join"];

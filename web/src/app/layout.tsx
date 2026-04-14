@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR } from "next/font/google";
 import { PwaProvider } from "@/components/pwa/pwa-provider";
 import { ExternalBrowserBanner } from "@/components/kakao/external-browser-banner";
+import { BottomNav } from "@/components/nav/bottom-nav";
 import "./globals.css";
 
 const notoSansKR = Noto_Sans_KR({
@@ -42,6 +43,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans safe-top safe-bottom">
         <ExternalBrowserBanner />
         {children}
+        <BottomNav />
         <PwaProvider />
       </body>
     </html>

@@ -142,7 +142,7 @@ export function MyEventsView({ events, crews }: MyEventsViewProps) {
   );
 
   return (
-    <div className="mx-auto min-h-dvh w-full max-w-2xl px-4 py-6 md:py-10">
+    <div className="mx-auto min-h-dvh w-full max-w-2xl px-4 py-6 pb-20 md:py-10">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">내 이벤트</h1>

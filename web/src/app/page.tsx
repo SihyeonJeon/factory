@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center px-4 md:px-8">
+    <div className="flex min-h-dvh flex-col items-center justify-center px-4 pb-20 md:px-8">
       <div className="w-full max-w-md space-y-6 text-center md:max-w-lg xl:max-w-xl">
         <h1 className="text-4xl font-bold tracking-tight md:text-5xl xl:text-6xl">
           모먼트
@@ -18,20 +18,6 @@ export default function Home() {
             className="inline-flex h-12 items-center justify-center rounded-xl bg-primary px-8 text-base font-semibold text-primary-foreground transition-colors hover:bg-primary/90 md:h-14 md:px-10 md:text-lg"
           >
             이벤트 만들기
-          </Link>
-          <Link
-            href="/my"
-            className="inline-flex h-12 items-center justify-center rounded-xl border border-gray-200 px-8 text-base font-semibold text-gray-700 transition-colors hover:bg-gray-50 md:h-14 md:px-10 md:text-lg"
-          >
-            내 이벤트
-          </Link>
-        </div>
-        <div className="mt-2">
-          <Link
-            href="/crew/create"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 transition-colors hover:text-gray-700"
-          >
-            👥 아크 만들기
           </Link>
         </div>
       </div>

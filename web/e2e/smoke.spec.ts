@@ -8,10 +8,8 @@ test.describe("Public pages load", () => {
   test("home page renders CTAs", async ({ page }) => {
     await page.goto("/");
     await expect(page).toHaveTitle(/모먼트/);
-    // Check main CTA buttons exist
+    // Check main CTA button exists (nav handles other links)
     await expect(page.getByText("이벤트 만들기")).toBeVisible();
-    await expect(page.getByText("내 이벤트")).toBeVisible();
-    await expect(page.getByText("아크 만들기")).toBeVisible();
   });
 
   test("login page renders OAuth buttons", async ({ page }) => {
@@ -47,7 +45,7 @@ test.describe("Public pages load", () => {
 // ============================================================
 
 test.describe("Protected pages redirect to login", () => {
-  const protectedRoutes = ["/my", "/create", "/crew/create"];
+  const protectedRoutes = ["/my", "/create", "/crew/create", "/profile"];
 
   for (const route of protectedRoutes) {
     test(`${route} redirects to /login`, async ({ page }) => {
