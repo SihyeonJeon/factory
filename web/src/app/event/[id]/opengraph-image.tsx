@@ -2,6 +2,10 @@ import { ImageResponse } from "next/og";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getMoodTemplate } from "@/lib/mood-templates";
 
+const notoSansKr = fetch(
+  new URL("https://fonts.gstatic.com/s/notosanskr/v36/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzuozeLTq8H4hfeE.woff"),
+).then((res) => res.arrayBuffer());
+
 export const alt = "모먼트 이벤트";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -17,6 +21,7 @@ export default async function OgImage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const fontData = await notoSansKr;
 
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!UUID_RE.test(id)) {
@@ -260,6 +265,14 @@ export default async function OgImage({
     ),
     {
       ...size,
+      fonts: [
+        {
+          name: "Noto Sans KR",
+          data: fontData,
+          style: "normal",
+          weight: 700,
+        },
+      ],
     },
   );
 }
