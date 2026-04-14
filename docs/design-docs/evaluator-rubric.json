@@ -1,0 +1,114 @@
+{
+  "version": "2026-04-14",
+  "description": "Evaluator 채점 기준표 — Anthropic few-shot calibration 패턴",
+  "scoring": {
+    "scale": "0-10 per criterion, total 50",
+    "pass_threshold": 40,
+    "conditional_pass_threshold": 30,
+    "block_threshold": "< 30 or any criterion < 4"
+  },
+  "criteria": [
+    {
+      "id": "SEC",
+      "name": "보안",
+      "weight": 1.0,
+      "checklist": [
+        "모든 API 엔드포인트에 auth 체크",
+        "UUID 검증",
+        "RLS 정책 적용",
+        "SECURITY DEFINER에 auth.uid() + search_path",
+        "XSS 방어 (dangerouslySetInnerHTML 없음)",
+        "비밀 노출 없음",
+        "에러 메시지에 내부 구현 미노출"
+      ],
+      "few_shot_scores": {
+        "10": "모든 체크리스트 통과 + 방어 심층 계층 (security headers, CSP)",
+        "7": "체크리스트 대부분 통과, 1개 미흡",
+        "4": "인가 우회 가능한 경로 1개 존재",
+        "0": "인증 없는 보호 엔드포인트 존재"
+      }
+    },
+    {
+      "id": "FUNC",
+      "name": "기능 정확성",
+      "weight": 1.0,
+      "checklist": [
+        "클라이언트-서버 JSON 키 일치",
+        "에러 핸들링 (try-catch, 사용자 피드백)",
+        "엣지 케이스 처리 (빈 입력, 존재하지 않는 ID)",
+        "상태 관리 일관성",
+        "feature-registry.json의 모든 기능 passes=true"
+      ],
+      "few_shot_scores": {
+        "10": "모든 기능 정상 + 엣지 케이스 처리",
+        "7": "핵심 기능 정상, 1-2개 엣지 케이스 미처리",
+        "4": "핵심 기능 1개 고장 (예: 리마인더 키 미스매치)",
+        "0": "주요 플로우 다수 고장"
+      }
+    },
+    {
+      "id": "A11Y",
+      "name": "접근성",
+      "weight": 1.0,
+      "checklist": [
+        "WCAG AA 명암비 4.5:1+ (모든 무드 테마)",
+        "터치 타겟 44px+ (coarse pointer)",
+        "ARIA 속성 (role, aria-label, aria-hidden)",
+        "키보드 내비게이션 + 포커스 트랩",
+        "prefers-reduced-motion 존중",
+        "lang 속성, viewport scaling 허용"
+      ],
+      "few_shot_scores": {
+        "10": "전 항목 통과 + 스크린리더 테스트",
+        "7": "대부분 통과, 장식 SVG aria-hidden 누락 등 사소한 이슈",
+        "4": "명암비 실패 또는 포커스 트랩 없음",
+        "0": "터치 타겟 미달 + 키보드 접근 불가"
+      }
+    },
+    {
+      "id": "PERF",
+      "name": "성능",
+      "weight": 1.0,
+      "checklist": [
+        "불필요한 re-render 없음",
+        "이미지 lazy loading",
+        "N+1 쿼리 없음",
+        "번들 크기 최적화 (dynamic import)",
+        "서비스 워커 캐싱 전략 적절"
+      ],
+      "few_shot_scores": {
+        "10": "Lighthouse 90+ 예상, 모든 최적화 적용",
+        "7": "대부분 최적화, lazy import 1-2개 누락",
+        "4": "N+1 쿼리 또는 대형 번들 존재",
+        "0": "매 렌더링마다 불필요한 API 호출"
+      }
+    },
+    {
+      "id": "QUAL",
+      "name": "코드 품질",
+      "weight": 1.0,
+      "checklist": [
+        "TypeScript strict 준수",
+        "일관된 에러 메시지 언어 (한국어)",
+        "dead code 없음",
+        "커밋 메시지 명확성",
+        "변경 범위 적절성 (과도한 리팩터링 없음)"
+      ],
+      "few_shot_scores": {
+        "10": "깨끗한 코드 + 명확한 커밋 + 적절한 범위",
+        "7": "사소한 dead code 또는 unused import",
+        "4": "타입 오류 또는 불일치한 패턴",
+        "0": "빌드 실패"
+      }
+    }
+  ],
+  "process_quality": {
+    "description": "결과물뿐 아니라 도달 과정의 품질도 측정",
+    "criteria": [
+      "계획 대비 구현 범위 일치도",
+      "커밋 단위 적절성 (한 커밋에 하나의 논리적 변경)",
+      "검증 단계 누락 없음 (빌드 확인 후 커밋)",
+      "SKILLS.md 업데이트 여부 (새 교훈 발견 시)"
+    ]
+  }
+}

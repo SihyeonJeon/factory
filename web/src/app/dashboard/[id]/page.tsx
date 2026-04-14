@@ -11,10 +11,16 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const supabase = await createServerSupabaseClient();
-  const event = await getEventById(supabase, id);
 
-  if (!event) {
-    return { title: "이벤트를 찾을 수 없습니다 — 모먼트" };
+  // Verify host before exposing event title in metadata
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { title: "대시보드 — 모먼트", robots: { index: false } };
+  }
+
+  const event = await getEventById(supabase, id);
+  if (!event || event.hostId !== user.id) {
+    return { title: "대시보드 — 모먼트", robots: { index: false } };
   }
 
   return {

@@ -1,0 +1,107 @@
+{
+  "version": "2026-04-14",
+  "description": "기계 판독 가능한 기능 레지스트리 — Anthropic feature_list.json 패턴",
+  "note": "JSON이므로 에이전트가 임의로 편집/삭제하기 어려움 (Markdown 대비 무결성 우수)",
+  "features": [
+    {
+      "id": "E1-01",
+      "epic": "이벤트 생성",
+      "description": "4단계 위자드 (무드→커버→정보→미리보기)",
+      "test_steps": ["GET /create", "무드 선택", "커버 업로드 또는 기본 선택", "정보 입력", "미리보기 확인", "생성 완료"],
+      "passes": true,
+      "last_verified": "2026-04-14"
+    },
+    {
+      "id": "E1-05",
+      "epic": "이벤트 생성",
+      "description": "카카오톡 OG 미리보기: 제목+날짜+장소+무드이모지, 한국어 폰트",
+      "test_steps": ["이벤트 URL을 카카오톡에 공유", "OG 카드에 한국어 제목 확인", "1200x630 이미지 확인"],
+      "passes": null,
+      "last_verified": null,
+      "blocked_by": "카카오톡 실제 공유 테스트 필요 (휴먼)"
+    },
+    {
+      "id": "E2-01",
+      "epic": "RSVP",
+      "description": "3상태 RSVP (참석/불참/미정) + 동행인 + 참석비 의향",
+      "test_steps": ["GET /event/{id}", "참석 선택", "동행인 수 입력", "참석비 의향 선택", "제출"],
+      "passes": true,
+      "last_verified": "2026-04-14"
+    },
+    {
+      "id": "E2-04",
+      "epic": "RSVP",
+      "description": "비로그인 → 로그인 리다이렉트 → 원래 페이지 복귀",
+      "test_steps": ["비로그인 상태에서 RSVP 제출", "로그인 페이지 리다이렉트 확인", "로그인 후 원래 이벤트 페이지 복귀"],
+      "passes": null,
+      "last_verified": null,
+      "blocked_by": "OAuth 로그인 테스트 필요 (휴먼)"
+    },
+    {
+      "id": "E3-01",
+      "epic": "대시보드",
+      "description": "호스트만 접근 가능",
+      "test_steps": ["비호스트로 /dashboard/{id} 접근", "redirect 확인"],
+      "passes": true,
+      "last_verified": "2026-04-14"
+    },
+    {
+      "id": "E3-04",
+      "epic": "대시보드",
+      "description": "리마인더 발송 (미응답 게스트 대상)",
+      "test_steps": ["대시보드에서 리마인더 버튼 클릭", "API 호출 성공 확인"],
+      "passes": true,
+      "last_verified": "2026-04-14",
+      "notes": "Round 35에서 eventId→event_id 미스매치 수정"
+    },
+    {
+      "id": "E4-01",
+      "epic": "사진 타임라인",
+      "description": "사진 업로드 (타입/크기 검증, 10장 제한)",
+      "test_steps": ["사진 선택", "업로드", "10장 초과 시 차단 확인"],
+      "passes": true,
+      "last_verified": "2026-04-14"
+    },
+    {
+      "id": "E5-01",
+      "epic": "정산",
+      "description": "총액 입력 → 1/N 자동 계산 + 납부 토글",
+      "test_steps": ["총 금액 입력", "1/N 계산 확인", "납부 완료 토글", "confirm 다이얼로그"],
+      "passes": true,
+      "last_verified": "2026-04-14"
+    },
+    {
+      "id": "E5-04",
+      "epic": "정산",
+      "description": "mark_paid RPC 호스트 인가 + search_path 고정",
+      "test_steps": ["비호스트가 RPC 직접 호출 시 unauthorized 확인", "존재하지 않는 user_id 시 participant_not_found 확인"],
+      "passes": true,
+      "last_verified": "2026-04-14",
+      "notes": "migration 00009에서 수정"
+    },
+    {
+      "id": "RB-SEC",
+      "epic": "릴리스 차단",
+      "description": "모든 테이블 RLS + SECURITY DEFINER 내부 인가",
+      "test_steps": ["6개 테이블 RLS 확인", "mark_paid RPC auth.uid() 확인", "search_path 고정 확인"],
+      "passes": true,
+      "last_verified": "2026-04-14"
+    },
+    {
+      "id": "RB-A11Y",
+      "epic": "릴리스 차단",
+      "description": "WCAG AA: 명암비 4.5:1+, 터치 44px+, reduced-motion",
+      "test_steps": ["6개 무드 primary vs white 명암비 확인", "global CSS 44px 확인", "prefers-reduced-motion 확인"],
+      "passes": true,
+      "last_verified": "2026-04-14"
+    },
+    {
+      "id": "RB-PRIVACY",
+      "epic": "릴리스 차단",
+      "description": "개인정보 수집 동의 절차 (로그인 전 체크박스)",
+      "test_steps": ["로그인 페이지에서 체크박스 미체크 시 로그인 버튼 비활성화 확인"],
+      "passes": true,
+      "last_verified": "2026-04-14"
+    }
+  ]
+}
