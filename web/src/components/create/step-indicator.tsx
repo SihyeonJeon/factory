@@ -33,7 +33,7 @@ export function StepIndicator({ current, total }: StepIndicatorProps) {
             </div>
             <span
               className={cn(
-                "text-[11px]",
+                "text-xs",
                 i <= current
                   ? "font-medium text-foreground"
                   : "text-muted-foreground"

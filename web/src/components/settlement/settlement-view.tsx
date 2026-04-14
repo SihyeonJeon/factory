@@ -77,7 +77,10 @@ export function SettlementView({ event, initialSettlement }: SettlementViewProps
         }),
       });
 
-      if (!res.ok) return;
+      if (!res.ok) {
+        setMarkError("상태 변경에 실패했습니다");
+        return;
+      }
 
       const data = await res.json();
       setSettlement((prev) =>
