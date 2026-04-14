@@ -69,13 +69,26 @@ export async function registerFCMToken(): Promise<string | null> {
 
     const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
 
+    // Register FCM SW with a dedicated scope to avoid conflict with PWA sw.js
+    const swReg = await navigator.serviceWorker.register(
+      "/firebase-messaging-sw.js",
+      { scope: "/firebase-cloud-messaging-push-scope" },
+    );
+
+    // Inject Firebase config into the SW (public/ files can't use process.env)
+    const activeWorker = swReg.active ?? swReg.installing ?? swReg.waiting;
+    if (activeWorker) {
+      activeWorker.postMessage({
+        type: "FIREBASE_CONFIG",
+        config: getFirebaseConfig(),
+      });
+    }
+
     const token = await fcm.getToken(
       msg as ReturnType<typeof fcm.getMessaging>,
       {
         vapidKey,
-        serviceWorkerRegistration: await navigator.serviceWorker.register(
-          "/firebase-messaging-sw.js",
-        ),
+        serviceWorkerRegistration: swReg,
       },
     );
 

@@ -1,11 +1,16 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import dynamic from "next/dynamic";
 import type { EventDetail, TimelinePhoto } from "@/lib/types";
 import { getMoodTemplate } from "@/lib/mood-templates";
 import { PhotoTimeline } from "./photo-timeline";
-import { PhotoSwipeViewer } from "./photo-swipe-viewer";
 import { PhotoUploadButton } from "./photo-upload-button";
+
+const PhotoSwipeViewer = dynamic(() =>
+  import("./photo-swipe-viewer").then((m) => m.PhotoSwipeViewer),
+  { ssr: false },
+);
 
 const MAX_PHOTOS_PER_EVENT = 10;
 

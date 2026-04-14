@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import type {
   DashboardGuest,
   AttendanceCounts,
@@ -52,15 +52,31 @@ export function useRealtimeGuests(eventId: string) {
   const [guests, setGuests] = useState<DashboardGuest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch profile by user_id for newly inserted rows
+  // Profile cache to avoid redundant fetches for the same user
+  // Cleared when eventId changes to prevent unbounded growth (R37-006)
+  const profileCache = useRef(
+    new Map<string, { display_name: string; avatar_url: string | null }>(),
+  );
+  const prevEventId = useRef(eventId);
+  if (prevEventId.current !== eventId) {
+    profileCache.current.clear();
+    prevEventId.current = eventId;
+  }
+
+  // Fetch profile by user_id for newly inserted rows (cached)
   const fetchProfile = useCallback(
     async (userId: string) => {
+      const cached = profileCache.current.get(userId);
+      if (cached) return cached;
+
       const supabase = createClient();
       const { data } = await supabase
         .from("profiles")
         .select("display_name, avatar_url")
         .eq("id", userId)
         .single();
+
+      if (data) profileCache.current.set(userId, data);
       return data;
     },
     [],
@@ -99,7 +115,14 @@ export function useRealtimeGuests(eventId: string) {
         rowToGuest(row as unknown as GuestStateRow, row.profiles),
       );
 
-      setGuests(mapped);
+      // Merge with any realtime INSERTs that arrived before this fetch resolved (R37-005)
+      setGuests((prev) => {
+        if (prev.length === 0) return mapped;
+        const mergedMap = new Map<string, DashboardGuest>();
+        for (const g of mapped) mergedMap.set(g.id, g);
+        for (const g of prev) mergedMap.set(g.id, g); // realtime data wins
+        return Array.from(mergedMap.values());
+      });
       setIsLoading(false);
     }
 

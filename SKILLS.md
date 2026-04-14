@@ -50,6 +50,18 @@
 - **상황**: Claude 자기 검증 7라운드 PASS → Codex가 5개 실질적 결함 추가 발견
 - **교훈**: 구현한 모델 ≠ 검증 모델. 같은 모델은 같은 blind spot을 반복
 
+### S-010: SW fetch handler에서 내부 catch가 에러를 소멸시키면 외부 catch 미도달
+- **상황**: `fetchPromise.catch(() => cached)`가 에러를 흡수 → 외부 `.catch()`로 offline fallback 도달 불가
+- **교훈**: Promise 체인에서 에러 전파 경로를 추적 — catch 내부에서 대안이 없으면 rethrow
+
+### S-011: SW 캐시 저장 시 response.ok 체크 필수
+- **상황**: 5xx/redirect 응답도 캐시에 저장 → 사용자에게 복구 불가능한 오류 페이지 반복 노출
+- **해결**: `response.ok && response.type === "basic"` 가드
+
+### S-012: Push notification data는 공격자 제어 입력
+- **상황**: `notificationclick` 핸들러가 `event.notification.data.url`을 검증 없이 `openWindow()`에 전달
+- **해결**: `new URL()` 파싱 + same-origin 검증, pathname 기반 매칭
+
 ### S-009: 기존 마이그레이션 수정 금지 — 새 파일로 생성
 - **상황**: migration 00007 수정 후 되돌리고 00008 새로 생성
 - **교훈**: 이미 적용된 마이그레이션은 절대 수정하지 않음. `CREATE OR REPLACE`로 새 마이그레이션 추가

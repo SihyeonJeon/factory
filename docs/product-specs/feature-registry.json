@@ -1,5 +1,5 @@
 {
-  "version": "2026-04-14",
+  "version": "2026-04-14-r37",
   "description": "기계 판독 가능한 기능 레지스트리 — Anthropic feature_list.json 패턴",
   "note": "JSON이므로 에이전트가 임의로 편집/삭제하기 어려움 (Markdown 대비 무결성 우수)",
   "features": [
@@ -78,6 +78,24 @@
       "passes": true,
       "last_verified": "2026-04-14",
       "notes": "migration 00009에서 수정"
+    },
+    {
+      "id": "PWA-01",
+      "epic": "PWA",
+      "description": "FCM 백그라운드 푸시 알림 (SW 스코프 분리 + config 영속화)",
+      "test_steps": ["FCM 토큰 등록", "백그라운드 푸시 수신", "알림 클릭 시 same-origin 네비게이션"],
+      "passes": null,
+      "last_verified": null,
+      "blocked_by": "Firebase 프로젝트 설정 + 실제 푸시 테스트 필요 (휴먼)"
+    },
+    {
+      "id": "PWA-02",
+      "epic": "PWA",
+      "description": "오프라인 폴백 페이지 (네비게이션 실패 시 offline.html)",
+      "test_steps": ["오프라인 모드 전환", "페이지 네비게이션", "offline.html 표시 확인", "다시 시도 버튼"],
+      "passes": true,
+      "last_verified": "2026-04-14",
+      "notes": "Round 37에서 구현 + Codex 검증 후 수정"
     },
     {
       "id": "RB-SEC",

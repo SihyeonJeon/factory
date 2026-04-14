@@ -7,6 +7,7 @@ const STATIC_ASSETS = [
   "/icons/icon-512.svg",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
+  "/offline.html",
 ];
 
 self.addEventListener("install", (event) => {
@@ -67,12 +68,18 @@ self.addEventListener("fetch", (event) => {
   }
 
   // Network-only for protected routes (auth-dependent content)
+  // Falls back to offline page if the network request fails
   if (
     url.pathname.startsWith("/dashboard") ||
     url.pathname.startsWith("/create") ||
     url.pathname.startsWith("/login") ||
     url.pathname.startsWith("/auth")
   ) {
+    if (request.mode === "navigate") {
+      event.respondWith(
+        fetch(request).catch(() => caches.match("/offline.html"))
+      );
+    }
     return;
   }
 
@@ -81,11 +88,21 @@ self.addEventListener("fetch", (event) => {
     caches.match(request).then((cached) => {
       const fetchPromise = fetch(request)
         .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          // Only cache successful same-origin responses (R37-002)
+          if (response.ok && response.type === "basic") {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
           return response;
         })
-        .catch(() => cached);
+        .catch(() => {
+          // Network failed — return cached version or offline fallback (R37-001)
+          if (cached) return cached;
+          if (request.mode === "navigate") {
+            return caches.match("/offline.html");
+          }
+          return undefined;
+        });
 
       return cached || fetchPromise;
     })
