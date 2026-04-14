@@ -1,0 +1,100 @@
+# SKILLS — 검증된 패턴과 실패한 패턴
+
+> 모든 에이전트가 작업 전 참조하는 공용 지식 베이스.
+> 성공하면 즉시 기록, 실패하면 즉시 기록. 가설이 아닌 검증된 사실만 기록한다.
+
+---
+
+## 성공한 패턴 (DO)
+
+### S-001: 하네스 반복으로 품질 수렴
+- **상황**: Moment MVP 코드 리뷰
+- **방법**: Planner-Generator-Evaluator 3-agent 하네스를 28~34라운드 반복
+- **결과**: CONDITIONAL_PASS(3M+4L) → 6라운드 만에 연속 PASS 달성
+- **핵심**: 워크트리 지연(worktree lag)으로 이미 수정된 항목이 재보고됨 — 각 finding을 메인 브랜치 기준으로 교차검증 후 수정 여부 판단
+
+### S-002: SECURITY DEFINER RPC에는 반드시 내부 인가 체크
+- **상황**: `mark_participant_paid` RPC가 API 라우트에서만 호스트 검증
+- **문제**: Supabase 클라이언트 SDK로 직접 RPC 호출하면 우회 가능
+- **해결**: RPC 함수 내부에 `auth.uid() = events.host_id` 체크 추가
+- **교훈**: API 라우트 인가 ≠ DB 레벨 인가. 둘 다 필요
+
+### S-003: JSON try-catch 패턴으로 API 엔드포인트 강화
+- **상황**: `await request.json()` 이 malformed body에서 unhandled exception
+- **해결**: typed 변수 선언 + try-catch 래핑
+- **주의**: `unknown` + `as` 캐스트 대신 명시적 타입 변수 사용 (TS 빌드 에러 방지)
+
+### S-004: WCAG 명암비는 모든 무드 테마에 대해 검증
+- **상황**: 6개 무드 중 5개가 흰 글씨 대비 WCAG AA 실패
+- **해결**: primary 색상을 어둡게 조정 (4.5:1+ 확보)
+- **교훈**: 색상 팔레트 추가/변경 시 즉시 명암비 계산
+
+### S-005: OG 이미지에 한국어 폰트 명시 등록
+- **상황**: `ImageResponse`에 폰트 미지정 → 한국어가 깨질 위험
+- **해결**: Google Fonts에서 Noto Sans KR woff 가져와서 fonts 옵션에 등록
+- **교훈**: 한국어 프로덕트에서 Satori/OG 이미지 생성 시 폰트 누락은 치명적
+
+### S-006: SECURITY DEFINER 함수에는 `set search_path = ''` 필수
+- **상황**: migration 00008의 RPC가 search_path 미고정
+- **문제**: 세션 search_path 조작으로 다른 스키마의 동명 테이블 참조 가능
+- **해결**: `set search_path = ''` 추가 + 모든 테이블을 `public.` 접두사로 완전 정규화
+- **교훈**: SECURITY DEFINER 함수 작성 시 체크리스트: ① auth.uid() 검증 ② search_path 고정 ③ 테이블명 완전 정규화
+
+### S-007: 클라이언트-서버 간 JSON 키 이름 일치 확인
+- **상황**: 클라이언트에서 `eventId`, 서버에서 `event_id` 읽음 → 리마인더 기능 완전 고장
+- **문제**: 같은 모델이 7라운드 검증해도 발견하지 못함 (자기 편향)
+- **해결**: Codex 교차 검증으로 발견
+- **교훈**: API 엔드포인트 추가 시 클라이언트 호출부와 서버 파싱부의 키 이름을 직접 대조
+
+### S-008: 교차 검증은 자기 검증보다 실질적 결함을 더 많이 발견
+- **상황**: Claude 자기 검증 7라운드 PASS → Codex가 5개 실질적 결함 추가 발견
+- **교훈**: 구현한 모델 ≠ 검증 모델. 같은 모델은 같은 blind spot을 반복
+
+### S-009: 기존 마이그레이션 수정 금지 — 새 파일로 생성
+- **상황**: migration 00007 수정 후 되돌리고 00008 새로 생성
+- **교훈**: 이미 적용된 마이그레이션은 절대 수정하지 않음. `CREATE OR REPLACE`로 새 마이그레이션 추가
+
+---
+
+## 실패한 패턴 (DON'T)
+
+### F-004: 동일 모델 자기 검증으로 7라운드 PASS 받았으나 5개 실질적 결함 존재
+- **상황**: Claude가 구현+검증 모두 수행, Round 33-34에서 연속 PASS
+- **실제**: Codex 교차 검증으로 리마인더 완전 고장, search_path 미고정 등 발견
+- **교훈**: PASS는 "검증자의 blind spot 내에서 통과"일 뿐. 다른 관점 필수
+
+### F-001: 평가 프로세스를 인자 없이 호출
+- **상황**: `run_evaluation()` 시그니처가 `brief` 필수 인자로 변경됨
+- **증상**: 프로세스가 시작 후 즉시 종료, journal에 기록 없음
+- **교훈**: orchestrator API 변경 시 호출부도 반드시 업데이트
+
+### F-002: 자기가 구현한 코드를 자기가 검증
+- **상황**: Generator가 자체 코드 리뷰 → 자기 과대 평가로 결함 누락
+- **교훈**: 구현 에이전트 ≠ 검증 에이전트. 반드시 교차 검증
+
+### F-003: 커버 이미지 URL regex가 기본 커버 차단
+- **상황**: `[a-f0-9-]+` 패턴이 `birthday.svg` 같은 이름 거부
+- **교훈**: 검증 regex 작성 시 모든 유효 입력 케이스를 열거하고 테스트
+
+---
+
+## 워크플로 패턴
+
+### W-001: 하네스 라운드 실행 절차
+```
+1. run_evaluation(brief) 실행 (백그라운드)
+2. operator_journal.md 마지막 줄로 완료 확인
+3. code_review.md + ux_audit.md 읽기
+4. 워크트리 지연 여부 교차검증 (메인 브랜치 기준)
+5. 신규 finding만 수정 + 빌드 검증
+6. 커밋 → 다음 라운드
+```
+
+### W-002: 커밋 메시지 패턴
+```
+fix: resolve Round {N} review findings ({finding-ids})
+
+{각 finding별 한 줄 설명}
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+```
