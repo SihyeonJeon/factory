@@ -1,0 +1,21 @@
+{
+  "claude_api": {
+    "success": true,
+    "model": "claude-sonnet-4-20250514",
+    "output": "OK",
+    "error": "",
+    "transport": "cli"
+  },
+  "codex_cli": {
+    "success": true,
+    "model": "gpt-5.4",
+    "output": "OK",
+    "error": ""
+  },
+  "gemini_cli": {
+    "success": true,
+    "model": "gemini-2.5-pro",
+    "output": "OK",
+    "error": ""
+  }
+}

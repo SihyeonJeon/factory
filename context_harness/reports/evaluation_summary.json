@@ -1,0 +1,17 @@
+{
+  "passed": false,
+  "blockers": [
+    "hig_guardian_hig_audit.md:verdict_blocked",
+    "visual_qa_visual_qa.md:verdict_blocked"
+  ],
+  "lanes": [
+    "ui",
+    "logic"
+  ],
+  "playwright_smoke": "/Users/jeonsihyeon/factory/context_harness/reports/playwright_smoke.json",
+  "xcode_runtime_probe": "/Users/jeonsihyeon/factory/context_harness/reports/xcode_runtime_probe.json",
+  "xcode_test_probe": "/Users/jeonsihyeon/factory/context_harness/reports/xcode_test_probe.json",
+  "review_report": "/Users/jeonsihyeon/factory/context_harness/reports/red_team_reviewer_code_review.md",
+  "hig_report": "/Users/jeonsihyeon/factory/context_harness/reports/hig_guardian_hig_audit.md",
+  "visual_report": "/Users/jeonsihyeon/factory/context_harness/reports/visual_qa_visual_qa.md"
+}

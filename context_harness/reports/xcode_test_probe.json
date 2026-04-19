@@ -1,0 +1,10 @@
+{
+  "workspace_root": "/Users/jeonsihyeon/factory/.worktrees/_integration/workspace",
+  "xcodeproj": "/Users/jeonsihyeon/factory/.worktrees/_integration/workspace/ios/Unfading.xcodeproj",
+  "scheme": "Unfading",
+  "ok": true,
+  "returncode": 0,
+  "command": "xcodebuild -project /Users/jeonsihyeon/factory/.worktrees/_integration/workspace/ios/Unfading.xcodeproj -scheme Unfading -destination platform=iOS Simulator,name=iPhone 17 Pro test",
+  "log_path": "/Users/jeonsihyeon/factory/context_harness/reports/xcode_test.log",
+  "detail": "stYearlyRecapTopEmotion]' started.\nTest Case '-[UnfadingTests.UnfadingTests testYearlyRecapTopEmotion]' passed (0.001 seconds).\nTest Case '-[UnfadingTests.UnfadingTests testYearlyRecapTotalCost]' started.\nTest Case '-[UnfadingTests.UnfadingTests testYearlyRecapTotalCost]' passed (0.021 seconds).\nTest Case '-[UnfadingTests.UnfadingTests testYearlyRecapUniquePlaces]' started.\nTest Case '-[UnfadingTests.UnfadingTests testYearlyRecapUniquePlaces]' passed (0.001 seconds).\nTest Suite 'UnfadingTests' passed at 2026-04-14 10:23:14.493.\n\t Executed 79 tests, with 0 failures (0 unexpected) in 0.150 (0.199) seconds\nTest Suite 'UnfadingTests.xctest' passed at 2026-04-14 10:23:14.493.\n\t Executed 79 tests, with 0 failures (0 unexpected) in 0.150 (0.199) seconds\nTest Suite 'All tests' passed at 2026-04-14 10:23:14.493.\n\t Executed 79 tests, with 0 failures (0 unexpected) in 0.150 (0.200) seconds\n\nTest session results, code coverage, and logs:\n\t/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/Unfading-cgovpyewdjcmfwgdyjucuftfniox/Logs/Test/Test-Unfading-2026.04.14_10-22-32-+0900.xcresult\n\n** TEST SUCCEEDED **\n\nTesting started\n\n2026-04-14 10:23:14.845 xcodebuild[50933:1842836] [MT] IDETestOperationsObserverDebug: 30.479 elapsed -- Testing started completed.\n2026-04-14 10:23:14.846 xcodebuild[50933:1842836] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start\n2026-04-14 10:23:14.846 xcodebuild[50933:1842836] [MT] IDETestOperationsObserverDebug: 30.479 sec, +30.479 sec -- end"
+}

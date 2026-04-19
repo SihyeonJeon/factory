@@ -1,0 +1,1 @@
+**4 blockers, 2 advisories.** The plan above is the full remediation packet for Round 6. Approve to dispatch the codex `bug_fix` agent.

@@ -1,0 +1,8 @@
+{
+  "mode": "playwright_smoke",
+  "status": "skipped",
+  "passed": true,
+  "reason": "Native iOS xcodeproj present; Expo Playwright smoke suppressed to avoid false HIG noise against stale App.tsx.",
+  "workspace": "/Users/jeonsihyeon/factory/.worktrees/_integration/workspace",
+  "context": "/Users/jeonsihyeon/factory/context_harness"
+}

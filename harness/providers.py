@@ -124,6 +124,46 @@ def run_claude_api(
     )
 
 
+def run_claude_code_impl(
+    prompt: str,
+    model: str,
+    *,
+    system_prompt: str | None = None,
+    cwd: Path | None = None,
+    timeout: int = 900,
+    max_retries: int = 1,
+) -> ProviderResult:
+    """Run Claude Code CLI as implementer — full write access for code changes."""
+    project_root = Path(__file__).resolve().parent.parent
+    load_project_env(project_root)
+
+    cmd = [
+        "claude",
+        "-p",
+        prompt,
+        "--model",
+        normalize_claude_cli_model(model),
+        "--output-format",
+        "text",
+        "--permission-mode",
+        "bypassPermissions",
+        "--setting-sources",
+        "project,local",
+    ]
+    if system_prompt:
+        cmd += ["--append-system-prompt", system_prompt]
+    if cwd:
+        cmd += ["--add-dir", str(cwd)]
+
+    return run_cli(
+        cmd,
+        cwd=cwd or project_root,
+        timeout=timeout,
+        max_retries=max(max_retries, 1),
+        extra_env={"ANTHROPIC_API_KEY": None},
+    )
+
+
 def run_claude_cli(
     prompt: str,
     model: str,
@@ -173,7 +213,7 @@ def run_claude_cli(
         cmd,
         cwd=cwd or project_root,
         timeout=timeout,
-        max_retries=max_retries,
+        max_retries=max(max_retries, 2),
         extra_env={"ANTHROPIC_API_KEY": None},
     )
     if not result.success:
@@ -387,6 +427,9 @@ def run_cli(
             return ProviderResult(True, proc.stderr, retries=attempt)
 
         if attempt == max_retries:
-            return ProviderResult(False, "", retries=attempt, error=combined.strip())
+            return ProviderResult(False, "", retries=attempt, error=combined.strip() or "empty response from CLI")
+
+        # Brief pause before retrying empty-response failures
+        time.sleep(5)
 
     return ProviderResult(False, "", retries=max_retries, error="CLI retries exhausted")

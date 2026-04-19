@@ -180,11 +180,23 @@ RESPONSE CONTRACT:
 - The JSON must satisfy this schema exactly:
 {json.dumps(json_schema, indent=2, ensure_ascii=False)}
 """
+    # Inject few-shot calibration for evaluator roles
+    calibration_section = ""
+    evaluator_roles = {"red_team_reviewer", "hig_guardian", "visual_qa"}
+    if role_name in evaluator_roles:
+        try:
+            from harness.eval_calibration import get_calibration_prompt
+            calibration = get_calibration_prompt(role_name)
+            if calibration:
+                calibration_section = f"\nEVALUATION CALIBRATION:\n{calibration}\n"
+        except ImportError:
+            pass
+
     return f"""ROLE: {role.get('title', role_name)}
 
 RESPONSIBILITIES:
 {responsibilities or "- Follow the harness contract."}
-
+{calibration_section}
 CURRENT BRIEF:
 {brief}
 

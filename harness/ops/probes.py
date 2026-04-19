@@ -90,7 +90,7 @@ def run_xcode_runtime_probe(deps: ProbeDeps, repo: Path) -> Path:
         }
 
     if not scheme:
-        scheme = "MemoryMap" if xcodeproj and xcodeproj.stem == "MemoryMap" else (xcodeproj.stem if xcodeproj else None)
+        scheme = xcodeproj.stem if xcodeproj else None
     payload["scheme"] = scheme
 
     build_log = deps.reports_dir / "xcode_build.log"
@@ -251,7 +251,7 @@ def run_xcode_test_probe(deps: ProbeDeps, repo: Path) -> Path:
     payload: dict[str, Any] = {
         "workspace_root": str(workspace),
         "xcodeproj": str(xcodeproj) if xcodeproj else None,
-        "scheme": "MemoryMap" if xcodeproj else None,
+        "scheme": xcodeproj.stem if xcodeproj else None,
         "ok": False,
         "returncode": None,
         "command": None,
@@ -270,7 +270,7 @@ def run_xcode_test_probe(deps: ProbeDeps, repo: Path) -> Path:
         "-project",
         str(xcodeproj),
         "-scheme",
-        "MemoryMap",
+        xcodeproj.stem,
         "-destination",
         "platform=iOS Simulator,name=iPhone 17 Pro",
         "test",

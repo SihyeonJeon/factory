@@ -1,0 +1,36 @@
+{
+  "execution_summary": "Resuming from 2026-04-10 delivery session. M1–M4 are now implemented across both lanes: UI lane shipped place-confirmation composer UI, marker↔sheet sync animation, cluster zoom with reduce-motion fallback, and filter-change pin fade/scale; Logic lane shipped PlaceSuggestion/InferenceSource confirmation state machine, selectionRevision sync hardening, and filter predicate. Current cycle closes with M5 dual-auditor QA gate. Next cycle targets the three unimplemented P0 epics: Epic 1 (Group creation + invitation), Epic 2 remaining (memory record creation with photos and emotion tags), and Epic 4 (Rewind reminders). Fork policy remains single-lane (fork_decision.json: should_fork=false) — lanes run sequentially within each milestone, not in parallel forks. Dual-auditor sign-off (code_auditor + vision_auditor) required before each merge per system_rules and HIG guardrails policy.",
+  "milestones": [
+    "M5 — Merge + QA Gate (current cycle close): Merge UI-lane M1–M4 and Logic-lane M1–M2 into integration branch. Run HIG audit and code audit on merged state. Acceptance: no 44pt violations, no safe-area clipping, no sync regressions; both code_auditor and vision_auditor record APPROVE in blackboard before merge proceeds.",
+    "M6 — Epic 1 Group Creation Screen: Group creation flow with required name, mode selection (couple / general_group), and optional image and intro. Acceptance: both modes reachable from creation entry point; mode enum persists to GroupStore; all controls meet 44pt minimum; VoiceOver labels present; safe-area respected on creation sheet.",
+    "M7 — Epic 1 Invitation Flow: Invite-code generation and share-sheet integration. Invite link carries 24-hour expiry; re-issue is possible. Join flow accepts code and adds user to group. Acceptance: link expiry enforced server-side or locally; re-issue increments code; join flow handles expired-code error state with recoverable UI.",
+    "M8 — Epic 2 Memory Record Creation: Photo picker (up to 10 photos per record), short note field, and emotion-tag multi-select (6 predefined tags). Supports multiple user posts under a single memory. Acceptance: photo limit enforced with user-facing feedback; emotion tags allow multi-select and persist to MemoryStore; note field respects Dynamic Type; place confirmation gate from M1 remains active.",
+    "M9 — Epic 4 Rewind Reminder Scaffolding: UNUserNotificationCenter scheduling for N-years-ago-today reminders at 10:00 (user-configurable). Optional location-based reminder with 200m default radius (100–500m range, user toggle). Rewind card displays one photo, place name, companion names, and emotion tags; card is shareable via system share sheet. Acceptance: notification fires correctly in simulator at configured time; location trigger respects ON/OFF toggle; rewind card renders all required fields; share sheet invocation does not crash.",
+    "M10 — QA Sign-Off (next cycle close): HIG audit and visual regression on M6–M9. Code audit verifies spec compliance for group mode duality, invite expiry logic, photo limit, emotion tag domain, and notification scheduling. Acceptance: both auditors record APPROVE; no unresolved HIG findings; all Epic 1, 2, and 4 acceptance criteria from acceptance_input.md verified."
+  ],
+  "lane_ownership": {
+    "ui": [
+      "Group creation sheet — mode picker (couple/general_group), name field, optional image picker, intro field, HIG-safe layout (M6)",
+      "Invite code display and share-sheet trigger — copyable code, share button, expiry countdown label (M7)",
+      "Join-group screen — code entry field, error state for expired/invalid code (M7)",
+      "Memory record composer — photo grid (up to 10), emotion tag chips (multi-select, 6 tags), note field, place confirmation integration from M1 (M8)",
+      "Rewind card view — photo, place name, companion names, emotion tags, share button via system share sheet (M9)"
+    ],
+    "logic": [
+      "GroupStore — group creation with couple/general_group mode enum, persistence (M6)",
+      "Invite code generator — time-bound code (24hr expiry), re-issue increments code, join validation (M7)",
+      "MemoryStore extension — photo attachment (max 10), emotion tag multi-select domain, multiple-post-per-memory support (M8)",
+      "NotificationScheduler — UNUserNotificationCenter N-years-ago-today scheduling at configurable time, location-based CLRegion trigger with user toggle and radius setting (M9)",
+      "RewindQuery — finds memories matching today's date in prior years, selects representative photo and metadata for rewind card (M9)"
+    ],
+    "qa": [
+      "HIG audit on group creation and invite screens: 44pt targets, safe-area, dark mode, VoiceOver (M6, M7, M10)",
+      "HIG audit on memory record composer: photo grid density, emotion tag hit targets, Dynamic Type compliance (M8, M10)",
+      "HIG audit on rewind card: contrast, safe-area, share-sheet invocation safety (M9, M10)",
+      "Code audit: group mode duality preserved through all layers, invite expiry enforced, photo limit enforced, emotion tag domain correct, notification scheduling spec-compliant (M10)",
+      "Regression check: place confirmation gate still active after M8 composer changes; marker↔sheet sync unaffected by new screens (M10)"
+    ]
+  },
+  "merge_strategy": "Single sequential merge to main after each cycle's QA gate (M5 closes current cycle, M10 closes next cycle). No parallel forks per fork_decision.json (should_fork: false, lanes: [planner]). M6–M9 accumulate on a single feature branch; delivery_lead gates the merge on written APPROVE from both code_auditor and vision_auditor recorded in blackboard. No milestone may be skipped without an explicit waiver in operator_journal.md. M8 must not land before M6 (GroupStore dependency). M9 may be implemented in parallel with M8 within the logic lane only if ownership is disjoint; UI lane remains sequential.",
+  "feedback_loop": "After each milestone implementation: code_auditor reviews diff against acceptance_input.md, sprint_contract.json, and ui_ux_screen_contract.md; vision_auditor inspects Xcode simulator screenshots for HIG compliance and regressions per native_ios_strategy.md (Xcode evidence required, Expo-only insufficient). Delivery lead blocks M(n+1) start while M(n) has an open audit finding. At M5 and M10 gates, both auditors must record APPROVE in the blackboard before merge proceeds. Any HIG finding that cannot be resolved in the current milestone is escalated to operator_journal.md and blocks release readiness per hig_guardrails.md."
+}

@@ -1,0 +1,36 @@
+{
+  "workspace_root": "/Users/jeonsihyeon/factory/.worktrees/_integration/workspace",
+  "ios_dir_exists": true,
+  "xcworkspace": null,
+  "xcodeproj": "/Users/jeonsihyeon/factory/.worktrees/_integration/workspace/ios/Unfading.xcodeproj",
+  "xcodebuild_version": "Xcode 26.4\nBuild version 17E192",
+  "simctl": {
+    "ok": true,
+    "detail": "== Devices ==\n-- iOS 26.4 --\n    iPhone 17 Pro (00FCC049-D60A-4426-8EE3-EA743B48CCF9) (Shutdown) \n    iPhone 17 Pro Max (CEFC9FE8-6291-4BBA-ACD5-404E5E9F9300) (Shutdown) \n    iPhone 17e (8384CA50-C24D-47E1-9871-104CDB3004D4) (Shutdown) \n    iPhone Air (094DD5C3-C20A-4016-82E7-9FA9BAE08FEE) (Shutdown) \n    iPhone 17 (86938FB9-C757-413E-A3B7-265A9CBAE384) (Booted) \n    iPad Pro 13-inch (M5) (C1048C50-6413-4945-B85F-C9C02D9E6AA7) (Shutdown) \n    iPad Pro 11-inch (M5) (98FF329D-EAA1-4158-B5DE-AC29EB"
+  },
+  "project_discovery": {
+    "ok": true,
+    "detail": "Command line invocation:\n    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -list -project /Users/jeonsihyeon/factory/.worktrees/_integration/workspace/ios/Unfading.xcodeproj\n\nInformation about project \"Unfading\":\n    Targets:\n        Unfading\n        UnfadingTests\n\n    Build Configurations:\n        Debug\n        Release\n\n    If no build configuration is specified and -scheme is not passed then \"Debug\" is used.\n\n    Schemes:\n        Unfading"
+  },
+  "scheme": "Unfading",
+  "build": {
+    "ok": true,
+    "returncode": 0,
+    "command": "xcodebuild -project /Users/jeonsihyeon/factory/.worktrees/_integration/workspace/ios/Unfading.xcodeproj -scheme Unfading -derivedDataPath /Users/jeonsihyeon/factory/.worktrees/_integration/.deriveddata/evaluation -destination platform=iOS Simulator,name=iPhone 17 build",
+    "log_path": "/Users/jeonsihyeon/factory/context_harness/reports/xcode_build.log",
+    "detail": "n/factory/.worktrees/_integration/workspace/ios\n    \n    Signing Identity:     \"Sign to Run Locally\"\n    \n    /usr/bin/codesign --force --sign - --timestamp\\=none --generate-entitlement-der /Users/jeonsihyeon/factory/.worktrees/_integration/.deriveddata/evaluation/Build/Products/Debug-iphonesimulator/Unfading.app/__preview.dylib\n/Users/jeonsihyeon/factory/.worktrees/_integration/.deriveddata/evaluation/Build/Products/Debug-iphonesimulator/Unfading.app/__preview.dylib: replacing existing signature\n\nCodeSign /Users/jeonsihyeon/factory/.worktrees/_integration/.deriveddata/evaluation/Build/Products/Debug-iphonesimulator/Unfading.app (in target 'Unfading' from project 'Unfading')\n    cd /Users/jeonsihyeon/factory/.worktrees/_integration/workspace/ios\n    \n    Signing Identity:     \"Sign to Run Locally\"\n    \n    /usr/bin/codesign --force --sign - --timestamp\\=none --generate-entitlement-der /Users/jeonsihyeon/factory/.worktrees/_integration/.deriveddata/evaluation/Build/Products/Debug-iphonesimulator/Unfading.app\n\nValidate /Users/jeonsihyeon/factory/.worktrees/_integration/.deriveddata/evaluation/Build/Products/Debug-iphonesimulator/Unfading.app (in target 'Unfading' from project 'Unfading')\n    cd /Users/jeonsihyeon/factory/.worktrees/_integration/workspace/ios\n    builtin-validationUtility /Users/jeonsihyeon/factory/.worktrees/_integration/.deriveddata/evaluation/Build/Products/Debug-iphonesimulator/Unfading.app -shallow-bundle -infoplist-subpath Info.plist\n\n** BUILD SUCCEEDED **"
+  },
+  "build_output": "BUILD SUCCEEDED",
+  "app_binary": "/Users/jeonsihyeon/factory/.worktrees/_integration/.deriveddata/evaluation/Build/Products/Debug-iphonesimulator/Unfading.app",
+  "simulator_status": "booted",
+  "runtime_verification": {
+    "booted_device": "iPhone 17",
+    "device_id": "86938FB9-C757-413E-A3B7-265A9CBAE384",
+    "install_ok": true,
+    "launch_ok": true,
+    "screenshot": "/Users/jeonsihyeon/factory/context_harness/reports/xcode_runtime_screenshot.png",
+    "bundle_id": "com.jeonsihyeon.unfading",
+    "bootstatus_detail": "Monitoring boot status for iPhone 17 (86938FB9-C757-413E-A3B7-265A9CBAE384).\nDevice already booted, nothing to do."
+  },
+  "screenshot": "/Users/jeonsihyeon/factory/context_harness/reports/xcode_runtime_screenshot.png"
+}

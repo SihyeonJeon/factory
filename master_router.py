@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Optional
 
 from harness.company import load_manifest, load_providers, load_roles
-from harness.providers import ProviderResult, normalize_claude_model, run_claude_api, run_claude_cli, run_cli
+from harness.providers import ProviderResult, normalize_claude_model, run_claude_api, run_claude_cli, run_claude_code_impl, run_cli
 
 FACTORY_DIR = Path(__file__).parent.resolve()
 CONTEXT_DIR = FACTORY_DIR / "context_harness"
@@ -33,22 +33,24 @@ ROLES = load_roles(MANIFEST)
 TASK_ROLE_ORDER: dict[str, list[str]] = {
     "product_research": ["product_lead", "delivery_lead"],
     "market_research": ["product_lead", "delivery_lead"],
-    "planning": ["delivery_lead", "product_lead"],
-    "prd_generation": ["delivery_lead", "product_lead"],
-    "architecture": ["ios_architect", "delivery_lead"],
-    "task_allocation": ["delivery_lead", "ios_architect"],
+    "planning": ["delivery_lead", "codex_verifier"],
+    "prd_generation": ["delivery_lead", "codex_verifier"],
+    "architecture": ["ios_architect", "codex_verifier"],
+    "task_allocation": ["delivery_lead", "codex_verifier"],
     "ios_implementation": ["ios_ui_builder", "ios_logic_builder"],
     "ui_coding": ["ios_ui_builder", "ios_logic_builder"],
     "business_logic": ["ios_logic_builder", "ios_ui_builder"],
-    "code_review": ["red_team_reviewer", "ios_architect"],
+    "code_review": ["codex_verifier", "red_team_reviewer"],
     "hig_audit": ["hig_guardian", "visual_qa"],
     "visual_qa": ["visual_qa", "hig_guardian"],
-    "e2e_test_gen": ["ios_logic_builder", "ios_ui_builder"],
+    "e2e_test_gen": ["codex_verifier", "ios_logic_builder"],
     "bug_fix": ["ios_logic_builder", "ios_ui_builder"],
-    "sprint_eval": ["red_team_reviewer", "visual_qa"],
-    "documentation": ["delivery_lead", "product_lead"],
+    "sprint_eval": ["codex_verifier", "red_team_reviewer"],
+    "detail_fix": ["codex_verifier", "ios_logic_builder"],
+    "documentation": ["delivery_lead", "codex_verifier"],
     "boilerplate": ["ios_ui_builder", "ios_logic_builder"],
     "arbitration": ["delivery_lead", "ios_architect"],
+    "runtime_qa": ["visual_qa", "hig_guardian"],
 }
 
 class TaskType(Enum):
@@ -69,7 +71,9 @@ class TaskType(Enum):
     SPRINT_EVAL = "sprint_eval"
     DOCUMENTATION = "documentation"
     BOILERPLATE = "boilerplate"
+    DETAIL_FIX = "detail_fix"
     ARBITRATION = "arbitration"
+    RUNTIME_QA = "runtime_qa"
 
 
 TASK_TIMEOUTS: dict[TaskType, int] = {
@@ -90,7 +94,9 @@ TASK_TIMEOUTS: dict[TaskType, int] = {
     TaskType.SPRINT_EVAL: 300,
     TaskType.DOCUMENTATION: 180,
     TaskType.BOILERPLATE: 600,
+    TaskType.DETAIL_FIX: 900,
     TaskType.ARBITRATION: 240,
+    TaskType.RUNTIME_QA: 900,
 }
 
 
@@ -107,6 +113,8 @@ class AgentResult:
 def _provider_name(provider_id: str) -> str:
     if provider_id == "claude_api":
         return "claude-cli" if _claude_cli_enabled() else "claude-api"
+    if provider_id == "claude_code_cli":
+        return "claude-code"
     if provider_id == "codex_cli":
         return "codex"
     return provider_id
@@ -122,8 +130,9 @@ def _resolve_model(role_id: str) -> str:
         "product_lead": os.environ.get("FACTORY_CLAUDE_STRATEGY_MODEL"),
         "delivery_lead": os.environ.get("FACTORY_CLAUDE_DELIVERY_MODEL"),
         "ios_architect": os.environ.get("FACTORY_CLAUDE_STRATEGY_MODEL"),
-        "ios_ui_builder": os.environ.get("FACTORY_CODEX_PRIMARY_MODEL"),
-        "ios_logic_builder": os.environ.get("FACTORY_CODEX_PRIMARY_MODEL"),
+        "ios_ui_builder": os.environ.get("FACTORY_CLAUDE_IMPL_MODEL"),
+        "ios_logic_builder": os.environ.get("FACTORY_CLAUDE_IMPL_MODEL"),
+        "codex_verifier": os.environ.get("FACTORY_CODEX_PRIMARY_MODEL"),
         "red_team_reviewer": os.environ.get("FACTORY_CLAUDE_DELIVERY_MODEL"),
         "hig_guardian": os.environ.get("FACTORY_CLAUDE_DELIVERY_MODEL"),
         "visual_qa": os.environ.get("FACTORY_CLAUDE_DELIVERY_MODEL"),
@@ -147,6 +156,11 @@ def _resolve_model(role_id: str) -> str:
     if role.provider == "claude_api":
         model = provider_models.get("default") or "claude-sonnet-4-6"
         return normalize_claude_model(model)
+    if role.provider == "claude_code_cli":
+        env_override = provider_models.get("override_env")
+        if env_override and os.environ.get(env_override):
+            return os.environ[env_override]
+        return provider_models.get("default") or "claude-sonnet-4-6"
     if role.provider == "codex_cli":
         env_override = provider_models.get("override_env")
         if env_override and os.environ.get(env_override):
@@ -205,10 +219,10 @@ def _build_codex_cmd(
 
 
 def _build_codex_review_cmd(*, cwd: Optional[Path], model: str) -> list[str]:
-    cmd = ["codex", "exec", "review", "-m", model]
+    cmd = ["codex", "exec"]
     if cwd:
         cmd += ["-C", str(cwd)]
-    cmd.append("--full-auto")
+    cmd += ["-m", model, "--full-auto", "review", "--uncommitted"]
     return cmd
 
 
@@ -250,6 +264,14 @@ def _run_role(
                 json_schema=json_schema,
                 timeout=timeout,
             )
+    elif provider.provider_id == "claude_code_cli":
+        result = run_claude_code_impl(
+            prompt,
+            model=model,
+            system_prompt=system_prompt,
+            cwd=cwd,
+            timeout=timeout,
+        )
     elif provider.provider_id == "codex_cli":
         if task_type == TaskType.CODE_REVIEW:
             cmd = _build_codex_review_cmd(cwd=cwd, model=model)
@@ -427,12 +449,22 @@ def write_docs(prompt: str, **kwargs) -> AgentResult:
     return dispatch(TaskType.DOCUMENTATION, prompt, **kwargs)
 
 
+def detail_fix(prompt: str, cwd: Path = None, **kwargs) -> AgentResult:
+    """Codex-primary: 검증 후 세부 수정 디스패치."""
+    return dispatch(TaskType.DETAIL_FIX, prompt, cwd=cwd, **kwargs)
+
+
 def scaffold(prompt: str, cwd: Path = None, **kwargs) -> AgentResult:
     return dispatch(TaskType.BOILERPLATE, prompt, cwd=cwd, **kwargs)
 
 
 def arbitrate(prompt: str, **kwargs) -> AgentResult:
     return dispatch(TaskType.ARBITRATION, prompt, **kwargs)
+
+
+def runtime_qa(prompt: str, image_path: str = None, **kwargs) -> AgentResult:
+    """Runtime QA: screenshot-based visual analysis after XCUITest execution."""
+    return dispatch(TaskType.RUNTIME_QA, prompt, image_path=image_path, **kwargs)
 
 
 if __name__ == "__main__":

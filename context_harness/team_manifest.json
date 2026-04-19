@@ -22,14 +22,27 @@
         "ops": "claude-haiku-4-5-20251001"
       }
     },
+    "claude_code_cli": {
+      "transport": "cli",
+      "auth": "claude-pro-login",
+      "primary_use": [
+        "implementation",
+        "refactor",
+        "parallel worktree execution"
+      ],
+      "models": {
+        "default": "claude-sonnet-4-6",
+        "deep": "claude-opus-4-6",
+        "override_env": "FACTORY_CLAUDE_IMPL_MODEL"
+      }
+    },
     "codex_cli": {
       "transport": "cli",
       "auth": "chatgpt-pro-login",
       "primary_use": [
-        "implementation",
-        "refactor",
-        "parallel worktree execution",
-        "code review"
+        "code review",
+        "detailed design",
+        "1st verification"
       ],
       "models": {
         "default": "gpt-5.4",
@@ -110,8 +123,8 @@
       "id": "ios_ui_builder",
       "title": "iOS UI Builder",
       "team": "development",
-      "provider": "codex_cli",
-      "model": "gpt-5.4",
+      "provider": "claude_code_cli",
+      "model": "claude-sonnet-4-6",
       "ownership": [
         ".worktrees/ios_ui_builder"
       ],
@@ -125,8 +138,8 @@
       "id": "ios_logic_builder",
       "title": "iOS Logic Builder",
       "team": "development",
-      "provider": "codex_cli",
-      "model": "gpt-5.4",
+      "provider": "claude_code_cli",
+      "model": "claude-sonnet-4-6",
       "ownership": [
         ".worktrees/ios_logic_builder"
       ],
@@ -134,6 +147,21 @@
         "Implement stores, network boundaries, domain logic, and testable flows.",
         "Keep UI state and business state separated.",
         "Document assumptions that could affect QA."
+      ]
+    },
+    {
+      "id": "codex_verifier",
+      "title": "Codex Verifier",
+      "team": "evaluation",
+      "provider": "codex_cli",
+      "model": "gpt-5.4",
+      "ownership": [
+        "reports/codex_verifier_review.md"
+      ],
+      "responsibilities": [
+        "1st verification of Claude Code implementation.",
+        "Code review for architecture drift, convention violations, regressions.",
+        "Provide specific fix instructions when issues found."
       ]
     },
     {

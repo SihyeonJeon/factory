@@ -1,0 +1,31 @@
+{
+  "summary": "Unfading is a native iOS SwiftUI map diary for couples and recurring groups, turning shared dates and trips into place-based memory collections with a map-first surface and a synchronized bottom sheet gallery. Resuming from the 2026-04-08 baseline, the current delivery lane has landed M1–M4 across UI and logic worktrees: marker selection state, cluster zoom with reduce-motion fallback, filter-change pin animations, place confirmation gating with InferenceSource, and marker↔sheet sync hardening via selectionRevision. Product focus now is to keep the couple/general-group dual mode intact, protect the event hierarchy Group→DateEvent→Memory→MemoryPost, and ensure inferred place always requires explicit user confirmation before save. Category risk is moderate: the space has public social map apps and private photo journals, but lacks a private spatial memory product that treats the bottom sheet as a first-class browsing surface and adapts curation to both couple and group modes. Next intake→delivery→evaluation loop should validate HIG compliance on map, sheet, and rewind surfaces, and confirm acceptance criteria for Epics 1–4 against native Xcode evidence rather than Expo-only smoke.",
+  "user_pains": [
+    "Chat albums and photo feeds cannot answer 'what happened here with us' without scrolling years of history",
+    "Existing map apps optimize for public discovery, not private shared memory tied to place and event",
+    "Couples and recurring groups are forced into separate tools or couple-only apps that do not fit group meetups",
+    "Revisiting the same place loses layered history because tools do not merge or stack repeat visits",
+    "Inferred place from photo metadata can be wrong, and silent auto-save erodes trust in a memory diary",
+    "Marker taps and bottom-sheet content drifting out of sync breaks spatial browsing confidence",
+    "Rewind and anniversary moments are buried in camera rolls with no place, people, or emotion context"
+  ],
+  "hig_risks": [
+    "Bottom sheet as primary browsing surface must preserve native sheet gestures, detents, and safe-area insets rather than a custom modal",
+    "Map floating controls (filter, current location, add pin) risk oversized or gesture-hostile overlays that block pinch and pan",
+    "Cluster zoom and filter animations must honor Reduce Motion; current M3/M4 implementations claim fallbacks but need vision QA confirmation",
+    "Place confirmation gating must not use deceptive auto-confirm affordances; the confirm control needs a 44pt target and clear labeling",
+    "Dark mode and Dynamic Type coverage on date headers, emotion tags, and memory cards is unverified against HIG",
+    "VoiceOver labels for map markers, clusters, and sheet rows are required before release and not yet audited",
+    "Rewind notifications and location-based reminders must expose clear user ON/OFF control to avoid App Store review risk around background location",
+    "AI-generated UI cannot ship without an HIG audit trail in context_harness/reports, per the harness constitution"
+  ],
+  "design_references": [
+    "Apple Maps and iPhone-native Maps for map-first spatial confidence and calm hierarchy",
+    "Naver Map and Google Maps result panels for bottom-sheet detents and first-class browsing behavior",
+    "iPhone Photos app for date and event grouping, memory cards, and restrained chrome",
+    "Apple Human Interface Guidelines: Sheets, Maps, Notifications, Accessibility, and Dark Mode sections",
+    "context_harness/policies/ios_hig_guardrails.md as the release gate for 44pt targets, safe areas, and VoiceOver",
+    "context_harness/prd/ui_ux_screen_contract.md for the non-negotiable map-first and dual-mode product shape",
+    "context_harness/architecture/native_ios_strategy.md for preferring Xcode runtime evidence over Expo smoke"
+  ]
+}
