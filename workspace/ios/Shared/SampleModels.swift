@@ -177,6 +177,35 @@ struct SampleGroup: Identifiable, Hashable {
     )
 }
 
+struct SampleMemoryDraft: Identifiable, Codable, Hashable {
+    let id: UUID
+    var title: String
+    var body: String
+    var placeName: String
+    var timestamp: Date
+    var moodIDs: [String]
+
+    // vibe-limit-checked: 11 sample draft data maps future persisted memory draft model
+    static let defaultSamples: [SampleMemoryDraft] = [
+        .init(
+            id: UUID(uuidString: "ddddddd1-dddd-4ddd-8ddd-ddddddddddd1")!,
+            title: "상수 루프톱 저녁",
+            body: "친구들과 공연 이야기를 나눈 밤",
+            placeName: "상수 루프톱",
+            timestamp: Date(timeIntervalSince1970: 1_776_000_000),
+            moodIDs: ["joy", "grateful"]
+        ),
+        .init(
+            id: UUID(uuidString: "ddddddd2-dddd-4ddd-8ddd-ddddddddddd2")!,
+            title: "한강 산책",
+            body: "노을을 보며 천천히 걸었던 시간",
+            placeName: "여의도 한강공원",
+            timestamp: Date(timeIntervalSince1970: 1_776_086_400),
+            moodIDs: ["calm", "nostalgic"]
+        )
+    ]
+}
+
 struct PlaceSuggestion: Identifiable, Equatable {
     let id: String
     let title: String

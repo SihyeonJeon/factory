@@ -165,8 +165,48 @@ enum UnfadingLocalized {
         static let navTitle = "설정"
         static let stubTitle = "설정 화면 준비 중"
         static let stubBody = "앱 환경과 계정 설정은 다가오는 라운드에서 구성됩니다."
+        static let accountSection = "계정"
+        static let preferencesSection = "환경설정"
+        static let reminderToggle = "장소 기반 알림"
+        static let reminderHint = "이곳 근처에 가면 관련 추억을 알려드려요."
+        static let themeLabel = "테마"
+        static let groupsSection = "그룹"
         static let groupsRow = "그룹 관리"
         static let groupsRowHint = "현재는 기존 그룹 허브를 엽니다. 다가오는 라운드에서 지도 위 그룹 칩으로 이동합니다."
+        static let premiumSection = "프리미엄"
+        static let premiumExplore = "프리미엄 둘러보기"
+        static let premiumComingSoon = "출시 예정"
+        static let premiumSavingBadge = "33% 절약"
+        static let premiumTierFreeName = "무료"
+        static let premiumTierMonthly = "프리미엄 월"
+        static let premiumTierAnnual = "프리미엄 연"
+        static let premiumTierFreePrice = "₩0"
+        static let premiumTierMonthlyPrice = "월 ₩4,900"
+        static let premiumTierAnnualPrice = "연 ₩39,000"
+        static let infoSection = "정보"
+        static let versionLabel = "버전 1.0.0"
+        static let licensesRow = "오픈소스 라이선스"
+
+        static func draftCountFormat(_ count: Int) -> String {
+            "임시 저장 \(count)개"
+        }
+
+        static func tierFeatures(_ tier: Int) -> [String] {
+            switch tier {
+            case 0:
+                return ["월 30개 추억", "그룹 5명", "기본 지도 스타일"]
+            case 1:
+                return ["무제한 추억", "기념일 AI 리와인드", "고급 지도 테마", "가족 그룹"]
+            default:
+                return ["무제한 추억", "고급 지도 테마", "다이어리 북 내보내기", "연간 할인"]
+            }
+        }
+    }
+
+    enum Theme {
+        static let system = "시스템 설정"
+        static let light = "라이트"
+        static let dark = "다크"
     }
 
     // MARK: Placeholder (generic "coming soon" surfaces)
