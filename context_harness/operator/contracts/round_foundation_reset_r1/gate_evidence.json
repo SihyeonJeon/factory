@@ -1,0 +1,44 @@
+{
+  "round_id": "round_foundation_reset_r1",
+  "notes": "Foundation implementation round. 4 reusable Swift modules created; 8 view files refactored to use them; 18 new tests added; SESSION_RESUME rewritten to truthful reality + pre-v5 narrative archived. Verdict PASS.",
+  "gate1": {
+    "status": "pass",
+    "command": "xcodebuild -project workspace/ios/MemoryMap.xcodeproj -scheme MemoryMap -destination 'platform=iOS Simulator,name=iPhone 17' test",
+    "exit_code": 0,
+    "test_count": 28,
+    "log": {
+      "path": "context_harness/reports/round_foundation_reset_r1/evidence/xcode_test.log",
+      "sha256": "sha256:ce4921e536c4fcbcaf618386605d0e9921873e4ccdb6aca19809a58ca2703238"
+    }
+  },
+  "gate2": {
+    "status": "pass",
+    "reports": [
+      {
+        "path": "context_harness/reports/round_foundation_reset_r1/evidence/contract_capture.md",
+        "sha256": "sha256:4956fab414679bd3726031ab6db5149c51c114f4cddab2ac433fb9494e38b632"
+      },
+      {
+        "path": "context_harness/reports/round_foundation_reset_r1/verdict.md",
+        "sha256": "sha256:73c74b8c13708416f482b6d06b8415d933293fc2fccf910c2f2d10741820e6a2"
+      },
+      {
+        "path": "docs/design-docs/deepsight_tokens.md",
+        "sha256": "sha256:638425b8c8aa5cbcf0826fc31980b31a8b5ebc0dd9ed6c669c03c6c7c9d9a59f"
+      }
+    ]
+  },
+  "gate3": {
+    "status": "pass",
+    "cross_agreement_note": "Codex verdict PASS with advisories only (sample-data localization deferred). Claude Code capture factual-only. No 2+ evaluator overlap because implementation round uses Codex review + Claude Code implementation rather than 3-evaluator visual-QA fork; acceptance grep checks are empty, unit tests pass 28/28, reusable module import/use proof satisfied."
+  },
+  "gate4": {
+    "status": "pass",
+    "metrics_source": {
+      "path": "docs/exec-plans/process-log.jsonl",
+      "sha256": "sha256:cfa4872fd359a452295e20bbe235f2aa714be773961a0a848823b0736c83eac8"
+    },
+    "remediation_cycles": 0,
+    "blocker_recurrence": 0
+  }
+}

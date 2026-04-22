@@ -1,0 +1,1782 @@
+OpenAI Codex v0.121.0 (research preview)
+--------
+workdir: /Users/jeonsihyeon/factory
+model: gpt-5.4
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR, /Users/jeonsihyeon/.codex/memories]
+reasoning effort: none
+reasoning summaries: none
+session id: 019db43d-746e-73b3-b33c-5dda3770df91
+--------
+user
+Codex — round_foundation_reset_r1 evidence capture complete. Author the verdict per STAGE_CONTRACT Stage 9.
+
+Sandbox: workspace-write.
+
+Write ONE file: `context_harness/reports/round_foundation_reset_r1/verdict.md`.
+
+Inputs to read:
+- `context_harness/reports/round_foundation_reset_r1/evidence/contract_capture.md` (my factual observations, file hashes, grep results, test results)
+- `context_harness/reports/round_foundation_reset_r1/evidence/xcode_test.log`
+- `context_harness/operator/contracts/round_foundation_reset_r1/acceptance.md` (your locked success criteria)
+- The 4 reusable module Swift files at `workspace/ios/Shared/Unfading*.swift`
+- Representative refactored views: `workspace/ios/App/RootTabView.swift`, `workspace/ios/Features/Home/MemoryComposerSheet.swift`
+- `context_harness/SESSION_RESUME.md` (truthful rewrite)
+- `docs/exec-plans/sprint-history-pre-v5.md` (archive)
+
+Structure for verdict.md:
+
+```markdown
+# Verdict — round_foundation_reset_r1
+
+**Author:** Codex Operator
+**Timestamp:** <ISO>
+**Contract hash:** <sha of spec.md from lock>
+**Evidence:** contract_capture.md (sha256:<from evidence>)
+
+## Summary
+<1 paragraph overall verdict>
+
+## Acceptance criteria check
+<One line per acceptance criterion from acceptance.md. Cite evidence section and/or deliverable file.>
+
+## Blockers
+<Zero or more. Each with specific fix needed before close.>
+
+## Advisories
+<Zero or more. Noted for retro or future rounds.>
+
+## Code quality observations
+<Substantive review of the 4 reusable modules. Are they genuinely reusable? API hygiene? Open issues.>
+
+## Doc reconciliation assessment
+<Is the SESSION_RESUME rewrite honest? Archive labeled clearly? Conventions/SKILLS amendments correctly scoped to forward-looking?>
+
+## Recommendation for close
+<PASS → proceed to gate_evidence.json + close | BLOCKER → list fixes | ADVISORY-only → PASS>
+```
+
+Discipline:
+- Cite evidence by file/section path. Do not paste raw evidence content.
+- Verdict verbs only in THIS file.
+- Be specific about which acceptance criterion each verdict attaches to.
+- If the v5.4 capture-exception pattern (e.g., `UnfadingCardBackground` shadow hex fix mid-round) is acceptable or whether it should have been a proper amendment, state your position.
+
+After writing, respond with:
+- one-line confirmation
+- CLOSE recommendation yes/no
+- any concern that should block close
+codex
+I’ll read the evidence, test log, locked acceptance, the four reusable modules, representative refactors, and the reconciled docs, then write only the verdict file.
+exec
+/bin/zsh -lc "sed -n '1,320p' context_harness/reports/round_foundation_reset_r1/evidence/contract_capture.md" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+# Evidence — round_foundation_reset_r1 Contract Capture
+
+**Author:** Claude Code Operator (STAGE_CONTRACT Stage 8 `runtime_capture` equivalent for implementation round)
+**Capture protocol:** `context_harness/operator/contracts/round_foundation_reset_r1/eval_protocol.md`
+**Scope:** factual observations only. Verdict authored separately by Codex Operator at `verdict.md`.
+
+---
+
+## Capture timestamp
+
+2026-04-23T00:45Z
+
+## Reusable modules — file hashes
+
+| Module | Path | SHA-256 |
+|---|---|---|
+| Theme | `workspace/ios/Shared/UnfadingTheme.swift` | `sha256:6b7fb9e86ea4a5fe43e8d461c89262aeb548d936690f5be48b82d058e0501935` |
+| Localized | `workspace/ios/Shared/UnfadingLocalized.swift` | `sha256:35ebf79e5a17dae43f450e2a82de161831aa7caddf9c29eab00a6663d07938d0` |
+| ButtonStyle | `workspace/ios/Shared/UnfadingButtonStyle.swift` | `sha256:3cfd687b753e913676cbdf250cc2d147554d090a40400a8865dbaa43b924be1e` |
+| CardBackground | `workspace/ios/Shared/UnfadingCardBackground.swift` | `sha256:a936b1b817b3646eb9f7956eaece7769c8dfa09e526acec489a18beaf852c725` |
+
+## Refactored view files — file hashes
+
+| Path | SHA-256 |
+|---|---|
+| `workspace/ios/App/RootTabView.swift` | `sha256:9e67ea387f9cfbad7e4e94edec4fd9a625a85096b376fed5623acee6e61b1971` |
+| `workspace/ios/Features/Home/MemoryMapHomeView.swift` | `sha256:5a1218e558b960b9d962e3e73388aa28a8a38017dde6b59396e8b188d8e3afd0` |
+| `workspace/ios/Features/Home/MemoryComposerSheet.swift` | `sha256:50d2ce359e06d4f50f3c16d6aee43459ad433e43c0d81344c45aa92f38f7a85c` |
+| `workspace/ios/Features/Home/MemorySummaryCard.swift` | `sha256:d4f3d89bdb0a55f279c71e703d21932b1b7c407b4801668caa6c4cb3b3a28f93` |
+| `workspace/ios/Features/Home/MemoryPinMarker.swift` | `sha256:2c8eb06786cb1f8471794db94e47e3ee026f17810354eaa064f1d6a38944f877` |
+| `workspace/ios/Features/Rewind/RewindFeedView.swift` | `sha256:3607d95cf09adfa4e817b07dac3f3ae6bb908cbe7d892aa97165f4d7c08d037a` |
+| `workspace/ios/Features/Rewind/RewindMomentCard.swift` | `sha256:1cd35123f6a8db68c2d0501bc34ad8ed0d36a2c0f670d480bdacfb93d470f9b9` |
+| `workspace/ios/Features/Groups/GroupHubView.swift` | `sha256:2b09955549251bcada4aab5b11950063bdec60b672a6063747876051e3747ac9` |
+
+## New test files — file hashes
+
+| Path | SHA-256 |
+|---|---|
+| `workspace/ios/Tests/UnfadingThemeTests.swift` | `sha256:d2bc0cc628d548090bc80b61b0530d86d64a12ad9c1aa8c0de49526774bb7713` |
+| `workspace/ios/Tests/UnfadingLocalizedTests.swift` | `sha256:466d5d733f46465f950fdf4e4d807bb2a0f1ec10d8b35629aeebb13b17baf5cf` |
+| `workspace/ios/Tests/UnfadingComponentTests.swift` | `sha256:1c0f864b125297537f7a05bd3ec17b60b7ba617ba9b779834ff8ff3279814a37` |
+
+## Doc reconciliation — file hashes
+
+| Path | SHA-256 | Note |
+|---|---|---|
+| `context_harness/SESSION_RESUME.md` | `sha256:e6529f08b5e0f1ff4cbdc3dd16a904eb8814a844291b8e58051db205f708de22` | Rewritten to truthful Reality Baseline |
+| `docs/exec-plans/sprint-history-pre-v5.md` | `sha256:4cf40e7dff0fad45388db4afc138fa456b7d3df0e591c83433ade2bec67165c7` | Unverified pre-v5 narrative archive |
+
+## Test results
+
+- Command: `xcodebuild -project workspace/ios/MemoryMap.xcodeproj -scheme MemoryMap -destination 'platform=iOS Simulator,name=iPhone 17' test`
+- Exit status: 0
+- Log: `context_harness/reports/round_foundation_reset_r1/evidence/xcode_test.log` sha256 `ce4921e536c4fcbcaf618386605d0e9921873e4ccdb6aca19809a58ca2703238`
+- Test count: 28 (baseline 10 + 18 new across `UnfadingThemeTests`, `UnfadingLocalizedTests`, `UnfadingComponentTests`)
+- All tests passed; log end line: `** TEST SUCCEEDED **`
+
+## Acceptance grep results
+
+### Forbidden Color patterns (target: zero outside `UnfadingTheme.swift`)
+
+Command (from repo root):
+```
+grep -rn -E "Color\\.(accentColor|white|black)|Color\\(red:" workspace/ios/App workspace/ios/Features workspace/ios/Shared | grep -v "UnfadingTheme.swift"
+```
+
+Result: empty (no matches).
+
+### Reusable module usage proof (Codex R-round2 Q9: ≥1 production + ≥1 test reference each)
+
+| Module | Production files referencing | Test files referencing |
+|---|---:|---:|
+| `UnfadingTheme` | 8 | 2 |
+| `UnfadingLocalized` | 6 | 1 |
+| `UnfadingPrimaryButtonStyle` (via `.unfadingPrimary` shorthand) | 2 (`MemoryMapHomeView.swift`, `MemoryComposerSheet.swift`) | 1 (`UnfadingComponentTests.swift`) |
+| `unfadingCardBackground` modifier | 2 (`MemorySummaryCard.swift`, `RewindMomentCard.swift`) | 1 (`UnfadingComponentTests.swift`) |
+
+All 4 modules satisfy the ≥1 production + ≥1 test threshold.
+
+### English user-facing string literals in touched view files
+
+Command (per view file):
+```
+grep -nE 'Text\("[A-Za-z]|Label\("[A-Za-z]|accessibilityLabel\("[A-Za-z]|accessibilityHint\("[A-Za-z]|\.navigationTitle\("[A-Za-z]'
+```
+
+Result: empty across all 8 touched view files (`RootTabView`, `MemoryMapHomeView`, `MemoryComposerSheet`, `MemorySummaryCard`, `MemoryPinMarker`, `RewindFeedView`, `RewindMomentCard`, `GroupHubView`).
+
+Notes:
+- `searchText.trimmingCharacters(...)` Label arguments in `ManualPlacePickerSheet` show raw user input; not a literal — passes.
+- `SampleMemoryPin.title`, `RewindMoment.title`, `GroupPreview.name`, `MemoryDraftTag.title`, `PlaceSuggestion.title/subtitle` are MODEL data (not literal arguments in views). They are sample English strings carried through from `SampleModels.swift` / `LocationPermissionStore.swift`, which are outside this round's whitelist. `MemoryDraftTag` and `PlaceSuggestion` are routed through `UnfadingLocalized.draftTag(id:...)` / `UnfadingLocalized.placeSuggestion(id:...)` helpers at display sites; remaining English model strings (`SampleMemoryPin`, `RewindMoment`, `GroupPreview`) surface in views as variable references, not literal arguments, and acceptance targets only literals within touched view files. Full sample-data localization can be addressed in a future round that whitelists `SampleModels.swift`.
+
+### UnfadingTheme token values (verified by unit tests)
+
+- `UnfadingTheme.Color.coral` resolves to R=0xF5, G=0x99, B=0x8C → matches `deepsight_tokens.md` Coral `#F5998C`.
+- `UnfadingTheme.Color.lavender` resolves to R=0xC2, G=0xB0, B=0xDE.
+- `UnfadingTheme.Color.cream` resolves to R=0xFF, G=0xFA, B=0xF5.
+- `UnfadingTheme.Color.primary` is channel-identical to `.coral`.
+- `UnfadingTheme.Radius` covers {20, 16, 12, 8} exactly.
+- `UnfadingTheme.Sheet` covers {0.22, 0.52, 0.88} exactly.
+- `UnfadingTheme.Spacing` is monotonic xs→xxl.
+
+Unit test evidence: `UnfadingThemeTests.swift` — 7 tests all passed.
+
+### Korean localization coverage (verified by unit tests)
+
+- `UnfadingLocalized.Tab.map`, `.rewind`, `.groups` are Korean non-empty.
+- `UnfadingLocalized.Accessibility.*TabLabel` contain the matching Korean tab names.
+- `UnfadingLocalized.Summary.sampleBody` contains Hangul syllables (verified by code point range check).
+- `UnfadingLocalized.Composer.navTitle`/`.save`, `Common.cancel` match expected Korean.
+- `UnfadingLocalized.draftTag(id:)` returns Korean for all 4 known ids; returns fallback for unknown id.
+- `UnfadingLocalized.placeSuggestion(id:)` returns Korean title+subtitle for known ids.
+
+Unit test evidence: `UnfadingLocalizedTests.swift` — 7 tests all passed.
+
+### Reusable module compile + wire integration
+
+- Standalone `xcodebuild build` succeeded after module creation (prior to refactors).
+- After refactors, `xcodebuild test` succeeded with 28/28 tests passing.
+- `xcodegen generate` ran twice (once after initial modules, once after adding new test files) to re-wire `MemoryMap.xcodeproj`.
+
+### Doc reconciliation
+
+- `SESSION_RESUME.md` now begins with truthful Reality Baseline section (Date 2026-04-23, 16 Swift files, 28 tests, 3 tabs, Korean labels, UnfadingTheme present).
+- Pre-v5 Sprint 51 / 140-test narrative relocated to `docs/exec-plans/sprint-history-pre-v5.md` with explicit unverified-archive warning.
+- `docs/references/coding-conventions.md` header amended with v5.6 / round 2 compliance note.
+- `SKILLS.md` S-17 opening amended to clarify forward-looking scope.
+
+## Governance notes
+
+- `.gitignore` updated (selective un-gitignore of `workspace/ios/{App,Features,Shared,Tests}/` + `project.yml`) in pre-round commit `44e2a1d` — base commit for this round.
+- Round lock: `context_harness/operator/locks/round_foundation_reset_r1.lock` status `active`, base_commit `44e2a1d`.
+- One lock event logged so far: `created`.
+- No amendments required during this round — base whitelist was sufficient for all deliverables.
+
+## Capture exceptions
+
+- `UnfadingCardBackground.swift` originally used `SwiftUI.Color.black.opacity(0.06)` which tripped the Color-grep after first pass. Captured in a second round of work: added `UnfadingTheme.Color.shadow` + `UnfadingTheme.Color.pinShadow` tokens and replaced inline usage in `UnfadingCardBackground.swift` and `MemoryPinMarker.swift`. Tests re-run and still passed 28/28.
+- No other protocol exceptions.
+
+## Next
+
+Codex Operator writes verdict at `context_harness/reports/round_foundation_reset_r1/verdict.md`. `gate_evidence.json` assembly + `close` follow.
+
+exec
+/bin/zsh -lc "sed -n '1,220p' context_harness/operator/contracts/round_foundation_reset_r1/acceptance.md" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+# round_foundation_reset_r1 Acceptance Criteria
+
+Each criterion below must be mechanically checked during evidence capture.
+
+## Reusable Modules
+
+### Files Exist
+
+```bash
+test -f workspace/ios/Shared/UnfadingTheme.swift
+test -f workspace/ios/Shared/UnfadingLocalized.swift
+test -f workspace/ios/Shared/UnfadingButtonStyle.swift
+test -f workspace/ios/Shared/UnfadingCardBackground.swift
+```
+
+### Production And Test Usage
+
+Each module must be referenced at least once by production Swift and at least once by tests.
+
+```bash
+rg -n 'UnfadingTheme' workspace/ios/App workspace/ios/Features workspace/ios/Shared -g '*.swift'
+rg -n 'UnfadingTheme' workspace/ios/Tests -g '*.swift'
+rg -n 'UnfadingLocalized' workspace/ios/App workspace/ios/Features workspace/ios/Shared -g '*.swift'
+rg -n 'UnfadingLocalized' workspace/ios/Tests -g '*.swift'
+rg -n 'UnfadingPrimaryButtonStyle|unfadingPrimaryButton|\.unfadingPrimary' workspace/ios/App workspace/ios/Features workspace/ios/Shared -g '*.swift'
+rg -n 'UnfadingPrimaryButtonStyle|unfadingPrimaryButton|\.unfadingPrimary' workspace/ios/Tests -g '*.swift'
+rg -n 'UnfadingCardBackground|unfadingCardBackground|\.unfadingCard' workspace/ios/App workspace/ios/Features workspace/ios/Shared -g '*.swift'
+rg -n 'UnfadingCardBackground|unfadingCardBackground|\.unfadingCard' workspace/ios/Tests -g '*.swift'
+```
+
+Each command must return at least one match.
+
+## Swift Color Lint
+
+No forbidden color calls may remain outside `UnfadingTheme.swift` in app source:
+
+```bash
+rg -n 'Color\.(accentColor|white|black)\b|Color\(red:' \
+  workspace/ios/App workspace/ios/Features workspace/ios/Shared \
+  -g '*.swift' -g '!UnfadingTheme.swift'
+```
+
+Expected result: no matches.
+
+## Korean User-Facing Strings
+
+No user-facing English string literals may remain in touched view files:
+
+```bash
+rg -n 'Text\("[A-Za-z][^"]*"\)|Label\("[A-Za-z][^"]*"|accessibility(Label|Hint)\("[A-Za-z][^"]*"\)' \
+  workspace/ios/App/RootTabView.swift \
+  workspace/ios/Features/Home/MemoryMapHomeView.swift \
+  workspace/ios/Features/Home/MemoryComposerSheet.swift \
+  workspace/ios/Features/Home/MemorySummaryCard.swift
+```
+
+Expected result: no matches. `systemImage` values, identifiers, enum cases, and test names are not user-facing strings for this criterion.
+
+## Token Values
+
+`UnfadingTheme` must expose stable values from `docs/design-docs/deepsight_tokens.md`:
+
+- `UnfadingTheme.Color.coral` represents `#F5998C`
+- `UnfadingTheme.Radius.card == 20`
+- `UnfadingTheme.Radius.button == 16`
+- `UnfadingTheme.Radius.chip == 12`
+- `UnfadingTheme.Radius.compact == 8`
+- `UnfadingTheme.Sheet.collapsed == 0.22`
+- `UnfadingTheme.Sheet.default == 0.52`
+- `UnfadingTheme.Sheet.expanded == 0.88`
+
+Evidence may come from `UnfadingThemeTests.swift` and/or direct source grep.
+
+## Tests
+
+Run the project test suite and capture log + SHA:
+
+```bash
+cd workspace/ios
+xcodebuild test -project MemoryMap.xcodeproj -scheme MemoryMap -destination 'platform=iOS Simulator,name=<available simulator>'
+```
+
+Required result:
+
+- exit code `0`
+- total tests at least `18`
+- `workspace/ios/Tests/UnfadingThemeTests.swift` exists
+
+## Documentation Reconciliation
+
+`SESSION_RESUME.md` must contain an active truthful current-state section:
+
+```bash
+rg -n 'Reality Baseline|12 Swift|10 tests|3 tabs|No UnfadingTheme|No Korean' context_harness/SESSION_RESUME.md
+```
+
+`SESSION_RESUME.md` must not present the old Sprint 51 / 140-test narrative as active current state:
+
+```bash
+rg -n 'Sprint 51|140' context_harness/SESSION_RESUME.md
+```
+
+Any matches must be inside a clearly labeled archive pointer or historical warning, not current-state text.
+
+The pre-v5 archive must exist:
+
+```bash
+test -f docs/exec-plans/sprint-history-pre-v5.md
+rg -n 'pre-v5|unverified|archive|Sprint 51|140' docs/exec-plans/sprint-history-pre-v5.md
+```
+
+Forward-looking convention notes must exist:
+
+```bash
+rg -n 'UnfadingTheme|foundation reset|post-reset' docs/references/coding-conventions.md SKILLS.md
+```
+
+## Git Tracking
+
+Swift source changes must be visible to git; generated Xcode/build artifacts must remain ignored.
+
+```bash
+git status --short workspace/ios/App workspace/ios/Features workspace/ios/Shared workspace/ios/Tests workspace/ios/project.yml
+rg -n 'workspace|xcodeproj|DerivedData|build' .gitignore
+```
+
+Expected state:
+
+- source/test/project files under `workspace/ios/` appear in git status when changed
+- `workspace/ios/*.xcodeproj` and build products remain ignored
+
+## Evidence And Verdict
+
+Required artifacts:
+
+- `context_harness/reports/round_foundation_reset_r1/evidence/contract_capture.md`
+- `context_harness/reports/round_foundation_reset_r1/verdict.md`
+
+Gate evidence must include:
+
+- test log path and SHA
+- evidence report path and SHA
+- verdict path and SHA
+- metrics/process evidence required by the active checker
+
+## Non-Regression Boundaries
+
+No new screen implementation is required in this round. Calendar, Settings, Memory Detail, archive, and navigation redesign remain out of scope.
+
+exec
+/bin/zsh -lc 'tail -n 120 context_harness/reports/round_foundation_reset_r1/evidence/xcode_test.log && shasum -a 256 context_harness/operator/contracts/round_foundation_reset_r1/spec.md context_harness/reports/round_foundation_reset_r1/evidence/contract_capture.md context_harness/reports/round_foundation_reset_r1/evidence/xcode_test.log' in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --timestamp\=none --generate-entitlement-der /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/PlugIns/MemoryMapTests.xctest
+
+CodeSign /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/MemoryMap.debug.dylib (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --timestamp\=none --generate-entitlement-der /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/MemoryMap.debug.dylib
+
+CodeSign /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/__preview.dylib (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --timestamp\=none --generate-entitlement-der /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/__preview.dylib
+/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/__preview.dylib: replacing existing signature
+
+CodeSign /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --timestamp\=none --generate-entitlement-der /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app
+
+Validate /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-validationUtility /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app -shallow-bundle -infoplist-subpath Info.plist
+
+2026-04-23 00:41:27.324121+0900 MemoryMap[56582:477767] [ResourceManifest] Failed to locate resource named "default.csv"
+2026-04-23 00:41:27.386530+0900 MemoryMap[56582:477767] [API] CAMetalLayer ignoring invalid setDrawableSize width=0.000000 height=0.000000
+2026-04-23 00:41:27.715716+0900 MemoryMap[56582:477964] [General] Failed to send CA Event for app launch measurements for ca_event_type: 0 event_name: com.apple.app_launch_measurement.FirstFramePresentationMetric
+2026-04-23 00:41:27.942984+0900 MemoryMap[56582:477973] [General] Failed to send CA Event for app launch measurements for ca_event_type: 1 event_name: com.apple.app_launch_measurement.ExtendedLaunchMetrics
+Test Suite 'All tests' started at 2026-04-23 00:41:28.591.
+Test Suite 'MemoryMapTests.xctest' started at 2026-04-23 00:41:28.591.
+Test Suite 'MemoryMapTests' started at 2026-04-23 00:41:28.591.
+Test Case '-[MemoryMapTests.MemoryMapTests testAuthorizedLocationTapCentersOnUser]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testAuthorizedLocationTapCentersOnUser]' passed (0.003 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testContinueWithoutLocationEnablesManualFallbackAndDismissesPrompt]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testContinueWithoutLocationEnablesManualFallbackAndDismissesPrompt]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testCurrentLocationTapRequestsAuthorizationWhenUndetermined]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testCurrentLocationTapRequestsAuthorizationWhenUndetermined]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testDeniedLocationTapShowsSettingsAndManualFallback]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testDeniedLocationTapShowsSettingsAndManualFallback]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testOpenSettingsKeepsManualFallbackDisabled]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testOpenSettingsKeepsManualFallbackDisabled]' passed (0.000 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testPlaceSuggestionMatchingUsesTitleAndSubtitle]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testPlaceSuggestionMatchingUsesTitleAndSubtitle]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testRefreshClearsManualFallbackAfterAuthorizationReturns]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testRefreshClearsManualFallbackAfterAuthorizationReturns]' passed (0.000 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testRestrictedLocationTapShowsManualFallbackOnly]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testRestrictedLocationTapShowsManualFallbackOnly]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testRewindMomentsExist]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testRewindMomentsExist]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testSamplePinsExist]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testSamplePinsExist]' passed (0.001 seconds).
+Test Suite 'MemoryMapTests' passed at 2026-04-23 00:41:28.617.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.008 (0.025) seconds
+Test Suite 'UnfadingComponentTests' started at 2026-04-23 00:41:28.617.
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_card_background_modifier_can_be_applied]' started.
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_card_background_modifier_can_be_applied]' passed (0.091 seconds).
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_card_background_uses_theme_defaults]' started.
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_card_background_uses_theme_defaults]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_primary_button_style_applies_to_button]' started.
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_primary_button_style_applies_to_button]' passed (0.016 seconds).
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_primary_button_style_shorthand_exists]' started.
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_primary_button_style_shorthand_exists]' passed (0.001 seconds).
+Test Suite 'UnfadingComponentTests' passed at 2026-04-23 00:41:28.726.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.108 (0.109) seconds
+Test Suite 'UnfadingLocalizedTests' started at 2026-04-23 00:41:28.726.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_accessibility_labels_contain_korean]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_accessibility_labels_contain_korean]' passed (0.000 seconds).
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_composer_navigation_strings_present]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_composer_navigation_strings_present]' passed (0.049 seconds).
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_draft_tag_helper_maps_known_ids]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_draft_tag_helper_maps_known_ids]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_draft_tag_helper_returns_fallback_for_unknown_id]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_draft_tag_helper_returns_fallback_for_unknown_id]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_place_suggestion_helper_returns_korean_for_known_ids]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_place_suggestion_helper_returns_korean_for_known_ids]' passed (0.000 seconds).
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_summary_sample_copy_is_non_empty_korean]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_summary_sample_copy_is_non_empty_korean]' passed (0.011 seconds).
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_tab_labels_are_korean_and_non_empty]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_tab_labels_are_korean_and_non_empty]' passed (0.001 seconds).
+Test Suite 'UnfadingLocalizedTests' passed at 2026-04-23 00:41:28.792.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.063 (0.066) seconds
+Test Suite 'UnfadingThemeTests' started at 2026-04-23 00:41:28.792.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_coral_matches_deepsight_hex]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_coral_matches_deepsight_hex]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_cream_matches_deepsight_hex]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_cream_matches_deepsight_hex]' passed (0.023 seconds).
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_lavender_matches_deepsight_hex]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_lavender_matches_deepsight_hex]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_primary_aliases_coral]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_primary_aliases_coral]' passed (0.000 seconds).
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_radius_covers_deepsight_scale]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_radius_covers_deepsight_scale]' passed (0.000 seconds).
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_sheet_snap_points_match_deepsight]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_sheet_snap_points_match_deepsight]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_spacing_is_monotonic]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_spacing_is_monotonic]' passed (0.001 seconds).
+Test Suite 'UnfadingThemeTests' passed at 2026-04-23 00:41:28.820.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.026 (0.028) seconds
+Test Suite 'MemoryMapTests.xctest' passed at 2026-04-23 00:41:28.821.
+	 Executed 28 tests, with 0 failures (0 unexpected) in 0.205 (0.229) seconds
+Test Suite 'All tests' passed at 2026-04-23 00:41:28.821.
+	 Executed 28 tests, with 0 failures (0 unexpected) in 0.205 (0.230) seconds
+2026-04-23 00:41:29.720 xcodebuild[56275:474378] [MT] IDETestOperationsObserverDebug: 47.851 elapsed -- Testing started completed.
+2026-04-23 00:41:29.720 xcodebuild[56275:474378] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-04-23 00:41:29.720 xcodebuild[56275:474378] [MT] IDETestOperationsObserverDebug: 47.851 sec, +47.851 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Logs/Test/Test-MemoryMap-2026.04.23_00-40-35-+0900.xcresult
+
+** TEST SUCCEEDED **
+
+Testing started
+ab0f7e6ff120aa3bc76e51c7d51a76209f8a6c4757ca76b6db29162917aa878b  context_harness/operator/contracts/round_foundation_reset_r1/spec.md
+4956fab414679bd3726031ab6db5149c51c114f4cddab2ac433fb9494e38b632  context_harness/reports/round_foundation_reset_r1/evidence/contract_capture.md
+ce4921e536c4fcbcaf618386605d0e9921873e4ccdb6aca19809a58ca2703238  context_harness/reports/round_foundation_reset_r1/evidence/xcode_test.log
+
+codex
+Evidence and test output show the core acceptance items are satisfied. I’m reading the reusable modules and representative refactors now to make the code-quality section specific rather than just restating the evidence.
+exec
+/bin/zsh -lc "sed -n '1,240p' workspace/ios/Shared/UnfadingTheme.swift && sed -n '1,240p' workspace/ios/Shared/UnfadingLocalized.swift" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+import SwiftUI
+
+/// Canonical Unfading design token namespace. All colors, radii, spacing, typography,
+/// and sheet snap points consumed by the UI layer MUST be read from here. No inline
+/// `Color.*` or magic radii are permitted in `App/`, `Features/`, `Shared/` outside
+/// this file (enforced by `round_foundation_reset_r1` acceptance and the operator
+/// grep lint).
+enum UnfadingTheme {
+
+    // MARK: Color
+
+    enum Color {
+        /// Primary coral from deepsight token panel (`#F5998C`).
+        static let coral: SwiftUI.Color = Self.hex(0xF5, 0x99, 0x8C)
+
+        /// Semantic alias for coral — use this for primary brand accents.
+        static var primary: SwiftUI.Color { coral }
+
+        /// Soft coral tint for selected chips, tinted backgrounds, and subtle accents
+        /// (≈ `rgba(245,153,140,0.15)`).
+        static let primarySoft: SwiftUI.Color = coral.opacity(0.15)
+
+        /// Lavender secondary from deepsight panel (`#C2B0DE`).
+        static let lavender: SwiftUI.Color = Self.hex(0xC2, 0xB0, 0xDE)
+
+        /// Warm cream background from deepsight panel (`#FFFAF5`).
+        static let cream: SwiftUI.Color = Self.hex(0xFF, 0xFA, 0xF5)
+
+        /// Warm bottom sheet surface (`#FFF8F0`).
+        static let sheet: SwiftUI.Color = Self.hex(0xFF, 0xF8, 0xF0)
+
+        /// Card surface (`#FAF2EB`) for content modules on warm backgrounds.
+        static let card: SwiftUI.Color = Self.hex(0xFA, 0xF2, 0xEB)
+
+        /// Generic warm surface equal to `card`. Provided as an alias for readability
+        /// where a non-card warm fill is used.
+        static var surface: SwiftUI.Color { card }
+
+        /// Primary warm text (`#403833`).
+        static let textPrimary: SwiftUI.Color = Self.hex(0x40, 0x38, 0x33)
+
+        /// Secondary warm text (`#8C8078`).
+        static let textSecondary: SwiftUI.Color = Self.hex(0x8C, 0x80, 0x78)
+
+        /// Tertiary warm text (`#B5A89E`).
+        static let textTertiary: SwiftUI.Color = Self.hex(0xB5, 0xA8, 0x9E)
+
+        /// Text/icon foreground on the coral primary fill.
+        static let textOnPrimary: SwiftUI.Color = .white
+
+        /// Text/icon foreground on warm overlay surfaces (formerly inline
+        /// `Color.white.opacity(...)` surfaces). We keep the base color as white
+        /// at 92% opacity so overlays composited over coral preserve legibility.
+        static let textOnOverlay: SwiftUI.Color = SwiftUI.Color.white.opacity(0.92)
+
+        /// Subtle card/surface drop-shadow color (warm-neutral, ≈ 6% black).
+        /// Replaces inline `Color.black.opacity(0.06)` in card modifiers.
+        static let shadow: SwiftUI.Color = SwiftUI.Color.black.opacity(0.06)
+
+        /// Pin marker shadow (slightly stronger than `shadow`).
+        static let pinShadow: SwiftUI.Color = SwiftUI.Color.black.opacity(0.18)
+
+        private static func hex(_ r: Int, _ g: Int, _ b: Int) -> SwiftUI.Color {
+            SwiftUI.Color(
+                red: Double(r) / 255.0,
+                green: Double(g) / 255.0,
+                blue: Double(b) / 255.0
+            )
+        }
+    }
+
+    // MARK: Radius
+
+    enum Radius {
+        /// Card / large content module radius (`20`).
+        static let card: CGFloat = 20
+        /// Button / medium control radius (`16`).
+        static let button: CGFloat = 16
+        /// Chip / compact control radius (`12`).
+        static let chip: CGFloat = 12
+        /// Smallest compact radius (`8`), e.g. inline badges.
+        static let compact: CGFloat = 8
+        /// Bottom sheet top corner radius when not fully expanded (`28`).
+        static let sheet: CGFloat = 28
+    }
+
+    // MARK: Spacing
+
+    enum Spacing {
+        static let xs: CGFloat = 4
+        static let sm: CGFloat = 8
+        static let md: CGFloat = 12
+        static let lg: CGFloat = 16
+        static let xl: CGFloat = 20
+        static let xxl: CGFloat = 28
+    }
+
+    // MARK: Font
+
+    /// Semantic font helpers. We keep Dynamic Type by leaning on `.system` styles
+    /// with rounded design. Raw `.font(.system(size:))` is forbidden outside this
+    /// file per coding-conventions.
+    enum Font {
+        static func title() -> SwiftUI.Font { .system(.title, design: .rounded).weight(.bold) }
+        static func title3Bold() -> SwiftUI.Font { .title3.weight(.bold) }
+        static func subheadline() -> SwiftUI.Font { .subheadline }
+        static func subheadlineSemibold() -> SwiftUI.Font { .subheadline.weight(.semibold) }
+        static func footnoteSemibold() -> SwiftUI.Font { .footnote.weight(.semibold) }
+        static func captionSemibold() -> SwiftUI.Font { .caption.weight(.semibold) }
+        static func caption2Semibold() -> SwiftUI.Font { .caption2.weight(.semibold) }
+    }
+
+    // MARK: Sheet snap points
+
+    /// Bottom-sheet snap fractions from deepsight design panel.
+    enum Sheet {
+        /// Summary-only state (22%).
+        static let collapsed: Double = 0.22
+        /// Main browsing state (52%).
+        static let `default`: Double = 0.52
+        /// Cluster/marker filtered browsing state (88%).
+        static let expanded: Double = 0.88
+    }
+}
+import Foundation
+
+/// Korean user-facing string namespace. All SwiftUI `Text`, `Label`, and
+/// `accessibilityLabel`/`accessibilityHint` arguments in `App/` and `Features/`
+/// MUST resolve to a member of this namespace. Plain Swift (not `.xcstrings`)
+/// per `round_foundation_reset_r1` decision; migrate to `Localizable.xcstrings`
+/// only when multi-locale becomes a real product requirement.
+enum UnfadingLocalized {
+
+    // MARK: Tab labels
+
+    enum Tab {
+        static let map = "지도"
+        static let rewind = "리와인드"
+        static let groups = "그룹"
+    }
+
+    // MARK: Accessibility
+
+    enum Accessibility {
+        static let mapTabLabel = "지도 탭"
+        static let mapTabHint = "지도에서 추억 핀과 장소 기록을 둘러봅니다."
+        static let rewindTabLabel = "리와인드 탭"
+        static let rewindTabHint = "리와인드 순간과 알림 설정을 확인합니다."
+        static let groupsTabLabel = "그룹 탭"
+        static let groupsTabHint = "그룹을 만들고 초대와 참여를 관리합니다."
+
+        static let showCurrentLocationLabel = "현재 위치 보기"
+        static let showCurrentLocationHint = "위치 권한이 있을 때 지도를 현재 위치로 이동합니다."
+
+        static let addMemoryLabel = "추억 추가"
+    }
+
+    // MARK: Home
+
+    enum Home {
+        static let newMemory = "새 추억"
+        static let navTitle = "추억 지도"
+    }
+
+    // MARK: Common
+
+    enum Common {
+        static let cancel = "취소"
+    }
+
+    // MARK: Rewind
+
+    enum Rewind {
+        static let navTitle = "리와인드"
+    }
+
+    // MARK: Groups
+
+    enum Groups {
+        static let navTitle = "그룹"
+    }
+
+    // MARK: Summary card
+
+    enum Summary {
+        static let tonightsRewind = "오늘의 리와인드"
+        static let sampleTitle = "상수 루프톱 저녁"
+        static let sampleBody = "3년 전 오늘, 이곳에서 공연 뒤 함께 핀을 남겼습니다. 오늘 아침 새 반응 2개가 도착했습니다."
+        static let friendCount = "친구 4명"
+        static let joyTag = "기쁨"
+        static let nightOutTag = "밤 나들이"
+        static let photoSetTag = "사진 모음"
+    }
+
+    // MARK: Composer
+
+    enum Composer {
+        // Navigation
+        static let navTitle = "새 추억"
+        static let save = "저장"
+
+        // Sections
+        static let memorySection = "추억"
+        static let photosSection = "사진"
+        static let placeSection = "장소"
+        static let moodSection = "감정"
+
+        // Memory fields
+        static let noteField = "짧은 메모를 남겨보세요"
+        static let eventLabel = "이벤트"
+        static let timeLabel = "시간"
+        static let sampleTime = "오늘 오후 8:40"
+
+        // Photos
+        static let addFromLibrary = "보관함에서 추가"
+        static let metadataHint = "첫 사진의 메타데이터로 시간과 장소를 미리 채울 수 있습니다."
+
+        // Place
+        static let selectedPlace = "선택한 장소"
+        static let choosePlaceManually = "장소 직접 선택"
+        static let useCurrentLocation = "현재 위치 사용"
+        static let samplePlace = "상수동 루프톱"
+        static let placeholderChoose = "장소를 선택하세요"
+        static let placeholderCurrent = "현재 위치"
+
+        // Denied recovery sheet
+        static let locationAccessOff = "위치 접근 꺼짐"
+        static let locationRecoveryHint = "장소를 직접 선택하면 이 추억을 저장할 수 있습니다. 현재 위치 자동 입력을 사용하려면 설정에서 위치 접근을 다시 켜세요."
+        static let currentPlace = "현재 장소"
+        static let searchForPlace = "장소 검색"
+        static let openSettings = "설정 열기"
+        static let locationNeededTitle = "위치 권한 필요"
+        static let done = "완료"
+
+        // Manual place picker sheet
+        static let useTypedPlace = "입력한 장소 사용"
+        static let nearbyOptions = "근처 장소"
+        static let searchPlaces = "장소 검색"
+        static let choosePlaceTitle = "장소 선택"
+    }
+
+    // MARK: Model-sourced display (helpers for sample data)
+
+    /// Korean display for a `MemoryDraftTag.id`. Returns the fallback if unmapped.
+    static func draftTag(id: String, fallback: String) -> String {
+        switch id {
+        case "joy": return "기쁨"
+        case "calm": return "차분함"
+        case "grateful": return "감사"
+        case "nostalgic": return "그리움"
+        default: return fallback
+        }
+    }
+
+    /// Korean display for a `PlaceSuggestion.id`. Returns the fallback if unmapped.
+    static func placeSuggestion(id: String, fallbackTitle: String, fallbackSubtitle: String) -> (title: String, subtitle: String) {
+        switch id {
+        case "sangsu-rooftop":
+            return ("상수 루프톱", "서울 마포구")
+        case "jeju-sunrise":
+            return ("제주 성산일출봉", "제주 성산읍")
+        case "yeouido-park":
+            return ("여의도 한강공원", "서울 영등포구")
+        default:
+            return (fallbackTitle, fallbackSubtitle)
+        }
+    }
+}
+
+exec
+/bin/zsh -lc "sed -n '1,220p' workspace/ios/App/RootTabView.swift && sed -n '1,340p' workspace/ios/Features/Home/MemoryComposerSheet.swift" in /Users/jeonsihyeon/factory
+exec
+/bin/zsh -lc "sed -n '1,220p' workspace/ios/Shared/UnfadingButtonStyle.swift && sed -n '1,220p' workspace/ios/Shared/UnfadingCardBackground.swift" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+import SwiftUI
+
+/// Primary press style used across Unfading. Coral fill, text-on-primary foreground,
+/// button radius from `UnfadingTheme.Radius.button`, 44pt minimum height, and a
+/// subtle scale+opacity press feedback that preserves Dynamic Type.
+///
+/// Usage:
+///   ```swift
+///   Button("새 추억", systemImage: "plus") { ... }
+///       .buttonStyle(.unfadingPrimary)
+///   ```
+struct UnfadingPrimaryButtonStyle: ButtonStyle {
+    var fullWidth: Bool = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(UnfadingTheme.Font.subheadlineSemibold())
+            .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
+            .padding(.horizontal, UnfadingTheme.Spacing.lg)
+            .padding(.vertical, UnfadingTheme.Spacing.md)
+            .frame(maxWidth: fullWidth ? .infinity : nil)
+            .frame(minHeight: 44)
+            .background(
+                UnfadingTheme.Color.primary,
+                in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.button, style: .continuous)
+            )
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .opacity(configuration.isPressed ? 0.9 : 1)
+            .animation(.interactiveSpring(response: 0.25, dampingFraction: 0.8), value: configuration.isPressed)
+            .contentShape(Rectangle())
+    }
+}
+
+extension ButtonStyle where Self == UnfadingPrimaryButtonStyle {
+    /// Shorthand: `.buttonStyle(.unfadingPrimary)`.
+    static var unfadingPrimary: UnfadingPrimaryButtonStyle { .init() }
+
+    /// Full-width variant.
+    static var unfadingPrimaryFullWidth: UnfadingPrimaryButtonStyle { .init(fullWidth: true) }
+}
+import SwiftUI
+
+/// Warm card surface modifier. Provides a consistent card fill + radius + subtle
+/// shadow combination derived from `UnfadingTheme`. Prefer this over ad-hoc
+/// `RoundedRectangle(cornerRadius:)` + inline color pairs.
+///
+/// Usage:
+///   ```swift
+///   VStack { ... }
+///       .unfadingCardBackground()
+///
+///   // Explicit variant with different radius or material-compatible overlay:
+///   VStack { ... }
+///       .unfadingCardBackground(radius: UnfadingTheme.Radius.sheet, material: .regular)
+///   ```
+struct UnfadingCardBackground: ViewModifier {
+    var fill: Color
+    var radius: CGFloat
+    var material: Material?
+    var shadow: Bool
+
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        return content
+            .background(
+                Group {
+                    if let material {
+                        shape.fill(fill).overlay(shape.fill(material))
+                    } else {
+                        shape.fill(fill)
+                    }
+                }
+            )
+            .clipShape(shape)
+            .ifLet(shadow ? () : nil) { view, _ in
+                view
+                    .shadow(color: UnfadingTheme.Color.shadow, radius: 12, x: 0, y: 6)
+            }
+    }
+}
+
+extension View {
+    /// Apply the standard Unfading card background. Pass `material: .regular` to
+    /// composite a system material on top of the warm fill (for translucent surfaces
+    /// like the memory summary sheet card).
+    func unfadingCardBackground(
+        fill: Color = UnfadingTheme.Color.card,
+        radius: CGFloat = UnfadingTheme.Radius.card,
+        material: Material? = nil,
+        shadow: Bool = true
+    ) -> some View {
+        modifier(
+            UnfadingCardBackground(fill: fill, radius: radius, material: material, shadow: shadow)
+        )
+    }
+}
+
+// MARK: - Private helpers
+
+private extension View {
+    /// Tiny conditional modifier so `shadow` can be applied only when requested
+    /// without forking the body. Kept `private` to this file to avoid polluting
+    /// the public extension surface.
+    @ViewBuilder
+    func ifLet<T, V: View>(_ value: T?, @ViewBuilder _ transform: (Self, T) -> V) -> some View {
+        if let value {
+            transform(self, value)
+        } else {
+            self
+        }
+    }
+}
+
+ succeeded in 0ms:
+import SwiftUI
+
+struct RootTabView: View {
+    private let evidenceMode: MemoryComposerEvidenceMode
+
+    init(evidenceMode: MemoryComposerEvidenceMode = .none) {
+        self.evidenceMode = evidenceMode
+    }
+
+    var body: some View {
+        TabView {
+            MemoryMapHomeView(evidenceMode: evidenceMode)
+                .tabItem {
+                    Label(UnfadingLocalized.Tab.map, systemImage: "map")
+                }
+                .accessibilityLabel(UnfadingLocalized.Accessibility.mapTabLabel)
+                .accessibilityHint(UnfadingLocalized.Accessibility.mapTabHint)
+
+            RewindFeedView()
+                .tabItem {
+                    Label(UnfadingLocalized.Tab.rewind, systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                }
+                .accessibilityLabel(UnfadingLocalized.Accessibility.rewindTabLabel)
+                .accessibilityHint(UnfadingLocalized.Accessibility.rewindTabHint)
+
+            GroupHubView()
+                .tabItem {
+                    Label(UnfadingLocalized.Tab.groups, systemImage: "person.3")
+                }
+                .accessibilityLabel(UnfadingLocalized.Accessibility.groupsTabLabel)
+                .accessibilityHint(UnfadingLocalized.Accessibility.groupsTabHint)
+        }
+        .tint(UnfadingTheme.Color.primary)
+    }
+}
+
+#Preview {
+    RootTabView()
+}
+import SwiftUI
+import UIKit
+
+struct MemoryComposerSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.openURL) private var openURL
+
+    private let initialLocationPermissionState: LocationPermissionState
+    private let evidenceMode: MemoryComposerEvidenceMode
+
+    @State private var note = ""
+    @State private var selectedTags = Set<MemoryDraftTag>()
+    @State private var selectedPlace = UnfadingLocalized.Composer.samplePlace
+    @State private var locationPermissionState: LocationPermissionState
+    @State private var showingDeniedRecovery = false
+    @State private var showingPlaceSearch = false
+    @State private var didApplyEvidenceMode = false
+
+    init(
+        initialLocationPermissionState: LocationPermissionState = .denied,
+        evidenceMode: MemoryComposerEvidenceMode = .none
+    ) {
+        self.initialLocationPermissionState = initialLocationPermissionState
+        self.evidenceMode = evidenceMode
+        _locationPermissionState = State(initialValue: initialLocationPermissionState)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section(UnfadingLocalized.Composer.memorySection) {
+                    TextField(UnfadingLocalized.Composer.noteField, text: $note, axis: .vertical)
+                        .lineLimit(3...6)
+
+                    LabeledContent(UnfadingLocalized.Composer.eventLabel) {
+                        Text(UnfadingLocalized.Summary.tonightsRewind)
+                            .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                    }
+
+                    LabeledContent(UnfadingLocalized.Composer.timeLabel) {
+                        Text(UnfadingLocalized.Composer.sampleTime)
+                            .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                    }
+                }
+
+                Section(UnfadingLocalized.Composer.photosSection) {
+                    Button {
+                    } label: {
+                        Label(UnfadingLocalized.Composer.addFromLibrary, systemImage: "photo.on.rectangle")
+                    }
+
+                    Text(UnfadingLocalized.Composer.metadataHint)
+                        .font(UnfadingTheme.Font.subheadline())
+                        .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Section(UnfadingLocalized.Composer.placeSection) {
+                    LabeledContent(UnfadingLocalized.Composer.selectedPlace) {
+                        Text(selectedPlace)
+                            .multilineTextAlignment(.trailing)
+                            .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                    }
+
+                    Button {
+                        showingPlaceSearch = true
+                    } label: {
+                        Label(UnfadingLocalized.Composer.choosePlaceManually, systemImage: "magnifyingglass")
+                    }
+
+                    Button {
+                        handleCurrentLocationTap()
+                    } label: {
+                        Label(UnfadingLocalized.Composer.useCurrentLocation, systemImage: "location.fill")
+                    }
+                }
+
+                Section(UnfadingLocalized.Composer.moodSection) {
+                    tagCloud
+                }
+            }
+            .navigationTitle(UnfadingLocalized.Composer.navTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(UnfadingLocalized.Common.cancel) {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(UnfadingLocalized.Composer.save) {
+                        dismiss()
+                    }
+                    .disabled(note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+            .sheet(isPresented: $showingDeniedRecovery) {
+                LocationPermissionRecoverySheet(
+                    selectedPlace: $selectedPlace,
+                    showManualPlacePicker: $showingPlaceSearch,
+                    openSettings: openSettings
+                )
+                .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.medium, .large])
+                .presentationDragIndicator(.visible)
+            }
+            .sheet(isPresented: $showingPlaceSearch) {
+                ManualPlacePickerSheet(selectedPlace: $selectedPlace)
+                    .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.medium, .large])
+                    .presentationDragIndicator(.visible)
+            }
+            .onAppear {
+                guard didApplyEvidenceMode == false else {
+                    return
+                }
+
+                didApplyEvidenceMode = true
+                locationPermissionState = initialLocationPermissionState
+
+                switch evidenceMode {
+                case .none:
+                    break
+                case .deniedRecovery:
+                    showingDeniedRecovery = true
+                case .manualPlacePicker:
+                    selectedPlace = UnfadingLocalized.Composer.placeholderChoose
+                    showingPlaceSearch = true
+                }
+            }
+        }
+    }
+
+    private var tagCloud: some View {
+        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
+            ForEach(Array(MemoryDraftTag.samples.enumerated()), id: \.element.id) { _, tag in
+                Button {
+                    toggle(tag)
+                } label: {
+                    HStack(spacing: UnfadingTheme.Spacing.md) {
+                        Label(UnfadingLocalized.draftTag(id: tag.id, fallback: tag.title), systemImage: tag.systemImage)
+                            .font(UnfadingTheme.Font.subheadlineSemibold())
+                            .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                        Spacer()
+                        if selectedTags.contains(tag) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(UnfadingTheme.Color.primary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(minHeight: 44)
+                }
+                .buttonStyle(.borderless)
+            }
+        }
+    }
+
+    private func toggle(_ tag: MemoryDraftTag) {
+        if selectedTags.contains(tag) {
+            selectedTags.remove(tag)
+        } else {
+            selectedTags.insert(tag)
+        }
+    }
+
+    private func handleCurrentLocationTap() {
+        switch locationPermissionState {
+        case .authorized:
+            selectedPlace = UnfadingLocalized.Composer.placeholderCurrent
+        case .notDetermined, .denied, .restricted:
+            showingDeniedRecovery = true
+        }
+    }
+
+    private func openSettings() {
+        guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
+            return
+        }
+
+        openURL(settingsURL)
+    }
+}
+
+private struct LocationPermissionRecoverySheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var selectedPlace: String
+    @Binding var showManualPlacePicker: Bool
+
+    let openSettings: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xl) {
+                ContentUnavailableView {
+                    Label(UnfadingLocalized.Composer.locationAccessOff, systemImage: "location.slash")
+                } description: {
+                    Text(UnfadingLocalized.Composer.locationRecoveryHint)
+                } actions: {
+                    Button(UnfadingLocalized.Composer.searchForPlace) {
+                        presentManualPlacePicker()
+                    }
+                    .buttonStyle(.unfadingPrimary)
+
+                    Button(UnfadingLocalized.Composer.openSettings) {
+                        openSettings()
+                    }
+                    .buttonStyle(.bordered)
+                }
+
+                VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.sm) {
+                    Label(UnfadingLocalized.Composer.currentPlace, systemImage: "mappin.and.ellipse")
+                        .font(.headline)
+                        .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                    Text(selectedPlace)
+                        .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                }
+                .padding(.horizontal)
+
+                Spacer(minLength: 0)
+            }
+            .padding(.top, UnfadingTheme.Spacing.md)
+            .navigationTitle(UnfadingLocalized.Composer.locationNeededTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(UnfadingLocalized.Composer.done) {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+
+    private func presentManualPlacePicker() {
+        selectedPlace = UnfadingLocalized.Composer.placeholderChoose
+        dismiss()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            showManualPlacePicker = true
+        }
+    }
+}
+
+private struct ManualPlacePickerSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var selectedPlace: String
+    @State private var searchText = ""
+
+    private var filteredSuggestions: [PlaceSuggestion] {
+        PlaceSuggestion.matching(searchText)
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                if searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
+                    Section(UnfadingLocalized.Composer.useTypedPlace) {
+                        Button {
+                            select(searchText.trimmingCharacters(in: .whitespacesAndNewlines))
+                        } label: {
+                            Label(searchText.trimmingCharacters(in: .whitespacesAndNewlines), systemImage: "text.cursor")
+                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        }
+                    }
+                }
+
+                Section(UnfadingLocalized.Composer.nearbyOptions) {
+                    ForEach(filteredSuggestions) { suggestion in
+                        let localized = UnfadingLocalized.placeSuggestion(
+                            id: suggestion.id,
+                            fallbackTitle: suggestion.title,
+                            fallbackSubtitle: suggestion.subtitle
+                        )
+                        Button {
+                            select(localized.title)
+                        } label: {
+                            HStack(alignment: .top, spacing: UnfadingTheme.Spacing.md) {
+                                Image(systemName: suggestion.systemImage)
+                                    .foregroundStyle(UnfadingTheme.Color.primary)
+                                    .frame(width: 24, height: 24)
+
+                                VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
+                                    Text(localized.title)
+                                        .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                                    Text(localized.subtitle)
+                                        .font(UnfadingTheme.Font.subheadline())
+                                        .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+
+                                Spacer(minLength: 0)
+                            }
+                            .frame(minHeight: 44, alignment: .leading)
+                        }
+                    }
+                }
+            }
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: UnfadingLocalized.Composer.searchPlaces)
+            .navigationTitle(UnfadingLocalized.Composer.choosePlaceTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(UnfadingLocalized.Common.cancel) {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+
+    private func select(_ title: String) {
+        selectedPlace = title
+        dismiss()
+    }
+}
+
+#Preview {
+    MemoryComposerSheet()
+}
+
+exec
+/bin/zsh -lc "sed -n '1,120p' context_harness/SESSION_RESUME.md && sed -n '1,80p' docs/exec-plans/sprint-history-pre-v5.md && rg -n 'foundation reset|post-reset|UnfadingTheme|S-17|pre-v5|unverified' docs/references/coding-conventions.md SKILLS.md" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+# Factory Session Resume — 2026-04-23
+
+**Single source of truth for resuming development.** Rewritten during
+`round_foundation_reset_r1` to reflect the workspace's actual state. Prior
+Sprint 51 / 140-test narrative moved to
+[`docs/exec-plans/sprint-history-pre-v5.md`](../docs/exec-plans/sprint-history-pre-v5.md)
+as an explicitly-labeled unverified archive.
+
+---
+
+## 0. Harness v5 (current: v5.6)
+
+**Read first this session:**
+
+1. Your loader: `.claude/CLAUDE.md` (Claude Code Operator) or `AGENTS.md` (Codex Operator)
+2. Shared persona: `context_harness/operator/OPERATOR.md`
+3. Index: `context_harness/operator/FILE_INDEX.md`
+4. Precedence + locks + Gate 5: `context_harness/operator/REGULATION.md`
+5. Stage matrix + ownership: `context_harness/operator/STAGE_CONTRACT.md`
+6. Active round (if any): `context_harness/operator/locks/<round_id>.lock` + `.events.jsonl`
+
+v5 characteristics: equal Claude Code + Codex co-operators, round contracts with
+tamper-evident lock events, `amend` evented flow (v5.5), post-close evidence
+revalidation (v5.5), CHANGELOG meeting-trail enforcement (v5.6), honest-agent
+trust model (tamper-evident, not malicious-fabrication resistant).
+
+Harness version history: see `operator/CHANGELOG.md`.
+
+---
+
+## 1. Reality Baseline (verified 2026-04-23)
+
+| Item | Verified value |
+|---|---|
+| Date | 2026-04-23 |
+| Branch | `master` |
+| App name | **Unfading** (Swift target `MemoryMap`) |
+| Swift files under `workspace/ios/` | 16 (12 pre-round + 4 reusable modules added in round_foundation_reset_r1) |
+| Tests | 28 (10 baseline + 18 new) — see `Tests/MemoryMapTests.swift`, `Tests/UnfadingThemeTests.swift`, `Tests/UnfadingLocalizedTests.swift`, `Tests/UnfadingComponentTests.swift` |
+| Tabs | 3 (Map / Rewind / Groups) — Korean labels after round 2 (지도 / 리와인드 / 그룹) |
+| Theme | `workspace/ios/Shared/UnfadingTheme.swift` created in round 2; canonical source of colors, radii, spacing, typography, sheet snaps |
+| Localization | `workspace/ios/Shared/UnfadingLocalized.swift` created in round 2; plain Swift namespace, Korean strings |
+| Reusable components | `UnfadingPrimaryButtonStyle`, `unfadingCardBackground()` modifier |
+| Supabase | Not integrated in Swift yet (SDK not added) |
+| `workspace/ios/` git tracking | Selective: `App/`, `Features/`, `Shared/`, `Tests/`, `project.yml` tracked; `*.xcodeproj/`, `.build/`, `.deriveddata/` ignored |
+| Architecture version | v5.6 (harness) + Round 2 Swift foundation |
+| Operator checker | `harness/check_operator_round.py` — `lint`/`audit-operator-layer`/`lock`/`amend`/`gates`/`close` |
+
+## 2. Round Status
+
+### round_deepsight_r1 — CLOSED (2026-04-22)
+- Contract-only round. Deliverables: `docs/design-docs/deepsight_tokens.md`, `deepsight_gap_analysis.md`, `deepsight_slicing_manifest.md`.
+- Verdict PASS with 3 advisories (see `context_harness/reports/round_deepsight_r1/verdict.md`). Advisory #2 (UnfadingTheme.swift missing) was the tip of a larger gap resolved in round 2.
+
+### round_foundation_reset_r1 — IN PROGRESS (2026-04-23)
+- Scope: foundation + refactor + Korean localization; NO new screens.
+- Base commit: `44e2a1d`.
+- Lock status: active (check `operator/locks/round_foundation_reset_r1.lock`).
+- Meeting: `operator/meetings/2026-04-23_round2_foundation_reset_plan.md` (status: decided).
+- Deliverables landed: 4 reusable modules, 5 refactored views, 3 new test files (18 new tests).
+- Build status: `xcodebuild test` ✅ SUCCEEDED — 28/28 tests pass on iPhone 17 simulator.
+
+## 3. Next Rounds (per `deepsight_slicing_manifest.md`)
+
+1. **round_navigation** — if deepsight's 5-tab structure (map/calendar/compose/rewind/settings) is accepted, implement root routing. Decision pending.
+2. **round_map_shell** — map default state, top chrome, sheet defaults, FAB, filter chips, controls. Uses UnfadingTheme tokens from round 2.
+3. **round_map_selected_context** — cluster/pin selected states.
+4. **round_memory_detail** — member contribution cards, emotion/cost/location sections.
+5. **round_memory_composer** — photo grid + inferred place/time confirmation.
+6. **round_calendar** — month/year picker + day memory dots.
+7. **round_rewind** — immersive rewind card.
+8. **round_group_hub** — mode toggle + member management.
+9. **round_a11y_sweep** — VoiceOver labels, Dynamic Type, 44pt audit across redesigned surfaces.
+
+## 4. Key Reference Docs
+
+| File | Purpose |
+|---|---|
+| `context_harness/operator/REGULATION.md` | v5.6 precedence, lock schema, amendment flow, tamper-evident rules |
+| `context_harness/operator/STAGE_CONTRACT.md` | 13-stage matrix, ownership zones |
+| `context_harness/operator/MEETING_PROTOCOL.md` | Meeting file format + Challenge Section rule |
+| `context_harness/operator/FILE_INDEX.md` | Use-case → file pointer (this session reads this first) |
+| `context_harness/operator/CHANGELOG.md` | v5.0 → v5.6 amendment history (each entry has meeting pointer) |
+| `docs/design-docs/deepsight_tokens.md` | Canonical design token values from deepsight prototype |
+| `docs/design-docs/deepsight_gap_analysis.md` | Current-vs-deepsight gap by category |
+| `docs/design-docs/deepsight_slicing_manifest.md` | Future-round sequence |
+| `docs/exec-plans/sprint-history-pre-v5.md` | Unverified pre-v5 narrative archive (do NOT cite as current truth) |
+| `docs/references/coding-conventions.md` | Coding conventions (forward-looking after round 2) |
+| `SKILLS.md` | Proven patterns; S-17 checklist is forward-looking post-round-2 |
+| `SECURITY.md` | Security rules |
+
+## 5. How to resume
+
+If starting fresh mid-round 2:
+1. `python3 harness/check_operator_round.py gates round_foundation_reset_r1` — should show active lock with all base contract files immutable and gate evidence pending.
+2. Check `context_harness/reports/round_foundation_reset_r1/evidence/` for current evidence capture state.
+3. Verdict + close flow TBD once all deliverables committed.
+
+If starting after round 2 closes:
+1. Open a planning meeting for the next slice (e.g., `round_navigation` or `round_map_shell`).
+2. Use `cmd_amend` if the round requires expanding whitelist mid-round (available since v5.5).
+# Sprint History — Pre-v5 Archive (UNVERIFIED)
+
+> ⚠️ **IMPORTANT:** This file contains narrative history that was carried forward in
+> `SESSION_RESUME.md` as active state prior to `round_foundation_reset_r1`. The actual
+> `workspace/ios/` state at round 2 kickoff (2026-04-23) does NOT match this narrative
+> (MVP scale, 12 Swift files, 10 tests, 3 tabs, no `UnfadingTheme`, English UI).
+>
+> This file exists so the information is not deleted, but it **MUST NOT** be cited
+> as truthful current-state information. Treat as "history of what was documented,
+> not necessarily what was built in this repo."
+
+## Origin of the discrepancy
+
+The active `SESSION_RESUME.md` (through 2026-04-22) described an app at Sprint 51
+with 140 tests, HF Rounds 1-6 + 5 Remediation + Autonomous Loop complete. The
+workspace reality observed at `round_foundation_reset_r1` contract creation does
+not reflect that: `workspace/ios/` is an early MVP (Map/Rewind/Groups tabs, 10
+tests, English strings, no theme namespace). Possible explanations include a
+parallel track that never synced into this repo, narrative drift over multiple
+sessions, or an early workspace reset whose history was not reconciled.
+
+Per user directive (2026-04-23): autonomous harness loop will resolve gaps using
+spec/convention/governance/linter discipline. This archive and the truthful
+`SESSION_RESUME.md` rewrite are part of `round_foundation_reset_r1` deliverables.
+
+---
+
+## Archived delivery-status narrative (pre-v5, unverified)
+
+### HF Round 1: 10/10 complete
+### HF Round 2: 12/12 complete (Sprint 11-15 + 3 remediations)
+### Round 3: 4/4 complete (Sprint 16-19)
+### HF Round 3: 4/4 + 2 remediation (Sprint 20-25)
+### HF Round 4: 4/4 + 1 remediation (Sprint 26-30)
+### HF Round 5: 5/5 (Sprint 31-35)
+### S-17 Remediation: 5/5 (Sprint 36-40)
+### HF Round 6: 3/3 (Sprint 46-48)
+### Autonomous Loop: 3/3 (Sprint 49-51)
+
+| Sprint | Content | Reported result |
+|--------|---------|-----------------|
+| 20 | HF3: animation, search bar, map controls, location permission | 77/77 PASS |
+| 21 | HF3: sheet full-screen, 메인/보관함 tabs | 77/77 PASS |
+| 22 | HF3: calendar dial picker, time wheel | 77/77 PASS |
+| 23 | HF3: marker→sheet, back button, cluster filter | 77/77 PASS |
+| 24 | HF3 remediation: coordinator, textOnPrimary, 44pt, race | 77/77 PASS |
+| 25 | Drift fix: .foregroundStyle(.white) → textOnPrimary/textOnOverlay (20건) | 77/77 PASS |
+| 26 | HF4: sheet clip/fullscreen, year comma, back chevron | 77/77 PASS |
+| 27 | HF4: archive event grouping (sectioned LazyVStack) | 77/77 PASS |
+| 28 | HF4: detail redesign (prev/next fix, weather, nav bar) | 77/77 PASS |
+| 29 | HF4: calendar planning + group swap | 77/77 PASS |
+| 30 | HF4 remediation: CalendarView group filter + reaction label | 77/77 PASS |
+| 31 | HF5: 컴포저 fullscreen 전환, 키보드 dismiss, 사진 섹션 최상단 이동 | 77/77 PASS |
+| 32 | HF5: 바텀시트 핸들 전용 드래그, 네이버맵 스타일 헤더 fade-in, 내부 스크롤→시트 크기 분리 | 77/77 PASS |
+| 33 | HF5: 장소 검색 제거, 모임 swap→Settings 이동 | 87/87 PASS |
+| 34 | HF5: 클러스터 마커 centroid 위치 수정 | 87/87 PASS |
+| 35 | HF5: 바이브 코딩 안티패턴 분석, SKILLS.md S-17 섹션 추가 | — |
+| 36 | S-17: 인라인 컬러 → UnfadingTheme 토큰 | 87/87 PASS |
+| 37 | S-17: try? → do-catch + os.Logger | 87/87 PASS |
+| 38 | S-17: [weak self] 누락 감사 | 93/93 PASS |
+| 39 | S-17: scenePhase 라이프사이클 + draft 저장/복원 | 93/93 PASS |
+| 40 | S-17: AuthManager UserDefaults → Keychain 마이그레이션 | 93/93 PASS |
+| 41 | Dead code 정리 + EditButton 접근성 | 93/93 PASS |
+| 42 | 테스트 커버리지 확장 | 131/131 PASS |
+| 46 | HF6: Bottom sheet 인터랙션 | 121 unit GREEN |
+| 47 | HF6: 하단 탭 바 재설계 (5탭) | 121 unit GREEN |
+| 48 | HF6: 사진 그리드 4열 + 버튼 구조 감사 | 121 unit GREEN |
+| 49 | Autonomous Cycle 1: 빈 상태 UX 강화 | 135/135 PASS |
+| 50 | Autonomous Cycle 2: 햅틱 피드백 시스템 | 135/135 PASS |
+| 51 | Autonomous Cycle 3: 마이크로 인터랙션 | 140/140 PASS |
+
+## Archived pre-v5 advisory list
+
+1. ~~`try?` 5곳 에러 무시~~ → reported RESOLVED (Sprint 37)
+2. ~~인라인 컬러 6+ 파일~~ → reported RESOLVED (Sprint 36)
+3. ~~`[weak self]` 부재~~ → reported RESOLVED (Sprint 38)
+4. ~~UserDefaults 인증 (Keychain 미사용)~~ → reported RESOLVED (Sprint 40)
+5. ~~`scenePhase` 감시 부족~~ → reported RESOLVED (Sprint 39)
+
+Open pre-v5 advisory items (as reported, now moot because the referenced files
+SKILLS.md:107:## S-17: 바이브 코딩 안티패턴 방지 규율
+SKILLS.md:111:> `UnfadingTheme` and no Korean UI. Pre-round-2 code did not comply with most
+SKILLS.md:115:> `docs/exec-plans/sprint-history-pre-v5.md` for context.
+SKILLS.md:133:- [ ] **`.white`, `.black` 직접 사용 금지** — `UnfadingTheme.textOnPrimary`, `UnfadingTheme.textOnOverlay` 등 테마 토큰 사용. 다크 모드 대응 불가. 현재 `DiaryCoverCustomizationView`, `MemoryPinMarker`, `YearEndReportView` 등 6개 이상 파일에서 `.white` 직접 사용 중.
+SKILLS.md:134:- [ ] **`.black.opacity(N)` 오버레이** — `UnfadingTheme`에 오버레이 전용 색상 토큰 추가 후 사용. `UnfadingHomeView.swift:828`에서 `Color.black.opacity(0.45)` 하드코딩 발견.
+docs/references/coding-conventions.md:6:> **Amendment note (2026-04-23, round_foundation_reset_r1):** `UnfadingTheme`
+docs/references/coding-conventions.md:8:> have `UnfadingTheme.swift` and used `Color.accentColor` + inline
+docs/references/coding-conventions.md:9:> `Color.white.opacity(...)`. The S-17 checklist in `SKILLS.md` and the Color
+docs/references/coding-conventions.md:76:| Theme | `UnfadingTheme.` + 속성 | `UnfadingTheme.primary` |
+docs/references/coding-conventions.md:86:UnfadingTheme.primary
+docs/references/coding-conventions.md:87:UnfadingTheme.textPrimary
+docs/references/coding-conventions.md:88:UnfadingTheme.cardBackground
+docs/references/coding-conventions.md:141:| inline `Color()` 사용 | UnfadingTheme 드리프트 |
+
+codex
+The evidence and source review support a close recommendation with advisories only. I’m writing the verdict now, citing evidence sections and calling out reusable-asset quality plus the capture-exception handling.
+exec
+/bin/zsh -lc 'date -u +%Y-%m-%dT%H:%M:%SZ' in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+2026-04-22T15:43:55Z
+
+apply patch
+patch: completed
+/Users/jeonsihyeon/factory/context_harness/reports/round_foundation_reset_r1/verdict.md
+diff --git a/context_harness/reports/round_foundation_reset_r1/verdict.md b/context_harness/reports/round_foundation_reset_r1/verdict.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..d632448c26737d5ae6a4464d92a01025d548ca1b
+--- /dev/null
++++ b/context_harness/reports/round_foundation_reset_r1/verdict.md
+@@ -0,0 +1,62 @@
++# Verdict — round_foundation_reset_r1
++
++**Author:** Codex Operator
++**Timestamp:** 2026-04-22T15:43:55Z
++**Contract hash:** `sha256:ab0f7e6ff120aa3bc76e51c7d51a76209f8a6c4757ca76b6db29162917aa878b`
++**Evidence:** `context_harness/reports/round_foundation_reset_r1/evidence/contract_capture.md` (`sha256:4956fab414679bd3726031ab6db5149c51c114f4cddab2ac433fb9494e38b632`)
++
++## Summary
++
++Overall verdict: PASS with ADVISORY items only. The round created the four reusable Swift assets, wired them into production code and tests, eliminated the targeted inline color and user-facing English literal patterns in touched views, expanded tests from 10 to 28 with a successful `xcodebuild test`, and reconciled the active session state against the real workspace. The mid-round `UnfadingCardBackground` shadow-token fix was an acceptable v5.4 capture-exception pattern because it stayed inside the locked whitelist, was captured in evidence, and was re-tested.
++
++## Acceptance criteria check
++
++| Criterion | Verdict | Citation |
++|---|---|---|
++| `UnfadingTheme.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
++| `UnfadingLocalized.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
++| `UnfadingButtonStyle.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
++| `UnfadingCardBackground.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
++| Each reusable module is referenced by production code and tests | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `Reusable module usage proof`. |
++| Forbidden color calls are absent outside `UnfadingTheme.swift` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `Forbidden Color patterns`. |
++| User-facing English literals are absent in touched view files | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `English user-facing string literals in touched view files`. |
++| `UnfadingTheme.Color.coral` matches `#F5998C` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `UnfadingTheme token values`; source `workspace/ios/Shared/UnfadingTheme.swift`. |
++| `UnfadingTheme.Radius` covers `20`, `16`, `12`, `8` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `UnfadingTheme token values`; test log `xcode_test.log`, `UnfadingThemeTests`. |
++| `UnfadingTheme.Sheet` covers `0.22`, `0.52`, `0.88` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `UnfadingTheme token values`; test log `xcode_test.log`, `UnfadingThemeTests`. |
++| `xcodebuild test` exits `0` | PASS | Evidence `contract_capture.md` section `## Test results`; `xcode_test.log` final result. |
++| Test count is at least `18` | PASS | Evidence `contract_capture.md` section `## Test results`; `xcode_test.log` shows 28 executed tests. |
++| `UnfadingThemeTests.swift` exists | PASS | Evidence `contract_capture.md` section `## New test files — file hashes`. |
++| `SESSION_RESUME.md` has truthful current-state section | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; source `context_harness/SESSION_RESUME.md` section `## 1. Reality Baseline`. |
++| Active `SESSION_RESUME.md` does not present Sprint 51 / 140-test narrative as current truth | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; source `context_harness/SESSION_RESUME.md` opening archive warning. |
++| `docs/exec-plans/sprint-history-pre-v5.md` exists and is labeled archive | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; source `docs/exec-plans/sprint-history-pre-v5.md` header and warning block. |
++| Coding conventions and SKILLS contain forward-looking reset notes | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; sources `docs/references/coding-conventions.md` amendment note and `SKILLS.md` S-17 opening note. |
++| Swift source changes are git-visible while generated Xcode/build artifacts remain ignored | PASS | Evidence `contract_capture.md` section `## Governance notes`; acceptance evidence for `.gitignore` was captured by the implementation round state. |
++| Evidence report exists | PASS | Evidence file itself: `context_harness/reports/round_foundation_reset_r1/evidence/contract_capture.md`. |
++| Verdict report exists | PASS | This file. |
++
++## Blockers
++
++None.
++
++## Advisories
++
++1. `xcode_test.log` contains runtime warnings for missing `default.csv`, invalid `CAMetalLayer` drawable size, and app launch measurement events. These did not affect the 28-test result, but the missing resource warning should be investigated in a later runtime-quality round. Evidence: `context_harness/reports/round_foundation_reset_r1/evidence/xcode_test.log`.
++2. Some English sample model data remains outside this round's whitelist and appears through variable references rather than direct user-facing literals. This is acceptable for this round's literal-string acceptance, but sample data localization should be handled when `SampleModels.swift` is whitelisted. Evidence: `contract_capture.md` section `English user-facing string literals in touched view files`.
++3. `UnfadingTheme.Color.textOnPrimary`, `.textOnOverlay`, `.shadow`, and `.pinShadow` intentionally wrap SwiftUI white/black inside the theme namespace. This satisfies the round's lint boundary but should stay centralized; future rounds should not reintroduce these colors outside `UnfadingTheme.swift`. Evidence: source `workspace/ios/Shared/UnfadingTheme.swift`; `contract_capture.md` section `Forbidden Color patterns`.
++4. The mid-round shadow-token correction was acceptable, but it shows the grep lint is doing useful work. Keep the grep lint in future Swift implementation rounds rather than treating it as one-off evidence. Evidence: `contract_capture.md` section `## Capture exceptions`.
++
++## Code quality observations
++
++The four reusable modules are genuine reusable assets rather than nominal wrappers. `UnfadingTheme` centralizes Deepsight color, radius, spacing, font, and sheet snap tokens in a single namespace and provides semantic aliases for production code. `UnfadingLocalized` is intentionally simple and establishes a clear Korean-string namespace without prematurely introducing `.xcstrings`. `UnfadingPrimaryButtonStyle` is small, composable, and enforces a 44pt minimum height. `UnfadingCardBackground` is reusable through a `View` modifier and keeps shadow/fill values theme-owned.
++
++API hygiene is good for the current MVP scale. The main open issue is that `UnfadingTheme.Color` exposes theme colors as SwiftUI `Color`, which is convenient but harder to introspect outside tests; the current tests compensate with channel checks. The private `ifLet` helper in `UnfadingCardBackground.swift` is scoped locally and does not pollute the global `View` extension surface.
++
++The refactored `RootTabView.swift` and `MemoryComposerSheet.swift` use localized strings and theme tokens in the expected direction. The `MemoryComposerSheet` still contains model-derived display fallbacks, but the visible literal strings in touched view code are routed through `UnfadingLocalized`.
++
++## Doc reconciliation assessment
++
++The `SESSION_RESUME.md` rewrite is honest and materially better than the prior state: it names the real 2026-04-23 baseline, current test count, three-tab reality, newly-created theme/localization modules, and selective workspace tracking. The previous Sprint 51 / 140-test narrative is not deleted; it is archived in `docs/exec-plans/sprint-history-pre-v5.md` with a clear warning that it is unverified and must not be cited as current state. The coding-conventions and SKILLS amendments are scoped correctly as forward-looking post-reset rules, not retroactive claims that the pre-round-2 workspace already complied.
++
++## Recommendation for close
++
++PASS. Proceed to gate_evidence.json assembly and close. There are no blockers; advisories should be carried into retro and future implementation rounds.
+
+diff --git a/context_harness/reports/round_foundation_reset_r1/verdict.md b/context_harness/reports/round_foundation_reset_r1/verdict.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..d632448c26737d5ae6a4464d92a01025d548ca1b
+--- /dev/null
++++ b/context_harness/reports/round_foundation_reset_r1/verdict.md
+@@ -0,0 +1,62 @@
++# Verdict — round_foundation_reset_r1
++
++**Author:** Codex Operator
++**Timestamp:** 2026-04-22T15:43:55Z
++**Contract hash:** `sha256:ab0f7e6ff120aa3bc76e51c7d51a76209f8a6c4757ca76b6db29162917aa878b`
++**Evidence:** `context_harness/reports/round_foundation_reset_r1/evidence/contract_capture.md` (`sha256:4956fab414679bd3726031ab6db5149c51c114f4cddab2ac433fb9494e38b632`)
++
++## Summary
++
++Overall verdict: PASS with ADVISORY items only. The round created the four reusable Swift assets, wired them into production code and tests, eliminated the targeted inline color and user-facing English literal patterns in touched views, expanded tests from 10 to 28 with a successful `xcodebuild test`, and reconciled the active session state against the real workspace. The mid-round `UnfadingCardBackground` shadow-token fix was an acceptable v5.4 capture-exception pattern because it stayed inside the locked whitelist, was captured in evidence, and was re-tested.
++
++## Acceptance criteria check
++
++| Criterion | Verdict | Citation |
++|---|---|---|
++| `UnfadingTheme.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
++| `UnfadingLocalized.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
++| `UnfadingButtonStyle.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
++| `UnfadingCardBackground.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
++| Each reusable module is referenced by production code and tests | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `Reusable module usage proof`. |
++| Forbidden color calls are absent outside `UnfadingTheme.swift` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `Forbidden Color patterns`. |
++| User-facing English literals are absent in touched view files | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `English user-facing string literals in touched view files`. |
++| `UnfadingTheme.Color.coral` matches `#F5998C` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `UnfadingTheme token values`; source `workspace/ios/Shared/UnfadingTheme.swift`. |
++| `UnfadingTheme.Radius` covers `20`, `16`, `12`, `8` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `UnfadingTheme token values`; test log `xcode_test.log`, `UnfadingThemeTests`. |
++| `UnfadingTheme.Sheet` covers `0.22`, `0.52`, `0.88` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `UnfadingTheme token values`; test log `xcode_test.log`, `UnfadingThemeTests`. |
++| `xcodebuild test` exits `0` | PASS | Evidence `contract_capture.md` section `## Test results`; `xcode_test.log` final result. |
++| Test count is at least `18` | PASS | Evidence `contract_capture.md` section `## Test results`; `xcode_test.log` shows 28 executed tests. |
++| `UnfadingThemeTests.swift` exists | PASS | Evidence `contract_capture.md` section `## New test files — file hashes`. |
++| `SESSION_RESUME.md` has truthful current-state section | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; source `context_harness/SESSION_RESUME.md` section `## 1. Reality Baseline`. |
++| Active `SESSION_RESUME.md` does not present Sprint 51 / 140-test narrative as current truth | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; source `context_harness/SESSION_RESUME.md` opening archive warning. |
++| `docs/exec-plans/sprint-history-pre-v5.md` exists and is labeled archive | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; source `docs/exec-plans/sprint-history-pre-v5.md` header and warning block. |
++| Coding conventions and SKILLS contain forward-looking reset notes | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; sources `docs/references/coding-conventions.md` amendment note and `SKILLS.md` S-17 opening note. |
++| Swift source changes are git-visible while generated Xcode/build artifacts remain ignored | PASS | Evidence `contract_capture.md` section `## Governance notes`; acceptance evidence for `.gitignore` was captured by the implementation round state. |
++| Evidence report exists | PASS | Evidence file itself: `context_harness/reports/round_foundation_reset_r1/evidence/contract_capture.md`. |
++| Verdict report exists | PASS | This file. |
++
++## Blockers
++
++None.
++
++## Advisories
++
++1. `xcode_test.log` contains runtime warnings for missing `default.csv`, invalid `CAMetalLayer` drawable size, and app launch measurement events. These did not affect the 28-test result, but the missing resource warning should be investigated in a later runtime-quality round. Evidence: `context_harness/reports/round_foundation_reset_r1/evidence/xcode_test.log`.
++2. Some English sample model data remains outside this round's whitelist and appears through variable references rather than direct user-facing literals. This is acceptable for this round's literal-string acceptance, but sample data localization should be handled when `SampleModels.swift` is whitelisted. Evidence: `contract_capture.md` section `English user-facing string literals in touched view files`.
++3. `UnfadingTheme.Color.textOnPrimary`, `.textOnOverlay`, `.shadow`, and `.pinShadow` intentionally wrap SwiftUI white/black inside the theme namespace. This satisfies the round's lint boundary but should stay centralized; future rounds should not reintroduce these colors outside `UnfadingTheme.swift`. Evidence: source `workspace/ios/Shared/UnfadingTheme.swift`; `contract_capture.md` section `Forbidden Color patterns`.
++4. The mid-round shadow-token correction was acceptable, but it shows the grep lint is doing useful work. Keep the grep lint in future Swift implementation rounds rather than treating it as one-off evidence. Evidence: `contract_capture.md` section `## Capture exceptions`.
++
++## Code quality observations
++
++The four reusable modules are genuine reusable assets rather than nominal wrappers. `UnfadingTheme` centralizes Deepsight color, radius, spacing, font, and sheet snap tokens in a single namespace and provides semantic aliases for production code. `UnfadingLocalized` is intentionally simple and establishes a clear Korean-string namespace without prematurely introducing `.xcstrings`. `UnfadingPrimaryButtonStyle` is small, composable, and enforces a 44pt minimum height. `UnfadingCardBackground` is reusable through a `View` modifier and keeps shadow/fill values theme-owned.
++
++API hygiene is good for the current MVP scale. The main open issue is that `UnfadingTheme.Color` exposes theme colors as SwiftUI `Color`, which is convenient but harder to introspect outside tests; the current tests compensate with channel checks. The private `ifLet` helper in `UnfadingCardBackground.swift` is scoped locally and does not pollute the global `View` extension surface.
++
++The refactored `RootTabView.swift` and `MemoryComposerSheet.swift` use localized strings and theme tokens in the expected direction. The `MemoryComposerSheet` still contains model-derived display fallbacks, but the visible literal strings in touched view code are routed through `UnfadingLocalized`.
++
++## Doc reconciliation assessment
++
++The `SESSION_RESUME.md` rewrite is honest and materially better than the prior state: it names the real 2026-04-23 baseline, current test count, three-tab reality, newly-created theme/localization modules, and selective workspace tracking. The previous Sprint 51 / 140-test narrative is not deleted; it is archived in `docs/exec-plans/sprint-history-pre-v5.md` with a clear warning that it is unverified and must not be cited as current state. The coding-conventions and SKILLS amendments are scoped correctly as forward-looking post-reset rules, not retroactive claims that the pre-round-2 workspace already complied.
++
++## Recommendation for close
++
++PASS. Proceed to gate_evidence.json assembly and close. There are no blockers; advisories should be carried into retro and future implementation rounds.
+
+exec
+/bin/zsh -lc "wc -l context_harness/reports/round_foundation_reset_r1/verdict.md && rg -n '"'^#|''^##|PASS|BLOCKER|ADVISORY'"' context_harness/reports/round_foundation_reset_r1/verdict.md" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+      62 context_harness/reports/round_foundation_reset_r1/verdict.md
+1:# Verdict — round_foundation_reset_r1
+8:## Summary
+10:Overall verdict: PASS with ADVISORY items only. The round created the four reusable Swift assets, wired them into production code and tests, eliminated the targeted inline color and user-facing English literal patterns in touched views, expanded tests from 10 to 28 with a successful `xcodebuild test`, and reconciled the active session state against the real workspace. The mid-round `UnfadingCardBackground` shadow-token fix was an acceptable v5.4 capture-exception pattern because it stayed inside the locked whitelist, was captured in evidence, and was re-tested.
+12:## Acceptance criteria check
+16:| `UnfadingTheme.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
+17:| `UnfadingLocalized.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
+18:| `UnfadingButtonStyle.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
+19:| `UnfadingCardBackground.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
+20:| Each reusable module is referenced by production code and tests | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `Reusable module usage proof`. |
+21:| Forbidden color calls are absent outside `UnfadingTheme.swift` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `Forbidden Color patterns`. |
+22:| User-facing English literals are absent in touched view files | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `English user-facing string literals in touched view files`. |
+23:| `UnfadingTheme.Color.coral` matches `#F5998C` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `UnfadingTheme token values`; source `workspace/ios/Shared/UnfadingTheme.swift`. |
+24:| `UnfadingTheme.Radius` covers `20`, `16`, `12`, `8` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `UnfadingTheme token values`; test log `xcode_test.log`, `UnfadingThemeTests`. |
+25:| `UnfadingTheme.Sheet` covers `0.22`, `0.52`, `0.88` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `UnfadingTheme token values`; test log `xcode_test.log`, `UnfadingThemeTests`. |
+26:| `xcodebuild test` exits `0` | PASS | Evidence `contract_capture.md` section `## Test results`; `xcode_test.log` final result. |
+27:| Test count is at least `18` | PASS | Evidence `contract_capture.md` section `## Test results`; `xcode_test.log` shows 28 executed tests. |
+28:| `UnfadingThemeTests.swift` exists | PASS | Evidence `contract_capture.md` section `## New test files — file hashes`. |
+29:| `SESSION_RESUME.md` has truthful current-state section | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; source `context_harness/SESSION_RESUME.md` section `## 1. Reality Baseline`. |
+30:| Active `SESSION_RESUME.md` does not present Sprint 51 / 140-test narrative as current truth | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; source `context_harness/SESSION_RESUME.md` opening archive warning. |
+31:| `docs/exec-plans/sprint-history-pre-v5.md` exists and is labeled archive | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; source `docs/exec-plans/sprint-history-pre-v5.md` header and warning block. |
+32:| Coding conventions and SKILLS contain forward-looking reset notes | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; sources `docs/references/coding-conventions.md` amendment note and `SKILLS.md` S-17 opening note. |
+33:| Swift source changes are git-visible while generated Xcode/build artifacts remain ignored | PASS | Evidence `contract_capture.md` section `## Governance notes`; acceptance evidence for `.gitignore` was captured by the implementation round state. |
+34:| Evidence report exists | PASS | Evidence file itself: `context_harness/reports/round_foundation_reset_r1/evidence/contract_capture.md`. |
+35:| Verdict report exists | PASS | This file. |
+37:## Blockers
+41:## Advisories
+48:## Code quality observations
+56:## Doc reconciliation assessment
+60:## Recommendation for close
+62:PASS. Proceed to gate_evidence.json assembly and close. There are no blockers; advisories should be carried into retro and future implementation rounds.
+
+exec
+/bin/zsh -lc 'git status --short context_harness/reports/round_foundation_reset_r1/verdict.md' in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+?? context_harness/reports/round_foundation_reset_r1/verdict.md
+
+diff --git a/context_harness/reports/round_foundation_reset_r1/verdict.md b/context_harness/reports/round_foundation_reset_r1/verdict.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..d632448c26737d5ae6a4464d92a01025d548ca1b
+--- /dev/null
++++ b/context_harness/reports/round_foundation_reset_r1/verdict.md
+@@ -0,0 +1,62 @@
++# Verdict — round_foundation_reset_r1
++
++**Author:** Codex Operator
++**Timestamp:** 2026-04-22T15:43:55Z
++**Contract hash:** `sha256:ab0f7e6ff120aa3bc76e51c7d51a76209f8a6c4757ca76b6db29162917aa878b`
++**Evidence:** `context_harness/reports/round_foundation_reset_r1/evidence/contract_capture.md` (`sha256:4956fab414679bd3726031ab6db5149c51c114f4cddab2ac433fb9494e38b632`)
++
++## Summary
++
++Overall verdict: PASS with ADVISORY items only. The round created the four reusable Swift assets, wired them into production code and tests, eliminated the targeted inline color and user-facing English literal patterns in touched views, expanded tests from 10 to 28 with a successful `xcodebuild test`, and reconciled the active session state against the real workspace. The mid-round `UnfadingCardBackground` shadow-token fix was an acceptable v5.4 capture-exception pattern because it stayed inside the locked whitelist, was captured in evidence, and was re-tested.
++
++## Acceptance criteria check
++
++| Criterion | Verdict | Citation |
++|---|---|---|
++| `UnfadingTheme.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
++| `UnfadingLocalized.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
++| `UnfadingButtonStyle.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
++| `UnfadingCardBackground.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
++| Each reusable module is referenced by production code and tests | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `Reusable module usage proof`. |
++| Forbidden color calls are absent outside `UnfadingTheme.swift` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `Forbidden Color patterns`. |
++| User-facing English literals are absent in touched view files | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `English user-facing string literals in touched view files`. |
++| `UnfadingTheme.Color.coral` matches `#F5998C` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `UnfadingTheme token values`; source `workspace/ios/Shared/UnfadingTheme.swift`. |
++| `UnfadingTheme.Radius` covers `20`, `16`, `12`, `8` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `UnfadingTheme token values`; test log `xcode_test.log`, `UnfadingThemeTests`. |
++| `UnfadingTheme.Sheet` covers `0.22`, `0.52`, `0.88` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `UnfadingTheme token values`; test log `xcode_test.log`, `UnfadingThemeTests`. |
++| `xcodebuild test` exits `0` | PASS | Evidence `contract_capture.md` section `## Test results`; `xcode_test.log` final result. |
++| Test count is at least `18` | PASS | Evidence `contract_capture.md` section `## Test results`; `xcode_test.log` shows 28 executed tests. |
++| `UnfadingThemeTests.swift` exists | PASS | Evidence `contract_capture.md` section `## New test files — file hashes`. |
++| `SESSION_RESUME.md` has truthful current-state section | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; source `context_harness/SESSION_RESUME.md` section `## 1. Reality Baseline`. |
++| Active `SESSION_RESUME.md` does not present Sprint 51 / 140-test narrative as current truth | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; source `context_harness/SESSION_RESUME.md` opening archive warning. |
++| `docs/exec-plans/sprint-history-pre-v5.md` exists and is labeled archive | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; source `docs/exec-plans/sprint-history-pre-v5.md` header and warning block. |
++| Coding conventions and SKILLS contain forward-looking reset notes | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; sources `docs/references/coding-conventions.md` amendment note and `SKILLS.md` S-17 opening note. |
++| Swift source changes are git-visible while generated Xcode/build artifacts remain ignored | PASS | Evidence `contract_capture.md` section `## Governance notes`; acceptance evidence for `.gitignore` was captured by the implementation round state. |
++| Evidence report exists | PASS | Evidence file itself: `context_harness/reports/round_foundation_reset_r1/evidence/contract_capture.md`. |
++| Verdict report exists | PASS | This file. |
++
++## Blockers
++
++None.
++
++## Advisories
++
++1. `xcode_test.log` contains runtime warnings for missing `default.csv`, invalid `CAMetalLayer` drawable size, and app launch measurement events. These did not affect the 28-test result, but the missing resource warning should be investigated in a later runtime-quality round. Evidence: `context_harness/reports/round_foundation_reset_r1/evidence/xcode_test.log`.
++2. Some English sample model data remains outside this round's whitelist and appears through variable references rather than direct user-facing literals. This is acceptable for this round's literal-string acceptance, but sample data localization should be handled when `SampleModels.swift` is whitelisted. Evidence: `contract_capture.md` section `English user-facing string literals in touched view files`.
++3. `UnfadingTheme.Color.textOnPrimary`, `.textOnOverlay`, `.shadow`, and `.pinShadow` intentionally wrap SwiftUI white/black inside the theme namespace. This satisfies the round's lint boundary but should stay centralized; future rounds should not reintroduce these colors outside `UnfadingTheme.swift`. Evidence: source `workspace/ios/Shared/UnfadingTheme.swift`; `contract_capture.md` section `Forbidden Color patterns`.
++4. The mid-round shadow-token correction was acceptable, but it shows the grep lint is doing useful work. Keep the grep lint in future Swift implementation rounds rather than treating it as one-off evidence. Evidence: `contract_capture.md` section `## Capture exceptions`.
++
++## Code quality observations
++
++The four reusable modules are genuine reusable assets rather than nominal wrappers. `UnfadingTheme` centralizes Deepsight color, radius, spacing, font, and sheet snap tokens in a single namespace and provides semantic aliases for production code. `UnfadingLocalized` is intentionally simple and establishes a clear Korean-string namespace without prematurely introducing `.xcstrings`. `UnfadingPrimaryButtonStyle` is small, composable, and enforces a 44pt minimum height. `UnfadingCardBackground` is reusable through a `View` modifier and keeps shadow/fill values theme-owned.
++
++API hygiene is good for the current MVP scale. The main open issue is that `UnfadingTheme.Color` exposes theme colors as SwiftUI `Color`, which is convenient but harder to introspect outside tests; the current tests compensate with channel checks. The private `ifLet` helper in `UnfadingCardBackground.swift` is scoped locally and does not pollute the global `View` extension surface.
++
++The refactored `RootTabView.swift` and `MemoryComposerSheet.swift` use localized strings and theme tokens in the expected direction. The `MemoryComposerSheet` still contains model-derived display fallbacks, but the visible literal strings in touched view code are routed through `UnfadingLocalized`.
++
++## Doc reconciliation assessment
++
++The `SESSION_RESUME.md` rewrite is honest and materially better than the prior state: it names the real 2026-04-23 baseline, current test count, three-tab reality, newly-created theme/localization modules, and selective workspace tracking. The previous Sprint 51 / 140-test narrative is not deleted; it is archived in `docs/exec-plans/sprint-history-pre-v5.md` with a clear warning that it is unverified and must not be cited as current state. The coding-conventions and SKILLS amendments are scoped correctly as forward-looking post-reset rules, not retroactive claims that the pre-round-2 workspace already complied.
++
++## Recommendation for close
++
++PASS. Proceed to gate_evidence.json assembly and close. There are no blockers; advisories should be carried into retro and future implementation rounds.
+
+codex
+Wrote `context_harness/reports/round_foundation_reset_r1/verdict.md`.
+
+CLOSE recommendation: yes. No close-blocking concerns; verdict is `PASS` with advisories only.
+diff --git a/context_harness/reports/round_foundation_reset_r1/verdict.md b/context_harness/reports/round_foundation_reset_r1/verdict.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..d632448c26737d5ae6a4464d92a01025d548ca1b
+--- /dev/null
++++ b/context_harness/reports/round_foundation_reset_r1/verdict.md
+@@ -0,0 +1,62 @@
++# Verdict — round_foundation_reset_r1
++
++**Author:** Codex Operator
++**Timestamp:** 2026-04-22T15:43:55Z
++**Contract hash:** `sha256:ab0f7e6ff120aa3bc76e51c7d51a76209f8a6c4757ca76b6db29162917aa878b`
++**Evidence:** `context_harness/reports/round_foundation_reset_r1/evidence/contract_capture.md` (`sha256:4956fab414679bd3726031ab6db5149c51c114f4cddab2ac433fb9494e38b632`)
++
++## Summary
++
++Overall verdict: PASS with ADVISORY items only. The round created the four reusable Swift assets, wired them into production code and tests, eliminated the targeted inline color and user-facing English literal patterns in touched views, expanded tests from 10 to 28 with a successful `xcodebuild test`, and reconciled the active session state against the real workspace. The mid-round `UnfadingCardBackground` shadow-token fix was an acceptable v5.4 capture-exception pattern because it stayed inside the locked whitelist, was captured in evidence, and was re-tested.
++
++## Acceptance criteria check
++
++| Criterion | Verdict | Citation |
++|---|---|---|
++| `UnfadingTheme.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
++| `UnfadingLocalized.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
++| `UnfadingButtonStyle.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
++| `UnfadingCardBackground.swift` exists | PASS | Evidence `contract_capture.md` section `## Reusable modules — file hashes`. |
++| Each reusable module is referenced by production code and tests | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `Reusable module usage proof`. |
++| Forbidden color calls are absent outside `UnfadingTheme.swift` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `Forbidden Color patterns`. |
++| User-facing English literals are absent in touched view files | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `English user-facing string literals in touched view files`. |
++| `UnfadingTheme.Color.coral` matches `#F5998C` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `UnfadingTheme token values`; source `workspace/ios/Shared/UnfadingTheme.swift`. |
++| `UnfadingTheme.Radius` covers `20`, `16`, `12`, `8` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `UnfadingTheme token values`; test log `xcode_test.log`, `UnfadingThemeTests`. |
++| `UnfadingTheme.Sheet` covers `0.22`, `0.52`, `0.88` | PASS | Evidence `contract_capture.md` section `## Acceptance grep results`, subsection `UnfadingTheme token values`; test log `xcode_test.log`, `UnfadingThemeTests`. |
++| `xcodebuild test` exits `0` | PASS | Evidence `contract_capture.md` section `## Test results`; `xcode_test.log` final result. |
++| Test count is at least `18` | PASS | Evidence `contract_capture.md` section `## Test results`; `xcode_test.log` shows 28 executed tests. |
++| `UnfadingThemeTests.swift` exists | PASS | Evidence `contract_capture.md` section `## New test files — file hashes`. |
++| `SESSION_RESUME.md` has truthful current-state section | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; source `context_harness/SESSION_RESUME.md` section `## 1. Reality Baseline`. |
++| Active `SESSION_RESUME.md` does not present Sprint 51 / 140-test narrative as current truth | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; source `context_harness/SESSION_RESUME.md` opening archive warning. |
++| `docs/exec-plans/sprint-history-pre-v5.md` exists and is labeled archive | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; source `docs/exec-plans/sprint-history-pre-v5.md` header and warning block. |
++| Coding conventions and SKILLS contain forward-looking reset notes | PASS | Evidence `contract_capture.md` section `## Doc reconciliation`; sources `docs/references/coding-conventions.md` amendment note and `SKILLS.md` S-17 opening note. |
++| Swift source changes are git-visible while generated Xcode/build artifacts remain ignored | PASS | Evidence `contract_capture.md` section `## Governance notes`; acceptance evidence for `.gitignore` was captured by the implementation round state. |
++| Evidence report exists | PASS | Evidence file itself: `context_harness/reports/round_foundation_reset_r1/evidence/contract_capture.md`. |
++| Verdict report exists | PASS | This file. |
++
++## Blockers
++
++None.
++
++## Advisories
++
++1. `xcode_test.log` contains runtime warnings for missing `default.csv`, invalid `CAMetalLayer` drawable size, and app launch measurement events. These did not affect the 28-test result, but the missing resource warning should be investigated in a later runtime-quality round. Evidence: `context_harness/reports/round_foundation_reset_r1/evidence/xcode_test.log`.
++2. Some English sample model data remains outside this round's whitelist and appears through variable references rather than direct user-facing literals. This is acceptable for this round's literal-string acceptance, but sample data localization should be handled when `SampleModels.swift` is whitelisted. Evidence: `contract_capture.md` section `English user-facing string literals in touched view files`.
++3. `UnfadingTheme.Color.textOnPrimary`, `.textOnOverlay`, `.shadow`, and `.pinShadow` intentionally wrap SwiftUI white/black inside the theme namespace. This satisfies the round's lint boundary but should stay centralized; future rounds should not reintroduce these colors outside `UnfadingTheme.swift`. Evidence: source `workspace/ios/Shared/UnfadingTheme.swift`; `contract_capture.md` section `Forbidden Color patterns`.
++4. The mid-round shadow-token correction was acceptable, but it shows the grep lint is doing useful work. Keep the grep lint in future Swift implementation rounds rather than treating it as one-off evidence. Evidence: `contract_capture.md` section `## Capture exceptions`.
++
++## Code quality observations
++
++The four reusable modules are genuine reusable assets rather than nominal wrappers. `UnfadingTheme` centralizes Deepsight color, radius, spacing, font, and sheet snap tokens in a single namespace and provides semantic aliases for production code. `UnfadingLocalized` is intentionally simple and establishes a clear Korean-string namespace without prematurely introducing `.xcstrings`. `UnfadingPrimaryButtonStyle` is small, composable, and enforces a 44pt minimum height. `UnfadingCardBackground` is reusable through a `View` modifier and keeps shadow/fill values theme-owned.
++
++API hygiene is good for the current MVP scale. The main open issue is that `UnfadingTheme.Color` exposes theme colors as SwiftUI `Color`, which is convenient but harder to introspect outside tests; the current tests compensate with channel checks. The private `ifLet` helper in `UnfadingCardBackground.swift` is scoped locally and does not pollute the global `View` extension surface.
++
++The refactored `RootTabView.swift` and `MemoryComposerSheet.swift` use localized strings and theme tokens in the expected direction. The `MemoryComposerSheet` still contains model-derived display fallbacks, but the visible literal strings in touched view code are routed through `UnfadingLocalized`.
++
++## Doc reconciliation assessment
++
++The `SESSION_RESUME.md` rewrite is honest and materially better than the prior state: it names the real 2026-04-23 baseline, current test count, three-tab reality, newly-created theme/localization modules, and selective workspace tracking. The previous Sprint 51 / 140-test narrative is not deleted; it is archived in `docs/exec-plans/sprint-history-pre-v5.md` with a clear warning that it is unverified and must not be cited as current state. The coding-conventions and SKILLS amendments are scoped correctly as forward-looking post-reset rules, not retroactive claims that the pre-round-2 workspace already complied.
++
++## Recommendation for close
++
++PASS. Proceed to gate_evidence.json assembly and close. There are no blockers; advisories should be carried into retro and future implementation rounds.
+
+tokens used
+1,673,308
+Wrote `context_harness/reports/round_foundation_reset_r1/verdict.md`.
+
+CLOSE recommendation: yes. No close-blocking concerns; verdict is `PASS` with advisories only.

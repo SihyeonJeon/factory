@@ -5,73 +5,82 @@ struct MemorySummaryCard: View {
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: dynamicTypeSize.isAccessibilitySize) {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.lg - 2) {
                 header
 
-                Text("Three years ago today, your group dropped a pin here after the concert. Two new reactions arrived this morning.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                Text(UnfadingLocalized.Summary.sampleBody)
+                    .font(UnfadingTheme.Font.subheadline())
+                    .foregroundStyle(UnfadingTheme.Color.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
 
                 tagSection
             }
-            .padding(20)
+            .padding(UnfadingTheme.Spacing.xl)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(maxHeight: dynamicTypeSize.isAccessibilitySize ? 320 : nil, alignment: .top)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .unfadingCardBackground(
+            fill: UnfadingTheme.Color.sheet,
+            radius: UnfadingTheme.Radius.sheet,
+            material: .regular
+        )
     }
 
     @ViewBuilder
     private var header: some View {
         if dynamicTypeSize.isAccessibilitySize {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
                 titleBlock
                 peopleBadge
             }
         } else {
-            HStack(alignment: .top, spacing: 12) {
+            HStack(alignment: .top, spacing: UnfadingTheme.Spacing.md) {
                 titleBlock
-                Spacer(minLength: 12)
+                Spacer(minLength: UnfadingTheme.Spacing.md)
                 peopleBadge
             }
         }
     }
 
     private var titleBlock: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Tonight's rewind")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-            Text("Sangsu rooftop dinner")
-                .font(.title3.weight(.bold))
+        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
+            Text(UnfadingLocalized.Summary.tonightsRewind)
+                .font(UnfadingTheme.Font.captionSemibold())
+                .foregroundStyle(UnfadingTheme.Color.textSecondary)
+            Text(UnfadingLocalized.Summary.sampleTitle)
+                .font(UnfadingTheme.Font.title3Bold())
+                .foregroundStyle(UnfadingTheme.Color.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private var peopleBadge: some View {
-        Label("4 friends", systemImage: "person.3.fill")
-            .font(.footnote.weight(.semibold))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
+        Label(UnfadingLocalized.Summary.friendCount, systemImage: "person.3.fill")
+            .font(UnfadingTheme.Font.footnoteSemibold())
+            .foregroundStyle(UnfadingTheme.Color.textPrimary)
+            .padding(.horizontal, UnfadingTheme.Spacing.sm + 2)
+            .padding(.vertical, UnfadingTheme.Spacing.sm)
             .frame(minHeight: 44)
-            .background(Color.white.opacity(0.16), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .background(
+                UnfadingTheme.Color.primarySoft,
+                in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.button, style: .continuous)
+            )
             .fixedSize(horizontal: false, vertical: true)
     }
 
     private var tagSection: some View {
         ViewThatFits(in: .vertical) {
-            HStack(spacing: 12) {
-                MemoryTag(title: "Joy", systemImage: "sparkles")
-                MemoryTag(title: "Night out", systemImage: "moon.stars.fill")
-                MemoryTag(title: "Photo set", systemImage: "photo.on.rectangle")
+            HStack(spacing: UnfadingTheme.Spacing.md) {
+                MemoryTag(title: UnfadingLocalized.Summary.joyTag, systemImage: "sparkles")
+                MemoryTag(title: UnfadingLocalized.Summary.nightOutTag, systemImage: "moon.stars.fill")
+                MemoryTag(title: UnfadingLocalized.Summary.photoSetTag, systemImage: "photo.on.rectangle")
             }
 
-            VStack(alignment: .leading, spacing: 10) {
-                MemoryTag(title: "Joy", systemImage: "sparkles")
-                MemoryTag(title: "Night out", systemImage: "moon.stars.fill")
-                MemoryTag(title: "Photo set", systemImage: "photo.on.rectangle")
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.sm + 2) {
+                MemoryTag(title: UnfadingLocalized.Summary.joyTag, systemImage: "sparkles")
+                MemoryTag(title: UnfadingLocalized.Summary.nightOutTag, systemImage: "moon.stars.fill")
+                MemoryTag(title: UnfadingLocalized.Summary.photoSetTag, systemImage: "photo.on.rectangle")
             }
         }
     }
@@ -83,11 +92,15 @@ private struct MemoryTag: View {
 
     var body: some View {
         Label(title, systemImage: systemImage)
-            .font(.footnote.weight(.semibold))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .font(UnfadingTheme.Font.footnoteSemibold())
+            .foregroundStyle(UnfadingTheme.Color.textPrimary)
+            .padding(.horizontal, UnfadingTheme.Spacing.md)
+            .padding(.vertical, UnfadingTheme.Spacing.sm)
             .frame(minHeight: 44)
-            .background(Color.accentColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .background(
+                UnfadingTheme.Color.primarySoft,
+                in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.button, style: .continuous)
+            )
             .fixedSize(horizontal: false, vertical: true)
     }
 }

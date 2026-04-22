@@ -4,27 +4,28 @@ struct RewindMomentCard: View {
     let moment: RewindMoment
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.lg) {
+            RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card + 2, style: .continuous)
                 .fill(moment.gradient)
                 .frame(height: 180)
                 .overlay(alignment: .bottomLeading) {
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs + 2) {
                         Text(moment.dateLabel)
-                            .font(.caption.weight(.semibold))
+                            .font(UnfadingTheme.Font.captionSemibold())
                         Text(moment.title)
-                            .font(.title3.weight(.bold))
+                            .font(UnfadingTheme.Font.title3Bold())
                     }
-                    .foregroundStyle(.white)
-                    .padding(18)
+                    .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
+                    .padding(UnfadingTheme.Spacing.lg + 2)
                 }
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.sm) {
                 Text(moment.location)
                     .font(.headline)
+                    .foregroundStyle(UnfadingTheme.Color.textPrimary)
                 Text(moment.summary)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(UnfadingTheme.Font.subheadline())
+                    .foregroundStyle(UnfadingTheme.Color.textSecondary)
             }
 
             HStack {
@@ -32,10 +33,13 @@ struct RewindMomentCard: View {
                 Spacer()
                 Label(moment.mood, systemImage: "heart.fill")
             }
-            .font(.footnote.weight(.semibold))
-            .foregroundStyle(.secondary)
+            .font(UnfadingTheme.Font.footnoteSemibold())
+            .foregroundStyle(UnfadingTheme.Color.textSecondary)
         }
-        .padding(18)
-        .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .padding(UnfadingTheme.Spacing.lg + 2)
+        .unfadingCardBackground(
+            fill: UnfadingTheme.Color.card,
+            radius: UnfadingTheme.Radius.sheet
+        )
     }
 }

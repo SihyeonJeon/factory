@@ -4,22 +4,23 @@ struct GroupHubView: View {
     var body: some View {
         NavigationStack {
             List(GroupPreview.samples) { group in
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.sm) {
                     HStack {
                         Text(group.name)
                             .font(.headline)
+                            .foregroundStyle(UnfadingTheme.Color.textPrimary)
                         Spacer()
                         Text(group.members)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .font(UnfadingTheme.Font.captionSemibold())
+                            .foregroundStyle(UnfadingTheme.Color.textSecondary)
                     }
                     Text(group.summary)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .font(UnfadingTheme.Font.subheadline())
+                        .foregroundStyle(UnfadingTheme.Color.textSecondary)
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, UnfadingTheme.Spacing.sm)
             }
-            .navigationTitle("Groups")
+            .navigationTitle(UnfadingLocalized.Groups.navTitle)
         }
     }
 }

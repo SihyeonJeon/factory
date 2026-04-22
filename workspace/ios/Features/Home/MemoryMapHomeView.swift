@@ -34,11 +34,11 @@ struct MemoryMapHomeView: View {
             .ignoresSafeArea(edges: .top)
             .safeAreaInset(edge: .bottom) {
                 MemorySummaryCard()
-                    .padding(.horizontal, dynamicTypeSize.isAccessibilitySize ? 16 : 20)
-                    .padding(.top, 12)
-                    .padding(.bottom, 8)
+                    .padding(.horizontal, dynamicTypeSize.isAccessibilitySize ? UnfadingTheme.Spacing.lg : UnfadingTheme.Spacing.xl)
+                    .padding(.top, UnfadingTheme.Spacing.md)
+                    .padding(.bottom, UnfadingTheme.Spacing.sm)
             }
-            .navigationTitle("Memory Map")
+            .navigationTitle(UnfadingLocalized.Home.navTitle)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
@@ -48,8 +48,8 @@ struct MemoryMapHomeView: View {
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.large)
-                    .accessibilityLabel("Show current location")
-                    .accessibilityHint("Centers the map on your current location when permission is available.")
+                    .accessibilityLabel(UnfadingLocalized.Accessibility.showCurrentLocationLabel)
+                    .accessibilityHint(UnfadingLocalized.Accessibility.showCurrentLocationHint)
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
@@ -59,12 +59,11 @@ struct MemoryMapHomeView: View {
                         if dynamicTypeSize.isAccessibilitySize {
                             Image(systemName: "plus")
                         } else {
-                            Label("New Memory", systemImage: "plus")
+                            Label(UnfadingLocalized.Home.newMemory, systemImage: "plus")
                         }
                     }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.large)
-                        .accessibilityLabel("Add memory")
+                    .buttonStyle(.unfadingPrimary)
+                    .accessibilityLabel(UnfadingLocalized.Accessibility.addMemoryLabel)
                 }
             }
             .sheet(isPresented: $showingComposer) {
@@ -88,7 +87,7 @@ struct MemoryMapHomeView: View {
                     }
                 }
 
-                Button("Cancel", role: .cancel) {
+                Button(UnfadingLocalized.Common.cancel, role: .cancel) {
                     locationPermissionStore.dismissRecoveryPrompt()
                 }
             } message: {

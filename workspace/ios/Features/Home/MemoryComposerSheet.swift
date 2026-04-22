@@ -11,7 +11,7 @@ struct MemoryComposerSheet: View {
 
     @State private var note = ""
     @State private var selectedTags = Set<MemoryDraftTag>()
-    @State private var selectedPlace = "Sangsu-dong rooftop"
+    @State private var selectedPlace = UnfadingLocalized.Composer.samplePlace
     @State private var locationPermissionState: LocationPermissionState
     @State private var showingDeniedRecovery = false
     @State private var showingPlaceSearch = false
@@ -29,68 +29,68 @@ struct MemoryComposerSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Memory") {
-                    TextField("Add a short note", text: $note, axis: .vertical)
+                Section(UnfadingLocalized.Composer.memorySection) {
+                    TextField(UnfadingLocalized.Composer.noteField, text: $note, axis: .vertical)
                         .lineLimit(3...6)
 
-                    LabeledContent("Event") {
-                        Text("Tonight's rewind")
-                            .foregroundStyle(.secondary)
+                    LabeledContent(UnfadingLocalized.Composer.eventLabel) {
+                        Text(UnfadingLocalized.Summary.tonightsRewind)
+                            .foregroundStyle(UnfadingTheme.Color.textSecondary)
                     }
 
-                    LabeledContent("Time") {
-                        Text("Today, 8:40 PM")
-                            .foregroundStyle(.secondary)
+                    LabeledContent(UnfadingLocalized.Composer.timeLabel) {
+                        Text(UnfadingLocalized.Composer.sampleTime)
+                            .foregroundStyle(UnfadingTheme.Color.textSecondary)
                     }
                 }
 
-                Section("Photos") {
+                Section(UnfadingLocalized.Composer.photosSection) {
                     Button {
                     } label: {
-                        Label("Add from Library", systemImage: "photo.on.rectangle")
+                        Label(UnfadingLocalized.Composer.addFromLibrary, systemImage: "photo.on.rectangle")
                     }
 
-                    Text("Your first photo can prefill time and place when metadata is available.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    Text(UnfadingLocalized.Composer.metadataHint)
+                        .font(UnfadingTheme.Font.subheadline())
+                        .foregroundStyle(UnfadingTheme.Color.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                Section("Place") {
-                    LabeledContent("Selected place") {
+                Section(UnfadingLocalized.Composer.placeSection) {
+                    LabeledContent(UnfadingLocalized.Composer.selectedPlace) {
                         Text(selectedPlace)
                             .multilineTextAlignment(.trailing)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(UnfadingTheme.Color.textSecondary)
                     }
 
                     Button {
                         showingPlaceSearch = true
                     } label: {
-                        Label("Choose Place Manually", systemImage: "magnifyingglass")
+                        Label(UnfadingLocalized.Composer.choosePlaceManually, systemImage: "magnifyingglass")
                     }
 
                     Button {
                         handleCurrentLocationTap()
                     } label: {
-                        Label("Use Current Location", systemImage: "location.fill")
+                        Label(UnfadingLocalized.Composer.useCurrentLocation, systemImage: "location.fill")
                     }
                 }
 
-                Section("Mood") {
+                Section(UnfadingLocalized.Composer.moodSection) {
                     tagCloud
                 }
             }
-            .navigationTitle("New Memory")
+            .navigationTitle(UnfadingLocalized.Composer.navTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(UnfadingLocalized.Common.cancel) {
                         dismiss()
                     }
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(UnfadingLocalized.Composer.save) {
                         dismiss()
                     }
                     .disabled(note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -124,7 +124,7 @@ struct MemoryComposerSheet: View {
                 case .deniedRecovery:
                     showingDeniedRecovery = true
                 case .manualPlacePicker:
-                    selectedPlace = "Choose a place"
+                    selectedPlace = UnfadingLocalized.Composer.placeholderChoose
                     showingPlaceSearch = true
                 }
             }
@@ -132,18 +132,19 @@ struct MemoryComposerSheet: View {
     }
 
     private var tagCloud: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
             ForEach(Array(MemoryDraftTag.samples.enumerated()), id: \.element.id) { _, tag in
                 Button {
                     toggle(tag)
                 } label: {
-                    HStack(spacing: 12) {
-                        Label(tag.title, systemImage: tag.systemImage)
-                            .font(.body.weight(.semibold))
+                    HStack(spacing: UnfadingTheme.Spacing.md) {
+                        Label(UnfadingLocalized.draftTag(id: tag.id, fallback: tag.title), systemImage: tag.systemImage)
+                            .font(UnfadingTheme.Font.subheadlineSemibold())
+                            .foregroundStyle(UnfadingTheme.Color.textPrimary)
                         Spacer()
                         if selectedTags.contains(tag) {
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(Color.accentColor)
+                                .foregroundStyle(UnfadingTheme.Color.primary)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -165,7 +166,7 @@ struct MemoryComposerSheet: View {
     private func handleCurrentLocationTap() {
         switch locationPermissionState {
         case .authorized:
-            selectedPlace = "Current location"
+            selectedPlace = UnfadingLocalized.Composer.placeholderCurrent
         case .notDetermined, .denied, .restricted:
             showingDeniedRecovery = true
         }
@@ -189,39 +190,40 @@ private struct LocationPermissionRecoverySheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xl) {
                 ContentUnavailableView {
-                    Label("Location Access Off", systemImage: "location.slash")
+                    Label(UnfadingLocalized.Composer.locationAccessOff, systemImage: "location.slash")
                 } description: {
-                    Text("You can still save this memory by choosing a place manually, or re-enable location access in Settings for current-location autofill.")
+                    Text(UnfadingLocalized.Composer.locationRecoveryHint)
                 } actions: {
-                    Button("Search for a Place") {
+                    Button(UnfadingLocalized.Composer.searchForPlace) {
                         presentManualPlacePicker()
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.unfadingPrimary)
 
-                    Button("Open Settings") {
+                    Button(UnfadingLocalized.Composer.openSettings) {
                         openSettings()
                     }
                     .buttonStyle(.bordered)
                 }
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Label("Current place", systemImage: "mappin.and.ellipse")
+                VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.sm) {
+                    Label(UnfadingLocalized.Composer.currentPlace, systemImage: "mappin.and.ellipse")
                         .font(.headline)
+                        .foregroundStyle(UnfadingTheme.Color.textPrimary)
                     Text(selectedPlace)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(UnfadingTheme.Color.textSecondary)
                 }
                 .padding(.horizontal)
 
                 Spacer(minLength: 0)
             }
-            .padding(.top, 12)
-            .navigationTitle("Location Needed")
+            .padding(.top, UnfadingTheme.Spacing.md)
+            .navigationTitle(UnfadingLocalized.Composer.locationNeededTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
+                    Button(UnfadingLocalized.Composer.done) {
                         dismiss()
                     }
                 }
@@ -230,7 +232,7 @@ private struct LocationPermissionRecoverySheet: View {
     }
 
     private func presentManualPlacePicker() {
-        selectedPlace = "Choose a place"
+        selectedPlace = UnfadingLocalized.Composer.placeholderChoose
         dismiss()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
@@ -252,7 +254,7 @@ private struct ManualPlacePickerSheet: View {
         NavigationStack {
             List {
                 if searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
-                    Section("Use typed place") {
+                    Section(UnfadingLocalized.Composer.useTypedPlace) {
                         Button {
                             select(searchText.trimmingCharacters(in: .whitespacesAndNewlines))
                         } label: {
@@ -262,22 +264,27 @@ private struct ManualPlacePickerSheet: View {
                     }
                 }
 
-                Section("Nearby options") {
+                Section(UnfadingLocalized.Composer.nearbyOptions) {
                     ForEach(filteredSuggestions) { suggestion in
+                        let localized = UnfadingLocalized.placeSuggestion(
+                            id: suggestion.id,
+                            fallbackTitle: suggestion.title,
+                            fallbackSubtitle: suggestion.subtitle
+                        )
                         Button {
-                            select(suggestion.title)
+                            select(localized.title)
                         } label: {
-                            HStack(alignment: .top, spacing: 12) {
+                            HStack(alignment: .top, spacing: UnfadingTheme.Spacing.md) {
                                 Image(systemName: suggestion.systemImage)
-                                    .foregroundStyle(Color.accentColor)
+                                    .foregroundStyle(UnfadingTheme.Color.primary)
                                     .frame(width: 24, height: 24)
 
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(suggestion.title)
-                                        .foregroundStyle(.primary)
-                                    Text(suggestion.subtitle)
-                                        .font(.footnote)
-                                        .foregroundStyle(.secondary)
+                                VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
+                                    Text(localized.title)
+                                        .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                                    Text(localized.subtitle)
+                                        .font(UnfadingTheme.Font.subheadline())
+                                        .foregroundStyle(UnfadingTheme.Color.textSecondary)
                                         .fixedSize(horizontal: false, vertical: true)
                                 }
 
@@ -288,12 +295,12 @@ private struct ManualPlacePickerSheet: View {
                     }
                 }
             }
-            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search places")
-            .navigationTitle("Choose Place")
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: UnfadingLocalized.Composer.searchPlaces)
+            .navigationTitle(UnfadingLocalized.Composer.choosePlaceTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(UnfadingLocalized.Common.cancel) {
                         dismiss()
                     }
                 }

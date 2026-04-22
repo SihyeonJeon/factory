@@ -1,0 +1,39 @@
+{
+  "round_id": "round_foundation_reset_r1",
+  "schema_version": 2,
+  "started_at": "2026-04-22T15:26:18.041816+00:00",
+  "status": "closed",
+  "operators": {
+    "claude_code": {
+      "session": "this-session",
+      "role_default": "implementer"
+    },
+    "codex": {
+      "session": "",
+      "role_default": "designer_reviewer"
+    }
+  },
+  "base_commit": "44e2a1d5725a59a161dc0702e704a637c476fbdc",
+  "hashes": {
+    "spec.md": "sha256:ab0f7e6ff120aa3bc76e51c7d51a76209f8a6c4757ca76b6db29162917aa878b",
+    "file_whitelist.txt": "sha256:9cf09f8cbbaf6636000663f036ad3ae5d4152667b9348a45fe6cd1b434bfaba2",
+    "convention_version.txt": "sha256:ae1b4b50d9629aa309bf3e2c67d756504dac5a8b943da226ed03dab1c1d4dd84",
+    "lint_config.txt": "sha256:f3d820df87654ce4d7ab2748bf0ce25ca34924e147e0f196b6cdafd496dbfd46",
+    "acceptance.md": "sha256:de55bbf5d853845fbc39e069422128b87feff550538e8f4feb315801c5dd3fee",
+    "eval_protocol.md": "sha256:a4e3d0812992f8ae388ef9422ee3e8b8079d0aeb18bbe59dd36d352297a2a5c4"
+  },
+  "amendments": [
+    {
+      "file": "file_whitelist.amendment.1.txt",
+      "target": "file_whitelist.txt",
+      "sha256": "sha256:44b7b05395c3755347e886eaf8ca7eaf30b5a2e11d3ffe63273161fac079e693",
+      "supersedes": [
+        "file_whitelist.txt"
+      ],
+      "meeting": "context_harness/operator/meetings/2026-04-23_round2_whitelist_amendment.md"
+    }
+  ],
+  "stages_completed": [],
+  "gate_evidence_sha256": "sha256:581818506f47838406e28bf94bd9a432bd2d68db103b8ba2dde7ebe1f7afefe3",
+  "closed_at": "2026-04-22T15:46:44.157699+00:00"
+}

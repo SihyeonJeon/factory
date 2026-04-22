@@ -106,6 +106,14 @@ Operator↔operator peer 회의는 **같은 codex 세션을 여러 턴에 걸쳐
 
 ## S-17: 바이브 코딩 안티패턴 방지 규율
 
+> **v5.6+ note (2026-04-23):** This checklist is FORWARD-LOOKING. At
+> `round_foundation_reset_r1` kickoff the workspace was a ~12-file MVP with no
+> `UnfadingTheme` and no Korean UI. Pre-round-2 code did not comply with most
+> items below. Compliance begins with round 2 deliverables. Earlier references
+> in this file that assume compliance (e.g., "현재 161건 적용") describe a
+> hypothetical advanced workspace, not this repo. See
+> `docs/exec-plans/sprint-history-pre-v5.md` for context.
+
 시니어 iOS 개발자가 자연스럽게 수행하지만, AI/바이브 코딩이 반복적으로 놓치는 항목.
 코드 작성 및 리뷰 시 아래 체크리스트를 반드시 확인한다.
 

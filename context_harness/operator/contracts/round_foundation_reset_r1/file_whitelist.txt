@@ -1,0 +1,47 @@
+# round_foundation_reset_r1 — writable paths (base; amendments via file_whitelist.amendment.N.txt)
+
+# New reusable modules
+workspace/ios/Shared/UnfadingTheme.swift
+workspace/ios/Shared/UnfadingLocalized.swift
+workspace/ios/Shared/UnfadingButtonStyle.swift
+workspace/ios/Shared/UnfadingCardBackground.swift
+
+# Refactor targets
+workspace/ios/App/RootTabView.swift
+workspace/ios/Features/Home/MemoryMapHomeView.swift
+workspace/ios/Features/Home/MemoryComposerSheet.swift
+workspace/ios/Features/Home/MemorySummaryCard.swift
+workspace/ios/Features/Home/MemoryPinMarker.swift
+workspace/ios/Features/Rewind/RewindFeedView.swift
+workspace/ios/Features/Rewind/RewindMomentCard.swift
+workspace/ios/Features/Groups/GroupHubView.swift
+
+# Tests
+workspace/ios/Tests/MemoryMapTests.swift
+workspace/ios/Tests/UnfadingThemeTests.swift
+workspace/ios/Tests/UnfadingLocalizedTests.swift
+workspace/ios/Tests/UnfadingComponentTests.swift
+
+# Doc reconciliation
+context_harness/SESSION_RESUME.md
+docs/exec-plans/sprint-history-pre-v5.md
+docs/references/coding-conventions.md
+SKILLS.md
+
+# Governance artifacts
+context_harness/operator/contracts/round_foundation_reset_r1/**
+context_harness/operator/locks/round_foundation_reset_r1.lock
+context_harness/operator/locks/round_foundation_reset_r1.events.jsonl
+context_harness/operator/meetings/2026-04-23_round2_*.md
+context_harness/operator/codex_transcripts/codex_round2_*.log
+context_harness/operator/codex_transcripts/codex_r2_*.log
+context_harness/operator/CHANGELOG.md
+
+# Evidence + verdict
+context_harness/reports/round_foundation_reset_r1/**
+
+# Live state + logs
+docs/exec-plans/process-log.jsonl
+
+# Generated xcodeproj is gitignored but `xcodegen generate` may touch it pre-test; allow patterns here for completeness
+workspace/ios/MemoryMap.xcodeproj/**

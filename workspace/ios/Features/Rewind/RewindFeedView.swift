@@ -4,15 +4,15 @@ struct RewindFeedView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: UnfadingTheme.Spacing.lg) {
                     ForEach(RewindMoment.samples) { moment in
                         RewindMomentCard(moment: moment)
                     }
                 }
-                .padding(20)
+                .padding(UnfadingTheme.Spacing.xl)
             }
-            .background(Color(uiColor: .systemGroupedBackground))
-            .navigationTitle("Rewind")
+            .background(UnfadingTheme.Color.cream)
+            .navigationTitle(UnfadingLocalized.Rewind.navTitle)
         }
     }
 }
