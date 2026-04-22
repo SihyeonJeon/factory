@@ -1,0 +1,198 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project /Users/jeonsihyeon/factory/workspace/ios/MemoryMap.xcodeproj -scheme MemoryMap -destination "platform=iOS Simulator,name=iPhone 17" test
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (2 targets)
+    Target 'MemoryMapTests' in project 'MemoryMap'
+        ➜ Explicit dependency on target 'MemoryMap' in project 'MemoryMap'
+    Target 'MemoryMap' in project 'MemoryMap' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.4-23E237-686eebb5dc1d8ecb277353a59184f4aa.sdkstatcache
+    cd /Users/jeonsihyeon/factory/workspace/ios/MemoryMap.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -o /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.4-23E237-686eebb5dc1d8ecb277353a59184f4aa.sdkstatcache
+
+2026-04-23 01:52:53.515950+0900 MemoryMap[86372:631136] [ResourceManifest] Failed to locate resource named "default.csv"
+2026-04-23 01:52:53.549656+0900 MemoryMap[86372:631136] [API] CAMetalLayer ignoring invalid setDrawableSize width=0.000000 height=0.000000
+Test Suite 'All tests' started at 2026-04-23 01:52:54.660.
+Test Suite 'MemoryMapTests.xctest' started at 2026-04-23 01:52:54.660.
+Test Suite 'MemoryComposerStateTests' started at 2026-04-23 01:52:54.661.
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_add_photo_enables_save]' started.
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_add_photo_enables_save]' passed (0.003 seconds).
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_initial_state_is_empty_and_save_disabled]' started.
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_initial_state_is_empty_and_save_disabled]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_reset_clears_all_user_input]' started.
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_reset_clears_all_user_input]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_set_note_enables_save]' started.
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_set_note_enables_save]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_toggle_mood_adds_then_removes]' started.
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_toggle_mood_adds_then_removes]' passed (0.001 seconds).
+Test Suite 'MemoryComposerStateTests' passed at 2026-04-23 01:52:54.668.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.005 (0.007) seconds
+Test Suite 'MemoryMapTests' started at 2026-04-23 01:52:54.668.
+Test Case '-[MemoryMapTests.MemoryMapTests testAuthorizedLocationTapCentersOnUser]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testAuthorizedLocationTapCentersOnUser]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testContinueWithoutLocationEnablesManualFallbackAndDismissesPrompt]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testContinueWithoutLocationEnablesManualFallbackAndDismissesPrompt]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testCurrentLocationTapRequestsAuthorizationWhenUndetermined]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testCurrentLocationTapRequestsAuthorizationWhenUndetermined]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testDeniedLocationTapShowsSettingsAndManualFallback]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testDeniedLocationTapShowsSettingsAndManualFallback]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testOpenSettingsKeepsManualFallbackDisabled]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testOpenSettingsKeepsManualFallbackDisabled]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testPlaceSuggestionMatchingUsesTitleAndSubtitle]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testPlaceSuggestionMatchingUsesTitleAndSubtitle]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testRefreshClearsManualFallbackAfterAuthorizationReturns]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testRefreshClearsManualFallbackAfterAuthorizationReturns]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testRestrictedLocationTapShowsManualFallbackOnly]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testRestrictedLocationTapShowsManualFallbackOnly]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testRewindMomentsExist]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testRewindMomentsExist]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testSamplePinsExist]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testSamplePinsExist]' passed (0.001 seconds).
+Test Suite 'MemoryMapTests' passed at 2026-04-23 01:52:54.716.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.006 (0.048) seconds
+Test Suite 'MemorySelectionStateTests' started at 2026-04-23 01:52:54.716.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_clearSelection_resets_snap_to_default]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_clearSelection_resets_snap_to_default]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_filter_has_five_cases_matching_deepsight_plan]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_filter_has_five_cases_matching_deepsight_plan]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_initial_state_has_no_selection_default_filter_default_snap]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_initial_state_has_no_selection_default_filter_default_snap]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_select_sets_pin_and_expands_sheet]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_select_sets_pin_and_expands_sheet]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_selectedPin_resolves_id_to_sample]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_selectedPin_resolves_id_to_sample]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_selectedPin_returns_nil_when_no_selection]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_selectedPin_returns_nil_when_no_selection]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_selecting_different_pin_switches_selection]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_selecting_different_pin_switches_selection]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_selecting_same_pin_twice_clears_and_restores_default]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_selecting_same_pin_twice_clears_and_restores_default]' passed (0.000 seconds).
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_toggleFilter_activates_then_reverts_to_all]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_toggleFilter_activates_then_reverts_to_all]' passed (0.000 seconds).
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_toggleFilter_swaps_between_filters]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_toggleFilter_swaps_between_filters]' passed (0.000 seconds).
+Test Suite 'MemorySelectionStateTests' passed at 2026-04-23 01:52:54.745.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.005 (0.029) seconds
+Test Suite 'RootNavigationTests' started at 2026-04-23 01:52:54.745.
+Test Case '-[MemoryMapTests.RootNavigationTests test_accessibility_labels_match_tab_purpose]' started.
+Test Case '-[MemoryMapTests.RootNavigationTests test_accessibility_labels_match_tab_purpose]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.RootNavigationTests test_calendar_stub_has_korean_placeholder]' started.
+Test Case '-[MemoryMapTests.RootNavigationTests test_calendar_stub_has_korean_placeholder]' passed (0.000 seconds).
+Test Case '-[MemoryMapTests.RootNavigationTests test_compose_tab_intercept_contract]' started.
+Test Case '-[MemoryMapTests.RootNavigationTests test_compose_tab_intercept_contract]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.RootNavigationTests test_settings_stub_exposes_groups_row]' started.
+Test Case '-[MemoryMapTests.RootNavigationTests test_settings_stub_exposes_groups_row]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.RootNavigationTests test_tab_labels_are_korean]' started.
+Test Case '-[MemoryMapTests.RootNavigationTests test_tab_labels_are_korean]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.RootNavigationTests test_tab_order_matches_deepsight_plan]' started.
+Test Case '-[MemoryMapTests.RootNavigationTests test_tab_order_matches_deepsight_plan]' passed (0.013 seconds).
+Test Suite 'RootNavigationTests' passed at 2026-04-23 01:52:54.763.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.016 (0.018) seconds
+Test Suite 'UnfadingBottomSheetTests' started at 2026-04-23 01:52:54.763.
+Test Case '-[MemoryMapTests.UnfadingBottomSheetTests test_bottom_sheet_view_builds]' started.
+Test Case '-[MemoryMapTests.UnfadingBottomSheetTests test_bottom_sheet_view_builds]' passed (0.053 seconds).
+Test Case '-[MemoryMapTests.UnfadingBottomSheetTests test_nearest_picks_closest_snap]' started.
+Test Case '-[MemoryMapTests.UnfadingBottomSheetTests test_nearest_picks_closest_snap]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingBottomSheetTests test_ordered_is_monotonic]' started.
+Test Case '-[MemoryMapTests.UnfadingBottomSheetTests test_ordered_is_monotonic]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingBottomSheetTests test_snap_fractions_match_deepsight]' started.
+Test Case '-[MemoryMapTests.UnfadingBottomSheetTests test_snap_fractions_match_deepsight]' passed (0.001 seconds).
+Test Suite 'UnfadingBottomSheetTests' passed at 2026-04-23 01:52:54.819.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.054 (0.056) seconds
+Test Suite 'UnfadingComponentTests' started at 2026-04-23 01:52:54.819.
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_card_background_modifier_can_be_applied]' started.
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_card_background_modifier_can_be_applied]' passed (0.031 seconds).
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_card_background_uses_theme_defaults]' started.
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_card_background_uses_theme_defaults]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_primary_button_style_applies_to_button]' started.
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_primary_button_style_applies_to_button]' passed (0.020 seconds).
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_primary_button_style_shorthand_exists]' started.
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_primary_button_style_shorthand_exists]' passed (0.001 seconds).
+Test Suite 'UnfadingComponentTests' passed at 2026-04-23 01:52:54.873.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.052 (0.053) seconds
+Test Suite 'UnfadingFilterChipTests' started at 2026-04-23 01:52:54.873.
+Test Case '-[MemoryMapTests.UnfadingFilterChipTests test_chip_action_callable]' started.
+Test Case '-[MemoryMapTests.UnfadingFilterChipTests test_chip_action_callable]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingFilterChipTests test_chip_title_is_required]' started.
+Test Case '-[MemoryMapTests.UnfadingFilterChipTests test_chip_title_is_required]' passed (0.000 seconds).
+Test Case '-[MemoryMapTests.UnfadingFilterChipTests test_filter_chip_builds_for_selected_and_unselected]' started.
+Test Case '-[MemoryMapTests.UnfadingFilterChipTests test_filter_chip_builds_for_selected_and_unselected]' passed (0.007 seconds).
+Test Suite 'UnfadingFilterChipTests' passed at 2026-04-23 01:52:54.882.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.008 (0.009) seconds
+Test Suite 'UnfadingLocalizedTests' started at 2026-04-23 01:52:54.882.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_accessibility_labels_contain_korean]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_accessibility_labels_contain_korean]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_composer_navigation_strings_present]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_composer_navigation_strings_present]' passed (0.000 seconds).
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_draft_tag_helper_maps_known_ids]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_draft_tag_helper_maps_known_ids]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_draft_tag_helper_returns_fallback_for_unknown_id]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_draft_tag_helper_returns_fallback_for_unknown_id]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_place_suggestion_helper_returns_korean_for_known_ids]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_place_suggestion_helper_returns_korean_for_known_ids]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_summary_sample_copy_is_non_empty_korean]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_summary_sample_copy_is_non_empty_korean]' passed (0.002 seconds).
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_tab_labels_are_korean_and_non_empty]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_tab_labels_are_korean_and_non_empty]' passed (0.000 seconds).
+Test Suite 'UnfadingLocalizedTests' passed at 2026-04-23 01:52:54.889.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.005 (0.007) seconds
+Test Suite 'UnfadingPhotoGridTests' started at 2026-04-23 01:52:54.889.
+Test Case '-[MemoryMapTests.UnfadingPhotoGridTests test_empty_selection_render_smoke]' started.
+2026-04-23 01:52:54.890050+0900 MemoryMap[86372:631136] [SwiftUI] Accessing State's value outside of being installed on a View. This will result in a constant Binding of the initial value and will not update.
+Test Case '-[MemoryMapTests.UnfadingPhotoGridTests test_empty_selection_render_smoke]' passed (0.071 seconds).
+Test Case '-[MemoryMapTests.UnfadingPhotoGridTests test_max_selection_respected_by_configuration]' started.
+Test Case '-[MemoryMapTests.UnfadingPhotoGridTests test_max_selection_respected_by_configuration]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingPhotoGridTests test_populated_selection_render_smoke]' started.
+2026-04-23 01:52:54.961767+0900 MemoryMap[86372:631136] [SwiftUI] Accessing State's value outside of being installed on a View. This will result in a constant Binding of the initial value and will not update.
+Test Case '-[MemoryMapTests.UnfadingPhotoGridTests test_populated_selection_render_smoke]' passed (0.055 seconds).
+Test Case '-[MemoryMapTests.UnfadingPhotoGridTests test_remove_button_label_is_korean]' started.
+Test Case '-[MemoryMapTests.UnfadingPhotoGridTests test_remove_button_label_is_korean]' passed (0.001 seconds).
+Test Suite 'UnfadingPhotoGridTests' passed at 2026-04-23 01:52:55.017.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.126 (0.128) seconds
+Test Suite 'UnfadingThemeTests' started at 2026-04-23 01:52:55.017.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_coral_matches_deepsight_hex]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_coral_matches_deepsight_hex]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_cream_matches_deepsight_hex]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_cream_matches_deepsight_hex]' passed (0.000 seconds).
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_lavender_matches_deepsight_hex]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_lavender_matches_deepsight_hex]' passed (0.000 seconds).
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_primary_aliases_coral]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_primary_aliases_coral]' passed (0.000 seconds).
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_radius_covers_deepsight_scale]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_radius_covers_deepsight_scale]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_sheet_snap_points_match_deepsight]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_sheet_snap_points_match_deepsight]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_spacing_is_monotonic]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_spacing_is_monotonic]' passed (0.001 seconds).
+Test Suite 'UnfadingThemeTests' passed at 2026-04-23 01:52:55.023.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.004 (0.006) seconds
+Test Suite 'MemoryMapTests.xctest' passed at 2026-04-23 01:52:55.023.
+	 Executed 60 tests, with 0 failures (0 unexpected) in 0.282 (0.362) seconds
+Test Suite 'All tests' passed at 2026-04-23 01:52:55.023.
+	 Executed 60 tests, with 0 failures (0 unexpected) in 0.282 (0.363) seconds
+2026-04-23 01:53:08.658 xcodebuild[85986:627738] [MT] IDETestOperationsObserverDebug: 56.895 elapsed -- Testing started completed.
+2026-04-23 01:53:08.658 xcodebuild[85986:627738] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-04-23 01:53:08.658 xcodebuild[85986:627738] [MT] IDETestOperationsObserverDebug: 56.895 sec, +56.895 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Logs/Test/Test-MemoryMap-2026.04.23_01-52-09-+0900.xcresult
+
+** TEST SUCCEEDED **
+
+Testing started

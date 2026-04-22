@@ -1,0 +1,16 @@
+workspace/ios/Shared/UnfadingPhotoGrid.swift
+workspace/ios/Shared/UnfadingLocalized.swift
+workspace/ios/Features/Home/MemoryComposerSheet.swift
+workspace/ios/Features/Home/MemoryComposerState.swift
+workspace/ios/Tests/UnfadingPhotoGridTests.swift
+workspace/ios/Tests/MemoryComposerStateTests.swift
+workspace/ios/project.yml
+context_harness/operator/contracts/round_composer_redesign_r1/**
+context_harness/operator/locks/round_composer_redesign_r1.lock
+context_harness/operator/locks/round_composer_redesign_r1.events.jsonl
+context_harness/operator/meetings/2026-04-23_round6_*.md
+context_harness/operator/codex_transcripts/codex_r6_*.log
+context_harness/reports/round_composer_redesign_r1/**
+context_harness/SESSION_RESUME.md
+docs/exec-plans/process-log.jsonl
+workspace/ios/MemoryMap.xcodeproj/**

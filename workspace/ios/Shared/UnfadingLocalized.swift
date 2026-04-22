@@ -1,5 +1,6 @@
 import Foundation
 
+// vibe-limit-checked: 7 Korean UI fidelity, 8 accessibility copy, 11 sample-data mapping
 /// Korean user-facing string namespace. All SwiftUI `Text`, `Label`, and
 /// `accessibilityLabel`/`accessibilityHint` arguments in `App/` and `Features/`
 /// MUST resolve to a member of this namespace. Plain Swift (not `.xcstrings`)
@@ -39,6 +40,15 @@ enum UnfadingLocalized {
         static let showCurrentLocationHint = "위치 권한이 있을 때 지도를 현재 위치로 이동합니다."
 
         static let addMemoryLabel = "추억 추가"
+    }
+
+    // MARK: Photo grid
+
+    enum PhotoGrid {
+        static let addPhoto = "사진 추가"
+        static let removePhoto = "사진 삭제"
+        static let loading = "불러오는 중"
+        static let loadFailed = "사진을 불러오지 못했어요"
     }
 
     // MARK: Home
@@ -125,18 +135,25 @@ enum UnfadingLocalized {
         // Navigation
         static let navTitle = "새 추억"
         static let save = "저장"
+        static let savePrimary = "저장"
+        static let saveDraft = "임시 저장"
 
         // Sections
         static let memorySection = "추억"
+        static let photoSection = "사진"
         static let photosSection = "사진"
         static let placeSection = "장소"
         static let moodSection = "감정"
+        static let moodLabel = "감정"
 
         // Memory fields
+        static let noteLabel = "메모"
         static let noteField = "짧은 메모를 남겨보세요"
         static let eventLabel = "이벤트"
         static let timeLabel = "시간"
         static let sampleTime = "오늘 오후 8:40"
+        static let timeInferredPrompt = "사진의 시간 정보를 기준으로 제안했어요."
+        static let timeEditAction = "시간 조정"
 
         // Photos
         static let addFromLibrary = "보관함에서 추가"
@@ -147,6 +164,8 @@ enum UnfadingLocalized {
         static let choosePlaceManually = "장소 직접 선택"
         static let useCurrentLocation = "현재 위치 사용"
         static let samplePlace = "상수동 루프톱"
+        static let placeConfirmPrompt = "저장하기 전에 장소가 맞는지 확인해 주세요."
+        static let placeEditAction = "장소 변경"
         static let placeholderChoose = "장소를 선택하세요"
         static let placeholderCurrent = "현재 위치"
 
