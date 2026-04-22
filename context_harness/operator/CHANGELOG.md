@@ -4,6 +4,54 @@ Append-only. Every operator-doc amendment must add an entry with date, summary, 
 
 ---
 
+## v5.4 — Real-Use P0 Fixes (2026-04-22)
+
+**Evidence:** `context_harness/reports/round_deepsight_r1/evidence/checker_friction.md`
+**Codex confirmation:** R7 (`context_harness/operator/codex_transcripts/codex_v5_4_confirm.log`) — 3 adjustments + 1 additional check accepted.
+**Trigger:** round_deepsight_r1 empirically confirmed Codex R5 blockers #1 (no `amend` command) and #4 (post-close evidence not revalidated) as REAL.
+
+### Added (2 narrow fixes)
+
+1. **`amend <round_id> <amendment_file> <meeting_path>` subcommand** — evented amendment flow that was missing in v5.3. Pre-checks lock status + tamper evidence, validates amendment metadata, writes lock atomically, appends `amended` event with post-amend lock sha. Rolls back to pre-amend lock text if post-write validation fails (no `amended` event emitted in rollback).
+   - `.md` amendments: parse frontmatter, cross-check `meeting` field against CLI arg.
+   - `.txt` amendments: infer `target` from filename (`<base>.amendment.N.txt` → `<base>.txt`); target must be in `REQUIRED_CONTRACT_FILES`.
+   - Rejects duplicates, close-state corruption (`gate_evidence_sha256` set or `closed_at` non-null), or any pre-check failure.
+   - Closes Codex blocker #1. Empirically verified end-to-end on `test_amend_r1` smoke round (happy path + invalid-target rejection).
+
+2. **Post-close gate evidence revalidation in `cmd_gates`** — when `lock.status == "closed"` and `lock.gate_evidence_sha256` is set, the checker recomputes live `gate_evidence.json` sha and blocks on mismatch. Closes Codex blocker #4. Empirically verified: tampered `gate_evidence.json` with fabricated content post-close → `gates` blocker fires; restore → passes.
+
+### Not in v5.4 scope (deferred from Codex R5)
+
+- #2 atomic lock+event (no crash experienced)
+- #3 event sequence validation (only `created`→`amended`→`closed` emitted by commands; manual event injection beyond scope)
+- #5 schema_version enforcement (no v1 locks in use)
+- #6 manual close provenance (orthogonal to v5.4 fixes)
+- #7 amendment meeting must require both participants (routine but batched for later)
+- #10 paused/escalated/aborted evented commands (no deadlock observed)
+
+### Other changes
+
+- REGULATION §3: amendment flow described as evented; post-close revalidation section added
+- STAGE_CONTRACT/OPERATOR/MEETING_PROTOCOL/PROCESS_AUDIT_CHECKLIST: version bumped to v5.4
+- FILE_INDEX: `amend` listed in checker commands
+- Docstring of `harness/check_operator_round.py` updated
+
+### Empirical test evidence
+
+`test_amend_r1` smoke round (cleaned up after verification):
+- `lock` → 9 passes / 0 blockers, `created` event logged
+- `amend ... spec.amendment.1.md ...` → 3 passes / 0 blockers, amendment registered with valid target/meeting/sha, `amended` event logged with post-amend lock sha
+- `amend ... spec.amendment.2.md ...` (invalid target `nonexistent.md`) → 1 blocker rejected pre-write, lock amendments count unchanged (rollback verified)
+- `gates` → 1 valid amendment accepted; unregistered `spec.amendment.2.md` on disk correctly flagged as blocker per v5.3 disk-scan rule
+
+`round_deepsight_r1` post-close tamper test:
+- Replaced `gate_evidence.json` with `{"TAMPERED_FOR_TEST":true}` → `gates` blocker: `gate_evidence.json tampered after close: locked=sha256:46945f05... live=sha256:cfbf46c1...`
+- Restored → `ok gate_evidence.json post-close integrity verified`
+
+Checker state after v5.4 on round_deepsight_r1 (closed): **0 blockers / 1 advisory (allowlisted future path) / 27 passes.**
+
+---
+
 ## v5.3 — Governance Bypass Fix (2026-04-22)
 
 **Meeting:** [`meetings/2026-04-22_v5.3_bypass_fix.md`](meetings/2026-04-22_v5.3_bypass_fix.md)

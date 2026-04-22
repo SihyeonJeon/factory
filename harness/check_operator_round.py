@@ -3,11 +3,13 @@
 Operator-round checker for Harness v5.
 
 Commands:
-  lint                       Lint operator docs against lint_config.toml (line caps, loader pointers, FILE_INDEX coverage, meeting frontmatter + Challenge Section)
-  audit-operator-layer       Operator-layer drift audit (REG §7): stage IDs, path existence, SESSION_RESUME freshness, legacy SUPERSEDED headers, file index coverage
-  lock <round_id>            Create operator/locks/<round_id>.lock from contract files (sha256 of all base files)
-  gates <round_id>           Gate 5 process-integrity checks for a round (contract immutability, live lint/convention hash, commit traceability, meeting integrity, operator-layer drift)
-  close <round_id>           Run gates; if all pass, transition lock status to `closed` with closed_at timestamp
+  lint                              Lint operator docs against lint_config.toml
+  audit-operator-layer              Operator-layer drift audit (REG §7)
+  lock   <round_id>                 Create lock from contract files + append `created` event
+  amend  <round_id> <file> <meeting> v5.4: validate + register amendment, append `amended` event
+                                    with post-amend lock sha. Rollback on validation failure.
+  gates  <round_id>                 Gate 5 checks. Post-close also revalidates gate_evidence.json sha.
+  close  <round_id>                 Run gates + gate_evidence.json schema; transition to `closed`
 
 Exits 0 on pass, non-zero on any blocker. Pure stdlib (Python 3.11+ tomllib).
 """
@@ -917,13 +919,144 @@ def cmd_gates(round_id: str) -> CheckReport:
     validate_amendments(lock, report)
     # v5.3: stages_completed = informational; ID membership only
     validate_stages_completed(lock, cfg, report)
-    # Commit traceability (v5.2+: includes uncommitted)
-    check_commit_traceability(lock, report)
+    # Commit traceability (v5.2+: includes uncommitted).
+    # v5.4: skip for closed rounds — their whitelist is historical; new work belongs to a new round.
+    if lock.get("status") != "closed":
+        check_commit_traceability(lock, report)
+    else:
+        report.ok("commit traceability skipped (closed round; historical whitelist)")
+    # v5.4: post-close gate_evidence revalidation (Codex blocker #4 fix)
+    if lock.get("status") == "closed" and lock.get("gate_evidence_sha256"):
+        ev_path = CONTRACTS_DIR / round_id / "gate_evidence.json"
+        if not ev_path.exists():
+            report.blocker("gate_evidence.json missing after close")
+        else:
+            actual = sha256_file(ev_path)
+            if actual != lock["gate_evidence_sha256"]:
+                report.blocker(f"gate_evidence.json tampered after close: locked={lock['gate_evidence_sha256'][:20]}... live={actual[:20]}...")
+            else:
+                report.ok("gate_evidence.json post-close integrity verified")
     # Lint + audit
     lint_report = cmd_lint()
     audit_report = cmd_audit_operator_layer()
     report.merge(lint_report)
     report.merge(audit_report)
+    return report
+
+
+def cmd_amend(round_id: str, amendment_file: str, meeting_path: str) -> CheckReport:
+    """v5.4: evented amendment flow. Validates amendment, updates lock.amendments[], writes lock,
+    then appends `amended` event with post-amend lock sha. Rollback on validation failure.
+
+    Codex R5 blocker #1 fix + R7 adjustments:
+    - .txt amendments infer target from filename (<base>.amendment.N.txt → <base>.txt)
+    - Reject if gate_evidence_sha256 already set or closed_at non-null (close-state corruption guard)
+    - On post-write validate_amendments() failure, restore old lock text BEFORE appending event
+    """
+    report = CheckReport()
+    lock_path = LOCKS_DIR / f"{round_id}.lock"
+    if not lock_path.exists():
+        report.blocker(f"lock missing: {lock_path}")
+        return report
+    try:
+        old_lock_text = lock_path.read_text()
+        lock = json.loads(old_lock_text)
+    except json.JSONDecodeError as e:
+        report.blocker(f"lock JSON invalid: {e}")
+        return report
+    # Status guards
+    if lock.get("status") != "active":
+        report.blocker(f"amend refused: lock status is '{lock.get('status')}', must be 'active'")
+        return report
+    # Codex R7 Q4: close-state corruption guard
+    if lock.get("gate_evidence_sha256") is not None:
+        report.blocker("amend refused: lock.gate_evidence_sha256 already set (close-state corruption)")
+        return report
+    if lock.get("closed_at") is not None:
+        report.blocker("amend refused: lock.closed_at already set (close-state corruption)")
+        return report
+    # Tamper-evident precheck
+    check_lock_tamper_evidence(round_id, lock_path, report)
+    if report.blockers:
+        return report
+    # Amendment file presence
+    round_dir = CONTRACTS_DIR / round_id
+    ap = round_dir / amendment_file
+    if not ap.exists():
+        report.blocker(f"amendment file missing: {round_dir.name}/{amendment_file}")
+        return report
+    # Duplicate guard
+    if any(a.get("file") == amendment_file for a in lock.get("amendments", [])):
+        report.blocker(f"amendment {amendment_file} already registered in lock")
+        return report
+    # Determine target + supersedes
+    target: str | None = None
+    supersedes: list = []
+    if amendment_file.endswith(".md"):
+        text = ap.read_text()
+        fm_match = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
+        if not fm_match:
+            report.blocker(f"amendment {amendment_file} missing frontmatter")
+            return report
+        fm = parse_simple_frontmatter(fm_match.group(1))
+        target = fm.get("target")
+        supersedes = fm.get("supersedes", [])
+        if not isinstance(supersedes, list):
+            supersedes = [supersedes]
+        fm_meeting = fm.get("meeting")
+        if not target:
+            report.blocker(f"amendment {amendment_file} frontmatter missing target")
+            return report
+        if fm_meeting and fm_meeting != meeting_path:
+            report.blocker(f"amendment {amendment_file} frontmatter meeting='{fm_meeting}' but CLI arg meeting='{meeting_path}'")
+            return report
+    elif amendment_file.endswith(".txt"):
+        # Infer target: <base>.amendment.N.txt → <base>.txt
+        m = re.match(r"(.+)\.amendment\.\d+\.txt$", amendment_file)
+        if not m:
+            report.blocker(f"amendment {amendment_file} filename must match `<base>.amendment.N.txt`")
+            return report
+        target = m.group(1) + ".txt"
+    else:
+        report.blocker(f"amendment {amendment_file} extension must be .md or .txt")
+        return report
+    # Target must be a base contract file (Codex R7 Q1: validate exactly)
+    if target not in REQUIRED_CONTRACT_FILES:
+        report.blocker(f"amendment target '{target}' not in REQUIRED_CONTRACT_FILES")
+        return report
+    # Meeting existence (same resolution logic as validate_amendments)
+    mp = REPO / meeting_path if meeting_path.startswith("context_harness/") else OPERATOR_DIR / "meetings" / Path(meeting_path).name
+    if not mp.exists():
+        report.blocker(f"meeting not found: {meeting_path}")
+        return report
+    # Compute amendment sha
+    amendment_sha = sha256_file(ap)
+    # Build entry
+    entry = {
+        "file": amendment_file,
+        "target": target,
+        "sha256": amendment_sha,
+        "supersedes": supersedes,
+        "meeting": meeting_path,
+    }
+    # Write new lock
+    new_lock = dict(lock)
+    new_lock["amendments"] = list(lock.get("amendments", [])) + [entry]
+    lock_path.write_text(json.dumps(new_lock, indent=2) + "\n")
+    # Post-write validation (rollback on failure — Codex R7 Q2)
+    validate_report = CheckReport()
+    validate_amendments(new_lock, validate_report)
+    if validate_report.blockers:
+        lock_path.write_text(old_lock_text)  # rollback BEFORE appending event
+        for b in validate_report.blockers:
+            report.blocker(f"post-write validation failed: {b}")
+        report.blocker(f"amend rolled back; lock restored to pre-amend state")
+        return report
+    # Append amended event with post-amend lock sha
+    post_sha = sha256_file(lock_path)
+    _append_lock_event(round_id, "amended", post_sha, lock.get("base_commit"), amendment_file)
+    report.ok(f"amendment registered: {amendment_file} → target={target}")
+    report.ok(f"event logged: amended (lock sha advanced to {post_sha[:20]}...)")
     return report
 
 
@@ -970,6 +1103,8 @@ def main(argv: list[str]) -> int:
         report = cmd_audit_operator_layer()
     elif cmd == "lock" and len(argv) >= 3:
         report = cmd_lock(argv[2])
+    elif cmd == "amend" and len(argv) >= 5:
+        report = cmd_amend(argv[2], argv[3], argv[4])
     elif cmd == "gates" and len(argv) >= 3:
         report = cmd_gates(argv[2])
     elif cmd == "close" and len(argv) >= 3:

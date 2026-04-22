@@ -40,7 +40,7 @@
 
 - Script: `harness/check_operator_round.py`
 - Lint config (operator-doc scope, TOML): `context_harness/operator/lint_config.toml`
-- Checker commands: `lint` | `lock <round>` | `gates <round>` | `close <round>` | `audit-operator-layer`
+- Checker commands: `lint` | `lock <round>` | `amend <round> <file> <meeting>` | `gates <round>` | `close <round>` | `audit-operator-layer`
 - Process log (append-only JSONL, one event per decided meeting): `docs/exec-plans/process-log.jsonl`
 
 ## Working on iOS code (Claude Code domain)

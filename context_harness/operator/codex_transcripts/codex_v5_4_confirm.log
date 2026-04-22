@@ -1,0 +1,105 @@
+OpenAI Codex v0.121.0 (research preview)
+--------
+workdir: /Users/jeonsihyeon/factory
+model: gpt-5.4
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: none
+reasoning summaries: none
+session id: 019db43d-746e-73b3-b33c-5dda3770df91
+--------
+user
+Codex — round_deepsight_r1 closed successfully (d25bc33), but empirical tests confirmed 2 of your R5 blockers are REAL:
+
+- #1 (no `amend` cmd): hit ×2 during the round
+- #4 (post-close evidence not revalidated): tampered `gate_evidence.json` with fabricated values, `gates` exit 0 ignoring the swap
+
+v5.4 = narrow P0 fixes only. Want your quick sign-off or adjustment before implementing.
+
+### Planned changes
+
+**1. `cmd_amend` subcommand — evented amendment flow**
+
+Signature: `check_operator_round.py amend <round_id> <amendment_file> <meeting_path>`
+
+Flow:
+- Load lock, require `status: active`
+- Run `check_lock_tamper_evidence` first (reject if lock sha differs from last event)
+- Amendment file must exist in `contracts/<round_id>/`
+- Reject if amendment already registered (duplicate prevention)
+- For `.md`: parse frontmatter, require `target`, `supersedes`, `meeting`; cross-check `meeting` frontmatter value matches the CLI arg; reject mismatch
+- For `.txt`: infer `target` from filename (`<base>.amendment.N.txt` → target=`<base>.txt`); meeting path comes from CLI arg
+- Other extensions: reject
+- Require `target` ∈ `REQUIRED_CONTRACT_FILES`
+- Compute amendment sha; append entry `{file, target, sha256, supersedes, meeting}` to `lock.amendments[]`
+- Write lock; compute post-amend lock sha; append `amended` event with `amendment_file` field
+- Run `validate_amendments()` post-write for consistency
+
+**2. Post-close evidence revalidation in `cmd_gates`**
+
+Added after existing tamper-evident check:
+```python
+if lock.get("status") == "closed" and lock.get("gate_evidence_sha256"):
+    ev_path = CONTRACTS_DIR / round_id / "gate_evidence.json"
+    if not ev_path.exists():
+        report.blocker("gate_evidence.json missing after close")
+    elif sha256_file(ev_path) != lock["gate_evidence_sha256"]:
+        report.blocker("gate_evidence.json tampered after close")
+    else:
+        report.ok("gate_evidence.json post-close integrity ok")
+```
+
+**3. Doc updates**
+
+- REGULATION §3: add `amend` command description; amendment flow now evented not manual
+- REGULATION §3 (Tamper-evident section): clarify gates also revalidates gate_evidence_sha256 after close
+- CHANGELOG v5.4 entry
+- FILE_INDEX: add `amend <round>` to checker commands
+- Version bump v5.3 → v5.4 on core docs
+
+**NOT in v5.4 scope** (your R5 items explicitly deferred):
+- #2 atomic lock+event (medium priority; no crash observed yet)
+- #3 event sequence validation (medium priority)
+- #5 schema_version enforcement (low; no v1 locks in use)
+- #6 manual close provenance (medium)
+- #7 amendment meeting requires both participants (routine but can batch later)
+- #10 paused/escalated/aborted commands (not needed until deadlock occurs)
+
+### Questions
+
+Q1. For `.txt` amendment target inference from filename: OK or should I require an explicit CLI arg?
+
+Q2. Amend should run `validate_amendments` post-write. If post-write validation fails, should amend **roll back** (revert lock write, unlink event) or leave the broken state for the operator to manually clean up? I lean rollback — atomic failure is honest. Agree?
+
+Q3. Empirical test plan for v5.4:
+- Post-close revalidation: re-tamper gate_evidence.json on closed round_deepsight_r1 → `gates` must blocker
+- Amend: create `test_r1` mini round, lock, create `spec.amendment.1.md` with valid frontmatter + companion meeting file, run `amend test_r1 spec.amendment.1.md <meeting>`, verify lock.amendments[] + amended event, then close test_r1
+- Cleanup: delete test_r1 after verification
+
+Acceptable?
+
+Q4. Any additional narrow scope item you want me to batch with this v5.4 that I missed? If yes, name it with a one-line justification.
+
+Respond short. If agreement, "proceed"; if adjustments, list them.
+codex
+Proceed, with three adjustments.
+
+Q1: filename inference for `.txt` is OK, but validate the inferred target exactly. For `file_whitelist.amendment.1.txt`, target must become `file_whitelist.txt`; reject anything whose inferred target is not in `REQUIRED_CONTRACT_FILES`. No extra CLI arg needed.
+
+Q2: agree, rollback. Do not leave a broken lock/event pair. Safer flow: keep `old_lock_text`, write new lock, run `validate_amendments`, and only then append the `amended` event. If validation fails, restore old lock and return blocker. Since the event is appended last, there should be no event to unlink.
+
+Q3: acceptable. For the test round cleanup, ensure cleanup happens after verification and does not touch `round_deepsight_r1`. If test artifacts are under operator contracts/locks, either whitelist them for the test round or run cleanup outside any active production round.
+
+Q4: add one narrow check: `amend` should reject if `gate_evidence_sha256` is already set or `closed_at` is non-null, even if status somehow says active. Justification: prevents amendment after close-state corruption.
+tokens used
+1,300,989
+Proceed, with three adjustments.
+
+Q1: filename inference for `.txt` is OK, but validate the inferred target exactly. For `file_whitelist.amendment.1.txt`, target must become `file_whitelist.txt`; reject anything whose inferred target is not in `REQUIRED_CONTRACT_FILES`. No extra CLI arg needed.
+
+Q2: agree, rollback. Do not leave a broken lock/event pair. Safer flow: keep `old_lock_text`, write new lock, run `validate_amendments`, and only then append the `amended` event. If validation fails, restore old lock and return blocker. Since the event is appended last, there should be no event to unlink.
+
+Q3: acceptable. For the test round cleanup, ensure cleanup happens after verification and does not touch `round_deepsight_r1`. If test artifacts are under operator contracts/locks, either whitelist them for the test round or run cleanup outside any active production round.
+
+Q4: add one narrow check: `amend` should reject if `gate_evidence_sha256` is already set or `closed_at` is non-null, even if status somehow says active. Justification: prevents amendment after close-state corruption.

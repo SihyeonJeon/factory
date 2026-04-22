@@ -1,8 +1,8 @@
 # REGULATION — Harness v5
 
-**Version:** v5.3
+**Version:** v5.4
 **Bootstrapped:** 2026-04-19
-**Last amended:** 2026-04-22 (v5.3 governance-bypass fix, meeting `meetings/2026-04-22_v5.3_bypass_fix.md`)
+**Last amended:** 2026-04-22 (v5.4 real-use P0 fixes — `amend` subcommand + post-close evidence revalidation; based on empirical findings from round_deepsight_r1)
 **Authority:** Second-highest. Only an active round contract + lock supersedes this file.
 **Amend via:** Meeting (see `MEETING_PROTOCOL.md`) + CHANGELOG bump + convention_version increment.
 **Trust model (v5.3):** HONEST-AGENT error-reduction regime with TAMPER-EVIDENT audit trail. Not malicious-fabrication resistant. See `meetings/2026-04-22_v5.3_bypass_fix.md §Trust Model Decision`.
@@ -65,7 +65,7 @@ All amendments share a common structure:
 - Recorded in lock's `amendments[]` array with `{file, target, sha256, supersedes, meeting}`
 - Consumers compute effective state by reading base + amendments in order. The checker **validates** amendments (file exists + sha matches lock + frontmatter present + meeting exists and `status: decided` + target ∈ base files) but does NOT regenerate `.effective.*` artifacts — consumers (e.g., operators running checks) compute effective state on read.
 
-### Tamper-evident lock event log (v5.3)
+### Tamper-evident lock event log (v5.3+)
 
 Per round: `operator/locks/<round_id>.events.jsonl` (append-only JSONL). Each event:
 
@@ -73,7 +73,16 @@ Per round: `operator/locks/<round_id>.events.jsonl` (append-only JSONL). Each ev
 {"ts":"ISO","action":"created|amended|closed","lock_sha256":"sha256:...","base_commit":"...","amendment_file":null}
 ```
 
-Checker at `gates`/`close` computes the current `lock_sha256` and compares to the last event's `lock_sha256`. Mismatch = Gate 5 blocker (tampering suspected). Only the checker's `close` subcommand is permitted to advance the sha (records a new `closed` event with the post-close sha). Deleting the events file is detectable via `git log`. Accepted scope limit: this is honest-agent tamper-evidence, not malicious-fabrication resistance.
+Checker at `gates`/`close`/`amend` computes the current `lock_sha256` and compares to the last event's `lock_sha256`. Mismatch = Gate 5 blocker (tampering suspected). SHA-advancing actions:
+- `lock` → emits `created` event
+- `amend` → validates amendment, writes new lock, emits `amended` event with post-amend sha. Rolls back (restores pre-amend lock text) if post-write validation fails; event is NOT emitted in the rollback path.
+- `close` → validates gates + gate evidence, writes closed lock, records `gate_evidence_sha256`, emits `closed` event with post-close sha.
+
+Hand-editing status, amendments, or hashes in the lock without an evented command causes the next `gates` run to fail with a sha mismatch. Deleting the events file is detectable via `git log`. Accepted scope limit: this is honest-agent tamper-evidence, not malicious-fabrication resistance.
+
+### Post-close gate evidence revalidation (v5.4)
+
+When `lock.status == "closed"` and `lock.gate_evidence_sha256` is set, every `gates` run recomputes the live `gate_evidence.json` sha and compares. Mismatch = Gate 5 blocker. This closes the v5.3 regression where post-close edits were undetected (confirmed empirically during round_deepsight_r1 testing).
 
 ### Gate evidence schema (v5.3)
 
