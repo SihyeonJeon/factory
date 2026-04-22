@@ -11,7 +11,11 @@ enum UnfadingLocalized {
 
     enum Tab {
         static let map = "지도"
+        static let calendar = "캘린더"
+        static let compose = "추억"
         static let rewind = "리와인드"
+        static let settings = "설정"
+        // Deprecated (R2 MVP only; R3 demoted Groups to a row under Settings)
         static let groups = "그룹"
     }
 
@@ -20,8 +24,14 @@ enum UnfadingLocalized {
     enum Accessibility {
         static let mapTabLabel = "지도 탭"
         static let mapTabHint = "지도에서 추억 핀과 장소 기록을 둘러봅니다."
+        static let calendarTabLabel = "캘린더 탭"
+        static let calendarTabHint = "날짜별로 추억을 훑어봅니다."
+        static let composeTabLabel = "추억 만들기 탭"
+        static let composeTabHint = "새 추억을 기록하는 화면을 엽니다."
         static let rewindTabLabel = "리와인드 탭"
         static let rewindTabHint = "리와인드 순간과 알림 설정을 확인합니다."
+        static let settingsTabLabel = "설정 탭"
+        static let settingsTabHint = "앱 설정과 그룹 관리에 접근합니다."
         static let groupsTabLabel = "그룹 탭"
         static let groupsTabHint = "그룹을 만들고 초대와 참여를 관리합니다."
 
@@ -54,6 +64,30 @@ enum UnfadingLocalized {
 
     enum Groups {
         static let navTitle = "그룹"
+    }
+
+    // MARK: Calendar (stub in R3; full impl in R8)
+
+    enum Calendar {
+        static let navTitle = "캘린더"
+        static let stubTitle = "달력 화면 준비 중"
+        static let stubBody = "다가오는 라운드에서 월별 격자와 날짜별 추억 점을 구현합니다."
+    }
+
+    // MARK: Settings (stub in R3; full impl in R11)
+
+    enum Settings {
+        static let navTitle = "설정"
+        static let stubTitle = "설정 화면 준비 중"
+        static let stubBody = "앱 환경과 계정 설정은 다가오는 라운드에서 구성됩니다."
+        static let groupsRow = "그룹 관리"
+        static let groupsRowHint = "현재는 기존 그룹 허브를 엽니다. 다가오는 라운드에서 지도 위 그룹 칩으로 이동합니다."
+    }
+
+    // MARK: Placeholder (generic "coming soon" surfaces)
+
+    enum Placeholder {
+        static let comingSoon = "준비 중"
     }
 
     // MARK: Summary card

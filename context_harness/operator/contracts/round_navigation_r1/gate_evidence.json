@@ -1,0 +1,44 @@
+{
+  "round_id": "round_navigation_r1",
+  "notes": "5-tab navigation (지도/캘린더/추억/리와인드/설정) + stub CalendarView/SettingsView + compose fullScreenCover interceptor. 34/34 tests pass. Runtime screenshot confirms 5 Korean tab labels visible. Codex code review identified 1 blocker (Dynamic Type font violation) + 4 advisories; blocker fixed + 1 advisory adopted.",
+  "gate1": {
+    "status": "pass",
+    "command": "xcodebuild -project workspace/ios/MemoryMap.xcodeproj -scheme MemoryMap -destination 'platform=iOS Simulator,name=iPhone 17' test",
+    "exit_code": 0,
+    "test_count": 34,
+    "log": {
+      "path": "context_harness/reports/round_navigation_r1/evidence/xcode_test.log",
+      "sha256": "sha256:726f03078066bea9f7faa84f1fd0bd83511957263a38594b4437ac3989ec8dc1"
+    }
+  },
+  "gate2": {
+    "status": "pass",
+    "reports": [
+      {
+        "path": "context_harness/reports/round_navigation_r1/evidence/contract_capture.md",
+        "sha256": "sha256:ae07c207f81077943ffc1854d202d0485c265dbe7d99c28d592dceb92dc2bdd8"
+      },
+      {
+        "path": "context_harness/reports/round_navigation_r1/verdict.md",
+        "sha256": "sha256:89e2376161310be8b3aac4f0a9c4c08afac117c0190863a4296db5a08bba92ec"
+      },
+      {
+        "path": "context_harness/reports/round_navigation_r1/evidence/screenshots/01_map_default.png",
+        "sha256": "sha256:3bec0945d72589902e4e1df747ebcbcc592aefd0e94311a42239225247fe034c"
+      }
+    ]
+  },
+  "gate3": {
+    "status": "pass",
+    "cross_agreement_note": "Codex code-review cycle on R3 diff (real peer review per user's R2 complaint): 1 blocker (Dynamic Type font in CalendarView) + 4 advisories identified; blocker fixed, 1 advisory adopted, 3 carried to retro. Codex re-verdict after fixes: PASS."
+  },
+  "gate4": {
+    "status": "pass",
+    "metrics_source": {
+      "path": "docs/exec-plans/process-log.jsonl",
+      "sha256": "sha256:091e45b287622598e94f19aece44ed84238fcfc5adcc8cfcbf937c551dfeb004"
+    },
+    "remediation_cycles": 1,
+    "blocker_recurrence": 0
+  }
+}

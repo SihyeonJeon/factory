@@ -1,0 +1,36 @@
+# round_navigation_r1 whitelist
+
+# Refactor
+workspace/ios/App/RootTabView.swift
+
+# New stubs
+workspace/ios/Features/Calendar/CalendarView.swift
+workspace/ios/Features/Settings/SettingsView.swift
+
+# Localization additions
+workspace/ios/Shared/UnfadingLocalized.swift
+
+# Test
+workspace/ios/Tests/RootNavigationTests.swift
+workspace/ios/Tests/MemoryMapTests.swift
+
+# project.yml (stub screens add new source dirs; xcodegen regen)
+workspace/ios/project.yml
+
+# Governance
+context_harness/operator/contracts/round_navigation_r1/**
+context_harness/operator/locks/round_navigation_r1.lock
+context_harness/operator/locks/round_navigation_r1.events.jsonl
+context_harness/operator/meetings/2026-04-23_round3_*.md
+context_harness/operator/codex_transcripts/codex_r3_*.log
+context_harness/operator/CHANGELOG.md
+
+# Evidence
+context_harness/reports/round_navigation_r1/**
+
+# Live state + logs
+context_harness/SESSION_RESUME.md
+docs/exec-plans/process-log.jsonl
+
+# Generated xcodeproj
+workspace/ios/MemoryMap.xcodeproj/**

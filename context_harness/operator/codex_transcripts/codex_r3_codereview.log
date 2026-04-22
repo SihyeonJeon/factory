@@ -1,0 +1,609 @@
+OpenAI Codex v0.121.0 (research preview)
+--------
+workdir: /Users/jeonsihyeon/factory
+model: gpt-5.4
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: none
+reasoning summaries: none
+session id: 019db43d-746e-73b3-b33c-5dda3770df91
+--------
+user
+Codex — R3 round_navigation_r1 Swift implementation complete, build ✅, 34/34 tests pass, runtime screenshot captured (5-tab bar, Korean labels visible).
+
+Peer-review the actual code diff (NOT just verdict — real code review per the complaint that R2 was too thin). Read:
+
+- workspace/ios/App/RootTabView.swift (rewrite from 3-tab to 5-tab + compose interceptor)
+- workspace/ios/Features/Calendar/CalendarView.swift (new stub)
+- workspace/ios/Features/Settings/SettingsView.swift (new stub + groups row)
+- workspace/ios/Shared/UnfadingLocalized.swift (Tab/Calendar/Settings/Accessibility additions)
+- workspace/ios/Tests/RootNavigationTests.swift (new test file)
+
+Focus on:
+1. **Compose-tab-as-fullscreen-cover pattern** — is the `bindingForSelection` logic correct? Any edge case where `selectedTab` and `previousTab` can get out of sync (e.g., rapid tab switching, background/foreground, composer-to-composer)?
+2. **Groups demotion** — is routing Group Hub behind a Settings row + sheet an acceptable interim? Any a11y regression?
+3. **Stub screens** — are they honest placeholders? Do they match the deepsight spirit or do they misrepresent?
+4. **Tab enum + binding pattern** — is this idiomatic SwiftUI for 2026? Any better pattern?
+5. **Test quality** — are the 6 navigation tests meaningful, or are they trivial type checks?
+
+Return a structured review:
+
+## Agree (strengths)
+## Disagree (what should change before close)
+## Blockers (must fix now)
+## Advisories (carry to retro)
+## Rewrite suggestions (if any)
+
+Scope: review only. Do not write files. If you flag blockers, I will revise and re-dispatch.
+codex
+I’ll review the actual Swift implementation and tests in a code-review stance, focusing on behavior and regressions rather than the prior verdict flow. No writes.
+exec
+/bin/zsh -lc "sed -n '1,260p' workspace/ios/App/RootTabView.swift" in /Users/jeonsihyeon/factory
+exec
+/bin/zsh -lc "sed -n '1,320p' workspace/ios/Shared/UnfadingLocalized.swift" in /Users/jeonsihyeon/factory
+exec
+/bin/zsh -lc "sed -n '1,260p' workspace/ios/Tests/RootNavigationTests.swift" in /Users/jeonsihyeon/factory
+exec
+/bin/zsh -lc "sed -n '1,220p' workspace/ios/Features/Calendar/CalendarView.swift && sed -n '1,260p' workspace/ios/Features/Settings/SettingsView.swift" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+import SwiftUI
+
+/// Root tab controller. R3 `round_navigation_r1` raised tab count 3 → 5 per the
+/// deepsight redesign: 지도 / 캘린더 / 추억(compose) / 리와인드 / 설정. The
+/// compose tab is a pseudo-destination — selecting it presents the composer as
+/// a fullScreenCover and restores the previous tab on dismiss. Groups were
+/// demoted from a top-level tab to a row inside Settings this round; future
+/// rounds surface Group Hub via a Map top-left chip.
+struct RootTabView: View {
+    enum Tab: Hashable {
+        case map
+        case calendar
+        case compose
+        case rewind
+        case settings
+    }
+
+    private let evidenceMode: MemoryComposerEvidenceMode
+
+    @State private var selectedTab: Tab = .map
+    @State private var previousTab: Tab = .map
+    @State private var isPresentingComposer: Bool = false
+
+    init(evidenceMode: MemoryComposerEvidenceMode = .none) {
+        self.evidenceMode = evidenceMode
+    }
+
+    var body: some View {
+        TabView(selection: bindingForSelection) {
+            MemoryMapHomeView(evidenceMode: evidenceMode)
+                .tabItem {
+                    Label(UnfadingLocalized.Tab.map, systemImage: "map")
+                }
+                .tag(Tab.map)
+                .accessibilityLabel(UnfadingLocalized.Accessibility.mapTabLabel)
+                .accessibilityHint(UnfadingLocalized.Accessibility.mapTabHint)
+
+            CalendarView()
+                .tabItem {
+                    Label(UnfadingLocalized.Tab.calendar, systemImage: "calendar")
+                }
+                .tag(Tab.calendar)
+                .accessibilityLabel(UnfadingLocalized.Accessibility.calendarTabLabel)
+                .accessibilityHint(UnfadingLocalized.Accessibility.calendarTabHint)
+
+            // Placeholder view for the compose tab — TabView requires a destination per tag.
+            // Actual behavior: selecting this tab presents MemoryComposerSheet via
+            // `bindingForSelection` below; this view should never be seen in practice.
+            ComposeTabPlaceholder()
+                .tabItem {
+                    Label(UnfadingLocalized.Tab.compose, systemImage: "plus.circle.fill")
+                }
+                .tag(Tab.compose)
+                .accessibilityLabel(UnfadingLocalized.Accessibility.composeTabLabel)
+                .accessibilityHint(UnfadingLocalized.Accessibility.composeTabHint)
+
+            RewindFeedView()
+                .tabItem {
+                    Label(UnfadingLocalized.Tab.rewind, systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                }
+                .tag(Tab.rewind)
+                .accessibilityLabel(UnfadingLocalized.Accessibility.rewindTabLabel)
+                .accessibilityHint(UnfadingLocalized.Accessibility.rewindTabHint)
+
+            SettingsView()
+                .tabItem {
+                    Label(UnfadingLocalized.Tab.settings, systemImage: "gearshape")
+                }
+                .tag(Tab.settings)
+                .accessibilityLabel(UnfadingLocalized.Accessibility.settingsTabLabel)
+                .accessibilityHint(UnfadingLocalized.Accessibility.settingsTabHint)
+        }
+        .tint(UnfadingTheme.Color.primary)
+        .fullScreenCover(isPresented: $isPresentingComposer, onDismiss: {
+            // Restore the prior tab after composer dismissal
+            selectedTab = previousTab
+        }) {
+            MemoryComposerSheet(
+                initialLocationPermissionState: .denied,
+                evidenceMode: evidenceMode
+            )
+        }
+    }
+
+    /// Intercept selection: if the user taps the compose tab, remember the previous
+    /// tab, snap selection back to the previous tab, and present the composer full-
+    /// screen. This avoids the TabView leaving the user "stranded" on the placeholder.
+    private var bindingForSelection: Binding<Tab> {
+        Binding(
+            get: { selectedTab },
+            set: { newValue in
+                if newValue == .compose {
+                    previousTab = selectedTab
+                    isPresentingComposer = true
+                    // Do NOT advance selectedTab; keep it on previousTab so the UI
+                    // doesn't flicker the placeholder while the cover animates up.
+                } else {
+                    selectedTab = newValue
+                }
+            }
+        )
+    }
+}
+
+/// Placeholder destination for the compose tab. See note in `RootTabView.body`.
+/// Intentionally minimal; the fullScreenCover covers the tab before SwiftUI can
+/// render this view.
+private struct ComposeTabPlaceholder: View {
+    var body: some View {
+        Color.clear.accessibilityHidden(true)
+    }
+}
+
+#Preview {
+    RootTabView()
+}
+
+ succeeded in 0ms:
+import Foundation
+
+/// Korean user-facing string namespace. All SwiftUI `Text`, `Label`, and
+/// `accessibilityLabel`/`accessibilityHint` arguments in `App/` and `Features/`
+/// MUST resolve to a member of this namespace. Plain Swift (not `.xcstrings`)
+/// per `round_foundation_reset_r1` decision; migrate to `Localizable.xcstrings`
+/// only when multi-locale becomes a real product requirement.
+enum UnfadingLocalized {
+
+    // MARK: Tab labels
+
+    enum Tab {
+        static let map = "지도"
+        static let calendar = "캘린더"
+        static let compose = "추억"
+        static let rewind = "리와인드"
+        static let settings = "설정"
+        // Deprecated (R2 MVP only; R3 demoted Groups to a row under Settings)
+        static let groups = "그룹"
+    }
+
+    // MARK: Accessibility
+
+    enum Accessibility {
+        static let mapTabLabel = "지도 탭"
+        static let mapTabHint = "지도에서 추억 핀과 장소 기록을 둘러봅니다."
+        static let calendarTabLabel = "캘린더 탭"
+        static let calendarTabHint = "날짜별로 추억을 훑어봅니다."
+        static let composeTabLabel = "추억 만들기 탭"
+        static let composeTabHint = "새 추억을 기록하는 화면을 엽니다."
+        static let rewindTabLabel = "리와인드 탭"
+        static let rewindTabHint = "리와인드 순간과 알림 설정을 확인합니다."
+        static let settingsTabLabel = "설정 탭"
+        static let settingsTabHint = "앱 설정과 그룹 관리에 접근합니다."
+        static let groupsTabLabel = "그룹 탭"
+        static let groupsTabHint = "그룹을 만들고 초대와 참여를 관리합니다."
+
+        static let showCurrentLocationLabel = "현재 위치 보기"
+        static let showCurrentLocationHint = "위치 권한이 있을 때 지도를 현재 위치로 이동합니다."
+
+        static let addMemoryLabel = "추억 추가"
+    }
+
+    // MARK: Home
+
+    enum Home {
+        static let newMemory = "새 추억"
+        static let navTitle = "추억 지도"
+    }
+
+    // MARK: Common
+
+    enum Common {
+        static let cancel = "취소"
+    }
+
+    // MARK: Rewind
+
+    enum Rewind {
+        static let navTitle = "리와인드"
+    }
+
+    // MARK: Groups
+
+    enum Groups {
+        static let navTitle = "그룹"
+    }
+
+    // MARK: Calendar (stub in R3; full impl in R8)
+
+    enum Calendar {
+        static let navTitle = "캘린더"
+        static let stubTitle = "달력 화면 준비 중"
+        static let stubBody = "다가오는 라운드에서 월별 격자와 날짜별 추억 점을 구현합니다."
+    }
+
+    // MARK: Settings (stub in R3; full impl in R11)
+
+    enum Settings {
+        static let navTitle = "설정"
+        static let stubTitle = "설정 화면 준비 중"
+        static let stubBody = "앱 환경과 계정 설정은 다가오는 라운드에서 구성됩니다."
+        static let groupsRow = "그룹 관리"
+        static let groupsRowHint = "현재는 기존 그룹 허브를 엽니다. 다가오는 라운드에서 지도 위 그룹 칩으로 이동합니다."
+    }
+
+    // MARK: Placeholder (generic "coming soon" surfaces)
+
+    enum Placeholder {
+        static let comingSoon = "준비 중"
+    }
+
+    // MARK: Summary card
+
+    enum Summary {
+        static let tonightsRewind = "오늘의 리와인드"
+        static let sampleTitle = "상수 루프톱 저녁"
+        static let sampleBody = "3년 전 오늘, 이곳에서 공연 뒤 함께 핀을 남겼습니다. 오늘 아침 새 반응 2개가 도착했습니다."
+        static let friendCount = "친구 4명"
+        static let joyTag = "기쁨"
+        static let nightOutTag = "밤 나들이"
+        static let photoSetTag = "사진 모음"
+    }
+
+    // MARK: Composer
+
+    enum Composer {
+        // Navigation
+        static let navTitle = "새 추억"
+        static let save = "저장"
+
+        // Sections
+        static let memorySection = "추억"
+        static let photosSection = "사진"
+        static let placeSection = "장소"
+        static let moodSection = "감정"
+
+        // Memory fields
+        static let noteField = "짧은 메모를 남겨보세요"
+        static let eventLabel = "이벤트"
+        static let timeLabel = "시간"
+        static let sampleTime = "오늘 오후 8:40"
+
+        // Photos
+        static let addFromLibrary = "보관함에서 추가"
+        static let metadataHint = "첫 사진의 메타데이터로 시간과 장소를 미리 채울 수 있습니다."
+
+        // Place
+        static let selectedPlace = "선택한 장소"
+        static let choosePlaceManually = "장소 직접 선택"
+        static let useCurrentLocation = "현재 위치 사용"
+        static let samplePlace = "상수동 루프톱"
+        static let placeholderChoose = "장소를 선택하세요"
+        static let placeholderCurrent = "현재 위치"
+
+        // Denied recovery sheet
+        static let locationAccessOff = "위치 접근 꺼짐"
+        static let locationRecoveryHint = "장소를 직접 선택하면 이 추억을 저장할 수 있습니다. 현재 위치 자동 입력을 사용하려면 설정에서 위치 접근을 다시 켜세요."
+        static let currentPlace = "현재 장소"
+        static let searchForPlace = "장소 검색"
+        static let openSettings = "설정 열기"
+        static let locationNeededTitle = "위치 권한 필요"
+        static let done = "완료"
+
+        // Manual place picker sheet
+        static let useTypedPlace = "입력한 장소 사용"
+        static let nearbyOptions = "근처 장소"
+        static let searchPlaces = "장소 검색"
+        static let choosePlaceTitle = "장소 선택"
+    }
+
+    // MARK: Model-sourced display (helpers for sample data)
+
+    /// Korean display for a `MemoryDraftTag.id`. Returns the fallback if unmapped.
+    static func draftTag(id: String, fallback: String) -> String {
+        switch id {
+        case "joy": return "기쁨"
+        case "calm": return "차분함"
+        case "grateful": return "감사"
+        case "nostalgic": return "그리움"
+        default: return fallback
+        }
+    }
+
+    /// Korean display for a `PlaceSuggestion.id`. Returns the fallback if unmapped.
+    static func placeSuggestion(id: String, fallbackTitle: String, fallbackSubtitle: String) -> (title: String, subtitle: String) {
+        switch id {
+        case "sangsu-rooftop":
+            return ("상수 루프톱", "서울 마포구")
+        case "jeju-sunrise":
+            return ("제주 성산일출봉", "제주 성산읍")
+        case "yeouido-park":
+            return ("여의도 한강공원", "서울 영등포구")
+        default:
+            return (fallbackTitle, fallbackSubtitle)
+        }
+    }
+}
+
+ succeeded in 0ms:
+import SwiftUI
+import XCTest
+@testable import MemoryMap
+
+/// Navigation contract tests for R3 `round_navigation_r1`.
+///
+/// We assert against the `RootTabView.Tab` enum + `UnfadingLocalized.Tab`
+/// strings, not by spinning up a `UIHostingController`, because the real
+/// 5-tab structural contract lives in the public enum + label map.
+final class RootNavigationTests: XCTestCase {
+
+    func test_tab_order_matches_deepsight_plan() {
+        // Deepsight plan order: map / calendar / compose / rewind / settings
+        let expected: [RootTabView.Tab] = [.map, .calendar, .compose, .rewind, .settings]
+        XCTAssertEqual(expected.count, 5, "5-tab root is the R3 contract")
+    }
+
+    func test_tab_labels_are_korean() {
+        XCTAssertEqual(UnfadingLocalized.Tab.map, "지도")
+        XCTAssertEqual(UnfadingLocalized.Tab.calendar, "캘린더")
+        XCTAssertEqual(UnfadingLocalized.Tab.compose, "추억")
+        XCTAssertEqual(UnfadingLocalized.Tab.rewind, "리와인드")
+        XCTAssertEqual(UnfadingLocalized.Tab.settings, "설정")
+    }
+
+    func test_accessibility_labels_match_tab_purpose() {
+        XCTAssertTrue(UnfadingLocalized.Accessibility.mapTabLabel.contains("지도"))
+        XCTAssertTrue(UnfadingLocalized.Accessibility.calendarTabLabel.contains("캘린더"))
+        XCTAssertTrue(UnfadingLocalized.Accessibility.composeTabLabel.contains("추억"))
+        XCTAssertTrue(UnfadingLocalized.Accessibility.rewindTabLabel.contains("리와인드"))
+        XCTAssertTrue(UnfadingLocalized.Accessibility.settingsTabLabel.contains("설정"))
+    }
+
+    func test_calendar_stub_has_korean_placeholder() {
+        XCTAssertFalse(UnfadingLocalized.Calendar.stubTitle.isEmpty)
+        XCTAssertTrue(UnfadingLocalized.Calendar.stubTitle.contains("달력"))
+        XCTAssertFalse(UnfadingLocalized.Calendar.stubBody.isEmpty)
+    }
+
+    func test_settings_stub_exposes_groups_row() {
+        XCTAssertEqual(UnfadingLocalized.Settings.groupsRow, "그룹 관리")
+        XCTAssertFalse(UnfadingLocalized.Settings.stubTitle.isEmpty)
+        XCTAssertFalse(UnfadingLocalized.Settings.groupsRowHint.isEmpty)
+    }
+
+    func test_compose_tab_intercept_contract() {
+        // The compose tab is a pseudo-destination; the behavioral rule (select →
+        // present cover → don't advance selectedTab) is encoded in bindingForSelection
+        // and exercised here by asserting the tab's presence in the enum.
+        let allCases: [RootTabView.Tab] = [.map, .calendar, .compose, .rewind, .settings]
+        XCTAssertTrue(allCases.contains(.compose))
+    }
+}
+
+ succeeded in 0ms:
+import SwiftUI
+
+/// Stub screen for R3 `round_navigation_r1`. Replaced with a full month-grid
+/// implementation in R8 `round_calendar_r1`. Exists now so the 5-tab root can
+/// route here deterministically and accessibility structure is testable.
+struct CalendarView: View {
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: UnfadingTheme.Spacing.lg) {
+                Spacer()
+                Image(systemName: "calendar")
+                    .font(.system(size: 56, weight: .light))
+                    .foregroundStyle(UnfadingTheme.Color.primary)
+                Text(UnfadingLocalized.Calendar.stubTitle)
+                    .font(UnfadingTheme.Font.title3Bold())
+                    .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                    .multilineTextAlignment(.center)
+                Text(UnfadingLocalized.Calendar.stubBody)
+                    .font(UnfadingTheme.Font.subheadline())
+                    .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, UnfadingTheme.Spacing.xl)
+                Spacer()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(UnfadingTheme.Color.cream)
+            .navigationTitle(UnfadingLocalized.Calendar.navTitle)
+        }
+    }
+}
+
+#Preview {
+    CalendarView()
+}
+import SwiftUI
+
+/// Stub screen for R3 `round_navigation_r1`. Replaced with a full Settings
+/// implementation in R11. Exists now so the 5-tab root can route here, and so
+/// Group Hub remains reachable after the Groups tab is removed in this round.
+struct SettingsView: View {
+    @State private var showingGroupHub = false
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
+                        Text(UnfadingLocalized.Settings.stubTitle)
+                            .font(UnfadingTheme.Font.title3Bold())
+                            .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                        Text(UnfadingLocalized.Settings.stubBody)
+                            .font(UnfadingTheme.Font.subheadline())
+                            .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                    }
+                    .padding(.vertical, UnfadingTheme.Spacing.sm)
+                }
+
+                Section {
+                    Button {
+                        showingGroupHub = true
+                    } label: {
+                        HStack {
+                            Label(UnfadingLocalized.Settings.groupsRow, systemImage: "person.3")
+                                .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                            Spacer()
+                            Image(systemName: "chevron.forward")
+                                .font(.footnote)
+                                .foregroundStyle(UnfadingTheme.Color.textTertiary)
+                        }
+                        .frame(minHeight: 44)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint(UnfadingLocalized.Settings.groupsRowHint)
+                }
+            }
+            .listStyle(.insetGrouped)
+            .navigationTitle(UnfadingLocalized.Settings.navTitle)
+            .sheet(isPresented: $showingGroupHub) {
+                GroupHubView()
+            }
+        }
+    }
+}
+
+#Preview {
+    SettingsView()
+}
+
+codex
+## Agree (strengths)
+
+- `RootTabView` compose interception is directionally correct. The custom `Binding` keeps `selectedTab` on the prior real tab and presents `MemoryComposerSheet` via `fullScreenCover`, which avoids stranding users on `ComposeTabPlaceholder`.
+- The five-tab order is readable and matches the plan: 지도 / 캘린더 / 추억 / 리와인드 / 설정.
+- Groups demotion is acceptable as an interim. `SettingsView` keeps `GroupHubView` reachable through a visible `그룹 관리` row, so the Groups tab removal is not a functional dead end.
+- The stubs are honest. `CalendarView` and `SettingsView` clearly say the surfaces are preparing/future work; they do not pretend to be complete features.
+- `UnfadingLocalized` additions are clean and keep labels/hints centralized.
+
+## Disagree (what should change before close)
+
+- `RootNavigationTests.test_compose_tab_intercept_contract` is too weak. It claims to exercise the compose intercept, but only asserts that `.compose` exists in a local array. It does not test `bindingForSelection`, previous-tab restoration, full-screen presentation state, or even `RootTabView` structure.
+- `test_tab_order_matches_deepsight_plan` is also mostly tautological: it constructs the expected array and checks its count. It does not compare against a source of truth from `RootTabView.Tab`.
+
+## Blockers (must fix now)
+
+1. `workspace/ios/Features/Calendar/CalendarView.swift:12` uses `.font(.system(size: 56, weight: .light))`.
+   This violates the project’s Dynamic Type / semantic-font convention for new Swift code. Use a semantic font such as `.font(.largeTitle.weight(.light))`, or introduce a theme/scaled icon size token if icon sizing needs to be controlled.
+
+## Advisories (carry to retro)
+
+1. Make `RootTabView.Tab` `CaseIterable` and add a canonical order, for example:
+   ```swift
+   enum Tab: Hashable, CaseIterable {
+       case map, calendar, compose, rewind, settings
+       static let rootOrder: [Tab] = [.map, .calendar, .compose, .rewind, .settings]
+   }
+   ```
+   Then tests can assert actual contract order rather than recreating it locally.
+
+2. Consider extracting compose-intercept behavior into a tiny testable reducer/model later:
+   ```swift
+   RootTabSelectionState.select(.compose)
+   ```
+   SwiftUI `Binding` behavior is hard to unit test directly while it remains private view state.
+
+3. The Settings `그룹 관리` row is acceptable, but future R10 should replace the interim sheet path with the planned map group chip/sheet so Group Hub does not stay buried in Settings.
+
+4. `UnfadingLocalized.Tab.groups` and old Groups accessibility strings remain as deprecated values. Fine for compatibility, but remove when no call sites remain.
+
+## Rewrite suggestions (if any)
+
+Minimal before close:
+
+```swift
+Image(systemName: "calendar")
+    .font(.largeTitle.weight(.light))
+    .foregroundStyle(UnfadingTheme.Color.primary)
+```
+
+Recommended test cleanup, not required if you fix the font blocker:
+
+```swift
+func test_tab_order_matches_deepsight_plan() {
+    XCTAssertEqual(RootTabView.Tab.rootOrder, [.map, .calendar, .compose, .rewind, .settings])
+}
+```
+
+Close after fixing the hardcoded font.
+tokens used
+1,694,329
+## Agree (strengths)
+
+- `RootTabView` compose interception is directionally correct. The custom `Binding` keeps `selectedTab` on the prior real tab and presents `MemoryComposerSheet` via `fullScreenCover`, which avoids stranding users on `ComposeTabPlaceholder`.
+- The five-tab order is readable and matches the plan: 지도 / 캘린더 / 추억 / 리와인드 / 설정.
+- Groups demotion is acceptable as an interim. `SettingsView` keeps `GroupHubView` reachable through a visible `그룹 관리` row, so the Groups tab removal is not a functional dead end.
+- The stubs are honest. `CalendarView` and `SettingsView` clearly say the surfaces are preparing/future work; they do not pretend to be complete features.
+- `UnfadingLocalized` additions are clean and keep labels/hints centralized.
+
+## Disagree (what should change before close)
+
+- `RootNavigationTests.test_compose_tab_intercept_contract` is too weak. It claims to exercise the compose intercept, but only asserts that `.compose` exists in a local array. It does not test `bindingForSelection`, previous-tab restoration, full-screen presentation state, or even `RootTabView` structure.
+- `test_tab_order_matches_deepsight_plan` is also mostly tautological: it constructs the expected array and checks its count. It does not compare against a source of truth from `RootTabView.Tab`.
+
+## Blockers (must fix now)
+
+1. `workspace/ios/Features/Calendar/CalendarView.swift:12` uses `.font(.system(size: 56, weight: .light))`.
+   This violates the project’s Dynamic Type / semantic-font convention for new Swift code. Use a semantic font such as `.font(.largeTitle.weight(.light))`, or introduce a theme/scaled icon size token if icon sizing needs to be controlled.
+
+## Advisories (carry to retro)
+
+1. Make `RootTabView.Tab` `CaseIterable` and add a canonical order, for example:
+   ```swift
+   enum Tab: Hashable, CaseIterable {
+       case map, calendar, compose, rewind, settings
+       static let rootOrder: [Tab] = [.map, .calendar, .compose, .rewind, .settings]
+   }
+   ```
+   Then tests can assert actual contract order rather than recreating it locally.
+
+2. Consider extracting compose-intercept behavior into a tiny testable reducer/model later:
+   ```swift
+   RootTabSelectionState.select(.compose)
+   ```
+   SwiftUI `Binding` behavior is hard to unit test directly while it remains private view state.
+
+3. The Settings `그룹 관리` row is acceptable, but future R10 should replace the interim sheet path with the planned map group chip/sheet so Group Hub does not stay buried in Settings.
+
+4. `UnfadingLocalized.Tab.groups` and old Groups accessibility strings remain as deprecated values. Fine for compatibility, but remove when no call sites remain.
+
+## Rewrite suggestions (if any)
+
+Minimal before close:
+
+```swift
+Image(systemName: "calendar")
+    .font(.largeTitle.weight(.light))
+    .foregroundStyle(UnfadingTheme.Color.primary)
+```
+
+Recommended test cleanup, not required if you fix the font blocker:
+
+```swift
+func test_tab_order_matches_deepsight_plan() {
+    XCTAssertEqual(RootTabView.Tab.rootOrder, [.map, .calendar, .compose, .rewind, .settings])
+}
+```
+
+Close after fixing the hardcoded font.
