@@ -99,6 +99,19 @@ must_reference = "context_harness/operator/OPERATOR.md"
 # Legacy docs marked SUPERSEDED.
 superseded_docs = ["docs/design-docs/multi-agent-architecture.md"]
 
+# Path existence allowlist — references that legitimately point at future/shorthand/grep-hint paths.
+# Missing paths NOT in this allowlist trigger Gate 5 blocker (not advisory).
+[path_existence]
+allowlist_placeholders = [
+  # Future-structure references
+  "context_harness/operator/indexes/",
+  "context_harness/operator/indexes",
+  # Grep hints (paths shown with shorthand to indicate "find via grep within round")
+  "workspace/ios/.../UnfadingTheme.swift",
+  # Placeholder artifacts that may be empty until first real round
+  "docs/exec-plans/metrics.jsonl",
+]
+
 # Forbidden language in Claude Code's evidence capture reports.
 evidence_forbidden_language = [
   "PASS",

@@ -14,6 +14,7 @@ Exits 0 on pass, non-zero on any blocker. Pure stdlib (Python 3.11+ tomllib).
 
 from __future__ import annotations
 
+import fnmatch
 import hashlib
 import json
 import os
@@ -22,7 +23,7 @@ import subprocess
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 try:
     import tomllib  # Python 3.11+
@@ -393,7 +394,8 @@ def audit_operator_layer(report: CheckReport, cfg: dict) -> None:
                 if isinstance(doc, str) and doc.startswith("context_harness/operator/") and doc not in reg:
                     report.advisory(f"precedence entry '{doc}' not textually present in REGULATION.md")
 
-    # Referenced file existence — any path-like token inside operator docs that points at a real location should resolve.
+    # Referenced file existence — v5.2: missing paths = BLOCKER (with allowlist).
+    allowlist = set(cfg.get("path_existence", {}).get("allowlist_placeholders", []))
     path_like = re.compile(r"(?:`|\()((?:context_harness|docs|harness|workspace|reports|operator)/[a-zA-Z0-9_./-]+)(?:`|\))")
     broken: list[tuple[str, str]] = []
     for doc_path in [OPERATOR_DOC, REGULATION_DOC, STAGE_CONTRACT_DOC, MEETING_PROTOCOL_DOC, FILE_INDEX, OPERATOR_DIR / "PROCESS_AUDIT_CHECKLIST.md"]:
@@ -402,17 +404,18 @@ def audit_operator_layer(report: CheckReport, cfg: dict) -> None:
         doc_is_in_operator = OPERATOR_DIR in doc_path.resolve().parents or doc_path.resolve() == OPERATOR_DIR
         for m in path_like.finditer(doc_path.read_text()):
             rel = m.group(1)
-            # Skip placeholders and wildcards
             if "<" in rel or ">" in rel or "**" in rel or "*" in rel or "..." in rel:
                 continue
-            # Skip known future-path directories referenced with trailing slash
-            if rel.endswith("/"):
-                continue
-            # Try two resolutions: repo-root, and (for bare `operator/...` from inside operator docs) context_harness/
-            candidates = [REPO / rel]
+            # Build candidate relative paths (raw + shorthand expansion)
+            rel_candidates = [rel]
             if rel.startswith("operator/") and doc_is_in_operator:
-                candidates.append(REPO / "context_harness" / rel)
-            if any(c.exists() for c in candidates):
+                rel_candidates.append("context_harness/" + rel)
+            # Existence check — any candidate resolving ⇒ OK
+            if any((REPO / rc).exists() for rc in rel_candidates):
+                continue
+            # Allowlist check — any candidate (with or without trailing slash) in allowlist ⇒ advisory
+            if any(rc in allowlist or rc.rstrip("/") in allowlist for rc in rel_candidates):
+                report.advisory(f"operator doc {doc_path.name} points at allowlisted future/shorthand path: {rel}")
                 continue
             broken.append((doc_path.name, rel))
     if broken:
@@ -422,7 +425,7 @@ def audit_operator_layer(report: CheckReport, cfg: dict) -> None:
             if key in seen:
                 continue
             seen.add(key)
-            report.advisory(f"operator doc {doc_name} points at missing path: {rel}")
+            report.blocker(f"operator doc {doc_name} references missing path: {rel}")
 
     # SESSION_RESUME freshness
     check_session_resume_freshness(report)
@@ -512,8 +515,36 @@ def cmd_lock(round_id: str) -> CheckReport:
     return report
 
 
+def _match_glob(rel: str, pattern: str) -> bool:
+    """Glob matcher with strict POSIX-style semantics:
+      * = [^/]*    (does NOT cross directory separators)
+      ** = .*      (crosses directories; must be a full segment — we normalize `**/` and `/**`)
+      ? = [^/]
+    Exact match short-circuits. Implementation: escape pattern → substitute glob tokens → regex match.
+    """
+    if pattern == rel:
+        return True
+    # Escape pattern then substitute glob tokens back in.
+    escaped = re.escape(pattern)
+    # Order matters: `**/` and `/**` must be handled before `**` and `*`.
+    escaped = escaped.replace(r"\*\*/", "(?:.*/)?")
+    escaped = escaped.replace(r"/\*\*", "(?:/.*)?")
+    escaped = escaped.replace(r"\*\*", ".*")
+    escaped = escaped.replace(r"\*", "[^/]*")
+    escaped = escaped.replace(r"\?", "[^/]")
+    return re.match("^" + escaped + "$", rel) is not None
+
+
+def _matches_any(rel: str, patterns) -> bool:
+    for pat in patterns:
+        if _match_glob(rel, pat):
+            return True
+    return False
+
+
 def check_commit_traceability(lock: dict, report: CheckReport) -> None:
-    """Item 11: commits since lock base_commit must touch only whitelisted files."""
+    """Item 11 (v5.1) + v5.2 fixes: commits AND uncommitted changes since lock base_commit
+    must touch only whitelisted files. Uses proper glob matching."""
     base = lock.get("base_commit")
     round_dir = CONTRACTS_DIR / lock["round_id"]
     wl_path = round_dir / "file_whitelist.txt"
@@ -523,62 +554,67 @@ def check_commit_traceability(lock: dict, report: CheckReport) -> None:
     if not wl_path.exists():
         report.blocker("file_whitelist.txt missing — cannot verify commit traceability")
         return
-    # Effective whitelist = base + amendments
+    # Effective whitelist = base + amendments (additive/subtractive via + / -)
     whitelist: set[str] = set()
     for ln in wl_path.read_text().splitlines():
         ln = ln.strip()
         if ln and not ln.startswith("#"):
             whitelist.add(ln)
     for amend in lock.get("amendments", []):
-        apath = round_dir / amend.get("file", "")
-        if apath.exists() and apath.name.startswith("file_whitelist.amendment."):
+        fname = amend.get("file", "")
+        apath = round_dir / fname
+        if apath.exists() and fname.startswith("file_whitelist.amendment."):
             for ln in apath.read_text().splitlines():
                 ln = ln.strip()
                 if ln.startswith("+"):
                     whitelist.add(ln[1:].strip())
                 elif ln.startswith("-"):
                     whitelist.discard(ln[1:].strip())
+    # Collect touched files: committed + uncommitted + staged
+    touched: set[str] = set()
     try:
-        diff_files = subprocess.check_output(
+        committed = subprocess.check_output(
             ["git", "diff", "--name-only", f"{base}..HEAD"], cwd=REPO, text=True
         ).strip().splitlines()
+        touched.update(f for f in committed if f)
     except Exception as e:
-        report.advisory(f"git diff unavailable: {e}")
+        report.blocker(f"git diff base..HEAD failed: {e}")
         return
-    out_of_scope: list[str] = []
-
-    def _matches_whitelist(rel: str) -> bool:
-        for pat in whitelist:
-            if pat.endswith("/**") and rel.startswith(pat[:-3]):
-                return True
-            if pat.endswith("/*") and rel.startswith(pat[:-2]) and "/" not in rel[len(pat) - 2:]:
-                return True
-            if pat == rel:
-                return True
-        return False
-
-    for f in diff_files:
-        if not f:
-            continue
-        if not _matches_whitelist(f):
-            out_of_scope.append(f)
+    try:
+        # Uncommitted (working tree + staged)
+        dirty = subprocess.check_output(
+            ["git", "status", "--porcelain"], cwd=REPO, text=True
+        ).strip().splitlines()
+        for ln in dirty:
+            # porcelain format: XY <filename>[ -> <renamed>]
+            if len(ln) < 4:
+                continue
+            fn = ln[3:].split(" -> ")[-1].strip()
+            if fn:
+                touched.add(fn)
+    except Exception as e:
+        report.advisory(f"git status --porcelain unavailable: {e}")
+    out_of_scope = [f for f in sorted(touched) if not _matches_any(f, whitelist)]
     if out_of_scope:
         for f in out_of_scope:
-            report.blocker(f"commit touches out-of-whitelist path: {f}")
+            report.blocker(f"commit/working-tree touches out-of-whitelist path: {f}")
     else:
-        report.ok(f"commit traceability ok ({len(diff_files)} files vs whitelist)")
+        report.ok(f"commit traceability ok ({len(touched)} file(s) vs whitelist)")
 
 
 def check_live_pointer_hashes(lock: dict, report: CheckReport) -> None:
-    """Item 5: lint_config.txt / convention_version.txt hold `<path>\\n<sha>`. Recompute and compare."""
+    """Item 5 (v5.1) + v5.2: pointer files must be `<path>\\n<sha>` format. Malformed = BLOCKER."""
     round_dir = CONTRACTS_DIR / lock["round_id"]
     for name in ("lint_config.txt", "convention_version.txt"):
         p = round_dir / name
         entry = read_pointer_file(p)
         if entry is None:
-            report.advisory(f"{name} does not follow `<path>\\n<sha256:...>` format — live hash check skipped")
+            report.blocker(f"{name} malformed (expected `<path>\\n<sha256:...>` 2-line format)")
             continue
         target_rel, expected = entry
+        if not expected.startswith("sha256:"):
+            report.blocker(f"{name} second line must start with `sha256:` — got `{expected[:20]}...`")
+            continue
         target = REPO / target_rel
         if not target.exists():
             report.blocker(f"{name} points at missing target: {target_rel}")
@@ -590,7 +626,87 @@ def check_live_pointer_hashes(lock: dict, report: CheckReport) -> None:
             report.ok(f"{name} live hash matches locked target")
 
 
+def validate_amendments(lock: dict, report: CheckReport) -> None:
+    """v5.2: every amendment in lock.amendments[] must be a valid artifact.
+    Check: file exists, sha matches lock entry, frontmatter (target/supersedes/meeting) present,
+    meeting exists with status: decided, target ∈ base contract files.
+    """
+    round_dir = CONTRACTS_DIR / lock["round_id"]
+    base_files = set(REQUIRED_CONTRACT_FILES)
+    for amend in lock.get("amendments", []):
+        fname = amend.get("file")
+        if not fname:
+            report.blocker(f"amendment entry missing `file`: {amend}")
+            continue
+        apath = round_dir / fname
+        if not apath.exists():
+            report.blocker(f"amendment file missing: {fname}")
+            continue
+        # Hash
+        expected = amend.get("sha256")
+        if expected and sha256_file(apath) != expected:
+            report.blocker(f"amendment {fname} SHA differs from lock")
+        # Frontmatter (for .md amendments; .txt uses the lock entry for metadata)
+        text = apath.read_text()
+        if fname.endswith(".md"):
+            fm_match = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
+            if not fm_match:
+                report.blocker(f"amendment {fname} missing frontmatter")
+                continue
+            fm = parse_simple_frontmatter(fm_match.group(1))
+            for k in ("target", "supersedes", "meeting"):
+                if k not in fm:
+                    report.blocker(f"amendment {fname} frontmatter missing `{k}`")
+            target = fm.get("target")
+            if target and target not in base_files:
+                report.blocker(f"amendment {fname} target `{target}` not a base contract file")
+            meeting_path = fm.get("meeting")
+            if meeting_path:
+                mp = REPO / meeting_path if meeting_path.startswith("context_harness/") else OPERATOR_DIR / "meetings" / Path(meeting_path).name
+                if not mp.exists():
+                    report.blocker(f"amendment {fname} meeting not found: {meeting_path}")
+                else:
+                    mtext = mp.read_text()
+                    fm_match = re.match(r"^---\n(.*?)\n---\n", mtext, re.DOTALL)
+                    if fm_match:
+                        mfm = parse_simple_frontmatter(fm_match.group(1))
+                        if mfm.get("status") != "decided":
+                            report.blocker(f"amendment {fname} references non-decided meeting: {meeting_path}")
+        report.ok(f"amendment valid: {fname}")
+
+
+def validate_stages_completed(lock: dict, cfg: dict, report: CheckReport) -> None:
+    """v5.2: lock.stages_completed[] entries must be valid stage_ids from lint config."""
+    allowed = set(cfg.get("meeting_frontmatter_allowed", {}).get("stage", []))
+    for sid in lock.get("stages_completed", []):
+        if sid not in allowed:
+            report.blocker(f"lock.stages_completed contains invalid stage_id: {sid}")
+    if lock.get("stages_completed"):
+        report.ok(f"stages_completed structurally valid ({len(lock['stages_completed'])} entries)")
+
+
+def load_gate_evidence(round_id: str, report: CheckReport) -> dict | None:
+    """v5.2: `close` requires contracts/<round>/gate_evidence.json with all 4 gates pass."""
+    p = CONTRACTS_DIR / round_id / "gate_evidence.json"
+    if not p.exists():
+        report.blocker(f"gate_evidence.json missing at {p}")
+        return None
+    try:
+        ev = json.loads(p.read_text())
+    except json.JSONDecodeError as e:
+        report.blocker(f"gate_evidence.json invalid JSON: {e}")
+        return None
+    for g in ("gate1", "gate2", "gate3", "gate4"):
+        g_ev = ev.get(g)
+        if not isinstance(g_ev, dict) or g_ev.get("status") != "pass":
+            report.blocker(f"gate_evidence.{g} is not `pass`: {g_ev}")
+        else:
+            report.ok(f"gate_evidence.{g} = pass")
+    return ev
+
+
 def cmd_gates(round_id: str) -> CheckReport:
+    cfg = load_lint_config()
     report = CheckReport()
     lock_path = LOCKS_DIR / f"{round_id}.lock"
     if not lock_path.exists():
@@ -613,9 +729,13 @@ def cmd_gates(round_id: str) -> CheckReport:
             report.blocker(f"contract file MUTATED after lock: {fname} expected {expected[:20]} got {actual[:20]}")
         else:
             report.ok(f"contract file immutable: {fname}")
-    # Live pointer hashes (lint/convention)
+    # Live pointer hashes (lint/convention) — v5.2 malformed = blocker
     check_live_pointer_hashes(lock, report)
-    # Commit traceability
+    # v5.2: amendment validation
+    validate_amendments(lock, report)
+    # v5.2: stages_completed structural check
+    validate_stages_completed(lock, cfg, report)
+    # Commit traceability (v5.2: includes uncommitted)
     check_commit_traceability(lock, report)
     # Lint + audit
     lint_report = cmd_lint()
@@ -626,9 +746,12 @@ def cmd_gates(round_id: str) -> CheckReport:
 
 
 def cmd_close(round_id: str) -> CheckReport:
+    """v5.2: close requires Gate 5 pass AND contracts/<round>/gate_evidence.json with gate1..gate4 all pass."""
     report = cmd_gates(round_id)
+    # v5.2: require external gate_evidence.json for Gates 1-4
+    load_gate_evidence(round_id, report)
     if report.blockers:
-        report.blocker(f"close refused: {len(report.blockers)} gate blocker(s) present")
+        report.blocker(f"close refused: {len(report.blockers)} blocker(s) present")
         return report
     lock_path = LOCKS_DIR / f"{round_id}.lock"
     lock = json.loads(lock_path.read_text())

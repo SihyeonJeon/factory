@@ -27,9 +27,11 @@
 - `docs/design-docs/multi-agent-architecture.md` marked **SUPERSEDED** (still readable for history; may not be cited to override v5).
 
 **Bootstrap meeting:** [`operator/meetings/2026-04-19_v5_kickoff.md`](operator/meetings/2026-04-19_v5_kickoff.md) — 3-round peer review, CONVERGED.
-**Drift fix (v5.1, 2026-04-22):** [`operator/meetings/2026-04-22_v5_bootstrap_drift.md`](operator/meetings/2026-04-22_v5_bootstrap_drift.md) — Codex stop-hook review caught 12 blockers + 3 advisories; all resolved as routine amendments (no v5 decisions reopened). Checker expanded with `close` subcommand, live hash checks, commit traceability, factual-evidence enforcement, operator-layer drift audit.
+**Drift fix (v5.1, 2026-04-22):** [`operator/meetings/2026-04-22_v5_bootstrap_drift.md`](operator/meetings/2026-04-22_v5_bootstrap_drift.md) — Codex stop-hook review caught 12 blockers + 3 advisories; all resolved as routine amendments. Checker expanded with `close` subcommand, live hash checks, commit traceability, factual-evidence enforcement, operator-layer drift audit.
 
-**Checker:** `python3 harness/check_operator_round.py lint|gates <round>|audit-operator-layer|lock <round>|close <round>`. Post-drift-fix: **0 blockers, 1 advisory (metrics.jsonl empty), 17+ passes.**
+**Drift fix (v5.2, 2026-04-22):** [`operator/meetings/2026-04-22_v5.2_drift_fix.md`](operator/meetings/2026-04-22_v5.2_drift_fix.md) — Second stop-hook review caught 7 blockers + 3 advisories (narrower than v5.1). Routine amendments: glob matcher rewritten for POSIX semantics, amendment schema validation, `close` requires external `gate_evidence.json`, REG §7 narrowed to actually-enforced checks only, missing paths escalated to blockers with allowlist.
+
+**Checker:** `python3 harness/check_operator_round.py lint|gates <round>|audit-operator-layer|lock <round>|close <round>`. Post-v5.2: **0 blockers, 1 advisory (`operator/indexes/` allowlisted future path), 17 passes.**
 
 **Next round:** Deepsight redesign processing (8-screen prototype at `docs/design-docs/travel_deepsight/`). Sliced per `design-revision-workflow.md` Phase 3.
 
@@ -46,7 +48,7 @@
 | Tests | 130 unit + 10 XCUITest = 140 total |
 | Integration worktree | `/Users/jeonsihyeon/factory/.worktrees/_integration` |
 | Supabase | 7 tables, RLS enabled, MCP connected |
-| Architecture version | **v5.1** (equal co-operators + contract/lock + Gate 5 + drift-fix enforcement) |
+| Architecture version | **v5.2** (v5.1 + glob matcher + amendment validation + gate_evidence close + REG §7 honesty) |
 | Runtime QA | XCUITest pipeline integrated — `harness/runtime_qa.py` |
 | Operator checker | `harness/check_operator_round.py` (v5.1) — lint + audit + close; 0 blockers |
 

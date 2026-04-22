@@ -1,6 +1,6 @@
 # PROCESS_AUDIT_CHECKLIST — Harness v5
 
-**Version:** v5.0
+**Version:** v5.2
 **Use:** Fill this out at Gate 5 before closing a round. Also run `harness/check_operator_round.py gates <round>` and attach its output.
 
 ---
@@ -26,7 +26,7 @@
 - [ ] `SKILLS.md` update decision classified in retro (append OR explicit "no novel pattern")
 - [ ] `SESSION_RESUME.md` updated within last 48h
 - [ ] `process-log.jsonl` event count matches decision meeting count
-- [ ] `FILE_INDEX.md` between 250-300 lines (warn)
+- [ ] `FILE_INDEX.md` line count: warn at configured threshold (currently 225), block above cap (250)
 - [ ] Operator loaders (`.claude/CLAUDE.md`, `AGENTS.md`) both exist and point to `operator/OPERATOR.md`
 - [ ] If any meeting went through escalation ladder: ladder tier path recorded
 

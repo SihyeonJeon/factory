@@ -4,6 +4,47 @@ Append-only. Every operator-doc amendment must add an entry with date, summary, 
 
 ---
 
+## v5.2 — Second Drift Fix (2026-04-22)
+
+**Meeting:** [`meetings/2026-04-22_v5.2_drift_fix.md`](meetings/2026-04-22_v5.2_drift_fix.md)
+**Decision ID:** `20260422-v5.2-drift-fix`
+**Trigger:** Stop-hook review (Codex) after `d0e73bc` flagged "d0e73bc still leaves governance drift in the checker/docs". Second drift-fix iteration. 7 blockers + 3 advisories identified, all routine. Trend: converging (v5.0: 12+3 → v5.1: 7+3 → v5.2: hopefully 0+0).
+
+### Fixed (7 blockers)
+
+1. **Version header drift** — bumped REGULATION, STAGE_CONTRACT, OPERATOR, PROCESS_AUDIT_CHECKLIST, MEETING_PROTOCOL to `v5.2`. REG §11 version bump honored.
+2. **Amendment schema now validated** — new `validate_amendments()` in checker verifies: file exists + SHA matches lock + frontmatter has `target`/`supersedes`/`meeting` + meeting exists with `status: decided` + target is a base contract file. REGULATION's "effective regeneration" claim narrowed to "consumers compute on read".
+3. **`close` requires external gate evidence** — checker `cmd_close` now reads `contracts/<round>/gate_evidence.json` and refuses close if `gate1..gate4` are not all `status: pass`. REGULATION wording narrowed to "Gate 5 + gate_evidence for Gates 1-4".
+4. **Commit traceability** — (a) includes uncommitted + staged via `git status --porcelain`; (b) glob matcher replaced with regex-based POSIX semantics (`*` = `[^/]*`, `**` = `.*`, with `/**` / `**/` normalization); (c) `workspace/ios/**/*.swift` now supported. 13/14 smoke tests pass.
+5. **Malformed pointer file = blocker** (was advisory). Bad `lint_config.txt` / `convention_version.txt` format no longer silently bypasses live hash check.
+6. **REG §7 honesty update** — operator-layer drift audit section rewritten to list ONLY what the checker enforces (9 checks). Explicitly marks role matrix full consistency, process-log event counts, and effective amendment regeneration as NOT enforced in v5.2.
+7. **Missing referenced paths = blocker** (was advisory) with explicit allowlist from `lint_config.toml [path_existence].allowlist_placeholders`. Allowlisted paths still produce advisory (e.g., `operator/indexes/` future directory).
+
+### Fixed (3 advisories)
+
+1. **PROCESS_AUDIT warn band aligned** with lint config (225 warn, 250 cap).
+2. **CHANGELOG v5.0 historical note** added — original YAML reference preserved verbatim with v5.2 annotation explaining migration.
+3. **Pointer file format example** added to REGULATION §3 (`<path>\n<sha256>`).
+
+### Checker added in v5.2
+
+- `validate_amendments(lock)` — base contract amendment validation
+- `validate_stages_completed(lock, cfg)` — structural stage_id validation
+- `load_gate_evidence(round_id)` — external gate_evidence.json reader
+- `_match_glob(rel, pattern)` — strict POSIX-semantics glob matcher replacing fragile prefix logic
+- `check_commit_traceability` now also uses `git status --porcelain`
+
+### Narrowed REGULATION claims (honesty over aspiration)
+
+- Dropped "effective file regeneration" from amendment artifact description
+- Narrowed `close` to "Gate 5 + gate_evidence.json"
+- Narrowed REG §7 to enforced checks list; deferred full role-matrix validation to a future peer-review amendment if needed
+
+### Classification
+All 10 items routine corrective amendments. No v5 principle reopened. Convergence expected — same stop-hook should no longer flag these specific patterns.
+
+---
+
 ## v5.1 — Bootstrap Drift Fix (2026-04-22)
 
 **Meeting:** [`meetings/2026-04-22_v5_bootstrap_drift.md`](meetings/2026-04-22_v5_bootstrap_drift.md)
@@ -43,6 +84,9 @@ All 15 items are corrective implementation drift from already-locked v5 decision
 ---
 
 ## v5.0 — Bootstrap (2026-04-19)
+
+> **Historical note (added in v5.2):** The original v5.0 entry below referenced `operator/lint_config.yaml`. During v5.1 bootstrap the config was migrated to TOML; this historical entry is preserved verbatim for audit trail. Active governance references all use `lint_config.toml` as of v5.1.
+
 
 **Meeting:** [`meetings/2026-04-19_v5_kickoff.md`](meetings/2026-04-19_v5_kickoff.md)
 **Decision ID:** `20260419-v5-bootstrap`
