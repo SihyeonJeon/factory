@@ -453,6 +453,55 @@ def audit_operator_layer(report: CheckReport, cfg: dict) -> None:
     # Legacy SUPERSEDED headers
     check_legacy_superseded_headers(cfg, report)
 
+    # v5.6: every CHANGELOG version entry must reference an existing meeting file
+    # (or declare itself as a meta-entry via `this-entry` marker)
+    check_changelog_meeting_trail(report)
+
+
+def check_changelog_meeting_trail(report: CheckReport) -> None:
+    """v5.6: parse CHANGELOG.md for `## v5.X` headers; each must have a `**Meeting:**` line
+    pointing to an existing meeting file (or marked as `this-entry` meta-amendment).
+    Enforces REGULATION §11 compliance mechanically.
+    """
+    cl = OPERATOR_DIR / "CHANGELOG.md"
+    if not cl.exists():
+        return  # audit_operator_layer separately flags missing CHANGELOG
+    text = cl.read_text()
+    # Split on `## vX.Y` headers; capture the section body
+    sections = re.split(r"\n(?=## v\d+\.\d+)", text)
+    for sec in sections:
+        m_header = re.match(r"## (v\d+\.\d+)", sec)
+        if not m_header:
+            continue
+        version = m_header.group(1)
+        # Look for `**Meeting:**` line
+        m_meeting = re.search(r"\*\*Meeting:\*\*\s*(.+?)(?:\n|$)", sec)
+        if not m_meeting:
+            report.blocker(f"CHANGELOG {version}: missing `**Meeting:**` pointer")
+            continue
+        meeting_line = m_meeting.group(1).strip()
+        # Meta-amendment marker
+        if "this-entry" in meeting_line:
+            report.ok(f"CHANGELOG {version}: meta-amendment (self-referencing)")
+            continue
+        # Extract markdown link target `[...](path)` or bare path
+        m_link = re.search(r"\(([^)]+\.md)\)", meeting_line)
+        if m_link:
+            rel = m_link.group(1)
+            # Relative to CHANGELOG.md location
+            p = (OPERATOR_DIR / rel).resolve() if not rel.startswith("context_harness") else (REPO / rel)
+            if not p.exists():
+                report.blocker(f"CHANGELOG {version}: referenced meeting not found: {rel}")
+            else:
+                report.ok(f"CHANGELOG {version}: meeting trail ok → {p.relative_to(REPO)}")
+        else:
+            # Bare path form
+            candidates = [REPO / meeting_line, OPERATOR_DIR / meeting_line]
+            if not any(c.exists() for c in candidates):
+                report.blocker(f"CHANGELOG {version}: meeting pointer unresolvable: {meeting_line}")
+            else:
+                report.ok(f"CHANGELOG {version}: meeting trail ok")
+
 
 def cmd_audit_operator_layer() -> CheckReport:
     cfg = load_lint_config()

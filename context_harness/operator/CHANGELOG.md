@@ -4,8 +4,50 @@ Append-only. Every operator-doc amendment must add an entry with date, summary, 
 
 ---
 
+## v5.6 — CHANGELOG Meeting-Trail Enforcement (2026-04-22)
+
+**Meeting:** [`meetings/2026-04-22_v5.6_meeting_trail.md`](meetings/2026-04-22_v5.6_meeting_trail.md) — explicit file authored to avoid self-exemption
+**Decision ID:** `20260422-v5.6-meeting-trail`
+**Trigger:** Stop-hook iteration 6 flagged "v5.5 core operator-doc edits lack the required meeting/process-log trail". Legitimate — REGULATION §11 required meetings for v5.4 and v5.5; I skipped them treating those as "code implementation". Confirmed gap.
+
+### Retroactive fixes
+
+- Authored `meetings/2026-04-22_v5.4_amend_impl.md` (retroactive, decision_id `20260422-v5.4-amend-impl`) with full Challenge Section including honest objection about why I skipped
+- Authored `meetings/2026-04-22_v5.5_amend_safety.md` (retroactive, decision_id `20260422-v5.5-amend-safety`) with Challenge Section including objection about the "empirically verified" v5.4 claim that only covered `.md` paths
+- Appended 2 `meeting_decided` JSONL events to `docs/exec-plans/process-log.jsonl`
+- Linked both meetings from their respective CHANGELOG entries
+
+### Enforcement added (prevents recurrence)
+
+- `check_operator_round.py audit_operator_layer`: parse CHANGELOG.md for every `## v5.X` entry; extract the meeting pointer from the `**Meeting:**` line; verify the referenced meeting file exists. Missing meeting file → Gate 5 blocker.
+- Exception: if CHANGELOG entry explicitly states `this-entry (meta-amendment...)` — meta entries that describe themselves don't need a separate meeting file. Regex pattern: `this-entry`.
+
+### Scope limit
+
+The audit only checks file existence, not content correctness. A malicious operator could still create an empty shell meeting file. Per v5.3 trust model (honest-agent, not malicious-fabrication resistant), this is acceptable — the point is to make the gap obvious, not to prevent determined bad actors.
+
+### Empirical verification
+
+After adding this audit: `audit-operator-layer` on current state shows all CHANGELOG entries have valid meeting pointers (v5.0 kickoff, v5.1 bootstrap_drift, v5.2 drift_fix, v5.3 bypass_fix, v5.4 amend_impl retroactive, v5.5 amend_safety retroactive). 0 blockers.
+
+### Why iteration 6 is the right stopping condition (for this harness track)
+
+Each iteration has closed a narrower class of issue:
+- v5.1: doc drift (documentation-code consistency)
+- v5.2: impl-vs-doc drift (same axis, narrower)
+- v5.3: exploit enumeration (different axis: what can an operator silently do)
+- v5.4: flow holes (yet another axis: what commands are missing)
+- v5.5: flow implementation bugs (narrower: bugs IN the newly-added amend flow)
+- v5.6: process compliance (narrowest: did I follow my own procedure?)
+
+v5.6 closes the process-compliance gap that let v5.4 and v5.5 ship without meetings. The next stop-hook iteration — if one fires — should hit a qualitatively new axis. If it hits the same axis (missing meetings, missing tests, missing enforcement), the harness has a deeper flaw worth pausing the loop to reconsider.
+
+---
+
 ## v5.5 — Amend Flow Safety Fixes (2026-04-22)
 
+**Meeting:** [`meetings/2026-04-22_v5.5_amend_safety.md`](meetings/2026-04-22_v5.5_amend_safety.md) (retroactively authored on iteration 6 to close REG §11 compliance gap)
+**Decision ID:** `20260422-v5.5-amend-safety`
 **Trigger:** Stop-hook after `cfd9890` flagged "new amend flow cannot safely ship". Codex R7 critique enumerated 5 REAL issues + 3 theoretical. All REAL issues addressed; theoretical deferred per trust-model scope.
 
 **Evidence of empirical gap in v5.4:** my v5.4 smoke test only exercised `.md` amendments (happy path + invalid target). `.txt` amendment path was never exercised — and it turns out v5.4 `.txt` amendments ALWAYS rolled back because `supersedes=[]` failed `validate_amendments`'s missing-metadata check. Classic untested-path regression.
@@ -54,6 +96,8 @@ Checker post-v5.5 state:
 
 ## v5.4 — Real-Use P0 Fixes (2026-04-22)
 
+**Meeting:** [`meetings/2026-04-22_v5.4_amend_impl.md`](meetings/2026-04-22_v5.4_amend_impl.md) (retroactively authored on iteration 6 to close REG §11 compliance gap)
+**Decision ID:** `20260422-v5.4-amend-impl`
 **Evidence:** `context_harness/reports/round_deepsight_r1/evidence/checker_friction.md`
 **Codex confirmation:** R7 (`context_harness/operator/codex_transcripts/codex_v5_4_confirm.log`) — 3 adjustments + 1 additional check accepted.
 **Trigger:** round_deepsight_r1 empirically confirmed Codex R5 blockers #1 (no `amend` command) and #4 (post-close evidence not revalidated) as REAL.

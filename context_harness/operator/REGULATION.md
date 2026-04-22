@@ -1,8 +1,8 @@
 # REGULATION — Harness v5
 
-**Version:** v5.5
+**Version:** v5.6
 **Bootstrapped:** 2026-04-19
-**Last amended:** 2026-04-22 (v5.5 — fix 5 REAL bugs in v5.4 amend flow: .txt supersedes default, path containment, meeting canonicalization, pre-write validation, closed-round deliverable revalidation)
+**Last amended:** 2026-04-22 (v5.6 — CHANGELOG meeting-trail enforcement added after stop-hook iteration 6 caught v5.4/v5.5 shipping without meeting files; retroactive meetings authored to close REG §11 compliance gap)
 **Authority:** Second-highest. Only an active round contract + lock supersedes this file.
 **Amend via:** Meeting (see `MEETING_PROTOCOL.md`) + CHANGELOG bump + convention_version increment.
 **Trust model (v5.3):** HONEST-AGENT error-reduction regime with TAMPER-EVIDENT audit trail. Not malicious-fabrication resistant. See `meetings/2026-04-22_v5.3_bypass_fix.md §Trust Model Decision`.
