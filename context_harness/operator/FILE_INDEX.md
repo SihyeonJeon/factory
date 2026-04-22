@@ -61,6 +61,8 @@
 - UI/UX screen contract: `context_harness/prd/ui_ux_screen_contract.md`
 - Supabase schema: `docs/references/supabase-schema.md`
 - Legacy multi-agent architecture: `docs/design-docs/multi-agent-architecture.md` (SUPERSEDED — kept for history)
+- Vibe-coding limits + harness regulation (v5.7): `docs/design-docs/vibe-coding-limits-2026.md`
+- Monetization strategy (v5.7): `docs/product-specs/unfading-monetization-strategy.md`
 
 ## Tracking what happened
 

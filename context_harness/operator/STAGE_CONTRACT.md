@@ -1,6 +1,6 @@
 # STAGE_CONTRACT — Harness v5
 
-**Version:** v5.6
+**Version:** v5.7
 **Precedence:** 3rd (below round contract + REGULATION)
 **Amend via:** Meeting + CHANGELOG bump
 
@@ -22,11 +22,11 @@ The `stage_id` column is the canonical identifier used in meeting frontmatter, l
 | 4 | `eval_protocol` | Eval Protocol Authoring | Codex | Claude Code | Serial | `contracts/<round>/eval_protocol.md` |
 | 5 | `acceptance` | Acceptance Criteria | Codex | Claude Code | Serial | `contracts/<round>/acceptance.md` |
 | 6 | `round_lock` | Round Lock Creation | Claude Code (runs checker) | Codex (reviews lock JSON) | Serial | `locks/<round>.lock` |
-| 7 | `coding_1st` | Coding 1st Pass | Claude Code | Codex (architecture + code review) | Parallel only with disjoint whitelists/worktrees | Commit(s) + `meetings/<round>_review1.md` |
+| 7 | `coding_1st` | Coding 1st Pass | **Codex (dispatched session)** (v5.7 change) | Codex (fresh session, author ≠ verifier across sessions) + Claude Code review oversight | Serial (one dispatch per sub-feature); parallel only with disjoint whitelists | Commit(s) + `meetings/<round>_review1.md` |
 | 8 | `runtime_capture` | Runtime Evidence Capture | Claude Code (following §5 eval protocol) | Codex (reviews report completeness) | Parallel across screens/scenarios | `context_harness/reports/<round_id>/evidence/*` |
 | 9 | `evaluation_verdict` | Evaluation Verdict | Codex | Claude Code (checks verdict is grounded in evidence) | Serial | `context_harness/reports/<round_id>/verdict.md` |
 | 10 | `gate2` | Gate 2 Three-Evaluator | red_team_reviewer, hig_guardian, visual_qa (parallel fork) | Cross-agreement rule (Gate 3) | **Parallel** | `context_harness/reports/<round_id>/gate2/*` |
-| 11 | `coding_2nd` | Coding 2nd Pass (remediation) | Codex + Claude Code (co-decide) → Claude Code (implements) | Codex (re-reviews) | Serial | Commit(s) + `meetings/<round>_review2.md` |
+| 11 | `coding_2nd` | Coding 2nd Pass (remediation) | Codex + Claude Code (co-decide fix) → **Codex dispatched session** (v5.7 change) | Codex (fresh review session) | Serial | Commit(s) + `meetings/<round>_review2.md` |
 | 12 | `retro` | Round Retro | Claude Code + Codex | Human | Serial | `round_retro/<round>.md` |
 | 13 | `regulation_update` | Regulation Update (if any) | Proposer operator | Other operator | Serial | Amendment meeting + CHANGELOG |
 
@@ -59,7 +59,7 @@ Stages 1–6 must complete before stage 7 begins. Stage 7–11 may interleave wi
 
 Default ownership determines who drafts without a meeting. Crossing zones requires a meeting + whitelist expansion.
 
-### Codex Operator — default owner
+### Codex Operator — default owner (v5.7 widened to include Swift)
 
 - `operator/contracts/<round>/spec.md` and amendments
 - `operator/contracts/<round>/acceptance.md`
@@ -68,18 +68,19 @@ Default ownership determines who drafts without a meeting. Crossing zones requir
 - `docs/design-docs/ios-architecture.md` (architecture-level edits)
 - `docs/product-specs/*` (acceptance criteria docs)
 - `AGENTS.md` invocation notes (persona section only; shared body requires meeting)
+- **`workspace/ios/**/*.swift` (moved from Claude Code in v5.7)** — all Swift source. Author session ≠ reviewer session (different `codex exec` calls).
 
-### Claude Code Operator — default owner
+### Claude Code Operator — default owner (v5.7 narrowed — no Swift)
 
-- `workspace/ios/**/*.swift` (all Swift code)
-- `workspace/ios/project.yml`, `Package.swift`
+- ~~`workspace/ios/**/*.swift`~~ — MOVED to Codex owner in v5.7.
+- `workspace/ios/project.yml`, `Package.swift` (non-Swift project structure)
 - `operator/contracts/<round>/file_whitelist.txt`
 - `operator/contracts/<round>/convention_version.txt`
 - `operator/contracts/<round>/lint_config.txt`
-- `context_harness/handoffs/<round>*.md` (implementation briefs)
+- `context_harness/handoffs/<round>*.md` (implementation briefs = dispatch prompts to Codex)
 - `context_harness/reports/<round_id>/evidence/*` (runtime capture outputs — evidence, not verdict)
 - `.claude/CLAUDE.md` invocation notes (persona section only; shared body requires meeting)
-- `harness/*.py` (orchestration infrastructure)
+- `harness/*.py` (orchestration infrastructure — non-Swift)
 
 ### Shared — meeting-gated
 

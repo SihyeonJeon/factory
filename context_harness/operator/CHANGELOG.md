@@ -4,6 +4,39 @@ Append-only. Every operator-doc amendment must add an entry with date, summary, 
 
 ---
 
+## v5.7 — Swift Impl Delegation + Vibe-Coding Regulation + Monetization (2026-04-23)
+
+**Meeting:** [`meetings/2026-04-23_swift_impl_delegation_and_vibe_limits.md`](meetings/2026-04-23_swift_impl_delegation_and_vibe_limits.md)
+**Decision ID:** `20260423-swift-impl-delegation-vibe-limits`
+**Trigger:** User 8-hour autonomous directive requiring operator-doesn't-edit-code discipline + launch-ready app + beta-unnecessary quality.
+
+### REGULATION changes
+- §2 narrowed Claude Code Operator: no direct Swift edits; all impl dispatched to Codex
+- §2 widened Codex Operator: owns `workspace/ios/**/*.swift`
+- §5.1 new blocker: "operator modified Swift file directly" (forward-looking from R5)
+- §12 (new): Multi-axis Evaluation — 5 axes (code / runtime functional / UI-UX fidelity / nav+info consistency / process-context)
+- §13 (new): Vibe-Coding Regulation — every dispatch cites vibe-coding-limits-2026 items; returned Swift must include `// vibe-limit-checked:` comment; fresh review session
+
+### STAGE_CONTRACT changes
+- Stage 7 `coding_1st` performer: Claude Code → Codex (dispatched session)
+- Stage 11 `coding_2nd` performer: Claude Code implements → Codex dispatched session implements
+- Ownership zones: `workspace/ios/**/*.swift` moved from Claude Code to Codex
+
+### New documents
+- `docs/design-docs/vibe-coding-limits-2026.md` — 15 anti-patterns + harness counter-regulations (Codex-authored)
+- `docs/product-specs/unfading-monetization-strategy.md` — freemium + premium tiers, KRW pricing, Korean market, retention, StoreKit 2 checklist (Codex-authored)
+
+### FILE_INDEX
+- Added pointers to vibe-coding-limits-2026.md + unfading-monetization-strategy.md
+
+### Enforcement note
+v5.7 is forward-looking from R5. Past rounds (R2-R4) had operator-authored Swift edits as historical debt; grandfathered. R5+ must dispatch all Swift to Codex.
+
+### Deleted (cleaned up)
+- `context_harness/operator/REGULATION.amendment.swift-impl-delegation.md` (was a draft holder; actual amendment applied inline to REGULATION.md + STAGE_CONTRACT.md per §11 protocol for operator-doc amendments)
+
+---
+
 ## v5.6 — CHANGELOG Meeting-Trail Enforcement (2026-04-22)
 
 **Meeting:** [`meetings/2026-04-22_v5.6_meeting_trail.md`](meetings/2026-04-22_v5.6_meeting_trail.md) — explicit file authored to avoid self-exemption

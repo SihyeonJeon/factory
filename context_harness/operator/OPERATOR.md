@@ -1,6 +1,6 @@
 # OPERATOR — Shared Persona & Decision Principles
 
-**Version:** v5.6
+**Version:** v5.7
 **Read by:** both operators, every session
 **Authority:** 4th in precedence (below round contract, REGULATION, STAGE_CONTRACT)
 **Line cap:** 120 lines

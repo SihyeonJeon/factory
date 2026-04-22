@@ -1,8 +1,8 @@
 # REGULATION — Harness v5
 
-**Version:** v5.6
+**Version:** v5.7
 **Bootstrapped:** 2026-04-19
-**Last amended:** 2026-04-22 (v5.6 — CHANGELOG meeting-trail enforcement added after stop-hook iteration 6 caught v5.4/v5.5 shipping without meeting files; retroactive meetings authored to close REG §11 compliance gap)
+**Last amended:** 2026-04-23 (v5.7 — Swift implementation delegation to Codex fork; vibe-coding regulation; multi-axis evaluation; monetization as first-class deliverable)
 **Authority:** Second-highest. Only an active round contract + lock supersedes this file.
 **Amend via:** Meeting (see `MEETING_PROTOCOL.md`) + CHANGELOG bump + convention_version increment.
 **Trust model (v5.3):** HONEST-AGENT error-reduction regime with TAMPER-EVIDENT audit trail. Not malicious-fabrication resistant. See `meetings/2026-04-22_v5.3_bypass_fix.md §Trust Model Decision`.
@@ -28,7 +28,13 @@ When any two documents conflict, higher precedence wins. An operator may never c
 - **Codex Operator** — persona loader at `AGENTS.md` at repo root (≤80 lines, thin pointer).
 - Both read `OPERATOR.md` and `FILE_INDEX.md` every session. Both equal.
 - Neither commands the other. Every cross-operator exchange goes through `MEETING_PROTOCOL.md`.
-- Zone-default ownership (see `STAGE_CONTRACT.md §Ownership`): Codex owns design/spec drafts, acceptance criteria, eval rubrics, architecture reviews, `AGENTS.md` invocation notes. Claude Code owns implementation briefs, Swift code, runtime capture, `.claude/CLAUDE.md` invocation notes. All other operator/* edits require a meeting.
+
+### v5.7 ownership (Swift implementation delegation)
+
+- **Claude Code Operator role (narrowed in v5.7):** authors meetings, briefs, contracts (whitelist/convention/lint pointers), evidence reports, aggregates runtime captures, commits/pushes. **Does NOT directly edit Swift source files.** All Swift implementation is dispatched to Codex via `codex exec` (subagent/fork). This rule is forward-looking from R5; pre-v5.7 rounds grandfathered.
+- **Codex Operator role (widened in v5.7):** authors design/spec drafts, acceptance criteria, eval rubrics, architecture reviews, AND writes all Swift source code via dispatched sessions. Also performs code review on its own prior dispatches through fresh review sessions (author ≠ verifier preserved across sessions: the implementation session differs from the review session).
+- Zone-default ownership (see `STAGE_CONTRACT.md §Ownership`): Codex owns everything in `workspace/ios/**/*.swift`. Claude Code owns `context_harness/**` (meetings, briefs, contracts, evidence), `docs/**` (product/design/exec artifacts authored by operator, not Swift), and `.claude/CLAUDE.md` invocation notes.
+- All other operator/* edits require a meeting.
 
 ## §3. Contract & Lock
 
@@ -194,6 +200,7 @@ Blockers (round cannot close):
 - Lock hash mismatch for any base contract file
 - Lint checker missing, failing, or unrunnable (`harness/check_operator_round.py` exit != 0)
 - Operator-layer drift audit reports contradictions (see §7)
+- **v5.7: any commit where Claude Code Operator directly authored a Swift source change.** Swift implementation must be dispatched to Codex (detectable via git log + commit-author + Codex-transcript cross-check). Forward-looking from R5.
 
 Advisories (noted in retro, do not block):
 - No new SKILLS.md entry — acceptable if retro explicitly classifies "no novel pattern"
@@ -237,6 +244,26 @@ Any contradiction on (1)-(9) → Gate 5 blocker. Resolution path: amendment meet
 - Gate 1-4 content (build/test/evaluator reports) — these come from `gate_evidence.json`, not this audit.
 
 If operators need any of the "not enforced" items, open an amendment meeting to either implement or keep REGULATION honest.
+
+## §12. Multi-Axis Evaluation (v5.7)
+
+Gate 2 MUST include evidence across 5 axes for every implementation round. Missing any axis = Gate 5 advisory (not blocker) with retro note; recurring misses become blocker in v5.8.
+
+1. **Code axis** — unit/integration tests; forbidden-pattern grep; static analysis. `xcodebuild test` pass.
+2. **Runtime functional axis** — simulator boot + install + launch; primary user flow exercised (or explicit capture exception); screenshot or XCUITest log.
+3. **UI/UX fidelity axis** — screenshot compared against deepsight mock (SHA-referenced); Codex written diff-style observation on alignment, color, typography, spacing, hierarchy.
+4. **Navigation + info consistency axis** — tab/surface reachability verified; all user-facing strings localized; no English leaks; info hierarchy readable at system text sizes.
+5. **Process-context axis** — meeting trail intact; Challenge Section with real objections; amendment flow followed; operator did not shortcut (e.g., direct Swift edit, unlogged deviations).
+
+## §13. Vibe-Coding Regulation (v5.7)
+
+Reference: `docs/design-docs/vibe-coding-limits-2026.md`. Every implementation dispatch to Codex MUST:
+
+- Cite the vibe-coding-limits-2026 section(s) being guarded against in the dispatch prompt.
+- Require the returned Swift to include at least a comment block `// vibe-limit-checked: <item-ids>` for the anti-patterns relevant to the touched surface.
+- Be reviewed by a fresh Codex session (different from the implementation session) that explicitly checks each cited anti-pattern was avoided.
+
+New anti-patterns discovered in production rounds are appended to `vibe-coding-limits-2026.md` with the failing commit sha + remediation sha (success/failure experience encoded).
 
 ## §8. Linter Enforcement
 

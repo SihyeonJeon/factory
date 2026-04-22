@@ -1,0 +1,2062 @@
+OpenAI Codex v0.121.0 (research preview)
+--------
+workdir: /Users/jeonsihyeon/factory
+model: gpt-5.4
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR, /Users/jeonsihyeon/.codex/memories]
+reasoning effort: none
+reasoning summaries: none
+session id: 019db43d-746e-73b3-b33c-5dda3770df91
+--------
+user
+Codex — R5 governance pivot. I need you to research and draft.
+
+CONTEXT:
+User directive (2026-04-23) redefines operator responsibilities: Claude Code Operator must NOT directly edit Swift code; all implementation = Codex subagent/fork dispatch. User wants:
+1. Research the known limits of "vibe coding" (LLM-driven coding) as of 2026-04-22 compared to senior developer practice. Enumerate anti-patterns, common failures, structural gaps.
+2. For each limit, propose a concrete regulation/rule/procedure that can be added to Unfading's harness to overcome or detect it.
+3. Draft a MONETIZATION STRATEGY for Unfading (Korean couple/group map diary) — business model options, pricing tiers, premium features, retention hooks. Should be launch-ready and targeted.
+
+Sandbox: workspace-write.
+
+Write 3 files:
+
+1. `docs/design-docs/vibe-coding-limits-2026.md`
+   - Enumerate ≥10 specific vibe-coding anti-patterns vs senior iOS practice as of 2026-04-22
+   - Each with: description, real-world failure mode, senior-dev counter-practice, proposed harness regulation
+   - Include citations to known research/blog posts/publications (dated 2024-2026) where applicable
+   - Categories: memory safety, concurrency, error handling, UI/UX fidelity, performance, testing, accessibility, security, architecture coherence, data modeling
+
+2. `context_harness/operator/REGULATION.amendment.swift-impl-delegation.md`
+   (This is a REGULATION amendment per v5.5 amend flow — has frontmatter `target`, `meeting`, `supersedes`.)
+   - Frontmatter target: REGULATION.md
+   - Proposed changes:
+     * REG §2 "The Two Operators": add that Claude Code Operator's role is narrowed — Swift implementation is delegated to Codex subagent/fork, NEVER edited directly by operator. Claude Code authors meetings/contracts/briefs/evidence; Codex writes all Swift.
+     * REG §7 "Operator-Layer Drift Audit": add a new check — "No direct operator edit to `workspace/ios/**/*.swift`" (detectable via git log + blame scan).
+     * REG §5.1 Gate 5 blockers: add "Operator modified Swift file directly" as a new blocker.
+     * REG new §12 "Multi-axis Evaluation": specify that Gate 2 must include (a) code correctness tests, (b) real runtime functional capture, (c) UI/UX fidelity check vs deepsight mocks, (d) navigation + information consistency, (e) process-context soundness.
+     * REG new §13 "Vibe-coding Regulation": reference vibe-coding-limits-2026.md as a checklist source for every implementation dispatch.
+   - Supersedes list the specific sections being amended.
+
+3. `docs/product-specs/unfading-monetization-strategy.md`
+   - Model: freemium with premium tiers
+   - Free tier: couple/small-group (up to 5 members), N memories/month, basic map styles, core features
+   - Premium (subscription): unlimited memories, custom map themes, AI-enhanced rewind, shareable diary book exports, storage, family-group (6+ members), priority support
+   - Pricing proposal (KRW monthly + annual)
+   - Korean market considerations (PG, payment methods, tax)
+   - Retention hooks: anniversary reminders, rewind push, streak-like mechanics
+   - Revenue targets + user acquisition cost model (rough)
+   - Ethics: no ads in free tier; premium = quality-of-life, not feature gatekeeping
+   - Launch-ready checklist for monetization (StoreKit 2, receipt validation, subscription management screen)
+
+After writing, confirm each file + any tension/concern about the regulation amendments. This is a BIG round.
+2026-04-22T16:30:19.912342Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 503 Service Unavailable, url: wss://chatgpt.com/backend-api/codex/responses
+codex
+I’ll draft the three requested governance/product docs, but first I need to verify current REGULATION section names and pull current public references for the vibe-coding limits research so the citations are not invented.
+web search: 
+web search: 2024 AI coding assistants code quality security study hallucination bugs developer productivity
+web search: 
+web search: 2024 study AI generated code security vulnerabilities GitHub Copilot CWE
+web search: 
+web search: South Korea App Store alternative payment system apps 2025 Apple in-app purchase rules
+codex
+I found current public references for METR’s experienced-developer study, GitClear’s code-quality/churn data, 2025–2026 AI-code security reporting, and Apple’s Korea-specific external purchase entitlement. I’m now drafting the three requested files.
+apply patch
+patch: completed
+/Users/jeonsihyeon/factory/context_harness/operator/REGULATION.amendment.swift-impl-delegation.md
+/Users/jeonsihyeon/factory/docs/design-docs/vibe-coding-limits-2026.md
+/Users/jeonsihyeon/factory/docs/product-specs/unfading-monetization-strategy.md
+diff --git a/context_harness/operator/REGULATION.amendment.swift-impl-delegation.md b/context_harness/operator/REGULATION.amendment.swift-impl-delegation.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..d7f74bf88ff5cc8bd8cbada9bf77f49e64115884
+--- /dev/null
++++ b/context_harness/operator/REGULATION.amendment.swift-impl-delegation.md
+@@ -0,0 +1,146 @@
++---
++target: REGULATION.md
++meeting: context_harness/operator/meetings/2026-04-23_swift_impl_delegation_and_vibe_limits.md
++supersedes:
++  - REGULATION.md#section-2-the-two-operators
++  - REGULATION.md#section-5-1-gate-5-process-integrity
++  - REGULATION.md#section-7-operator-layer-drift-audit
++  - REGULATION.md#new-section-12-multi-axis-evaluation
++  - REGULATION.md#new-section-13-vibe-coding-regulation
++---
++
++# REGULATION Amendment — Swift Implementation Delegation And Vibe-Coding Controls
++
++## Purpose
++
++User directive on 2026-04-23 narrows operator responsibilities:
++
++- Claude Code Operator must not directly edit Swift implementation files.
++- Swift implementation must be performed by Codex subagent/fork dispatch.
++- Claude Code Operator authors meetings, contracts, briefs, evidence, and orchestration.
++- Codex authors Swift code and participates in review/verdict.
++
++This amendment also adds multi-axis evaluation and explicit vibe-coding regulation based on `docs/design-docs/vibe-coding-limits-2026.md`.
++
++## Proposed Change — REG §2 The Two Operators
++
++Add:
++
++```markdown
++### Swift implementation delegation
++
++Claude Code Operator does not directly edit `workspace/ios/**/*.swift`, `workspace/ios/project.yml`, or Swift test files during implementation stages.
++
++Swift implementation is delegated to a Codex subagent/fork dispatch operating under the active round contract and whitelist. The dispatch must receive:
++
++- active round id and lock path,
++- exact file whitelist,
++- spec/acceptance/eval protocol paths,
++- reusable-asset requirements,
++- forbidden patterns,
++- evidence expectations.
++
++Claude Code Operator may author or edit:
++
++- meetings,
++- contracts,
++- implementation briefs,
++- evidence capture,
++- process logs,
++- non-Swift docs within whitelist.
++
++Codex may author Swift implementation files within the active whitelist. Claude Code captures factual evidence. Codex writes the verdict.
++```
++
++## Proposed Change — REG §5.1 Gate 5 Process Integrity
++
++Add blocker:
++
++```markdown
++- Operator modified Swift implementation files directly instead of dispatching to Codex subagent/fork.
++```
++
++Clarification:
++
++```markdown
++For this blocker, "operator modified directly" means a Swift file changed without a matching Codex implementation transcript, dispatch brief, or process-log event tying the change to a Codex implementation worker for the active round.
++```
++
++## Proposed Change — REG §7 Operator-Layer Drift Audit
++
++Add enforced or manual-audit check:
++
++```markdown
++No direct operator edit to `workspace/ios/**/*.swift`.
++
++Until automated, Gate 5 evidence must include:
++
++- `git log --name-status <base_commit>..HEAD -- workspace/ios`
++- Codex dispatch transcript path(s) and SHA-256
++- changed Swift file list
++- mapping from changed Swift file to Codex dispatch id
++
++If any changed Swift file lacks a Codex dispatch mapping, Gate 5 blocks.
++```
++
++Future checker implementation:
++
++```markdown
++The checker should validate the changed Swift file list against process-log events with `actor=codex` and a recorded transcript/hash. A git blame scan may be used as supporting evidence but is not sufficient by itself because author identity can be configured locally.
++```
++
++## Proposed New REG §12 Multi-Axis Evaluation
++
++Add:
++
++```markdown
++## §12. Multi-Axis Evaluation
++
++Gate 2 for implementation rounds must include all five axes:
++
++1. **Code correctness** — unit tests, compile/build, state transition tests, and touched-file review.
++2. **Real runtime function** — simulator launch or runtime capture showing the changed flow works in app context.
++3. **UI/UX fidelity** — screenshot comparison against active design contracts, Deepsight mocks, or accepted placeholders.
++4. **Navigation and information consistency** — labels, routes, state restoration, data shown, and user-facing copy match product contract.
++5. **Process-context soundness** — evidence that the implementation followed the active contract, whitelist, delegation rule, lint rules, and documented unresolved assumptions.
++
++Any axis not applicable must be explicitly marked `not applicable` with reason in the evidence report. Silent omission is a Gate 5 blocker.
++```
++
++## Proposed New REG §13 Vibe-Coding Regulation
++
++Add:
++
++```markdown
++## §13. Vibe-Coding Regulation
++
++Every Swift implementation dispatch must consult:
++
++`docs/design-docs/vibe-coding-limits-2026.md`
++
++The dispatch brief must include a "Vibe-coding risk controls" section covering:
++
++- reusable asset plan,
++- architecture coherence,
++- memory/concurrency/error handling,
++- UI/UX runtime evidence,
++- accessibility,
++- security/dependency risk,
++- testing depth,
++- data-model mapping,
++- unchecked assumptions.
++
++Codex implementation output is treated as untrusted until:
++
++1. build/test evidence passes,
++2. forbidden-pattern grep passes,
++3. runtime evidence exists for user-facing changes,
++4. cross-operator review records at least one concrete challenge/risk or factual no-issue evidence,
++5. verdict cites evidence for every acceptance criterion.
++```
++
++## Migration Notes
++
++- This amendment does not invalidate prior rounds retroactively.
++- It applies to future Swift implementation rounds after adoption.
++- Existing Swift files may be edited by Codex dispatch under whitelist; Claude Code may inspect/read them for evidence and review prompts but not modify them directly.
+diff --git a/docs/design-docs/vibe-coding-limits-2026.md b/docs/design-docs/vibe-coding-limits-2026.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..3a1856d294c52b7caf88510905437cef34e5d487
+--- /dev/null
++++ b/docs/design-docs/vibe-coding-limits-2026.md
+@@ -0,0 +1,62 @@
++# Vibe Coding Limits — 2026
++
++**Scope:** LLM-driven coding and agentic coding limits as of 2026-04-22, compared with senior iOS engineering practice.
++
++**Use:** implementation-dispatch checklist source for Unfading harness regulation.
++
++## Source Notes
++
++This document uses public research and industry reporting available by 2026-04-22, including:
++
++- METR, "Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity" (2025-07-10): https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/
++- METR, "We are Changing our Developer Productivity Experiment Design" (2026-02-24): https://metr.org/blog/2026-02-24-uplift-update/
++- GitClear, "Coding on Copilot" and "AI Copilot Code Quality: 2025" reports: https://www.gitclear.com/coding_on_copilot_data_shows_ais_downward_pressure_on_code_quality and https://www.gitclear.com/ai_assistant_code_quality_2025_research
++- Veracode 2025 GenAI Code Security reporting summarized by TechRadar: https://www.techradar.com/pro/nearly-half-of-all-code-generated-by-ai-found-to-contain-security-flaws-even-big-llms-affected
++- TechTarget, "Security risks of AI-generated code and how to manage them" (2025-05-29): https://www.techtarget.com/searchSecurity/tip/Security-risks-of-AI-generated-code-and-how-to-manage-them
++- Kaspersky, "Security risks of vibe coding and LLM assistants for developers" (2025): https://www.kaspersky.com/blog/vibe-coding-2025-risks/54584/
++- Axios, "Cursor taps new security partner in push to secure vibe coding" (2026-04-21): https://www.axios.com/2026/04/21/cursor-chainguard-ai-code-security
++- Business Insider, "Lovable's security stumble shows one big risk in using AI to code" (2026-04): https://www.businessinsider.com/lovable-security-access-vibe-coding-projects-risk-2026-4
++
++## Anti-Patterns And Harness Regulations
++
++| # | Category | Vibe-coding anti-pattern | Real-world failure mode | Senior-dev counter-practice | Proposed Unfading harness regulation |
++|---:|---|---|---|---|---|
++| 1 | Architecture coherence | Prompting for local patches without preserving system shape | New code compiles but duplicates state, bypasses existing abstractions, or creates parallel UI paths | Start with architecture map, owned modules, dependency boundaries, and explicit non-goals | Every Swift dispatch brief must include "owned files", "reused assets", "forbidden parallel abstractions", and "expected imports". Codex must review for duplicate module creation before implementation merges. |
++| 2 | Code reuse | Generating copy-paste variants instead of reusable units | GitClear observed rising code cloning and short-term churn in AI-assisted code; UI components diverge by screen | Extract shared modifiers/styles/types first; write one composable API and tests | Gate 5 implementation criterion: every new UI pattern repeated twice must be a reusable `Shared/` asset or an explicit rejected-abstraction note. |
++| 3 | Context mismatch | Trusting stale docs or hallucinated project state | Round 1 found `SESSION_RESUME.md` described 140 tests while workspace had 10; agents would plan against false reality | Verify source tree, test count, active files, and current UI before coding | Every round spec must include a "Reality Snapshot" with file count, test count, tracked/untracked state, and source hashes. Any mismatch with resume docs is a blocker until reconciled. |
++| 4 | Memory safety | Missing lifecycle/cancellation/retention checks in generated async/UI code | Retain cycles, tasks outliving views, stale callbacks mutating UI after dismissal | Audit escaping closures, `Task`, observers, timers, and deinit/onDisappear cancellation | Swift review checklist must include `[weak self]`/capture review, task cancellation review, and `@MainActor` boundary review for stores/view models. |
++| 5 | Concurrency | Adding async work without actor isolation or race analysis | Data races, UI updates off-main, duplicate network calls, inconsistent selected state | Make state ownership explicit; use `@MainActor` for UI state and isolate stores | Any new stateful Swift type must declare actor assumptions (`@MainActor`, value type, or documented immutable data). Codex review blocks unowned mutable shared state. |
++| 6 | Error handling | Using happy-path code or swallowing errors | `try?`, empty catches, failed save/upload silently losing user data | Propagate typed errors, log with context, show user recovery | Grep lint: `try?` in app code requires an inline justification comment or is a review blocker. Save/upload flows require user-visible failure path. |
++| 7 | UI/UX fidelity | Treating screenshots as decorative rather than contract | Generated UI "looks close" but misses spacing, hierarchy, target state, or primary action visibility; R4 FAB hidden at runtime | Runtime screenshot every user-facing surface, compare against contract states | Every visual round requires runtime screenshots of each acceptance state, not just static code review. Missing primary CTA in screenshot is a blocker. |
++| 8 | Accessibility | Omitting VoiceOver order, labels, Dynamic Type, and 44pt targets | UI works for sighted/default-size users but fails accessibility or large text | Design controls with labels/hints, semantic fonts, `@ScaledMetric`, minimum hit areas | Swift lint forbids hardcoded `.system(size:)` outside theme-approved exceptions. Evidence must include grep for labels/hints on icon-only buttons and screenshots at accessibility size for major surfaces. |
++| 9 | Security | Treating AI output as vetted | Veracode/industry reports found high rates of vulnerable AI-generated code; tools can omit auth, validation, secure storage | Threat model before implementation, least privilege, no secret exposure, static security checks | Any auth, storage, network, payment, or invitation feature requires a security subsection in spec and a red-team review before close. AI-generated code is considered untrusted until tests + review pass. |
++| 10 | Dependency hygiene | Accepting hallucinated or outdated dependencies | Kaspersky and supply-chain reporting describe fictitious packages/slopsquatting and unsafe imports | Prefer platform APIs; require dependency review and lockfile diff | New dependency requires meeting approval, source URL, maintenance/security check, license note, and lockfile diff. No AI-suggested package may be added silently. |
++| 11 | Data modeling | Creating UI-only sample structures that conflict with domain model | Screens ship with mock data that cannot map to `Group -> DateEvent -> Memory -> MemoryPost` | Model first, then view; maintain migration path from sample to persisted data | Any new screen using sample data must state its eventual domain model mapping. Sample English/model strings are allowed only with a future localization/data ticket. |
++| 12 | Testing | Writing tests that assert existence rather than behavior | Tests pass while compose tab behavior, gesture routing, or selection flow is untested | Test state transitions, reducers, edge cases, and runtime behavior | Tests must cover at least one behavioral transition per new state object. Pure "enum contains case" tests are advisory only unless paired with behavior evidence. |
++| 13 | Performance | Generating layout code that over-renders or blocks main thread | Large SwiftUI bodies, repeated expensive computations, image loading on main thread | Measure/render-scope review, lazy loading, small view decomposition | Review must flag large new `body` implementations, repeated image/data work in body, and non-lazy lists/grids. Performance-sensitive surfaces need Instruments or measured evidence before launch. |
++| 14 | Review overload | AI creates more code than humans can review carefully | METR found experienced devs spent time prompting/reviewing; code-volume spikes move bottleneck to review | Smaller slices, narrow whitelists, explicit reviewer focus | Implementation rounds must cap write scope. If touched files exceed whitelist intent, open amendment or split round. Codex verdict must mention review surface size. |
++| 15 | Process hallucination | Claiming compliance because a checker says green while checker scope is narrow | Earlier v5 checker passed despite governance drift; false sense of safety | Keep checker claims honest; write evidence of what was and was not checked | Every gate evidence file must include "unchecked assumptions". REGULATION must list not-enforced items explicitly until automated. |
++
++## Minimum Dispatch Checklist
++
++Before any Swift implementation dispatch, the brief must include:
++
++1. Current reality snapshot: test count, touched files, current UI state, tracked/untracked status.
++2. Reusable asset plan: existing modules reused and any new module API.
++3. Forbidden patterns: colors, hardcoded font sizes, English UI strings, `try?`, new dependencies.
++4. Runtime capture plan: screenshots or interaction evidence for changed UI states.
++5. Test plan: unit tests for state and at least one behavior test per new state object.
++6. Security/accessibility notes if the change touches auth, storage, network, payments, permissions, invitations, or user-generated content.
++7. Evidence paths and expected hashes/logs.
++
++## Senior Developer Standard For Unfading
++
++LLM output is acceptable only when it is converted into a small, reviewable, reusable unit with:
++
++- explicit contract,
++- narrow whitelist,
++- tests,
++- runtime evidence,
++- accessibility and security checks,
++- Codex/Claude cross-validation,
++- and honest documentation of remaining uncertainty.
+diff --git a/docs/product-specs/unfading-monetization-strategy.md b/docs/product-specs/unfading-monetization-strategy.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..039ca0cfc3a1954fb1e1228fe0172010c705682d
+--- /dev/null
++++ b/docs/product-specs/unfading-monetization-strategy.md
+@@ -0,0 +1,246 @@
++# Unfading Monetization Strategy
++
++**Product:** Korean couple/group map diary for memory capture, place-based browsing, Rewind, calendar, group history, and shareable diary artifacts.
++
++**Positioning:** private map diary for relationships and small groups. No ads. Premium pays for storage, customization, richer exports, and quality-of-life automation, not basic emotional memory keeping.
++
++## Business Model
++
++Freemium subscription with optional one-time paid exports.
++
++### Free Tier
++
++Target: couples, close friends, and small groups trying the product.
++
++Included:
++
++- 1 active couple or group space
++- up to 5 members
++- limited monthly new memories, recommended launch cap: 30 memories/month
++- basic map style
++- core map pins, composer, Rewind basics, calendar basics
++- basic media compression/storage cap
++- no ads
++
++Purpose:
++
++- let users build emotional history before monetization,
++- avoid paywalling the core diary loop,
++- create natural upgrade moments at storage, export, theme, and larger group boundaries.
++
++### Premium Individual / Couple
++
++Target: couples and small groups with frequent use.
++
++Proposed price:
++
++- KRW 4,900/month
++- KRW 49,000/year
++
++Premium features:
++
++- unlimited memories within fair-use storage policy
++- custom map themes: warm, vintage, dark, seasonal, trip-specific
++- AI-enhanced Rewind captions and memory summaries
++- shareable diary book exports: PDF/video/card
++- higher storage and original-quality media options
++- anniversary reminders and location-based revisit prompts
++- premium pin packs and cover styles
++- priority support
++
++### Premium Group / Family
++
++Target: friend groups, families, clubs, trips.
++
++Proposed price:
++
++- KRW 8,900/month per group
++- KRW 89,000/year per group
++
++Included:
++
++- 6+ members
++- group roles/admin controls
++- shared storage pool
++- group diary book exports
++- event/trip collections
++- premium map themes and group cover styles
++- priority support
++
++### One-Time Purchases
++
++Useful where users resist subscriptions:
++
++- Diary book export: KRW 3,900-9,900 depending on format/length
++- Seasonal map/pin pack: KRW 1,900-3,900
++- Trip archive export bundle: KRW 6,900
++
++One-time purchases should not replace subscription value; they monetize high-intent moments.
++
++## Premium Feature Ladder
++
++| User moment | Upgrade hook | Premium value |
++|---|---|---|
++| User reaches monthly memory limit | "이번 달 추억이 가득 찼어요" | unlimited memories |
++| Couple anniversary approaches | Rewind/anniversary reminder | AI-enhanced recap and export |
++| Group has 6th member | member cap reached | family/group tier |
++| User customizes map often | theme preview | premium map themes |
++| User shares screenshots | export prompt | diary book/video/card export |
++| User stores many photos | storage meter | higher storage/original quality |
++
++## Retention Hooks
++
++- Anniversary reminders: 100 days, 1 year, first trip, first place.
++- Rewind push: "1년 전 오늘, 여기에서 남긴 추억".
++- Place revisit prompt: when near a saved place, suggest opening past memory.
++- Gentle streak-like loops: weekly memory recap, not daily pressure.
++- Group nudges: "민재가 새 반응을 남겼어요", "이번 여행 앨범이 완성됐어요".
++- Seasonal diary: month-end and year-end memory maps.
++- Export milestones: after 50 memories, after first trip, after anniversary.
++
++Avoid manipulative streak mechanics. The product tone should feel intimate and respectful.
++
++## Korean Market Considerations
++
++### Payments
++
++Default launch path: Apple In-App Purchase / StoreKit 2.
++
++Reasons:
++
++- best App Store review fit,
++- built-in subscription management,
++- lower operational burden for refunds, tax handling, family purchase expectations,
++- less checkout friction for early launch.
++
++South Korea alternative payment option:
++
++- Apple provides a Korea-specific StoreKit External Purchase Entitlement for apps distributed solely in South Korea: https://developer.apple.com/support/storekit-external-entitlement-kr
++- Alternative PSPs may include Korean providers such as KCP, Inicis, Toss, or NICE, but the app must follow Apple's external purchase modal/API requirements and may need a Korea-only binary.
++- Alternative payment reduces some App Store control but adds support/refund/subscription-management burden and can still carry Apple commission/service-fee complexity.
++
++Recommendation:
++
++- Launch with StoreKit 2 only.
++- Revisit Korea-only external purchase after product-market fit and subscription volume justify operational overhead.
++
++### Payment Methods And Local Expectations
++
++Korean users expect:
++
++- KakaoPay, Naver Pay, Toss, credit/debit card, carrier billing, and easy cancellation experiences.
++- If using StoreKit, explain subscription management clearly in Korean and deep-link to App Store subscription management.
++- If later using external payment, provide Korean receipts, cancellation, refund, and customer-support flows equivalent to app-store expectations.
++
++### Tax And Compliance
++
++- Price tiers must account for VAT-inclusive consumer pricing.
++- Digital subscription receipts and refund policies must be clear in Korean.
++- Family/group data and photos are sensitive; premium storage/AI features must have explicit privacy copy.
++- AI-enhanced Rewind should disclose when generated summaries/captions are AI-assisted.
++
++## Pricing Rationale
++
++Initial KRW pricing should be low enough for couples but high enough to pay for media storage and AI features.
++
++| Tier | Monthly | Annual | Notes |
++|---|---:|---:|---|
++| Free | KRW 0 | KRW 0 | core loop, limited monthly memory creation |
++| Premium Couple/Small Group | KRW 4,900 | KRW 49,000 | annual gives ~17% discount |
++| Premium Group/Family | KRW 8,900 | KRW 89,000 | supports 6+ members/shared storage |
++
++Consider launch promo:
++
++- 30-day trial for annual plan
++- early-user lifetime annual discount for first 1,000 paid users
++- free export credit after first paid month
++
++## Rough Revenue Model
++
++Assumptions for first launch year:
++
++- 50,000 installs
++- 35% activation to first memory: 17,500 activated users
++- 20% reach 10+ memories: 10,000 engaged users
++- 5% paid conversion from engaged users: 500 paid subscribers
++- blended ARPPU: KRW 5,500/month
++
++Monthly recurring revenue estimate:
++
++- 500 × KRW 5,500 = KRW 2,750,000 MRR
++
++Upside scenario:
++
++- 150,000 installs
++- 30,000 engaged users
++- 8% paid conversion
++- 2,400 paid subscribers × KRW 5,500 = KRW 13,200,000 MRR
++
++CAC guidance:
++
++- If blended monthly gross margin per paid user after platform fees/storage is ~KRW 3,000-4,000, paid CAC should stay below KRW 12,000-18,000 unless annual conversion is strong.
++- Early acquisition should prioritize organic TikTok/Instagram/Reels couples/travel content, university groups, wedding/anniversary communities, and referral loops before paid ads.
++
++## Premium Ethics
++
++Principles:
++
++- No ads in the free tier.
++- Do not paywall private memory viewing after users create data.
++- Do not hold user memories hostage; exports/downloads should remain possible at least in basic form.
++- Premium should improve quality, volume, customization, automation, and export richness.
++- AI features should assist writing/recap, not invent false memories.
++
++Free users should feel respected; premium should feel like a better way to preserve something meaningful.
++
++## Launch-Ready Checklist
++
++### Product
++
++- Free-tier memory limit copy in Korean.
++- Upgrade screen with transparent plan comparison.
++- Storage usage meter.
++- Premium theme preview.
++- Export preview watermark for free users.
++- Subscription management screen.
++- Privacy copy for photos, locations, AI summaries, and group data.
++
++### StoreKit 2
++
++- Product IDs for monthly/annual couple premium.
++- Product IDs for monthly/annual group premium.
++- Optional consumable/non-consumable export products.
++- StoreKit 2 purchase flow.
++- Transaction listener and entitlement cache.
++- Restore purchases.
++- App Store subscription management deep link.
++- Server-side receipt or App Store Server API validation before high-cost storage/AI entitlements.
++- Grace-period and billing-retry handling.
++
++### Backend
++
++- Entitlement table keyed by user/group.
++- Storage quota enforcement.
++- Group member count enforcement.
++- Export job queue.
++- AI recap quota/rate limit.
++- Audit log for premium entitlement changes.
++
++### App Review / Legal
++
++- Korean subscription terms.
++- Privacy policy covering location, photos, group data, and AI processing.
++- Data deletion and export path.
++- Clear cancellation instructions.
++- If using external payment later: Korea-only entitlement, modal sheet, PSP compliance, and support/refund policy.
++
++## Recommended Launch Offer
++
++Launch with:
++
++- Free: 30 memories/month, up to 5 members, basic map.
++- Premium Couple/Small Group: KRW 4,900/month or KRW 49,000/year.
++- Premium Group/Family: KRW 8,900/month or KRW 89,000/year.
++- One free diary-card export after first paid month.
++
++The first premium upsell should appear at a meaningful moment: anniversary/revisit/export, not immediately at onboarding.
+
+diff --git a/context_harness/operator/REGULATION.amendment.swift-impl-delegation.md b/context_harness/operator/REGULATION.amendment.swift-impl-delegation.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..d7f74bf88ff5cc8bd8cbada9bf77f49e64115884
+--- /dev/null
++++ b/context_harness/operator/REGULATION.amendment.swift-impl-delegation.md
+@@ -0,0 +1,146 @@
++---
++target: REGULATION.md
++meeting: context_harness/operator/meetings/2026-04-23_swift_impl_delegation_and_vibe_limits.md
++supersedes:
++  - REGULATION.md#section-2-the-two-operators
++  - REGULATION.md#section-5-1-gate-5-process-integrity
++  - REGULATION.md#section-7-operator-layer-drift-audit
++  - REGULATION.md#new-section-12-multi-axis-evaluation
++  - REGULATION.md#new-section-13-vibe-coding-regulation
++---
++
++# REGULATION Amendment — Swift Implementation Delegation And Vibe-Coding Controls
++
++## Purpose
++
++User directive on 2026-04-23 narrows operator responsibilities:
++
++- Claude Code Operator must not directly edit Swift implementation files.
++- Swift implementation must be performed by Codex subagent/fork dispatch.
++- Claude Code Operator authors meetings, contracts, briefs, evidence, and orchestration.
++- Codex authors Swift code and participates in review/verdict.
++
++This amendment also adds multi-axis evaluation and explicit vibe-coding regulation based on `docs/design-docs/vibe-coding-limits-2026.md`.
++
++## Proposed Change — REG §2 The Two Operators
++
++Add:
++
++```markdown
++### Swift implementation delegation
++
++Claude Code Operator does not directly edit `workspace/ios/**/*.swift`, `workspace/ios/project.yml`, or Swift test files during implementation stages.
++
++Swift implementation is delegated to a Codex subagent/fork dispatch operating under the active round contract and whitelist. The dispatch must receive:
++
++- active round id and lock path,
++- exact file whitelist,
++- spec/acceptance/eval protocol paths,
++- reusable-asset requirements,
++- forbidden patterns,
++- evidence expectations.
++
++Claude Code Operator may author or edit:
++
++- meetings,
++- contracts,
++- implementation briefs,
++- evidence capture,
++- process logs,
++- non-Swift docs within whitelist.
++
++Codex may author Swift implementation files within the active whitelist. Claude Code captures factual evidence. Codex writes the verdict.
++```
++
++## Proposed Change — REG §5.1 Gate 5 Process Integrity
++
++Add blocker:
++
++```markdown
++- Operator modified Swift implementation files directly instead of dispatching to Codex subagent/fork.
++```
++
++Clarification:
++
++```markdown
++For this blocker, "operator modified directly" means a Swift file changed without a matching Codex implementation transcript, dispatch brief, or process-log event tying the change to a Codex implementation worker for the active round.
++```
++
++## Proposed Change — REG §7 Operator-Layer Drift Audit
++
++Add enforced or manual-audit check:
++
++```markdown
++No direct operator edit to `workspace/ios/**/*.swift`.
++
++Until automated, Gate 5 evidence must include:
++
++- `git log --name-status <base_commit>..HEAD -- workspace/ios`
++- Codex dispatch transcript path(s) and SHA-256
++- changed Swift file list
++- mapping from changed Swift file to Codex dispatch id
++
++If any changed Swift file lacks a Codex dispatch mapping, Gate 5 blocks.
++```
++
++Future checker implementation:
++
++```markdown
++The checker should validate the changed Swift file list against process-log events with `actor=codex` and a recorded transcript/hash. A git blame scan may be used as supporting evidence but is not sufficient by itself because author identity can be configured locally.
++```
++
++## Proposed New REG §12 Multi-Axis Evaluation
++
++Add:
++
++```markdown
++## §12. Multi-Axis Evaluation
++
++Gate 2 for implementation rounds must include all five axes:
++
++1. **Code correctness** — unit tests, compile/build, state transition tests, and touched-file review.
++2. **Real runtime function** — simulator launch or runtime capture showing the changed flow works in app context.
++3. **UI/UX fidelity** — screenshot comparison against active design contracts, Deepsight mocks, or accepted placeholders.
++4. **Navigation and information consistency** — labels, routes, state restoration, data shown, and user-facing copy match product contract.
++5. **Process-context soundness** — evidence that the implementation followed the active contract, whitelist, delegation rule, lint rules, and documented unresolved assumptions.
++
++Any axis not applicable must be explicitly marked `not applicable` with reason in the evidence report. Silent omission is a Gate 5 blocker.
++```
++
++## Proposed New REG §13 Vibe-Coding Regulation
++
++Add:
++
++```markdown
++## §13. Vibe-Coding Regulation
++
++Every Swift implementation dispatch must consult:
++
++`docs/design-docs/vibe-coding-limits-2026.md`
++
++The dispatch brief must include a "Vibe-coding risk controls" section covering:
++
++- reusable asset plan,
++- architecture coherence,
++- memory/concurrency/error handling,
++- UI/UX runtime evidence,
++- accessibility,
++- security/dependency risk,
++- testing depth,
++- data-model mapping,
++- unchecked assumptions.
++
++Codex implementation output is treated as untrusted until:
++
++1. build/test evidence passes,
++2. forbidden-pattern grep passes,
++3. runtime evidence exists for user-facing changes,
++4. cross-operator review records at least one concrete challenge/risk or factual no-issue evidence,
++5. verdict cites evidence for every acceptance criterion.
++```
++
++## Migration Notes
++
++- This amendment does not invalidate prior rounds retroactively.
++- It applies to future Swift implementation rounds after adoption.
++- Existing Swift files may be edited by Codex dispatch under whitelist; Claude Code may inspect/read them for evidence and review prompts but not modify them directly.
+diff --git a/docs/design-docs/vibe-coding-limits-2026.md b/docs/design-docs/vibe-coding-limits-2026.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..3a1856d294c52b7caf88510905437cef34e5d487
+--- /dev/null
++++ b/docs/design-docs/vibe-coding-limits-2026.md
+@@ -0,0 +1,62 @@
++# Vibe Coding Limits — 2026
++
++**Scope:** LLM-driven coding and agentic coding limits as of 2026-04-22, compared with senior iOS engineering practice.
++
++**Use:** implementation-dispatch checklist source for Unfading harness regulation.
++
++## Source Notes
++
++This document uses public research and industry reporting available by 2026-04-22, including:
++
++- METR, "Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity" (2025-07-10): https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/
++- METR, "We are Changing our Developer Productivity Experiment Design" (2026-02-24): https://metr.org/blog/2026-02-24-uplift-update/
++- GitClear, "Coding on Copilot" and "AI Copilot Code Quality: 2025" reports: https://www.gitclear.com/coding_on_copilot_data_shows_ais_downward_pressure_on_code_quality and https://www.gitclear.com/ai_assistant_code_quality_2025_research
++- Veracode 2025 GenAI Code Security reporting summarized by TechRadar: https://www.techradar.com/pro/nearly-half-of-all-code-generated-by-ai-found-to-contain-security-flaws-even-big-llms-affected
++- TechTarget, "Security risks of AI-generated code and how to manage them" (2025-05-29): https://www.techtarget.com/searchSecurity/tip/Security-risks-of-AI-generated-code-and-how-to-manage-them
++- Kaspersky, "Security risks of vibe coding and LLM assistants for developers" (2025): https://www.kaspersky.com/blog/vibe-coding-2025-risks/54584/
++- Axios, "Cursor taps new security partner in push to secure vibe coding" (2026-04-21): https://www.axios.com/2026/04/21/cursor-chainguard-ai-code-security
++- Business Insider, "Lovable's security stumble shows one big risk in using AI to code" (2026-04): https://www.businessinsider.com/lovable-security-access-vibe-coding-projects-risk-2026-4
++
++## Anti-Patterns And Harness Regulations
++
++| # | Category | Vibe-coding anti-pattern | Real-world failure mode | Senior-dev counter-practice | Proposed Unfading harness regulation |
++|---:|---|---|---|---|---|
++| 1 | Architecture coherence | Prompting for local patches without preserving system shape | New code compiles but duplicates state, bypasses existing abstractions, or creates parallel UI paths | Start with architecture map, owned modules, dependency boundaries, and explicit non-goals | Every Swift dispatch brief must include "owned files", "reused assets", "forbidden parallel abstractions", and "expected imports". Codex must review for duplicate module creation before implementation merges. |
++| 2 | Code reuse | Generating copy-paste variants instead of reusable units | GitClear observed rising code cloning and short-term churn in AI-assisted code; UI components diverge by screen | Extract shared modifiers/styles/types first; write one composable API and tests | Gate 5 implementation criterion: every new UI pattern repeated twice must be a reusable `Shared/` asset or an explicit rejected-abstraction note. |
++| 3 | Context mismatch | Trusting stale docs or hallucinated project state | Round 1 found `SESSION_RESUME.md` described 140 tests while workspace had 10; agents would plan against false reality | Verify source tree, test count, active files, and current UI before coding | Every round spec must include a "Reality Snapshot" with file count, test count, tracked/untracked state, and source hashes. Any mismatch with resume docs is a blocker until reconciled. |
++| 4 | Memory safety | Missing lifecycle/cancellation/retention checks in generated async/UI code | Retain cycles, tasks outliving views, stale callbacks mutating UI after dismissal | Audit escaping closures, `Task`, observers, timers, and deinit/onDisappear cancellation | Swift review checklist must include `[weak self]`/capture review, task cancellation review, and `@MainActor` boundary review for stores/view models. |
++| 5 | Concurrency | Adding async work without actor isolation or race analysis | Data races, UI updates off-main, duplicate network calls, inconsistent selected state | Make state ownership explicit; use `@MainActor` for UI state and isolate stores | Any new stateful Swift type must declare actor assumptions (`@MainActor`, value type, or documented immutable data). Codex review blocks unowned mutable shared state. |
++| 6 | Error handling | Using happy-path code or swallowing errors | `try?`, empty catches, failed save/upload silently losing user data | Propagate typed errors, log with context, show user recovery | Grep lint: `try?` in app code requires an inline justification comment or is a review blocker. Save/upload flows require user-visible failure path. |
++| 7 | UI/UX fidelity | Treating screenshots as decorative rather than contract | Generated UI "looks close" but misses spacing, hierarchy, target state, or primary action visibility; R4 FAB hidden at runtime | Runtime screenshot every user-facing surface, compare against contract states | Every visual round requires runtime screenshots of each acceptance state, not just static code review. Missing primary CTA in screenshot is a blocker. |
++| 8 | Accessibility | Omitting VoiceOver order, labels, Dynamic Type, and 44pt targets | UI works for sighted/default-size users but fails accessibility or large text | Design controls with labels/hints, semantic fonts, `@ScaledMetric`, minimum hit areas | Swift lint forbids hardcoded `.system(size:)` outside theme-approved exceptions. Evidence must include grep for labels/hints on icon-only buttons and screenshots at accessibility size for major surfaces. |
++| 9 | Security | Treating AI output as vetted | Veracode/industry reports found high rates of vulnerable AI-generated code; tools can omit auth, validation, secure storage | Threat model before implementation, least privilege, no secret exposure, static security checks | Any auth, storage, network, payment, or invitation feature requires a security subsection in spec and a red-team review before close. AI-generated code is considered untrusted until tests + review pass. |
++| 10 | Dependency hygiene | Accepting hallucinated or outdated dependencies | Kaspersky and supply-chain reporting describe fictitious packages/slopsquatting and unsafe imports | Prefer platform APIs; require dependency review and lockfile diff | New dependency requires meeting approval, source URL, maintenance/security check, license note, and lockfile diff. No AI-suggested package may be added silently. |
++| 11 | Data modeling | Creating UI-only sample structures that conflict with domain model | Screens ship with mock data that cannot map to `Group -> DateEvent -> Memory -> MemoryPost` | Model first, then view; maintain migration path from sample to persisted data | Any new screen using sample data must state its eventual domain model mapping. Sample English/model strings are allowed only with a future localization/data ticket. |
++| 12 | Testing | Writing tests that assert existence rather than behavior | Tests pass while compose tab behavior, gesture routing, or selection flow is untested | Test state transitions, reducers, edge cases, and runtime behavior | Tests must cover at least one behavioral transition per new state object. Pure "enum contains case" tests are advisory only unless paired with behavior evidence. |
++| 13 | Performance | Generating layout code that over-renders or blocks main thread | Large SwiftUI bodies, repeated expensive computations, image loading on main thread | Measure/render-scope review, lazy loading, small view decomposition | Review must flag large new `body` implementations, repeated image/data work in body, and non-lazy lists/grids. Performance-sensitive surfaces need Instruments or measured evidence before launch. |
++| 14 | Review overload | AI creates more code than humans can review carefully | METR found experienced devs spent time prompting/reviewing; code-volume spikes move bottleneck to review | Smaller slices, narrow whitelists, explicit reviewer focus | Implementation rounds must cap write scope. If touched files exceed whitelist intent, open amendment or split round. Codex verdict must mention review surface size. |
++| 15 | Process hallucination | Claiming compliance because a checker says green while checker scope is narrow | Earlier v5 checker passed despite governance drift; false sense of safety | Keep checker claims honest; write evidence of what was and was not checked | Every gate evidence file must include "unchecked assumptions". REGULATION must list not-enforced items explicitly until automated. |
++
++## Minimum Dispatch Checklist
++
++Before any Swift implementation dispatch, the brief must include:
++
++1. Current reality snapshot: test count, touched files, current UI state, tracked/untracked status.
++2. Reusable asset plan: existing modules reused and any new module API.
++3. Forbidden patterns: colors, hardcoded font sizes, English UI strings, `try?`, new dependencies.
++4. Runtime capture plan: screenshots or interaction evidence for changed UI states.
++5. Test plan: unit tests for state and at least one behavior test per new state object.
++6. Security/accessibility notes if the change touches auth, storage, network, payments, permissions, invitations, or user-generated content.
++7. Evidence paths and expected hashes/logs.
++
++## Senior Developer Standard For Unfading
++
++LLM output is acceptable only when it is converted into a small, reviewable, reusable unit with:
++
++- explicit contract,
++- narrow whitelist,
++- tests,
++- runtime evidence,
++- accessibility and security checks,
++- Codex/Claude cross-validation,
++- and honest documentation of remaining uncertainty.
+diff --git a/docs/product-specs/unfading-monetization-strategy.md b/docs/product-specs/unfading-monetization-strategy.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..039ca0cfc3a1954fb1e1228fe0172010c705682d
+--- /dev/null
++++ b/docs/product-specs/unfading-monetization-strategy.md
+@@ -0,0 +1,246 @@
++# Unfading Monetization Strategy
++
++**Product:** Korean couple/group map diary for memory capture, place-based browsing, Rewind, calendar, group history, and shareable diary artifacts.
++
++**Positioning:** private map diary for relationships and small groups. No ads. Premium pays for storage, customization, richer exports, and quality-of-life automation, not basic emotional memory keeping.
++
++## Business Model
++
++Freemium subscription with optional one-time paid exports.
++
++### Free Tier
++
++Target: couples, close friends, and small groups trying the product.
++
++Included:
++
++- 1 active couple or group space
++- up to 5 members
++- limited monthly new memories, recommended launch cap: 30 memories/month
++- basic map style
++- core map pins, composer, Rewind basics, calendar basics
++- basic media compression/storage cap
++- no ads
++
++Purpose:
++
++- let users build emotional history before monetization,
++- avoid paywalling the core diary loop,
++- create natural upgrade moments at storage, export, theme, and larger group boundaries.
++
++### Premium Individual / Couple
++
++Target: couples and small groups with frequent use.
++
++Proposed price:
++
++- KRW 4,900/month
++- KRW 49,000/year
++
++Premium features:
++
++- unlimited memories within fair-use storage policy
++- custom map themes: warm, vintage, dark, seasonal, trip-specific
++- AI-enhanced Rewind captions and memory summaries
++- shareable diary book exports: PDF/video/card
++- higher storage and original-quality media options
++- anniversary reminders and location-based revisit prompts
++- premium pin packs and cover styles
++- priority support
++
++### Premium Group / Family
++
++Target: friend groups, families, clubs, trips.
++
++Proposed price:
++
++- KRW 8,900/month per group
++- KRW 89,000/year per group
++
++Included:
++
++- 6+ members
++- group roles/admin controls
++- shared storage pool
++- group diary book exports
++- event/trip collections
++- premium map themes and group cover styles
++- priority support
++
++### One-Time Purchases
++
++Useful where users resist subscriptions:
++
++- Diary book export: KRW 3,900-9,900 depending on format/length
++- Seasonal map/pin pack: KRW 1,900-3,900
++- Trip archive export bundle: KRW 6,900
++
++One-time purchases should not replace subscription value; they monetize high-intent moments.
++
++## Premium Feature Ladder
++
++| User moment | Upgrade hook | Premium value |
++|---|---|---|
++| User reaches monthly memory limit | "이번 달 추억이 가득 찼어요" | unlimited memories |
++| Couple anniversary approaches | Rewind/anniversary reminder | AI-enhanced recap and export |
++| Group has 6th member | member cap reached | family/group tier |
++| User customizes map often | theme preview | premium map themes |
++| User shares screenshots | export prompt | diary book/video/card export |
++| User stores many photos | storage meter | higher storage/original quality |
++
++## Retention Hooks
++
++- Anniversary reminders: 100 days, 1 year, first trip, first place.
++- Rewind push: "1년 전 오늘, 여기에서 남긴 추억".
++- Place revisit prompt: when near a saved place, suggest opening past memory.
++- Gentle streak-like loops: weekly memory recap, not daily pressure.
++- Group nudges: "민재가 새 반응을 남겼어요", "이번 여행 앨범이 완성됐어요".
++- Seasonal diary: month-end and year-end memory maps.
++- Export milestones: after 50 memories, after first trip, after anniversary.
++
++Avoid manipulative streak mechanics. The product tone should feel intimate and respectful.
++
++## Korean Market Considerations
++
++### Payments
++
++Default launch path: Apple In-App Purchase / StoreKit 2.
++
++Reasons:
++
++- best App Store review fit,
++- built-in subscription management,
++- lower operational burden for refunds, tax handling, family purchase expectations,
++- less checkout friction for early launch.
++
++South Korea alternative payment option:
++
++- Apple provides a Korea-specific StoreKit External Purchase Entitlement for apps distributed solely in South Korea: https://developer.apple.com/support/storekit-external-entitlement-kr
++- Alternative PSPs may include Korean providers such as KCP, Inicis, Toss, or NICE, but the app must follow Apple's external purchase modal/API requirements and may need a Korea-only binary.
++- Alternative payment reduces some App Store control but adds support/refund/subscription-management burden and can still carry Apple commission/service-fee complexity.
++
++Recommendation:
++
++- Launch with StoreKit 2 only.
++- Revisit Korea-only external purchase after product-market fit and subscription volume justify operational overhead.
++
++### Payment Methods And Local Expectations
++
++Korean users expect:
++
++- KakaoPay, Naver Pay, Toss, credit/debit card, carrier billing, and easy cancellation experiences.
++- If using StoreKit, explain subscription management clearly in Korean and deep-link to App Store subscription management.
++- If later using external payment, provide Korean receipts, cancellation, refund, and customer-support flows equivalent to app-store expectations.
++
++### Tax And Compliance
++
++- Price tiers must account for VAT-inclusive consumer pricing.
++- Digital subscription receipts and refund policies must be clear in Korean.
++- Family/group data and photos are sensitive; premium storage/AI features must have explicit privacy copy.
++- AI-enhanced Rewind should disclose when generated summaries/captions are AI-assisted.
++
++## Pricing Rationale
++
++Initial KRW pricing should be low enough for couples but high enough to pay for media storage and AI features.
++
++| Tier | Monthly | Annual | Notes |
++|---|---:|---:|---|
++| Free | KRW 0 | KRW 0 | core loop, limited monthly memory creation |
++| Premium Couple/Small Group | KRW 4,900 | KRW 49,000 | annual gives ~17% discount |
++| Premium Group/Family | KRW 8,900 | KRW 89,000 | supports 6+ members/shared storage |
++
++Consider launch promo:
++
++- 30-day trial for annual plan
++- early-user lifetime annual discount for first 1,000 paid users
++- free export credit after first paid month
++
++## Rough Revenue Model
++
++Assumptions for first launch year:
++
++- 50,000 installs
++- 35% activation to first memory: 17,500 activated users
++- 20% reach 10+ memories: 10,000 engaged users
++- 5% paid conversion from engaged users: 500 paid subscribers
++- blended ARPPU: KRW 5,500/month
++
++Monthly recurring revenue estimate:
++
++- 500 × KRW 5,500 = KRW 2,750,000 MRR
++
++Upside scenario:
++
++- 150,000 installs
++- 30,000 engaged users
++- 8% paid conversion
++- 2,400 paid subscribers × KRW 5,500 = KRW 13,200,000 MRR
++
++CAC guidance:
++
++- If blended monthly gross margin per paid user after platform fees/storage is ~KRW 3,000-4,000, paid CAC should stay below KRW 12,000-18,000 unless annual conversion is strong.
++- Early acquisition should prioritize organic TikTok/Instagram/Reels couples/travel content, university groups, wedding/anniversary communities, and referral loops before paid ads.
++
++## Premium Ethics
++
++Principles:
++
++- No ads in the free tier.
++- Do not paywall private memory viewing after users create data.
++- Do not hold user memories hostage; exports/downloads should remain possible at least in basic form.
++- Premium should improve quality, volume, customization, automation, and export richness.
++- AI features should assist writing/recap, not invent false memories.
++
++Free users should feel respected; premium should feel like a better way to preserve something meaningful.
++
++## Launch-Ready Checklist
++
++### Product
++
++- Free-tier memory limit copy in Korean.
++- Upgrade screen with transparent plan comparison.
++- Storage usage meter.
++- Premium theme preview.
++- Export preview watermark for free users.
++- Subscription management screen.
++- Privacy copy for photos, locations, AI summaries, and group data.
++
++### StoreKit 2
++
++- Product IDs for monthly/annual couple premium.
++- Product IDs for monthly/annual group premium.
++- Optional consumable/non-consumable export products.
++- StoreKit 2 purchase flow.
++- Transaction listener and entitlement cache.
++- Restore purchases.
++- App Store subscription management deep link.
++- Server-side receipt or App Store Server API validation before high-cost storage/AI entitlements.
++- Grace-period and billing-retry handling.
++
++### Backend
++
++- Entitlement table keyed by user/group.
++- Storage quota enforcement.
++- Group member count enforcement.
++- Export job queue.
++- AI recap quota/rate limit.
++- Audit log for premium entitlement changes.
++
++### App Review / Legal
++
++- Korean subscription terms.
++- Privacy policy covering location, photos, group data, and AI processing.
++- Data deletion and export path.
++- Clear cancellation instructions.
++- If using external payment later: Korea-only entitlement, modal sheet, PSP compliance, and support/refund policy.
++
++## Recommended Launch Offer
++
++Launch with:
++
++- Free: 30 memories/month, up to 5 members, basic map.
++- Premium Couple/Small Group: KRW 4,900/month or KRW 49,000/year.
++- Premium Group/Family: KRW 8,900/month or KRW 89,000/year.
++- One free diary-card export after first paid month.
++
++The first premium upsell should appear at a meaningful moment: anniversary/revisit/export, not immediately at onboarding.
+
+codex
+The requested docs are written. I’m doing a quick verification pass for file presence, required headings/frontmatter, and the anti-pattern count before summarizing.
+exec
+/bin/zsh -lc "wc -l docs/design-docs/vibe-coding-limits-2026.md context_harness/operator/REGULATION.amendment.swift-impl-delegation.md docs/product-specs/unfading-monetization-strategy.md && rg -n '"'^#|''^##|''^---|target:|meeting:|supersedes:|Vibe|Anti|Premium|StoreKit|Swift implementation|Multi-Axis'"' docs/design-docs/vibe-coding-limits-2026.md context_harness/operator/REGULATION.amendment.swift-impl-delegation.md docs/product-specs/unfading-monetization-strategy.md" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+      62 docs/design-docs/vibe-coding-limits-2026.md
+     146 context_harness/operator/REGULATION.amendment.swift-impl-delegation.md
+     246 docs/product-specs/unfading-monetization-strategy.md
+     454 total
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:1:---
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:2:target: REGULATION.md
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:3:meeting: context_harness/operator/meetings/2026-04-23_swift_impl_delegation_and_vibe_limits.md
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:4:supersedes:
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:10:---
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:12:# REGULATION Amendment — Swift Implementation Delegation And Vibe-Coding Controls
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:14:## Purpose
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:18:- Claude Code Operator must not directly edit Swift implementation files.
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:19:- Swift implementation must be performed by Codex subagent/fork dispatch.
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:25:## Proposed Change — REG §2 The Two Operators
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:30:### Swift implementation delegation
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:34:Swift implementation is delegated to a Codex subagent/fork dispatch operating under the active round contract and whitelist. The dispatch must receive:
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:52:Codex may author Swift implementation files within the active whitelist. Claude Code captures factual evidence. Codex writes the verdict.
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:55:## Proposed Change — REG §5.1 Gate 5 Process Integrity
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:60:- Operator modified Swift implementation files directly instead of dispatching to Codex subagent/fork.
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:69:## Proposed Change — REG §7 Operator-Layer Drift Audit
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:92:## Proposed New REG §12 Multi-Axis Evaluation
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:97:## §12. Multi-Axis Evaluation
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:110:## Proposed New REG §13 Vibe-Coding Regulation
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:115:## §13. Vibe-Coding Regulation
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:117:Every Swift implementation dispatch must consult:
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:121:The dispatch brief must include a "Vibe-coding risk controls" section covering:
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:142:## Migration Notes
+context_harness/operator/REGULATION.amendment.swift-impl-delegation.md:145:- It applies to future Swift implementation rounds after adoption.
+docs/design-docs/vibe-coding-limits-2026.md:1:# Vibe Coding Limits — 2026
+docs/design-docs/vibe-coding-limits-2026.md:7:## Source Notes
+docs/design-docs/vibe-coding-limits-2026.md:20:## Anti-Patterns And Harness Regulations
+docs/design-docs/vibe-coding-limits-2026.md:22:| # | Category | Vibe-coding anti-pattern | Real-world failure mode | Senior-dev counter-practice | Proposed Unfading harness regulation |
+docs/design-docs/vibe-coding-limits-2026.md:40:## Minimum Dispatch Checklist
+docs/design-docs/vibe-coding-limits-2026.md:42:Before any Swift implementation dispatch, the brief must include:
+docs/design-docs/vibe-coding-limits-2026.md:52:## Senior Developer Standard For Unfading
+docs/product-specs/unfading-monetization-strategy.md:1:# Unfading Monetization Strategy
+docs/product-specs/unfading-monetization-strategy.md:5:**Positioning:** private map diary for relationships and small groups. No ads. Premium pays for storage, customization, richer exports, and quality-of-life automation, not basic emotional memory keeping.
+docs/product-specs/unfading-monetization-strategy.md:7:## Business Model
+docs/product-specs/unfading-monetization-strategy.md:11:### Free Tier
+docs/product-specs/unfading-monetization-strategy.md:31:### Premium Individual / Couple
+docs/product-specs/unfading-monetization-strategy.md:40:Premium features:
+docs/product-specs/unfading-monetization-strategy.md:51:### Premium Group / Family
+docs/product-specs/unfading-monetization-strategy.md:70:### One-Time Purchases
+docs/product-specs/unfading-monetization-strategy.md:80:## Premium Feature Ladder
+docs/product-specs/unfading-monetization-strategy.md:82:| User moment | Upgrade hook | Premium value |
+docs/product-specs/unfading-monetization-strategy.md:91:## Retention Hooks
+docs/product-specs/unfading-monetization-strategy.md:103:## Korean Market Considerations
+docs/product-specs/unfading-monetization-strategy.md:105:### Payments
+docs/product-specs/unfading-monetization-strategy.md:107:Default launch path: Apple In-App Purchase / StoreKit 2.
+docs/product-specs/unfading-monetization-strategy.md:118:- Apple provides a Korea-specific StoreKit External Purchase Entitlement for apps distributed solely in South Korea: https://developer.apple.com/support/storekit-external-entitlement-kr
+docs/product-specs/unfading-monetization-strategy.md:124:- Launch with StoreKit 2 only.
+docs/product-specs/unfading-monetization-strategy.md:127:### Payment Methods And Local Expectations
+docs/product-specs/unfading-monetization-strategy.md:132:- If using StoreKit, explain subscription management clearly in Korean and deep-link to App Store subscription management.
+docs/product-specs/unfading-monetization-strategy.md:135:### Tax And Compliance
+docs/product-specs/unfading-monetization-strategy.md:142:## Pricing Rationale
+docs/product-specs/unfading-monetization-strategy.md:149:| Premium Couple/Small Group | KRW 4,900 | KRW 49,000 | annual gives ~17% discount |
+docs/product-specs/unfading-monetization-strategy.md:150:| Premium Group/Family | KRW 8,900 | KRW 89,000 | supports 6+ members/shared storage |
+docs/product-specs/unfading-monetization-strategy.md:158:## Rough Revenue Model
+docs/product-specs/unfading-monetization-strategy.md:184:## Premium Ethics
+docs/product-specs/unfading-monetization-strategy.md:191:- Premium should improve quality, volume, customization, automation, and export richness.
+docs/product-specs/unfading-monetization-strategy.md:196:## Launch-Ready Checklist
+docs/product-specs/unfading-monetization-strategy.md:198:### Product
+docs/product-specs/unfading-monetization-strategy.md:203:- Premium theme preview.
+docs/product-specs/unfading-monetization-strategy.md:208:### StoreKit 2
+docs/product-specs/unfading-monetization-strategy.md:213:- StoreKit 2 purchase flow.
+docs/product-specs/unfading-monetization-strategy.md:220:### Backend
+docs/product-specs/unfading-monetization-strategy.md:229:### App Review / Legal
+docs/product-specs/unfading-monetization-strategy.md:237:## Recommended Launch Offer
+docs/product-specs/unfading-monetization-strategy.md:242:- Premium Couple/Small Group: KRW 4,900/month or KRW 49,000/year.
+docs/product-specs/unfading-monetization-strategy.md:243:- Premium Group/Family: KRW 8,900/month or KRW 89,000/year.
+
+exec
+/bin/zsh -lc "rg -n '"'^'"\\| [0-9]+ \\|' docs/design-docs/vibe-coding-limits-2026.md | wc -l && git status --short docs/design-docs/vibe-coding-limits-2026.md context_harness/operator/REGULATION.amendment.swift-impl-delegation.md docs/product-specs/unfading-monetization-strategy.md" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+      15
+?? context_harness/operator/REGULATION.amendment.swift-impl-delegation.md
+?? docs/design-docs/vibe-coding-limits-2026.md
+?? docs/product-specs/unfading-monetization-strategy.md
+
+diff --git a/context_harness/operator/REGULATION.amendment.swift-impl-delegation.md b/context_harness/operator/REGULATION.amendment.swift-impl-delegation.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..d7f74bf88ff5cc8bd8cbada9bf77f49e64115884
+--- /dev/null
++++ b/context_harness/operator/REGULATION.amendment.swift-impl-delegation.md
+@@ -0,0 +1,146 @@
++---
++target: REGULATION.md
++meeting: context_harness/operator/meetings/2026-04-23_swift_impl_delegation_and_vibe_limits.md
++supersedes:
++  - REGULATION.md#section-2-the-two-operators
++  - REGULATION.md#section-5-1-gate-5-process-integrity
++  - REGULATION.md#section-7-operator-layer-drift-audit
++  - REGULATION.md#new-section-12-multi-axis-evaluation
++  - REGULATION.md#new-section-13-vibe-coding-regulation
++---
++
++# REGULATION Amendment — Swift Implementation Delegation And Vibe-Coding Controls
++
++## Purpose
++
++User directive on 2026-04-23 narrows operator responsibilities:
++
++- Claude Code Operator must not directly edit Swift implementation files.
++- Swift implementation must be performed by Codex subagent/fork dispatch.
++- Claude Code Operator authors meetings, contracts, briefs, evidence, and orchestration.
++- Codex authors Swift code and participates in review/verdict.
++
++This amendment also adds multi-axis evaluation and explicit vibe-coding regulation based on `docs/design-docs/vibe-coding-limits-2026.md`.
++
++## Proposed Change — REG §2 The Two Operators
++
++Add:
++
++```markdown
++### Swift implementation delegation
++
++Claude Code Operator does not directly edit `workspace/ios/**/*.swift`, `workspace/ios/project.yml`, or Swift test files during implementation stages.
++
++Swift implementation is delegated to a Codex subagent/fork dispatch operating under the active round contract and whitelist. The dispatch must receive:
++
++- active round id and lock path,
++- exact file whitelist,
++- spec/acceptance/eval protocol paths,
++- reusable-asset requirements,
++- forbidden patterns,
++- evidence expectations.
++
++Claude Code Operator may author or edit:
++
++- meetings,
++- contracts,
++- implementation briefs,
++- evidence capture,
++- process logs,
++- non-Swift docs within whitelist.
++
++Codex may author Swift implementation files within the active whitelist. Claude Code captures factual evidence. Codex writes the verdict.
++```
++
++## Proposed Change — REG §5.1 Gate 5 Process Integrity
++
++Add blocker:
++
++```markdown
++- Operator modified Swift implementation files directly instead of dispatching to Codex subagent/fork.
++```
++
++Clarification:
++
++```markdown
++For this blocker, "operator modified directly" means a Swift file changed without a matching Codex implementation transcript, dispatch brief, or process-log event tying the change to a Codex implementation worker for the active round.
++```
++
++## Proposed Change — REG §7 Operator-Layer Drift Audit
++
++Add enforced or manual-audit check:
++
++```markdown
++No direct operator edit to `workspace/ios/**/*.swift`.
++
++Until automated, Gate 5 evidence must include:
++
++- `git log --name-status <base_commit>..HEAD -- workspace/ios`
++- Codex dispatch transcript path(s) and SHA-256
++- changed Swift file list
++- mapping from changed Swift file to Codex dispatch id
++
++If any changed Swift file lacks a Codex dispatch mapping, Gate 5 blocks.
++```
++
++Future checker implementation:
++
++```markdown
++The checker should validate the changed Swift file list against process-log events with `actor=codex` and a recorded transcript/hash. A git blame scan may be used as supporting evidence but is not sufficient by itself because author identity can be configured locally.
++```
++
++## Proposed New REG §12 Multi-Axis Evaluation
++
++Add:
++
++```markdown
++## §12. Multi-Axis Evaluation
++
++Gate 2 for implementation rounds must include all five axes:
++
++1. **Code correctness** — unit tests, compile/build, state transition tests, and touched-file review.
++2. **Real runtime function** — simulator launch or runtime capture showing the changed flow works in app context.
++3. **UI/UX fidelity** — screenshot comparison against active design contracts, Deepsight mocks, or accepted placeholders.
++4. **Navigation and information consistency** — labels, routes, state restoration, data shown, and user-facing copy match product contract.
++5. **Process-context soundness** — evidence that the implementation followed the active contract, whitelist, delegation rule, lint rules, and documented unresolved assumptions.
++
++Any axis not applicable must be explicitly marked `not applicable` with reason in the evidence report. Silent omission is a Gate 5 blocker.
++```
++
++## Proposed New REG §13 Vibe-Coding Regulation
++
++Add:
++
++```markdown
++## §13. Vibe-Coding Regulation
++
++Every Swift implementation dispatch must consult:
++
++`docs/design-docs/vibe-coding-limits-2026.md`
++
++The dispatch brief must include a "Vibe-coding risk controls" section covering:
++
++- reusable asset plan,
++- architecture coherence,
++- memory/concurrency/error handling,
++- UI/UX runtime evidence,
++- accessibility,
++- security/dependency risk,
++- testing depth,
++- data-model mapping,
++- unchecked assumptions.
++
++Codex implementation output is treated as untrusted until:
++
++1. build/test evidence passes,
++2. forbidden-pattern grep passes,
++3. runtime evidence exists for user-facing changes,
++4. cross-operator review records at least one concrete challenge/risk or factual no-issue evidence,
++5. verdict cites evidence for every acceptance criterion.
++```
++
++## Migration Notes
++
++- This amendment does not invalidate prior rounds retroactively.
++- It applies to future Swift implementation rounds after adoption.
++- Existing Swift files may be edited by Codex dispatch under whitelist; Claude Code may inspect/read them for evidence and review prompts but not modify them directly.
+diff --git a/docs/design-docs/vibe-coding-limits-2026.md b/docs/design-docs/vibe-coding-limits-2026.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..3a1856d294c52b7caf88510905437cef34e5d487
+--- /dev/null
++++ b/docs/design-docs/vibe-coding-limits-2026.md
+@@ -0,0 +1,62 @@
++# Vibe Coding Limits — 2026
++
++**Scope:** LLM-driven coding and agentic coding limits as of 2026-04-22, compared with senior iOS engineering practice.
++
++**Use:** implementation-dispatch checklist source for Unfading harness regulation.
++
++## Source Notes
++
++This document uses public research and industry reporting available by 2026-04-22, including:
++
++- METR, "Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity" (2025-07-10): https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/
++- METR, "We are Changing our Developer Productivity Experiment Design" (2026-02-24): https://metr.org/blog/2026-02-24-uplift-update/
++- GitClear, "Coding on Copilot" and "AI Copilot Code Quality: 2025" reports: https://www.gitclear.com/coding_on_copilot_data_shows_ais_downward_pressure_on_code_quality and https://www.gitclear.com/ai_assistant_code_quality_2025_research
++- Veracode 2025 GenAI Code Security reporting summarized by TechRadar: https://www.techradar.com/pro/nearly-half-of-all-code-generated-by-ai-found-to-contain-security-flaws-even-big-llms-affected
++- TechTarget, "Security risks of AI-generated code and how to manage them" (2025-05-29): https://www.techtarget.com/searchSecurity/tip/Security-risks-of-AI-generated-code-and-how-to-manage-them
++- Kaspersky, "Security risks of vibe coding and LLM assistants for developers" (2025): https://www.kaspersky.com/blog/vibe-coding-2025-risks/54584/
++- Axios, "Cursor taps new security partner in push to secure vibe coding" (2026-04-21): https://www.axios.com/2026/04/21/cursor-chainguard-ai-code-security
++- Business Insider, "Lovable's security stumble shows one big risk in using AI to code" (2026-04): https://www.businessinsider.com/lovable-security-access-vibe-coding-projects-risk-2026-4
++
++## Anti-Patterns And Harness Regulations
++
++| # | Category | Vibe-coding anti-pattern | Real-world failure mode | Senior-dev counter-practice | Proposed Unfading harness regulation |
++|---:|---|---|---|---|---|
++| 1 | Architecture coherence | Prompting for local patches without preserving system shape | New code compiles but duplicates state, bypasses existing abstractions, or creates parallel UI paths | Start with architecture map, owned modules, dependency boundaries, and explicit non-goals | Every Swift dispatch brief must include "owned files", "reused assets", "forbidden parallel abstractions", and "expected imports". Codex must review for duplicate module creation before implementation merges. |
++| 2 | Code reuse | Generating copy-paste variants instead of reusable units | GitClear observed rising code cloning and short-term churn in AI-assisted code; UI components diverge by screen | Extract shared modifiers/styles/types first; write one composable API and tests | Gate 5 implementation criterion: every new UI pattern repeated twice must be a reusable `Shared/` asset or an explicit rejected-abstraction note. |
++| 3 | Context mismatch | Trusting stale docs or hallucinated project state | Round 1 found `SESSION_RESUME.md` described 140 tests while workspace had 10; agents would plan against false reality | Verify source tree, test count, active files, and current UI before coding | Every round spec must include a "Reality Snapshot" with file count, test count, tracked/untracked state, and source hashes. Any mismatch with resume docs is a blocker until reconciled. |
++| 4 | Memory safety | Missing lifecycle/cancellation/retention checks in generated async/UI code | Retain cycles, tasks outliving views, stale callbacks mutating UI after dismissal | Audit escaping closures, `Task`, observers, timers, and deinit/onDisappear cancellation | Swift review checklist must include `[weak self]`/capture review, task cancellation review, and `@MainActor` boundary review for stores/view models. |
++| 5 | Concurrency | Adding async work without actor isolation or race analysis | Data races, UI updates off-main, duplicate network calls, inconsistent selected state | Make state ownership explicit; use `@MainActor` for UI state and isolate stores | Any new stateful Swift type must declare actor assumptions (`@MainActor`, value type, or documented immutable data). Codex review blocks unowned mutable shared state. |
++| 6 | Error handling | Using happy-path code or swallowing errors | `try?`, empty catches, failed save/upload silently losing user data | Propagate typed errors, log with context, show user recovery | Grep lint: `try?` in app code requires an inline justification comment or is a review blocker. Save/upload flows require user-visible failure path. |
++| 7 | UI/UX fidelity | Treating screenshots as decorative rather than contract | Generated UI "looks close" but misses spacing, hierarchy, target state, or primary action visibility; R4 FAB hidden at runtime | Runtime screenshot every user-facing surface, compare against contract states | Every visual round requires runtime screenshots of each acceptance state, not just static code review. Missing primary CTA in screenshot is a blocker. |
++| 8 | Accessibility | Omitting VoiceOver order, labels, Dynamic Type, and 44pt targets | UI works for sighted/default-size users but fails accessibility or large text | Design controls with labels/hints, semantic fonts, `@ScaledMetric`, minimum hit areas | Swift lint forbids hardcoded `.system(size:)` outside theme-approved exceptions. Evidence must include grep for labels/hints on icon-only buttons and screenshots at accessibility size for major surfaces. |
++| 9 | Security | Treating AI output as vetted | Veracode/industry reports found high rates of vulnerable AI-generated code; tools can omit auth, validation, secure storage | Threat model before implementation, least privilege, no secret exposure, static security checks | Any auth, storage, network, payment, or invitation feature requires a security subsection in spec and a red-team review before close. AI-generated code is considered untrusted until tests + review pass. |
++| 10 | Dependency hygiene | Accepting hallucinated or outdated dependencies | Kaspersky and supply-chain reporting describe fictitious packages/slopsquatting and unsafe imports | Prefer platform APIs; require dependency review and lockfile diff | New dependency requires meeting approval, source URL, maintenance/security check, license note, and lockfile diff. No AI-suggested package may be added silently. |
++| 11 | Data modeling | Creating UI-only sample structures that conflict with domain model | Screens ship with mock data that cannot map to `Group -> DateEvent -> Memory -> MemoryPost` | Model first, then view; maintain migration path from sample to persisted data | Any new screen using sample data must state its eventual domain model mapping. Sample English/model strings are allowed only with a future localization/data ticket. |
++| 12 | Testing | Writing tests that assert existence rather than behavior | Tests pass while compose tab behavior, gesture routing, or selection flow is untested | Test state transitions, reducers, edge cases, and runtime behavior | Tests must cover at least one behavioral transition per new state object. Pure "enum contains case" tests are advisory only unless paired with behavior evidence. |
++| 13 | Performance | Generating layout code that over-renders or blocks main thread | Large SwiftUI bodies, repeated expensive computations, image loading on main thread | Measure/render-scope review, lazy loading, small view decomposition | Review must flag large new `body` implementations, repeated image/data work in body, and non-lazy lists/grids. Performance-sensitive surfaces need Instruments or measured evidence before launch. |
++| 14 | Review overload | AI creates more code than humans can review carefully | METR found experienced devs spent time prompting/reviewing; code-volume spikes move bottleneck to review | Smaller slices, narrow whitelists, explicit reviewer focus | Implementation rounds must cap write scope. If touched files exceed whitelist intent, open amendment or split round. Codex verdict must mention review surface size. |
++| 15 | Process hallucination | Claiming compliance because a checker says green while checker scope is narrow | Earlier v5 checker passed despite governance drift; false sense of safety | Keep checker claims honest; write evidence of what was and was not checked | Every gate evidence file must include "unchecked assumptions". REGULATION must list not-enforced items explicitly until automated. |
++
++## Minimum Dispatch Checklist
++
++Before any Swift implementation dispatch, the brief must include:
++
++1. Current reality snapshot: test count, touched files, current UI state, tracked/untracked status.
++2. Reusable asset plan: existing modules reused and any new module API.
++3. Forbidden patterns: colors, hardcoded font sizes, English UI strings, `try?`, new dependencies.
++4. Runtime capture plan: screenshots or interaction evidence for changed UI states.
++5. Test plan: unit tests for state and at least one behavior test per new state object.
++6. Security/accessibility notes if the change touches auth, storage, network, payments, permissions, invitations, or user-generated content.
++7. Evidence paths and expected hashes/logs.
++
++## Senior Developer Standard For Unfading
++
++LLM output is acceptable only when it is converted into a small, reviewable, reusable unit with:
++
++- explicit contract,
++- narrow whitelist,
++- tests,
++- runtime evidence,
++- accessibility and security checks,
++- Codex/Claude cross-validation,
++- and honest documentation of remaining uncertainty.
+diff --git a/docs/product-specs/unfading-monetization-strategy.md b/docs/product-specs/unfading-monetization-strategy.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..039ca0cfc3a1954fb1e1228fe0172010c705682d
+--- /dev/null
++++ b/docs/product-specs/unfading-monetization-strategy.md
+@@ -0,0 +1,246 @@
++# Unfading Monetization Strategy
++
++**Product:** Korean couple/group map diary for memory capture, place-based browsing, Rewind, calendar, group history, and shareable diary artifacts.
++
++**Positioning:** private map diary for relationships and small groups. No ads. Premium pays for storage, customization, richer exports, and quality-of-life automation, not basic emotional memory keeping.
++
++## Business Model
++
++Freemium subscription with optional one-time paid exports.
++
++### Free Tier
++
++Target: couples, close friends, and small groups trying the product.
++
++Included:
++
++- 1 active couple or group space
++- up to 5 members
++- limited monthly new memories, recommended launch cap: 30 memories/month
++- basic map style
++- core map pins, composer, Rewind basics, calendar basics
++- basic media compression/storage cap
++- no ads
++
++Purpose:
++
++- let users build emotional history before monetization,
++- avoid paywalling the core diary loop,
++- create natural upgrade moments at storage, export, theme, and larger group boundaries.
++
++### Premium Individual / Couple
++
++Target: couples and small groups with frequent use.
++
++Proposed price:
++
++- KRW 4,900/month
++- KRW 49,000/year
++
++Premium features:
++
++- unlimited memories within fair-use storage policy
++- custom map themes: warm, vintage, dark, seasonal, trip-specific
++- AI-enhanced Rewind captions and memory summaries
++- shareable diary book exports: PDF/video/card
++- higher storage and original-quality media options
++- anniversary reminders and location-based revisit prompts
++- premium pin packs and cover styles
++- priority support
++
++### Premium Group / Family
++
++Target: friend groups, families, clubs, trips.
++
++Proposed price:
++
++- KRW 8,900/month per group
++- KRW 89,000/year per group
++
++Included:
++
++- 6+ members
++- group roles/admin controls
++- shared storage pool
++- group diary book exports
++- event/trip collections
++- premium map themes and group cover styles
++- priority support
++
++### One-Time Purchases
++
++Useful where users resist subscriptions:
++
++- Diary book export: KRW 3,900-9,900 depending on format/length
++- Seasonal map/pin pack: KRW 1,900-3,900
++- Trip archive export bundle: KRW 6,900
++
++One-time purchases should not replace subscription value; they monetize high-intent moments.
++
++## Premium Feature Ladder
++
++| User moment | Upgrade hook | Premium value |
++|---|---|---|
++| User reaches monthly memory limit | "이번 달 추억이 가득 찼어요" | unlimited memories |
++| Couple anniversary approaches | Rewind/anniversary reminder | AI-enhanced recap and export |
++| Group has 6th member | member cap reached | family/group tier |
++| User customizes map often | theme preview | premium map themes |
++| User shares screenshots | export prompt | diary book/video/card export |
++| User stores many photos | storage meter | higher storage/original quality |
++
++## Retention Hooks
++
++- Anniversary reminders: 100 days, 1 year, first trip, first place.
++- Rewind push: "1년 전 오늘, 여기에서 남긴 추억".
++- Place revisit prompt: when near a saved place, suggest opening past memory.
++- Gentle streak-like loops: weekly memory recap, not daily pressure.
++- Group nudges: "민재가 새 반응을 남겼어요", "이번 여행 앨범이 완성됐어요".
++- Seasonal diary: month-end and year-end memory maps.
++- Export milestones: after 50 memories, after first trip, after anniversary.
++
++Avoid manipulative streak mechanics. The product tone should feel intimate and respectful.
++
++## Korean Market Considerations
++
++### Payments
++
++Default launch path: Apple In-App Purchase / StoreKit 2.
++
++Reasons:
++
++- best App Store review fit,
++- built-in subscription management,
++- lower operational burden for refunds, tax handling, family purchase expectations,
++- less checkout friction for early launch.
++
++South Korea alternative payment option:
++
++- Apple provides a Korea-specific StoreKit External Purchase Entitlement for apps distributed solely in South Korea: https://developer.apple.com/support/storekit-external-entitlement-kr
++- Alternative PSPs may include Korean providers such as KCP, Inicis, Toss, or NICE, but the app must follow Apple's external purchase modal/API requirements and may need a Korea-only binary.
++- Alternative payment reduces some App Store control but adds support/refund/subscription-management burden and can still carry Apple commission/service-fee complexity.
++
++Recommendation:
++
++- Launch with StoreKit 2 only.
++- Revisit Korea-only external purchase after product-market fit and subscription volume justify operational overhead.
++
++### Payment Methods And Local Expectations
++
++Korean users expect:
++
++- KakaoPay, Naver Pay, Toss, credit/debit card, carrier billing, and easy cancellation experiences.
++- If using StoreKit, explain subscription management clearly in Korean and deep-link to App Store subscription management.
++- If later using external payment, provide Korean receipts, cancellation, refund, and customer-support flows equivalent to app-store expectations.
++
++### Tax And Compliance
++
++- Price tiers must account for VAT-inclusive consumer pricing.
++- Digital subscription receipts and refund policies must be clear in Korean.
++- Family/group data and photos are sensitive; premium storage/AI features must have explicit privacy copy.
++- AI-enhanced Rewind should disclose when generated summaries/captions are AI-assisted.
++
++## Pricing Rationale
++
++Initial KRW pricing should be low enough for couples but high enough to pay for media storage and AI features.
++
++| Tier | Monthly | Annual | Notes |
++|---|---:|---:|---|
++| Free | KRW 0 | KRW 0 | core loop, limited monthly memory creation |
++| Premium Couple/Small Group | KRW 4,900 | KRW 49,000 | annual gives ~17% discount |
++| Premium Group/Family | KRW 8,900 | KRW 89,000 | supports 6+ members/shared storage |
++
++Consider launch promo:
++
++- 30-day trial for annual plan
++- early-user lifetime annual discount for first 1,000 paid users
++- free export credit after first paid month
++
++## Rough Revenue Model
++
++Assumptions for first launch year:
++
++- 50,000 installs
++- 35% activation to first memory: 17,500 activated users
++- 20% reach 10+ memories: 10,000 engaged users
++- 5% paid conversion from engaged users: 500 paid subscribers
++- blended ARPPU: KRW 5,500/month
++
++Monthly recurring revenue estimate:
++
++- 500 × KRW 5,500 = KRW 2,750,000 MRR
++
++Upside scenario:
++
++- 150,000 installs
++- 30,000 engaged users
++- 8% paid conversion
++- 2,400 paid subscribers × KRW 5,500 = KRW 13,200,000 MRR
++
++CAC guidance:
++
++- If blended monthly gross margin per paid user after platform fees/storage is ~KRW 3,000-4,000, paid CAC should stay below KRW 12,000-18,000 unless annual conversion is strong.
++- Early acquisition should prioritize organic TikTok/Instagram/Reels couples/travel content, university groups, wedding/anniversary communities, and referral loops before paid ads.
++
++## Premium Ethics
++
++Principles:
++
++- No ads in the free tier.
++- Do not paywall private memory viewing after users create data.
++- Do not hold user memories hostage; exports/downloads should remain possible at least in basic form.
++- Premium should improve quality, volume, customization, automation, and export richness.
++- AI features should assist writing/recap, not invent false memories.
++
++Free users should feel respected; premium should feel like a better way to preserve something meaningful.
++
++## Launch-Ready Checklist
++
++### Product
++
++- Free-tier memory limit copy in Korean.
++- Upgrade screen with transparent plan comparison.
++- Storage usage meter.
++- Premium theme preview.
++- Export preview watermark for free users.
++- Subscription management screen.
++- Privacy copy for photos, locations, AI summaries, and group data.
++
++### StoreKit 2
++
++- Product IDs for monthly/annual couple premium.
++- Product IDs for monthly/annual group premium.
++- Optional consumable/non-consumable export products.
++- StoreKit 2 purchase flow.
++- Transaction listener and entitlement cache.
++- Restore purchases.
++- App Store subscription management deep link.
++- Server-side receipt or App Store Server API validation before high-cost storage/AI entitlements.
++- Grace-period and billing-retry handling.
++
++### Backend
++
++- Entitlement table keyed by user/group.
++- Storage quota enforcement.
++- Group member count enforcement.
++- Export job queue.
++- AI recap quota/rate limit.
++- Audit log for premium entitlement changes.
++
++### App Review / Legal
++
++- Korean subscription terms.
++- Privacy policy covering location, photos, group data, and AI processing.
++- Data deletion and export path.
++- Clear cancellation instructions.
++- If using external payment later: Korea-only entitlement, modal sheet, PSP compliance, and support/refund policy.
++
++## Recommended Launch Offer
++
++Launch with:
++
++- Free: 30 memories/month, up to 5 members, basic map.
++- Premium Couple/Small Group: KRW 4,900/month or KRW 49,000/year.
++- Premium Group/Family: KRW 8,900/month or KRW 89,000/year.
++- One free diary-card export after first paid month.
++
++The first premium upsell should appear at a meaningful moment: anniversary/revisit/export, not immediately at onboarding.
+
+codex
+Wrote `docs/design-docs/vibe-coding-limits-2026.md` — includes 15 anti-patterns across architecture, reuse, context, memory, concurrency, error handling, UI/UX, accessibility, security, dependencies, data modeling, testing, performance, review load, and process hallucination.
+
+Wrote `context_harness/operator/REGULATION.amendment.swift-impl-delegation.md` — draft amendment with required frontmatter and proposed changes for Swift delegation, Gate 5 blocker, drift audit, multi-axis evaluation, and vibe-coding regulation.
+
+Wrote `docs/product-specs/unfading-monetization-strategy.md` — launch-oriented freemium/subscription strategy with KRW pricing, Korean market payment considerations, retention hooks, rough revenue model, ethics, and StoreKit/backend checklist.
+
+Tension/concern: the REGULATION amendment references a meeting path, `context_harness/operator/meetings/2026-04-23_swift_impl_delegation_and_vibe_limits.md`, that does not exist yet in this turn. That is fine for a draft, but it must exist and be decided before registering this amendment through the v5.5 amend flow.
+diff --git a/context_harness/operator/REGULATION.amendment.swift-impl-delegation.md b/context_harness/operator/REGULATION.amendment.swift-impl-delegation.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..d7f74bf88ff5cc8bd8cbada9bf77f49e64115884
+--- /dev/null
++++ b/context_harness/operator/REGULATION.amendment.swift-impl-delegation.md
+@@ -0,0 +1,146 @@
++---
++target: REGULATION.md
++meeting: context_harness/operator/meetings/2026-04-23_swift_impl_delegation_and_vibe_limits.md
++supersedes:
++  - REGULATION.md#section-2-the-two-operators
++  - REGULATION.md#section-5-1-gate-5-process-integrity
++  - REGULATION.md#section-7-operator-layer-drift-audit
++  - REGULATION.md#new-section-12-multi-axis-evaluation
++  - REGULATION.md#new-section-13-vibe-coding-regulation
++---
++
++# REGULATION Amendment — Swift Implementation Delegation And Vibe-Coding Controls
++
++## Purpose
++
++User directive on 2026-04-23 narrows operator responsibilities:
++
++- Claude Code Operator must not directly edit Swift implementation files.
++- Swift implementation must be performed by Codex subagent/fork dispatch.
++- Claude Code Operator authors meetings, contracts, briefs, evidence, and orchestration.
++- Codex authors Swift code and participates in review/verdict.
++
++This amendment also adds multi-axis evaluation and explicit vibe-coding regulation based on `docs/design-docs/vibe-coding-limits-2026.md`.
++
++## Proposed Change — REG §2 The Two Operators
++
++Add:
++
++```markdown
++### Swift implementation delegation
++
++Claude Code Operator does not directly edit `workspace/ios/**/*.swift`, `workspace/ios/project.yml`, or Swift test files during implementation stages.
++
++Swift implementation is delegated to a Codex subagent/fork dispatch operating under the active round contract and whitelist. The dispatch must receive:
++
++- active round id and lock path,
++- exact file whitelist,
++- spec/acceptance/eval protocol paths,
++- reusable-asset requirements,
++- forbidden patterns,
++- evidence expectations.
++
++Claude Code Operator may author or edit:
++
++- meetings,
++- contracts,
++- implementation briefs,
++- evidence capture,
++- process logs,
++- non-Swift docs within whitelist.
++
++Codex may author Swift implementation files within the active whitelist. Claude Code captures factual evidence. Codex writes the verdict.
++```
++
++## Proposed Change — REG §5.1 Gate 5 Process Integrity
++
++Add blocker:
++
++```markdown
++- Operator modified Swift implementation files directly instead of dispatching to Codex subagent/fork.
++```
++
++Clarification:
++
++```markdown
++For this blocker, "operator modified directly" means a Swift file changed without a matching Codex implementation transcript, dispatch brief, or process-log event tying the change to a Codex implementation worker for the active round.
++```
++
++## Proposed Change — REG §7 Operator-Layer Drift Audit
++
++Add enforced or manual-audit check:
++
++```markdown
++No direct operator edit to `workspace/ios/**/*.swift`.
++
++Until automated, Gate 5 evidence must include:
++
++- `git log --name-status <base_commit>..HEAD -- workspace/ios`
++- Codex dispatch transcript path(s) and SHA-256
++- changed Swift file list
++- mapping from changed Swift file to Codex dispatch id
++
++If any changed Swift file lacks a Codex dispatch mapping, Gate 5 blocks.
++```
++
++Future checker implementation:
++
++```markdown
++The checker should validate the changed Swift file list against process-log events with `actor=codex` and a recorded transcript/hash. A git blame scan may be used as supporting evidence but is not sufficient by itself because author identity can be configured locally.
++```
++
++## Proposed New REG §12 Multi-Axis Evaluation
++
++Add:
++
++```markdown
++## §12. Multi-Axis Evaluation
++
++Gate 2 for implementation rounds must include all five axes:
++
++1. **Code correctness** — unit tests, compile/build, state transition tests, and touched-file review.
++2. **Real runtime function** — simulator launch or runtime capture showing the changed flow works in app context.
++3. **UI/UX fidelity** — screenshot comparison against active design contracts, Deepsight mocks, or accepted placeholders.
++4. **Navigation and information consistency** — labels, routes, state restoration, data shown, and user-facing copy match product contract.
++5. **Process-context soundness** — evidence that the implementation followed the active contract, whitelist, delegation rule, lint rules, and documented unresolved assumptions.
++
++Any axis not applicable must be explicitly marked `not applicable` with reason in the evidence report. Silent omission is a Gate 5 blocker.
++```
++
++## Proposed New REG §13 Vibe-Coding Regulation
++
++Add:
++
++```markdown
++## §13. Vibe-Coding Regulation
++
++Every Swift implementation dispatch must consult:
++
++`docs/design-docs/vibe-coding-limits-2026.md`
++
++The dispatch brief must include a "Vibe-coding risk controls" section covering:
++
++- reusable asset plan,
++- architecture coherence,
++- memory/concurrency/error handling,
++- UI/UX runtime evidence,
++- accessibility,
++- security/dependency risk,
++- testing depth,
++- data-model mapping,
++- unchecked assumptions.
++
++Codex implementation output is treated as untrusted until:
++
++1. build/test evidence passes,
++2. forbidden-pattern grep passes,
++3. runtime evidence exists for user-facing changes,
++4. cross-operator review records at least one concrete challenge/risk or factual no-issue evidence,
++5. verdict cites evidence for every acceptance criterion.
++```
++
++## Migration Notes
++
++- This amendment does not invalidate prior rounds retroactively.
++- It applies to future Swift implementation rounds after adoption.
++- Existing Swift files may be edited by Codex dispatch under whitelist; Claude Code may inspect/read them for evidence and review prompts but not modify them directly.
+diff --git a/docs/design-docs/vibe-coding-limits-2026.md b/docs/design-docs/vibe-coding-limits-2026.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..3a1856d294c52b7caf88510905437cef34e5d487
+--- /dev/null
++++ b/docs/design-docs/vibe-coding-limits-2026.md
+@@ -0,0 +1,62 @@
++# Vibe Coding Limits — 2026
++
++**Scope:** LLM-driven coding and agentic coding limits as of 2026-04-22, compared with senior iOS engineering practice.
++
++**Use:** implementation-dispatch checklist source for Unfading harness regulation.
++
++## Source Notes
++
++This document uses public research and industry reporting available by 2026-04-22, including:
++
++- METR, "Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity" (2025-07-10): https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/
++- METR, "We are Changing our Developer Productivity Experiment Design" (2026-02-24): https://metr.org/blog/2026-02-24-uplift-update/
++- GitClear, "Coding on Copilot" and "AI Copilot Code Quality: 2025" reports: https://www.gitclear.com/coding_on_copilot_data_shows_ais_downward_pressure_on_code_quality and https://www.gitclear.com/ai_assistant_code_quality_2025_research
++- Veracode 2025 GenAI Code Security reporting summarized by TechRadar: https://www.techradar.com/pro/nearly-half-of-all-code-generated-by-ai-found-to-contain-security-flaws-even-big-llms-affected
++- TechTarget, "Security risks of AI-generated code and how to manage them" (2025-05-29): https://www.techtarget.com/searchSecurity/tip/Security-risks-of-AI-generated-code-and-how-to-manage-them
++- Kaspersky, "Security risks of vibe coding and LLM assistants for developers" (2025): https://www.kaspersky.com/blog/vibe-coding-2025-risks/54584/
++- Axios, "Cursor taps new security partner in push to secure vibe coding" (2026-04-21): https://www.axios.com/2026/04/21/cursor-chainguard-ai-code-security
++- Business Insider, "Lovable's security stumble shows one big risk in using AI to code" (2026-04): https://www.businessinsider.com/lovable-security-access-vibe-coding-projects-risk-2026-4
++
++## Anti-Patterns And Harness Regulations
++
++| # | Category | Vibe-coding anti-pattern | Real-world failure mode | Senior-dev counter-practice | Proposed Unfading harness regulation |
++|---:|---|---|---|---|---|
++| 1 | Architecture coherence | Prompting for local patches without preserving system shape | New code compiles but duplicates state, bypasses existing abstractions, or creates parallel UI paths | Start with architecture map, owned modules, dependency boundaries, and explicit non-goals | Every Swift dispatch brief must include "owned files", "reused assets", "forbidden parallel abstractions", and "expected imports". Codex must review for duplicate module creation before implementation merges. |
++| 2 | Code reuse | Generating copy-paste variants instead of reusable units | GitClear observed rising code cloning and short-term churn in AI-assisted code; UI components diverge by screen | Extract shared modifiers/styles/types first; write one composable API and tests | Gate 5 implementation criterion: every new UI pattern repeated twice must be a reusable `Shared/` asset or an explicit rejected-abstraction note. |
++| 3 | Context mismatch | Trusting stale docs or hallucinated project state | Round 1 found `SESSION_RESUME.md` described 140 tests while workspace had 10; agents would plan against false reality | Verify source tree, test count, active files, and current UI before coding | Every round spec must include a "Reality Snapshot" with file count, test count, tracked/untracked state, and source hashes. Any mismatch with resume docs is a blocker until reconciled. |
++| 4 | Memory safety | Missing lifecycle/cancellation/retention checks in generated async/UI code | Retain cycles, tasks outliving views, stale callbacks mutating UI after dismissal | Audit escaping closures, `Task`, observers, timers, and deinit/onDisappear cancellation | Swift review checklist must include `[weak self]`/capture review, task cancellation review, and `@MainActor` boundary review for stores/view models. |
++| 5 | Concurrency | Adding async work without actor isolation or race analysis | Data races, UI updates off-main, duplicate network calls, inconsistent selected state | Make state ownership explicit; use `@MainActor` for UI state and isolate stores | Any new stateful Swift type must declare actor assumptions (`@MainActor`, value type, or documented immutable data). Codex review blocks unowned mutable shared state. |
++| 6 | Error handling | Using happy-path code or swallowing errors | `try?`, empty catches, failed save/upload silently losing user data | Propagate typed errors, log with context, show user recovery | Grep lint: `try?` in app code requires an inline justification comment or is a review blocker. Save/upload flows require user-visible failure path. |
++| 7 | UI/UX fidelity | Treating screenshots as decorative rather than contract | Generated UI "looks close" but misses spacing, hierarchy, target state, or primary action visibility; R4 FAB hidden at runtime | Runtime screenshot every user-facing surface, compare against contract states | Every visual round requires runtime screenshots of each acceptance state, not just static code review. Missing primary CTA in screenshot is a blocker. |
++| 8 | Accessibility | Omitting VoiceOver order, labels, Dynamic Type, and 44pt targets | UI works for sighted/default-size users but fails accessibility or large text | Design controls with labels/hints, semantic fonts, `@ScaledMetric`, minimum hit areas | Swift lint forbids hardcoded `.system(size:)` outside theme-approved exceptions. Evidence must include grep for labels/hints on icon-only buttons and screenshots at accessibility size for major surfaces. |
++| 9 | Security | Treating AI output as vetted | Veracode/industry reports found high rates of vulnerable AI-generated code; tools can omit auth, validation, secure storage | Threat model before implementation, least privilege, no secret exposure, static security checks | Any auth, storage, network, payment, or invitation feature requires a security subsection in spec and a red-team review before close. AI-generated code is considered untrusted until tests + review pass. |
++| 10 | Dependency hygiene | Accepting hallucinated or outdated dependencies | Kaspersky and supply-chain reporting describe fictitious packages/slopsquatting and unsafe imports | Prefer platform APIs; require dependency review and lockfile diff | New dependency requires meeting approval, source URL, maintenance/security check, license note, and lockfile diff. No AI-suggested package may be added silently. |
++| 11 | Data modeling | Creating UI-only sample structures that conflict with domain model | Screens ship with mock data that cannot map to `Group -> DateEvent -> Memory -> MemoryPost` | Model first, then view; maintain migration path from sample to persisted data | Any new screen using sample data must state its eventual domain model mapping. Sample English/model strings are allowed only with a future localization/data ticket. |
++| 12 | Testing | Writing tests that assert existence rather than behavior | Tests pass while compose tab behavior, gesture routing, or selection flow is untested | Test state transitions, reducers, edge cases, and runtime behavior | Tests must cover at least one behavioral transition per new state object. Pure "enum contains case" tests are advisory only unless paired with behavior evidence. |
++| 13 | Performance | Generating layout code that over-renders or blocks main thread | Large SwiftUI bodies, repeated expensive computations, image loading on main thread | Measure/render-scope review, lazy loading, small view decomposition | Review must flag large new `body` implementations, repeated image/data work in body, and non-lazy lists/grids. Performance-sensitive surfaces need Instruments or measured evidence before launch. |
++| 14 | Review overload | AI creates more code than humans can review carefully | METR found experienced devs spent time prompting/reviewing; code-volume spikes move bottleneck to review | Smaller slices, narrow whitelists, explicit reviewer focus | Implementation rounds must cap write scope. If touched files exceed whitelist intent, open amendment or split round. Codex verdict must mention review surface size. |
++| 15 | Process hallucination | Claiming compliance because a checker says green while checker scope is narrow | Earlier v5 checker passed despite governance drift; false sense of safety | Keep checker claims honest; write evidence of what was and was not checked | Every gate evidence file must include "unchecked assumptions". REGULATION must list not-enforced items explicitly until automated. |
++
++## Minimum Dispatch Checklist
++
++Before any Swift implementation dispatch, the brief must include:
++
++1. Current reality snapshot: test count, touched files, current UI state, tracked/untracked status.
++2. Reusable asset plan: existing modules reused and any new module API.
++3. Forbidden patterns: colors, hardcoded font sizes, English UI strings, `try?`, new dependencies.
++4. Runtime capture plan: screenshots or interaction evidence for changed UI states.
++5. Test plan: unit tests for state and at least one behavior test per new state object.
++6. Security/accessibility notes if the change touches auth, storage, network, payments, permissions, invitations, or user-generated content.
++7. Evidence paths and expected hashes/logs.
++
++## Senior Developer Standard For Unfading
++
++LLM output is acceptable only when it is converted into a small, reviewable, reusable unit with:
++
++- explicit contract,
++- narrow whitelist,
++- tests,
++- runtime evidence,
++- accessibility and security checks,
++- Codex/Claude cross-validation,
++- and honest documentation of remaining uncertainty.
+diff --git a/docs/product-specs/unfading-monetization-strategy.md b/docs/product-specs/unfading-monetization-strategy.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..039ca0cfc3a1954fb1e1228fe0172010c705682d
+--- /dev/null
++++ b/docs/product-specs/unfading-monetization-strategy.md
+@@ -0,0 +1,246 @@
++# Unfading Monetization Strategy
++
++**Product:** Korean couple/group map diary for memory capture, place-based browsing, Rewind, calendar, group history, and shareable diary artifacts.
++
++**Positioning:** private map diary for relationships and small groups. No ads. Premium pays for storage, customization, richer exports, and quality-of-life automation, not basic emotional memory keeping.
++
++## Business Model
++
++Freemium subscription with optional one-time paid exports.
++
++### Free Tier
++
++Target: couples, close friends, and small groups trying the product.
++
++Included:
++
++- 1 active couple or group space
++- up to 5 members
++- limited monthly new memories, recommended launch cap: 30 memories/month
++- basic map style
++- core map pins, composer, Rewind basics, calendar basics
++- basic media compression/storage cap
++- no ads
++
++Purpose:
++
++- let users build emotional history before monetization,
++- avoid paywalling the core diary loop,
++- create natural upgrade moments at storage, export, theme, and larger group boundaries.
++
++### Premium Individual / Couple
++
++Target: couples and small groups with frequent use.
++
++Proposed price:
++
++- KRW 4,900/month
++- KRW 49,000/year
++
++Premium features:
++
++- unlimited memories within fair-use storage policy
++- custom map themes: warm, vintage, dark, seasonal, trip-specific
++- AI-enhanced Rewind captions and memory summaries
++- shareable diary book exports: PDF/video/card
++- higher storage and original-quality media options
++- anniversary reminders and location-based revisit prompts
++- premium pin packs and cover styles
++- priority support
++
++### Premium Group / Family
++
++Target: friend groups, families, clubs, trips.
++
++Proposed price:
++
++- KRW 8,900/month per group
++- KRW 89,000/year per group
++
++Included:
++
++- 6+ members
++- group roles/admin controls
++- shared storage pool
++- group diary book exports
++- event/trip collections
++- premium map themes and group cover styles
++- priority support
++
++### One-Time Purchases
++
++Useful where users resist subscriptions:
++
++- Diary book export: KRW 3,900-9,900 depending on format/length
++- Seasonal map/pin pack: KRW 1,900-3,900
++- Trip archive export bundle: KRW 6,900
++
++One-time purchases should not replace subscription value; they monetize high-intent moments.
++
++## Premium Feature Ladder
++
++| User moment | Upgrade hook | Premium value |
++|---|---|---|
++| User reaches monthly memory limit | "이번 달 추억이 가득 찼어요" | unlimited memories |
++| Couple anniversary approaches | Rewind/anniversary reminder | AI-enhanced recap and export |
++| Group has 6th member | member cap reached | family/group tier |
++| User customizes map often | theme preview | premium map themes |
++| User shares screenshots | export prompt | diary book/video/card export |
++| User stores many photos | storage meter | higher storage/original quality |
++
++## Retention Hooks
++
++- Anniversary reminders: 100 days, 1 year, first trip, first place.
++- Rewind push: "1년 전 오늘, 여기에서 남긴 추억".
++- Place revisit prompt: when near a saved place, suggest opening past memory.
++- Gentle streak-like loops: weekly memory recap, not daily pressure.
++- Group nudges: "민재가 새 반응을 남겼어요", "이번 여행 앨범이 완성됐어요".
++- Seasonal diary: month-end and year-end memory maps.
++- Export milestones: after 50 memories, after first trip, after anniversary.
++
++Avoid manipulative streak mechanics. The product tone should feel intimate and respectful.
++
++## Korean Market Considerations
++
++### Payments
++
++Default launch path: Apple In-App Purchase / StoreKit 2.
++
++Reasons:
++
++- best App Store review fit,
++- built-in subscription management,
++- lower operational burden for refunds, tax handling, family purchase expectations,
++- less checkout friction for early launch.
++
++South Korea alternative payment option:
++
++- Apple provides a Korea-specific StoreKit External Purchase Entitlement for apps distributed solely in South Korea: https://developer.apple.com/support/storekit-external-entitlement-kr
++- Alternative PSPs may include Korean providers such as KCP, Inicis, Toss, or NICE, but the app must follow Apple's external purchase modal/API requirements and may need a Korea-only binary.
++- Alternative payment reduces some App Store control but adds support/refund/subscription-management burden and can still carry Apple commission/service-fee complexity.
++
++Recommendation:
++
++- Launch with StoreKit 2 only.
++- Revisit Korea-only external purchase after product-market fit and subscription volume justify operational overhead.
++
++### Payment Methods And Local Expectations
++
++Korean users expect:
++
++- KakaoPay, Naver Pay, Toss, credit/debit card, carrier billing, and easy cancellation experiences.
++- If using StoreKit, explain subscription management clearly in Korean and deep-link to App Store subscription management.
++- If later using external payment, provide Korean receipts, cancellation, refund, and customer-support flows equivalent to app-store expectations.
++
++### Tax And Compliance
++
++- Price tiers must account for VAT-inclusive consumer pricing.
++- Digital subscription receipts and refund policies must be clear in Korean.
++- Family/group data and photos are sensitive; premium storage/AI features must have explicit privacy copy.
++- AI-enhanced Rewind should disclose when generated summaries/captions are AI-assisted.
++
++## Pricing Rationale
++
++Initial KRW pricing should be low enough for couples but high enough to pay for media storage and AI features.
++
++| Tier | Monthly | Annual | Notes |
++|---|---:|---:|---|
++| Free | KRW 0 | KRW 0 | core loop, limited monthly memory creation |
++| Premium Couple/Small Group | KRW 4,900 | KRW 49,000 | annual gives ~17% discount |
++| Premium Group/Family | KRW 8,900 | KRW 89,000 | supports 6+ members/shared storage |
++
++Consider launch promo:
++
++- 30-day trial for annual plan
++- early-user lifetime annual discount for first 1,000 paid users
++- free export credit after first paid month
++
++## Rough Revenue Model
++
++Assumptions for first launch year:
++
++- 50,000 installs
++- 35% activation to first memory: 17,500 activated users
++- 20% reach 10+ memories: 10,000 engaged users
++- 5% paid conversion from engaged users: 500 paid subscribers
++- blended ARPPU: KRW 5,500/month
++
++Monthly recurring revenue estimate:
++
++- 500 × KRW 5,500 = KRW 2,750,000 MRR
++
++Upside scenario:
++
++- 150,000 installs
++- 30,000 engaged users
++- 8% paid conversion
++- 2,400 paid subscribers × KRW 5,500 = KRW 13,200,000 MRR
++
++CAC guidance:
++
++- If blended monthly gross margin per paid user after platform fees/storage is ~KRW 3,000-4,000, paid CAC should stay below KRW 12,000-18,000 unless annual conversion is strong.
++- Early acquisition should prioritize organic TikTok/Instagram/Reels couples/travel content, university groups, wedding/anniversary communities, and referral loops before paid ads.
++
++## Premium Ethics
++
++Principles:
++
++- No ads in the free tier.
++- Do not paywall private memory viewing after users create data.
++- Do not hold user memories hostage; exports/downloads should remain possible at least in basic form.
++- Premium should improve quality, volume, customization, automation, and export richness.
++- AI features should assist writing/recap, not invent false memories.
++
++Free users should feel respected; premium should feel like a better way to preserve something meaningful.
++
++## Launch-Ready Checklist
++
++### Product
++
++- Free-tier memory limit copy in Korean.
++- Upgrade screen with transparent plan comparison.
++- Storage usage meter.
++- Premium theme preview.
++- Export preview watermark for free users.
++- Subscription management screen.
++- Privacy copy for photos, locations, AI summaries, and group data.
++
++### StoreKit 2
++
++- Product IDs for monthly/annual couple premium.
++- Product IDs for monthly/annual group premium.
++- Optional consumable/non-consumable export products.
++- StoreKit 2 purchase flow.
++- Transaction listener and entitlement cache.
++- Restore purchases.
++- App Store subscription management deep link.
++- Server-side receipt or App Store Server API validation before high-cost storage/AI entitlements.
++- Grace-period and billing-retry handling.
++
++### Backend
++
++- Entitlement table keyed by user/group.
++- Storage quota enforcement.
++- Group member count enforcement.
++- Export job queue.
++- AI recap quota/rate limit.
++- Audit log for premium entitlement changes.
++
++### App Review / Legal
++
++- Korean subscription terms.
++- Privacy policy covering location, photos, group data, and AI processing.
++- Data deletion and export path.
++- Clear cancellation instructions.
++- If using external payment later: Korea-only entitlement, modal sheet, PSP compliance, and support/refund policy.
++
++## Recommended Launch Offer
++
++Launch with:
++
++- Free: 30 memories/month, up to 5 members, basic map.
++- Premium Couple/Small Group: KRW 4,900/month or KRW 49,000/year.
++- Premium Group/Family: KRW 8,900/month or KRW 89,000/year.
++- One free diary-card export after first paid month.
++
++The first premium upsell should appear at a meaningful moment: anniversary/revisit/export, not immediately at onboarding.
+
+tokens used
+2,576,955
+Wrote `docs/design-docs/vibe-coding-limits-2026.md` — includes 15 anti-patterns across architecture, reuse, context, memory, concurrency, error handling, UI/UX, accessibility, security, dependencies, data modeling, testing, performance, review load, and process hallucination.
+
+Wrote `context_harness/operator/REGULATION.amendment.swift-impl-delegation.md` — draft amendment with required frontmatter and proposed changes for Swift delegation, Gate 5 blocker, drift audit, multi-axis evaluation, and vibe-coding regulation.
+
+Wrote `docs/product-specs/unfading-monetization-strategy.md` — launch-oriented freemium/subscription strategy with KRW pricing, Korean market payment considerations, retention hooks, rough revenue model, ethics, and StoreKit/backend checklist.
+
+Tension/concern: the REGULATION amendment references a meeting path, `context_harness/operator/meetings/2026-04-23_swift_impl_delegation_and_vibe_limits.md`, that does not exist yet in this turn. That is fine for a draft, but it must exist and be decided before registering this amendment through the v5.5 amend flow.
