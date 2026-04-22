@@ -185,6 +185,52 @@ enum UnfadingLocalized {
         static let choosePlaceTitle = "장소 선택"
     }
 
+    // MARK: Detail
+
+    enum Detail {
+        static let navTitle = "추억 상세"
+        static let detailCta = "상세 보기"
+        static let previousButton = "이전"
+        static let nextButton = "다음"
+        static let contributionsLabel = "함께한 사람들"
+        static let moodLabel = "감정 태그"
+        static let locationLabel = "장소"
+        static let timeLabel = "시간"
+        static let costLabel = "비용"
+        static let costFormat = "₩"
+
+        static func title(for pin: SampleMemoryPin) -> String {
+            switch pin.id {
+            case SampleMemoryPin.samples[0].id: return "상수 루프톱 저녁"
+            case SampleMemoryPin.samples[1].id: return "한강 자전거 산책"
+            case SampleMemoryPin.samples[2].id: return "아침 산책"
+            default: return pin.title
+            }
+        }
+
+        static func place(for pin: SampleMemoryPin) -> String {
+            switch pin.id {
+            case SampleMemoryPin.samples[0].id: return "서울 마포구 상수동"
+            case SampleMemoryPin.samples[1].id: return "여의도 한강공원"
+            case SampleMemoryPin.samples[2].id: return "서울 도심 산책로"
+            default: return pin.shortLabel
+            }
+        }
+
+        static func time(for pin: SampleMemoryPin) -> String {
+            switch pin.id {
+            case SampleMemoryPin.samples[0].id: return "오늘 오후 8:40"
+            case SampleMemoryPin.samples[1].id: return "어제 오후 6:10"
+            case SampleMemoryPin.samples[2].id: return "그제 오전 7:20"
+            default: return Composer.sampleTime
+            }
+        }
+
+        static func moodTitle(id: String) -> String {
+            draftTag(id: id, fallback: id)
+        }
+    }
+
     // MARK: Model-sourced display (helpers for sample data)
 
     /// Korean display for a `MemoryDraftTag.id`. Returns the fallback if unmapped.

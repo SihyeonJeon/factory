@@ -6,6 +6,7 @@ struct MemorySummaryCard: View {
     /// When a pin is selected on the map, the card shows that pin's title and
     /// short label. When nil, it shows the default sample "오늘의 리와인드" copy.
     var selectedPin: SampleMemoryPin? = nil
+    var onDetailTap: (() -> Void)? = nil
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: dynamicTypeSize.isAccessibilitySize) {
@@ -18,6 +19,15 @@ struct MemorySummaryCard: View {
                     .fixedSize(horizontal: false, vertical: true)
 
                 tagSection
+
+                if let onDetailTap {
+                    Button(action: onDetailTap) {
+                        Label(UnfadingLocalized.Detail.detailCta, systemImage: "chevron.right.circle")
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityLabel(UnfadingLocalized.Detail.detailCta)
+                }
             }
             .padding(UnfadingTheme.Spacing.xl)
             .frame(maxWidth: .infinity, alignment: .leading)

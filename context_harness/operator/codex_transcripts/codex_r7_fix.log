@@ -1,0 +1,784 @@
+OpenAI Codex v0.121.0 (research preview)
+--------
+workdir: /Users/jeonsihyeon/factory
+model: gpt-5.4
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR, /Users/jeonsihyeon/.codex/memories]
+reasoning effort: none
+reasoning summaries: none
+session id: 019db43d-746e-73b3-b33c-5dda3770df91
+--------
+user
+Codex — R7 build failure:
+```
+workspace/ios/Features/Home/MemoryMapHomeView.swift:82:14: error: instance method 'navigationDestination(item:destination:)' requires that 'SampleMemoryPin' conform to 'Hashable'
+```
+
+Fix: make `SampleMemoryPin` conform to `Hashable`. Since it already has `id: UUID` and all properties are Hashable except `Color`, simplest: add `Hashable` conformance manually via id-based hash.
+
+Apply in `workspace/ios/Shared/SampleModels.swift`. Then re-run `xcodegen generate` + `xcodebuild test`. Report result.
+
+Sandbox: workspace-write.
+codex
+I’ll add id-based `Hashable`/`Equatable` conformance to `SampleMemoryPin`, then regenerate the project and run the test command.
+apply patch
+patch: completed
+/Users/jeonsihyeon/factory/workspace/ios/Shared/SampleModels.swift
+diff --git a/workspace/ios/Shared/SampleModels.swift b/workspace/ios/Shared/SampleModels.swift
+index f120749f3b329ad53e299dc811768b10dd3e5a96..efee63e069d8a5e88dc188176869234525ab1a88
+--- a/workspace/ios/Shared/SampleModels.swift
++++ b/workspace/ios/Shared/SampleModels.swift
+@@ -1,7 +1,7 @@
+ import CoreLocation
+ import SwiftUI
+ 
+-struct SampleMemoryPin: Identifiable {
++struct SampleMemoryPin: Identifiable, Hashable {
+     let id: UUID
+     let title: String
+     let shortLabel: String
+@@ -9,6 +9,14 @@
+     let symbol: String
+     let color: Color
+ 
++    static func == (lhs: SampleMemoryPin, rhs: SampleMemoryPin) -> Bool {
++        lhs.id == rhs.id
++    }
++
++    func hash(into hasher: inout Hasher) {
++        hasher.combine(id)
++    }
++
+     static let samples: [SampleMemoryPin] = [
+         .init(id: UUID(uuidString: "11111111-1111-4111-8111-111111111111")!, title: "Rooftop Dinner", shortLabel: "Dinner", coordinate: .init(latitude: 37.5519, longitude: 126.9215), symbol: "fork.knife", color: UnfadingTheme.Color.primary),
+         .init(id: UUID(uuidString: "22222222-2222-4222-8222-222222222222")!, title: "Han River Ride", shortLabel: "Ride", coordinate: .init(latitude: 37.5283, longitude: 126.9326), symbol: "bicycle", color: UnfadingTheme.Color.lavender),
+
+diff --git a/workspace/ios/Shared/SampleModels.swift b/workspace/ios/Shared/SampleModels.swift
+index f120749f3b329ad53e299dc811768b10dd3e5a96..efee63e069d8a5e88dc188176869234525ab1a88
+--- a/workspace/ios/Shared/SampleModels.swift
++++ b/workspace/ios/Shared/SampleModels.swift
+@@ -1,7 +1,7 @@
+ import CoreLocation
+ import SwiftUI
+ 
+-struct SampleMemoryPin: Identifiable {
++struct SampleMemoryPin: Identifiable, Hashable {
+     let id: UUID
+     let title: String
+     let shortLabel: String
+@@ -9,6 +9,14 @@
+     let symbol: String
+     let color: Color
+ 
++    static func == (lhs: SampleMemoryPin, rhs: SampleMemoryPin) -> Bool {
++        lhs.id == rhs.id
++    }
++
++    func hash(into hasher: inout Hasher) {
++        hasher.combine(id)
++    }
++
+     static let samples: [SampleMemoryPin] = [
+         .init(id: UUID(uuidString: "11111111-1111-4111-8111-111111111111")!, title: "Rooftop Dinner", shortLabel: "Dinner", coordinate: .init(latitude: 37.5519, longitude: 126.9215), symbol: "fork.knife", color: UnfadingTheme.Color.primary),
+         .init(id: UUID(uuidString: "22222222-2222-4222-8222-222222222222")!, title: "Han River Ride", shortLabel: "Ride", coordinate: .init(latitude: 37.5283, longitude: 126.9326), symbol: "bicycle", color: UnfadingTheme.Color.lavender),
+
+exec
+/bin/zsh -lc 'xcodegen generate' in /Users/jeonsihyeon/factory/workspace/ios
+ succeeded in 0ms:
+⚙️  Generating plists...
+⚙️  Generating project...
+⚙️  Writing project...
+Created project at /Users/jeonsihyeon/factory/workspace/ios/MemoryMap.xcodeproj
+
+diff --git a/workspace/ios/Shared/SampleModels.swift b/workspace/ios/Shared/SampleModels.swift
+index f120749f3b329ad53e299dc811768b10dd3e5a96..efee63e069d8a5e88dc188176869234525ab1a88
+--- a/workspace/ios/Shared/SampleModels.swift
++++ b/workspace/ios/Shared/SampleModels.swift
+@@ -1,7 +1,7 @@
+ import CoreLocation
+ import SwiftUI
+ 
+-struct SampleMemoryPin: Identifiable {
++struct SampleMemoryPin: Identifiable, Hashable {
+     let id: UUID
+     let title: String
+     let shortLabel: String
+@@ -9,6 +9,14 @@
+     let symbol: String
+     let color: Color
+ 
++    static func == (lhs: SampleMemoryPin, rhs: SampleMemoryPin) -> Bool {
++        lhs.id == rhs.id
++    }
++
++    func hash(into hasher: inout Hasher) {
++        hasher.combine(id)
++    }
++
+     static let samples: [SampleMemoryPin] = [
+         .init(id: UUID(uuidString: "11111111-1111-4111-8111-111111111111")!, title: "Rooftop Dinner", shortLabel: "Dinner", coordinate: .init(latitude: 37.5519, longitude: 126.9215), symbol: "fork.knife", color: UnfadingTheme.Color.primary),
+         .init(id: UUID(uuidString: "22222222-2222-4222-8222-222222222222")!, title: "Han River Ride", shortLabel: "Ride", coordinate: .init(latitude: 37.5283, longitude: 126.9326), symbol: "bicycle", color: UnfadingTheme.Color.lavender),
+
+exec
+/bin/zsh -lc "xcodebuild test -project MemoryMap.xcodeproj -scheme MemoryMap -destination 'platform=iOS Simulator,name=iPhone 17' -derivedDataPath .deriveddata/r7" in /Users/jeonsihyeon/factory/workspace/ios
+diff --git a/workspace/ios/Shared/SampleModels.swift b/workspace/ios/Shared/SampleModels.swift
+index f120749f3b329ad53e299dc811768b10dd3e5a96..efee63e069d8a5e88dc188176869234525ab1a88
+--- a/workspace/ios/Shared/SampleModels.swift
++++ b/workspace/ios/Shared/SampleModels.swift
+@@ -1,7 +1,7 @@
+ import CoreLocation
+ import SwiftUI
+ 
+-struct SampleMemoryPin: Identifiable {
++struct SampleMemoryPin: Identifiable, Hashable {
+     let id: UUID
+     let title: String
+     let shortLabel: String
+@@ -9,6 +9,14 @@
+     let symbol: String
+     let color: Color
+ 
++    static func == (lhs: SampleMemoryPin, rhs: SampleMemoryPin) -> Bool {
++        lhs.id == rhs.id
++    }
++
++    func hash(into hasher: inout Hasher) {
++        hasher.combine(id)
++    }
++
+     static let samples: [SampleMemoryPin] = [
+         .init(id: UUID(uuidString: "11111111-1111-4111-8111-111111111111")!, title: "Rooftop Dinner", shortLabel: "Dinner", coordinate: .init(latitude: 37.5519, longitude: 126.9215), symbol: "fork.knife", color: UnfadingTheme.Color.primary),
+         .init(id: UUID(uuidString: "22222222-2222-4222-8222-222222222222")!, title: "Han River Ride", shortLabel: "Ride", coordinate: .init(latitude: 37.5283, longitude: 126.9326), symbol: "bicycle", color: UnfadingTheme.Color.lavender),
+
+diff --git a/workspace/ios/Shared/SampleModels.swift b/workspace/ios/Shared/SampleModels.swift
+index f120749f3b329ad53e299dc811768b10dd3e5a96..efee63e069d8a5e88dc188176869234525ab1a88
+--- a/workspace/ios/Shared/SampleModels.swift
++++ b/workspace/ios/Shared/SampleModels.swift
+@@ -1,7 +1,7 @@
+ import CoreLocation
+ import SwiftUI
+ 
+-struct SampleMemoryPin: Identifiable {
++struct SampleMemoryPin: Identifiable, Hashable {
+     let id: UUID
+     let title: String
+     let shortLabel: String
+@@ -9,6 +9,14 @@
+     let symbol: String
+     let color: Color
+ 
++    static func == (lhs: SampleMemoryPin, rhs: SampleMemoryPin) -> Bool {
++        lhs.id == rhs.id
++    }
++
++    func hash(into hasher: inout Hasher) {
++        hasher.combine(id)
++    }
++
+     static let samples: [SampleMemoryPin] = [
+         .init(id: UUID(uuidString: "11111111-1111-4111-8111-111111111111")!, title: "Rooftop Dinner", shortLabel: "Dinner", coordinate: .init(latitude: 37.5519, longitude: 126.9215), symbol: "fork.knife", color: UnfadingTheme.Color.primary),
+         .init(id: UUID(uuidString: "22222222-2222-4222-8222-222222222222")!, title: "Han River Ride", shortLabel: "Ride", coordinate: .init(latitude: 37.5283, longitude: 126.9326), symbol: "bicycle", color: UnfadingTheme.Color.lavender),
+
+diff --git a/workspace/ios/Shared/SampleModels.swift b/workspace/ios/Shared/SampleModels.swift
+index f120749f3b329ad53e299dc811768b10dd3e5a96..efee63e069d8a5e88dc188176869234525ab1a88
+--- a/workspace/ios/Shared/SampleModels.swift
++++ b/workspace/ios/Shared/SampleModels.swift
+@@ -1,7 +1,7 @@
+ import CoreLocation
+ import SwiftUI
+ 
+-struct SampleMemoryPin: Identifiable {
++struct SampleMemoryPin: Identifiable, Hashable {
+     let id: UUID
+     let title: String
+     let shortLabel: String
+@@ -9,6 +9,14 @@
+     let symbol: String
+     let color: Color
+ 
++    static func == (lhs: SampleMemoryPin, rhs: SampleMemoryPin) -> Bool {
++        lhs.id == rhs.id
++    }
++
++    func hash(into hasher: inout Hasher) {
++        hasher.combine(id)
++    }
++
+     static let samples: [SampleMemoryPin] = [
+         .init(id: UUID(uuidString: "11111111-1111-4111-8111-111111111111")!, title: "Rooftop Dinner", shortLabel: "Dinner", coordinate: .init(latitude: 37.5519, longitude: 126.9215), symbol: "fork.knife", color: UnfadingTheme.Color.primary),
+         .init(id: UUID(uuidString: "22222222-2222-4222-8222-222222222222")!, title: "Han River Ride", shortLabel: "Ride", coordinate: .init(latitude: 37.5283, longitude: 126.9326), symbol: "bicycle", color: UnfadingTheme.Color.lavender),
+
+diff --git a/workspace/ios/Shared/SampleModels.swift b/workspace/ios/Shared/SampleModels.swift
+index f120749f3b329ad53e299dc811768b10dd3e5a96..efee63e069d8a5e88dc188176869234525ab1a88
+--- a/workspace/ios/Shared/SampleModels.swift
++++ b/workspace/ios/Shared/SampleModels.swift
+@@ -1,7 +1,7 @@
+ import CoreLocation
+ import SwiftUI
+ 
+-struct SampleMemoryPin: Identifiable {
++struct SampleMemoryPin: Identifiable, Hashable {
+     let id: UUID
+     let title: String
+     let shortLabel: String
+@@ -9,6 +9,14 @@
+     let symbol: String
+     let color: Color
+ 
++    static func == (lhs: SampleMemoryPin, rhs: SampleMemoryPin) -> Bool {
++        lhs.id == rhs.id
++    }
++
++    func hash(into hasher: inout Hasher) {
++        hasher.combine(id)
++    }
++
+     static let samples: [SampleMemoryPin] = [
+         .init(id: UUID(uuidString: "11111111-1111-4111-8111-111111111111")!, title: "Rooftop Dinner", shortLabel: "Dinner", coordinate: .init(latitude: 37.5519, longitude: 126.9215), symbol: "fork.knife", color: UnfadingTheme.Color.primary),
+         .init(id: UUID(uuidString: "22222222-2222-4222-8222-222222222222")!, title: "Han River Ride", shortLabel: "Ride", coordinate: .init(latitude: 37.5283, longitude: 126.9326), symbol: "bicycle", color: UnfadingTheme.Color.lavender),
+
+diff --git a/workspace/ios/Shared/SampleModels.swift b/workspace/ios/Shared/SampleModels.swift
+index f120749f3b329ad53e299dc811768b10dd3e5a96..efee63e069d8a5e88dc188176869234525ab1a88
+--- a/workspace/ios/Shared/SampleModels.swift
++++ b/workspace/ios/Shared/SampleModels.swift
+@@ -1,7 +1,7 @@
+ import CoreLocation
+ import SwiftUI
+ 
+-struct SampleMemoryPin: Identifiable {
++struct SampleMemoryPin: Identifiable, Hashable {
+     let id: UUID
+     let title: String
+     let shortLabel: String
+@@ -9,6 +9,14 @@
+     let symbol: String
+     let color: Color
+ 
++    static func == (lhs: SampleMemoryPin, rhs: SampleMemoryPin) -> Bool {
++        lhs.id == rhs.id
++    }
++
++    func hash(into hasher: inout Hasher) {
++        hasher.combine(id)
++    }
++
+     static let samples: [SampleMemoryPin] = [
+         .init(id: UUID(uuidString: "11111111-1111-4111-8111-111111111111")!, title: "Rooftop Dinner", shortLabel: "Dinner", coordinate: .init(latitude: 37.5519, longitude: 126.9215), symbol: "fork.knife", color: UnfadingTheme.Color.primary),
+         .init(id: UUID(uuidString: "22222222-2222-4222-8222-222222222222")!, title: "Han River Ride", shortLabel: "Ride", coordinate: .init(latitude: 37.5283, longitude: 126.9326), symbol: "bicycle", color: UnfadingTheme.Color.lavender),
+
+diff --git a/workspace/ios/Shared/SampleModels.swift b/workspace/ios/Shared/SampleModels.swift
+index f120749f3b329ad53e299dc811768b10dd3e5a96..efee63e069d8a5e88dc188176869234525ab1a88
+--- a/workspace/ios/Shared/SampleModels.swift
++++ b/workspace/ios/Shared/SampleModels.swift
+@@ -1,7 +1,7 @@
+ import CoreLocation
+ import SwiftUI
+ 
+-struct SampleMemoryPin: Identifiable {
++struct SampleMemoryPin: Identifiable, Hashable {
+     let id: UUID
+     let title: String
+     let shortLabel: String
+@@ -9,6 +9,14 @@
+     let symbol: String
+     let color: Color
+ 
++    static func == (lhs: SampleMemoryPin, rhs: SampleMemoryPin) -> Bool {
++        lhs.id == rhs.id
++    }
++
++    func hash(into hasher: inout Hasher) {
++        hasher.combine(id)
++    }
++
+     static let samples: [SampleMemoryPin] = [
+         .init(id: UUID(uuidString: "11111111-1111-4111-8111-111111111111")!, title: "Rooftop Dinner", shortLabel: "Dinner", coordinate: .init(latitude: 37.5519, longitude: 126.9215), symbol: "fork.knife", color: UnfadingTheme.Color.primary),
+         .init(id: UUID(uuidString: "22222222-2222-4222-8222-222222222222")!, title: "Han River Ride", shortLabel: "Ride", coordinate: .init(latitude: 37.5283, longitude: 126.9326), symbol: "bicycle", color: UnfadingTheme.Color.lavender),
+
+diff --git a/workspace/ios/Shared/SampleModels.swift b/workspace/ios/Shared/SampleModels.swift
+index f120749f3b329ad53e299dc811768b10dd3e5a96..efee63e069d8a5e88dc188176869234525ab1a88
+--- a/workspace/ios/Shared/SampleModels.swift
++++ b/workspace/ios/Shared/SampleModels.swift
+@@ -1,7 +1,7 @@
+ import CoreLocation
+ import SwiftUI
+ 
+-struct SampleMemoryPin: Identifiable {
++struct SampleMemoryPin: Identifiable, Hashable {
+     let id: UUID
+     let title: String
+     let shortLabel: String
+@@ -9,6 +9,14 @@
+     let symbol: String
+     let color: Color
+ 
++    static func == (lhs: SampleMemoryPin, rhs: SampleMemoryPin) -> Bool {
++        lhs.id == rhs.id
++    }
++
++    func hash(into hasher: inout Hasher) {
++        hasher.combine(id)
++    }
++
+     static let samples: [SampleMemoryPin] = [
+         .init(id: UUID(uuidString: "11111111-1111-4111-8111-111111111111")!, title: "Rooftop Dinner", shortLabel: "Dinner", coordinate: .init(latitude: 37.5519, longitude: 126.9215), symbol: "fork.knife", color: UnfadingTheme.Color.primary),
+         .init(id: UUID(uuidString: "22222222-2222-4222-8222-222222222222")!, title: "Han River Ride", shortLabel: "Ride", coordinate: .init(latitude: 37.5283, longitude: 126.9326), symbol: "bicycle", color: UnfadingTheme.Color.lavender),
+
+ exited 70 in 61608ms:
+2026-04-23 02:05:43.724 xcodebuild[89732:652010]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-04-23 02:05:43.958 xcodebuild[89732:652009] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+2026-04-23 02:05:44.429 xcodebuild[89732:652011] CoreSimulatorService connection became invalid.  Simulator services will no longer be available.
+2026-04-23 02:05:44.430 xcodebuild[89732:652044] Logging connecton invalid: <OS_xpc_error: <dictionary: 0x1fda2c5d0> { count = 1, transaction: 0, voucher = 0x0, contents =
+	"XPCErrorDescription" => <string: 0x1fda2c718> { string cache = 0x0, length = 18, contents = "Connection invalid" }
+}>
+2026-04-23 02:05:44.430 xcodebuild[89732:652044] Error opening log file (/Users/jeonsihyeon/Library/Logs/CoreSimulator/CoreSimulator.com.apple.dt.xcodebuild.log): Operation not permitted
+[-[SimServiceContext sendRequest:]:1751] ERROR : Unable to deliver request ({
+    "developer_dir" = "/Applications/Xcode.app/Contents/Developer";
+    request = "set_developer_dir";
+}) because we are not connected to CoreSimulatorService.
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test -project MemoryMap.xcodeproj -scheme MemoryMap -destination "platform=iOS Simulator,name=iPhone 17" -derivedDataPath .deriveddata/r7
+
+2026-04-23 02:05:44.511 xcodebuild[89732:652009] [MT] DVTAssertions: Warning in DVTFrameworks/DVTFoundation/FileTypes/DVTFileDataTypeDetection.m:80
+Details:  detectedTypeIdentifier (com.apple.xml-property-list) does not conform to matchedTypeIdentifier in MagicFileDataTypeDetector extenson com.apple.property-list. When both are specified, this conformance is required unless overridden by setting allowNonInheritance. extension.identifier:Xcode.MagicFileDataTypeDetector.XMLPlist
+Object:   <DVTFileDataTypeDetectionMagicCache: 0xa3a78e100>
+Method:   -initWithExtension:
+Thread:   <_NSMainThread: 0x101f05b70>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-04-23 02:05:44.513 xcodebuild[89732:652009] [MT] DVTAssertions: Warning in DVTFrameworks/DVTFoundation/FileTypes/DVTFileDataTypeDetection.m:80
+Details:  detectedTypeIdentifier (com.apple.binary-property-list) does not conform to matchedTypeIdentifier in MagicFileDataTypeDetector extenson com.apple.property-list. When both are specified, this conformance is required unless overridden by setting allowNonInheritance. extension.identifier:Xcode.MagicFileDataTypeDetector.BinaryPlist
+Object:   <DVTFileDataTypeDetectionMagicCache: 0xa3a78f3f0>
+Method:   -initWithExtension:
+Thread:   <_NSMainThread: 0x101f05b70>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+[-[SimServiceContext initWithDeveloperDir:connectionType:error:]:432] WARN  : Unable to discover any Simulator runtimes. Developer Directory is /Applications/Xcode.app/Contents/Developer.
+[-[SimDiskImageManager init]:175] ERROR : Could not kickstart simdiskimaged; SimDiskImageManager services will not be available: Error Domain=NSPOSIXErrorDomain Code=53 "Software caused connection abort" UserInfo={NSLocalizedDescription=Error returned in reply from CoreSimulatorService: Connection invalid}
+[-[SimDiskImageManager _onQueue_checkConnection:]:239] ERROR : simdiskimaged returned error (invalid), marking disconnected.
+[-[SimDiskImageManager _onQueue_checkConnection:]:239] ERROR : simdiskimaged returned error (invalid), marking disconnected.
+[-[SimServiceContext initWithDeveloperDir:connectionType:error:]_block_invoke:468] ERROR : Could not get list of trusted mount directories: Error Domain=com.apple.CoreSimulator.SimError Code=410 "The service used to manage runtime disk images (simdiskimaged) crashed or is not responding" UserInfo={NSLocalizedDescription=The service used to manage runtime disk images (simdiskimaged) crashed or is not responding}
+[-[SimServiceContext sendRequest:reply:error:]:1771] ERROR : Unable to deliver request ({
+    request = "notification_subscription";
+    "set_path" = "/Users/jeonsihyeon/Library/Developer/CoreSimulator/Devices";
+}) because we are not connected to CoreSimulatorService.
+2026-04-23 02:05:44.552 xcodebuild[89732:652044] Error Domain=NSPOSIXErrorDomain Code=61 "Connection refused" UserInfo={NSLocalizedDescription=CoreSimulatorService connection became invalid.  Simulator services will no longer be available.}
+2026-04-23 02:05:44.554 xcodebuild[89732:652044]  iOSSimulator: [SimServiceContext defaultDeviceSetWithError:] returned nil (Error Domain=NSPOSIXErrorDomain Code=61 "Connection refused" UserInfo={NSLocalizedFailureReason=Failed to subscribe to notifications from CoreSimulatorService., NSLocalizedDescription=Failed to initialize simulator device set., NSUnderlyingError=0xa39c0c7e0 {Error Domain=NSPOSIXErrorDomain Code=61 "Connection refused" UserInfo={NSLocalizedDescription=CoreSimulatorService connection became invalid.  Simulator services will no longer be available.}}}). Simulator device support disabled.
+[-[SimServiceContext sendRequest:reply:error:]:1771] ERROR : Unable to deliver request ({
+    request = "notification_subscription";
+    "set_path" = "/Users/jeonsihyeon/Library/Developer/CoreSimulator/Devices";
+}) because we are not connected to CoreSimulatorService.
+2026-04-23 02:05:44.554 xcodebuild[89732:652010] Error Domain=NSPOSIXErrorDomain Code=61 "Connection refused" UserInfo={NSLocalizedDescription=CoreSimulatorService connection became invalid.  Simulator services will no longer be available.}
+2026-04-23 02:05:44.555 xcodebuild[89732:652010]  IDESimulatorAvailability: startObservingSimulatorUpdates() FAILED to register SimDeviceSet observer
+2026-04-23 02:06:44.939 xcodebuild[89732:652009] Writing error result bundle to /var/folders/w0/p22btm453zg_dx831vtq_11m0000gn/T/ResultBundle_2026-23-04_02-06-0044.xcresult
+xcodebuild: error: Unable to find a device matching the provided destination specifier:
+		{ platform:iOS Simulator, OS:latest, name:iPhone 17 }
+
+	The requested device could not be found because no available devices matched the request.
+
+	Available destinations for the "MemoryMap" scheme:
+		{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00006000-0018605E017A401E, name:My Mac }
+		{ platform:iOS, id:dvtdevice-DVTiPhonePlaceholder-iphoneos:placeholder, name:Any iOS Device }
+		{ platform:iOS Simulator, id:dvtdevice-DVTiOSDeviceSimulatorPlaceholder-iphonesimulator:placeholder, name:Any iOS Simulator Device }
+
+diff --git a/workspace/ios/Shared/SampleModels.swift b/workspace/ios/Shared/SampleModels.swift
+index f120749f3b329ad53e299dc811768b10dd3e5a96..efee63e069d8a5e88dc188176869234525ab1a88
+--- a/workspace/ios/Shared/SampleModels.swift
++++ b/workspace/ios/Shared/SampleModels.swift
+@@ -1,7 +1,7 @@
+ import CoreLocation
+ import SwiftUI
+ 
+-struct SampleMemoryPin: Identifiable {
++struct SampleMemoryPin: Identifiable, Hashable {
+     let id: UUID
+     let title: String
+     let shortLabel: String
+@@ -9,6 +9,14 @@
+     let symbol: String
+     let color: Color
+ 
++    static func == (lhs: SampleMemoryPin, rhs: SampleMemoryPin) -> Bool {
++        lhs.id == rhs.id
++    }
++
++    func hash(into hasher: inout Hasher) {
++        hasher.combine(id)
++    }
++
+     static let samples: [SampleMemoryPin] = [
+         .init(id: UUID(uuidString: "11111111-1111-4111-8111-111111111111")!, title: "Rooftop Dinner", shortLabel: "Dinner", coordinate: .init(latitude: 37.5519, longitude: 126.9215), symbol: "fork.knife", color: UnfadingTheme.Color.primary),
+         .init(id: UUID(uuidString: "22222222-2222-4222-8222-222222222222")!, title: "Han River Ride", shortLabel: "Ride", coordinate: .init(latitude: 37.5283, longitude: 126.9326), symbol: "bicycle", color: UnfadingTheme.Color.lavender),
+
+codex
+The named simulator remains unavailable here. I’ll run a generic simulator build to see if the Hashable fix cleared the semantic error, though the sandbox may still stop on the preview macro plugin.
+exec
+/bin/zsh -lc "xcodebuild build -project MemoryMap.xcodeproj -scheme MemoryMap -destination 'generic/platform=iOS Simulator' -derivedDataPath .deriveddata/r7" in /Users/jeonsihyeon/factory/workspace/ios
+diff --git a/workspace/ios/Shared/SampleModels.swift b/workspace/ios/Shared/SampleModels.swift
+index f120749f3b329ad53e299dc811768b10dd3e5a96..efee63e069d8a5e88dc188176869234525ab1a88
+--- a/workspace/ios/Shared/SampleModels.swift
++++ b/workspace/ios/Shared/SampleModels.swift
+@@ -1,7 +1,7 @@
+ import CoreLocation
+ import SwiftUI
+ 
+-struct SampleMemoryPin: Identifiable {
++struct SampleMemoryPin: Identifiable, Hashable {
+     let id: UUID
+     let title: String
+     let shortLabel: String
+@@ -9,6 +9,14 @@
+     let symbol: String
+     let color: Color
+ 
++    static func == (lhs: SampleMemoryPin, rhs: SampleMemoryPin) -> Bool {
++        lhs.id == rhs.id
++    }
++
++    func hash(into hasher: inout Hasher) {
++        hasher.combine(id)
++    }
++
+     static let samples: [SampleMemoryPin] = [
+         .init(id: UUID(uuidString: "11111111-1111-4111-8111-111111111111")!, title: "Rooftop Dinner", shortLabel: "Dinner", coordinate: .init(latitude: 37.5519, longitude: 126.9215), symbol: "fork.knife", color: UnfadingTheme.Color.primary),
+         .init(id: UUID(uuidString: "22222222-2222-4222-8222-222222222222")!, title: "Han River Ride", shortLabel: "Ride", coordinate: .init(latitude: 37.5283, longitude: 126.9326), symbol: "bicycle", color: UnfadingTheme.Color.lavender),
+
+ exited 65 in 3132ms:
+2026-04-23 02:06:55.686 xcodebuild[89880:653033]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-04-23 02:06:55.894 xcodebuild[89880:653032] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+2026-04-23 02:06:56.339 xcodebuild[89880:653034] CoreSimulatorService connection became invalid.  Simulator services will no longer be available.
+2026-04-23 02:06:56.339 xcodebuild[89880:653065] Logging connecton invalid: <OS_xpc_error: <dictionary: 0x1fda2c5d0> { count = 1, transaction: 0, voucher = 0x0, contents =
+	"XPCErrorDescription" => <string: 0x1fda2c718> { string cache = 0x0, length = 18, contents = "Connection invalid" }
+}>
+2026-04-23 02:06:56.340 xcodebuild[89880:653064] Error opening log file (/Users/jeonsihyeon/Library/Logs/CoreSimulator/CoreSimulator.com.apple.dt.xcodebuild.log): Operation not permitted
+[-[SimServiceContext sendRequest:]:1751] ERROR : Unable to deliver request ({
+    "developer_dir" = "/Applications/Xcode.app/Contents/Developer";
+    request = "set_developer_dir";
+}) because we are not connected to CoreSimulatorService.
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild build -project MemoryMap.xcodeproj -scheme MemoryMap -destination "generic/platform=iOS Simulator" -derivedDataPath .deriveddata/r7
+
+[-[SimServiceContext initWithDeveloperDir:connectionType:error:]:432] WARN  : Unable to discover any Simulator runtimes. Developer Directory is /Applications/Xcode.app/Contents/Developer.
+[-[SimDiskImageManager init]:175] ERROR : Could not kickstart simdiskimaged; SimDiskImageManager services will not be available: Error Domain=NSPOSIXErrorDomain Code=53 "Software caused connection abort" UserInfo={NSLocalizedDescription=Error returned in reply from CoreSimulatorService: Connection invalid}
+[-[SimDiskImageManager _onQueue_checkConnection:]:219] ERROR : simdiskimaged connection is currently unavailable because connection became invalid
+[-[SimServiceContext initWithDeveloperDir:connectionType:error:]_block_invoke:468] ERROR : Could not get list of trusted mount directories: Error Domain=com.apple.CoreSimulator.SimError Code=409 "Cannot talk to the service used to manage runtime disk images (simdiskimaged) because its launchd job is not registered or was unloaded" UserInfo={NSLocalizedDescription=Cannot talk to the service used to manage runtime disk images (simdiskimaged) because its launchd job is not registered or was unloaded}
+[-[SimDiskImageManager _onQueue_checkConnection:]:219] ERROR : simdiskimaged connection is currently unavailable because connection became invalid
+[-[SimServiceContext sendRequest:reply:error:]:1771] ERROR : Unable to deliver request ({
+    request = "notification_subscription";
+    "set_path" = "/Users/jeonsihyeon/Library/Developer/CoreSimulator/Devices";
+}) because we are not connected to CoreSimulatorService.
+2026-04-23 02:06:56.420 xcodebuild[89880:653064] Error Domain=NSPOSIXErrorDomain Code=61 "Connection refused" UserInfo={NSLocalizedDescription=CoreSimulatorService connection became invalid.  Simulator services will no longer be available.}
+[-[SimServiceContext sendRequest:reply:error:]:1771] ERROR : Unable to deliver request ({
+    request = "notification_subscription";
+    "set_path" = "/Users/jeonsihyeon/Library/Developer/CoreSimulator/Devices";
+}) because we are not connected to CoreSimulatorService.
+2026-04-23 02:06:56.422 xcodebuild[89880:653064]  iOSSimulator: [SimServiceContext defaultDeviceSetWithError:] returned nil (Error Domain=NSPOSIXErrorDomain Code=61 "Connection refused" UserInfo={NSLocalizedFailureReason=Failed to subscribe to notifications from CoreSimulatorService., NSLocalizedDescription=Failed to initialize simulator device set., NSUnderlyingError=0x746728990 {Error Domain=NSPOSIXErrorDomain Code=61 "Connection refused" UserInfo={NSLocalizedDescription=CoreSimulatorService connection became invalid.  Simulator services will no longer be available.}}}). Simulator device support disabled.
+2026-04-23 02:06:56.422 xcodebuild[89880:653033] Error Domain=NSPOSIXErrorDomain Code=61 "Connection refused" UserInfo={NSLocalizedDescription=CoreSimulatorService connection became invalid.  Simulator services will no longer be available.}
+2026-04-23 02:06:56.422 xcodebuild[89880:653032] [MT] DVTAssertions: Warning in DVTFrameworks/DVTFoundation/FileTypes/DVTFileDataTypeDetection.m:80
+Details:  detectedTypeIdentifier (com.apple.xml-property-list) does not conform to matchedTypeIdentifier in MagicFileDataTypeDetector extenson com.apple.property-list. When both are specified, this conformance is required unless overridden by setting allowNonInheritance. extension.identifier:Xcode.MagicFileDataTypeDetector.XMLPlist
+Object:   <DVTFileDataTypeDetectionMagicCache: 0x746729560>
+Method:   -initWithExtension:
+Thread:   <_NSMainThread: 0x1050a1b70>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-04-23 02:06:56.422 xcodebuild[89880:653033]  IDESimulatorAvailability: startObservingSimulatorUpdates() FAILED to register SimDeviceSet observer
+2026-04-23 02:06:56.424 xcodebuild[89880:653032] [MT] DVTAssertions: Warning in DVTFrameworks/DVTFoundation/FileTypes/DVTFileDataTypeDetection.m:80
+Details:  detectedTypeIdentifier (com.apple.binary-property-list) does not conform to matchedTypeIdentifier in MagicFileDataTypeDetector extenson com.apple.property-list. When both are specified, this conformance is required unless overridden by setting allowNonInheritance. extension.identifier:Xcode.MagicFileDataTypeDetector.BinaryPlist
+Object:   <DVTFileDataTypeDetectionMagicCache: 0x74672a0d0>
+Method:   -initWithExtension:
+Thread:   <_NSMainThread: 0x1050a1b70>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (1 target)
+    Target 'MemoryMap' in project 'MemoryMap' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 5973cd43798616a44e2137ae6f5ca78a
+Build description path: /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/XCBuildData/5973cd43798616a44e2137ae6f5ca78a.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/SDKStatCaches.noindex/iphonesimulator26.4-23E237-686eebb5dc1d8ecb277353a59184f4aa.sdkstatcache
+    cd /Users/jeonsihyeon/factory/workspace/ios/MemoryMap.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -o /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/SDKStatCaches.noindex/iphonesimulator26.4-23E237-686eebb5dc1d8ecb277353a59184f4aa.sdkstatcache
+Failed to create FS event stream. Considering the cache up-to-date.
+
+Ld /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/Binary/__preview.dylib normal arm64 (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios18.0-simulator -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -O0 -L/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Products/Debug-iphonesimulator -F/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Products/Debug-iphonesimulator -install_name @rpath/MemoryMap.debug.dylib -Xlinker -dead_strip -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -Xlinker -dependency_info -Xlinker /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap_dependency_info.dat -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __entitlements -Xlinker /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap.app-Simulated.xcent -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __ents_der -Xlinker /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap.app-Simulated.xcent.der -Xlinker -no_adhoc_codesign -o /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/Binary/__preview.dylib
+
+Ld /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/x86_64/Binary/__preview.dylib normal x86_64 (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target x86_64-apple-ios18.0-simulator -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -O0 -L/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Products/Debug-iphonesimulator -F/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Products/Debug-iphonesimulator -install_name @rpath/MemoryMap.debug.dylib -Xlinker -dead_strip -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -Xlinker -dependency_info -Xlinker /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/x86_64/MemoryMap_dependency_info.dat -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __entitlements -Xlinker /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap.app-Simulated.xcent -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __ents_der -Xlinker /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap.app-Simulated.xcent.der -Xlinker -no_adhoc_codesign -o /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/x86_64/Binary/__preview.dylib
+
+ProcessInfoPlistFile /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Products/Debug-iphonesimulator/MemoryMap.app/Info.plist /Users/jeonsihyeon/factory/workspace/ios/App/Info.plist (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-infoPlistUtility /Users/jeonsihyeon/factory/workspace/ios/App/Info.plist -producttype com.apple.product-type.application -genpkginfo /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Products/Debug-iphonesimulator/MemoryMap.app/PkgInfo -expandbuildsettings -format binary -platform iphonesimulator -o /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Products/Debug-iphonesimulator/MemoryMap.app/Info.plist
+
+SwiftDriver MemoryMap normal arm64 com.apple.xcode.tools.swift.compiler (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name MemoryMap -Onone @/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -target arm64-apple-ios18.0-simulator -g -module-cache-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Products/Debug-iphonesimulator -F /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Products/Debug-iphonesimulator -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/SDKStatCaches.noindex/iphonesimulator26.4-23E237-686eebb5dc1d8ecb277353a59184f4aa.sdkstatcache -output-file-map /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/ModuleCache.noindex -sdk-module-cache-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap_const_extract_protocols.json -Xcc -iquote -Xcc /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-generated-files.hmap -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-own-target-headers.hmap -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-all-target-headers.hmap -Xcc -iquote -Xcc /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-project-headers.hmap -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/DerivedSources-normal/arm64 -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/DerivedSources/arm64 -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap-Swift.h -working-directory /Users/jeonsihyeon/factory/workspace/ios -experimental-emit-module-separately -disable-cmo
+
+SwiftDriver MemoryMap normal x86_64 com.apple.xcode.tools.swift.compiler (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name MemoryMap -Onone @/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/x86_64/MemoryMap.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -target x86_64-apple-ios18.0-simulator -g -module-cache-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Products/Debug-iphonesimulator -F /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Products/Debug-iphonesimulator -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/SDKStatCaches.noindex/iphonesimulator26.4-23E237-686eebb5dc1d8ecb277353a59184f4aa.sdkstatcache -output-file-map /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/x86_64/MemoryMap-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/ModuleCache.noindex -sdk-module-cache-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/x86_64/MemoryMap.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/x86_64/MemoryMap_const_extract_protocols.json -Xcc -iquote -Xcc /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-generated-files.hmap -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-own-target-headers.hmap -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-all-target-headers.hmap -Xcc -iquote -Xcc /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-project-headers.hmap -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/DerivedSources-normal/x86_64 -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/DerivedSources/x86_64 -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/x86_64/MemoryMap-Swift.h -working-directory /Users/jeonsihyeon/factory/workspace/ios -experimental-emit-module-separately -disable-cmo
+
+CreateUniversalBinary /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Products/Debug-iphonesimulator/MemoryMap.app/__preview.dylib normal arm64\ x86_64 (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo -create /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/Binary/__preview.dylib /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/x86_64/Binary/__preview.dylib -output /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Products/Debug-iphonesimulator/MemoryMap.app/__preview.dylib
+
+SwiftCompile normal arm64 Compiling\ RewindMomentCard.swift,\ RootTabView.swift,\ SampleModels.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Rewind/RewindMomentCard.swift /Users/jeonsihyeon/factory/workspace/ios/App/RootTabView.swift /Users/jeonsihyeon/factory/workspace/ios/Shared/SampleModels.swift (in target 'MemoryMap' from project 'MemoryMap')
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Features/Rewind/RewindMomentCard.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/App/RootTabView.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Shared/SampleModels.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+sandbox-exec: sandbox_apply: Operation not permitted
+SwiftCompile normal arm64 Compiling\ MemoryMapApp.swift,\ MemoryMapHomeView.swift,\ MemoryPinMarker.swift /Users/jeonsihyeon/factory/workspace/ios/App/MemoryMapApp.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemoryMapHomeView.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemoryPinMarker.swift (in target 'MemoryMap' from project 'MemoryMap')
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/App/MemoryMapApp.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemoryMapHomeView.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemoryPinMarker.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+sandbox-exec: sandbox_apply: Operation not permitted
+SwiftCompile normal arm64 Compiling\ CalendarView.swift,\ GroupHubView.swift,\ LocationPermissionStore.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Calendar/CalendarView.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Groups/GroupHubView.swift /Users/jeonsihyeon/factory/workspace/ios/Shared/LocationPermissionStore.swift (in target 'MemoryMap' from project 'MemoryMap')
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Features/Calendar/CalendarView.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Features/Groups/GroupHubView.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Shared/LocationPermissionStore.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+sandbox-exec: sandbox_apply: Operation not permitted
+SwiftEmitModule normal arm64 Emitting\ module\ for\ MemoryMap (in target 'MemoryMap' from project 'MemoryMap')
+sandbox-exec: sandbox_apply: Operation not permitted
+Failed frontend command:
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend -frontend -emit-module -experimental-skip-non-inlinable-function-bodies-without-types /Users/jeonsihyeon/factory/workspace/ios/Features/Calendar/CalendarView.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Groups/GroupHubView.swift /Users/jeonsihyeon/factory/workspace/ios/Shared/LocationPermissionStore.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemoryComposerSheet.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemoryComposerState.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Detail/MemoryDetailView.swift /Users/jeonsihyeon/factory/workspace/ios/App/MemoryMapApp.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemoryMapHomeView.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemoryPinMarker.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemorySelectionState.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemorySummaryCard.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Rewind/RewindFeedView.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Rewind/RewindMomentCard.swift /Users/jeonsihyeon/factory/workspace/ios/App/RootTabView.swift /Users/jeonsihyeon/factory/workspace/ios/Shared/SampleModels.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Settings/SettingsView.swift /Users/jeonsihyeon/factory/workspace/ios/Shared/UnfadingBottomSheet.swift /Users/jeonsihyeon/factory/workspace/ios/Shared/UnfadingButtonStyle.swift /Users/jeonsihyeon/factory/workspace/ios/Shared/UnfadingCardBackground.swift /Users/jeonsihyeon/factory/workspace/ios/Shared/UnfadingFilterChip.swift /Users/jeonsihyeon/factory/workspace/ios/Shared/UnfadingLocalized.swift /Users/jeonsihyeon/factory/workspace/ios/Shared/UnfadingPhotoGrid.swift /Users/jeonsihyeon/factory/workspace/ios/Shared/UnfadingTheme.swift -target arm64-apple-ios18.0-simulator -disable-cross-import-overlay-search -swift-module-cross-import MapKit /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/MapKit.framework/Modules/MapKit.swiftcrossimport/SwiftUI.swiftoverlay -swift-module-cross-import PhotosUI /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/PhotosUI.framework/Modules/PhotosUI.swiftcrossimport/SwiftUI.swiftoverlay -swift-module-cross-import PhotosUI /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/PhotosUI.framework/Modules/PhotosUI.swiftcrossimport/WidgetKit.swiftoverlay -swift-module-cross-import PhotosUI /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk/System/Library/Frameworks/PhotosUI.framework/Modules/PhotosUI.swiftcrossimport/SwiftUI.swiftoverlay -swift-module-cross-import PhotosUI /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk/System/Library/Frameworks/PhotosUI.framework/Modules/PhotosUI.swiftcrossimport/WidgetKit.swiftoverlay -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libFoundationMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#FoundationMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libObservationMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#ObservationMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libPreviewsMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#PreviewsMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libSwiftMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#SwiftMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libSwiftUIMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#SwiftUIMacros -disable-implicit-swift-modules -Xcc -fno-implicit-modules -Xcc -fno-implicit-module-maps -explicit-swift-module-map-file /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap-dependencies-2.json -Xllvm -aarch64-use-tbi -enable-objc-interop -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -I /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Products/Debug-iphonesimulator -F /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Products/Debug-iphonesimulator -no-color-diagnostics -Xcc -fno-color-diagnostics -enable-testing -g -debug-info-format\=dwarf -dwarf-version\=5 -module-cache-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -swift-version 5 -Onone -D DEBUG -serialize-debugging-options -const-gather-protocols-file /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap_const_extract_protocols.json -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -empty-abi-descriptor -validate-clang-modules-once -clang-build-session-file /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/ModuleCache.noindex/Session.modulevalidation -Xcc -working-directory -Xcc /Users/jeonsihyeon/factory/workspace/ios -enable-anonymous-context-mangled-names -file-compilation-dir /Users/jeonsihyeon/factory/workspace/ios -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -Xcc -ivfsstatcache -Xcc /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/SDKStatCaches.noindex/iphonesimulator26.4-23E237-686eebb5dc1d8ecb277353a59184f4aa.sdkstatcache -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/swift-overrides.hmap -Xcc -iquote -Xcc /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-generated-files.hmap -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-own-target-headers.hmap -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-all-target-headers.hmap -Xcc -iquote -Xcc /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-project-headers.hmap -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/DerivedSources-normal/arm64 -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/DerivedSources/arm64 -Xcc -I/Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/DerivedSources -Xcc -DDEBUG\=1 -no-auto-bridging-header-chaining -module-name MemoryMap -frontend-parseable-output -disable-clang-spi -clang-target arm64-apple-ios26.4-simulator -target-sdk-version 26.4 -target-sdk-name iphonesimulator26.4 -in-process-plugin-server-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/libSwiftInProcPluginServer.dylib -emit-module-doc-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.swiftdoc -emit-module-source-info-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.swiftsourceinfo -emit-objc-header-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap-Swift.h -serialize-diagnostics-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap-primary-emit-module.dia -emit-dependencies-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap-primary-emit-module.d -o /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.swiftmodule -emit-abi-descriptor-path /Users/jeonsihyeon/factory/workspace/ios/.deriveddata/r7/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.abi.json
+
+EmitSwiftModule normal arm64 (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+/Users/jeonsihyeon/factory/workspace/ios/Features/Calendar/CalendarView.swift:33:1: error: external macro implementation type 'PreviewsMacros.SwiftUIView' could not be found for macro 'Preview(_:body:)'; '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server' produced malformed response
+#Preview {
+^
+SwiftUI.Preview:2:41: note: 'Preview(_:body:)' declared here
+@freestanding(declaration) public macro Preview(_ name: String? = nil, @ViewBuilder body: @escaping @MainActor () -> any View) = #externalMacro(module: "PreviewsMacros", type: "SwiftUIView")
+                                        ^
+/Users/jeonsihyeon/factory/workspace/ios/Features/Groups/GroupHubView.swift:28:1: error: external macro implementation type 'PreviewsMacros.SwiftUIView' could not be found for macro 'Preview(_:body:)'; '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server' produced malformed response
+#Preview {
+^
+SwiftUI.Preview:2:41: note: 'Preview(_:body:)' declared here
+@freestanding(declaration) public macro Preview(_ name: String? = nil, @ViewBuilder body: @escaping @MainActor () -> any View) = #externalMacro(module: "PreviewsMacros", type: "SwiftUIView")
+                                        ^
+/Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemoryComposerSheet.swift:381:1: error: external macro implementation type 'PreviewsMacros.SwiftUIView' could not be found for macro 'Preview(_:body:)'; '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server' produced malformed response
+#Preview {
+^
+SwiftUI.Preview:2:41: note: 'Preview(_:body:)' declared here
+@freestanding(declaration) public macro Preview(_ name: String? = nil, @ViewBuilder body: @escaping @MainActor () -> any View) = #externalMacro(module: "PreviewsMacros", type: "SwiftUIView")
+                                        ^
+/Users/jeonsihyeon/factory/workspace/ios/Features/Detail/MemoryDetailView.swift:192:1: error: external macro implementation type 'PreviewsMacros.SwiftUIView' could not be found for macro 'Preview(_:body:)'; '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server' produced malformed response
+#Preview {
+^
+SwiftUI.Preview:2:41: note: 'Preview(_:body:)' declared here
+@freestanding(declaration) public macro Preview(_ name: String? = nil, @ViewBuilder body: @escaping @MainActor () -> any View) = #externalMacro(module: "PreviewsMacros", type: "SwiftUIView")
+                                        ^
+/Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemoryMapHomeView.swift:235:1: error: external macro implementation type 'PreviewsMacros.SwiftUIView' could not be found for macro 'Preview(_:body:)'; '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server' produced malformed response
+#Preview {
+^
+SwiftUI.Preview:2:41: note: 'Preview(_:body:)' declared here
+@freestanding(declaration) public macro Preview(_ name: String? = nil, @ViewBuilder body: @escaping @MainActor () -> any View) = #externalMacro(module: "PreviewsMacros", type: "SwiftUIView")
+                                        ^
+/Users/jeonsihyeon/factory/workspace/ios/Features/Rewind/RewindFeedView.swift:20:1: error: external macro implementation type 'PreviewsMacros.SwiftUIView' could not be found for macro 'Preview(_:body:)'; '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server' produced malformed response
+#Preview {
+^
+SwiftUI.Preview:2:41: note: 'Preview(_:body:)' declared here
+@freestanding(declaration) public macro Preview(_ name: String? = nil, @ViewBuilder body: @escaping @MainActor () -> any View) = #externalMacro(module: "PreviewsMacros", type: "SwiftUIView")
+                                        ^
+/Users/jeonsihyeon/factory/workspace/ios/App/RootTabView.swift:118:1: error: external macro implementation type 'PreviewsMacros.SwiftUIView' could not be found for macro 'Preview(_:body:)'; '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server' produced malformed response
+#Preview {
+^
+SwiftUI.Preview:2:41: note: 'Preview(_:body:)' declared here
+@freestanding(declaration) public macro Preview(_ name: String? = nil, @ViewBuilder body: @escaping @MainActor () -> any View) = #externalMacro(module: "PreviewsMacros", type: "SwiftUIView")
+                                        ^
+/Users/jeonsihyeon/factory/workspace/ios/Features/Settings/SettingsView.swift:51:1: error: external macro implementation type 'PreviewsMacros.SwiftUIView' could not be found for macro 'Preview(_:body:)'; '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server' produced malformed response
+#Preview {
+^
+SwiftUI.Preview:2:41: note: 'Preview(_:body:)' declared here
+@freestanding(declaration) public macro Preview(_ name: String? = nil, @ViewBuilder body: @escaping @MainActor () -> any View) = #externalMacro(module: "PreviewsMacros", type: "SwiftUIView")
+                                        ^
+
+SwiftCompile normal arm64 Compiling\ MemorySelectionState.swift,\ MemorySummaryCard.swift,\ RewindFeedView.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemorySelectionState.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemorySummaryCard.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Rewind/RewindFeedView.swift (in target 'MemoryMap' from project 'MemoryMap')
+sandbox-exec: sandbox_apply: Operation not permitted
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemorySelectionState.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemorySummaryCard.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Features/Rewind/RewindFeedView.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 Compiling\ SettingsView.swift,\ UnfadingBottomSheet.swift,\ UnfadingButtonStyle.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Settings/SettingsView.swift /Users/jeonsihyeon/factory/workspace/ios/Shared/UnfadingBottomSheet.swift /Users/jeonsihyeon/factory/workspace/ios/Shared/UnfadingButtonStyle.swift (in target 'MemoryMap' from project 'MemoryMap')
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Features/Settings/SettingsView.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Shared/UnfadingBottomSheet.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Shared/UnfadingButtonStyle.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+sandbox-exec: sandbox_apply: Operation not permitted
+SwiftEmitModule normal x86_64 Emitting\ module\ for\ MemoryMap (in target 'MemoryMap' from project 'MemoryMap')
+sandbox-exec: sandbox_apply: Operation not permitted
+
+EmitSwiftModule normal x86_64 (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 Compiling\ UnfadingPhotoGrid.swift,\ UnfadingTheme.swift /Users/jeonsihyeon/factory/workspace/ios/Shared/UnfadingPhotoGrid.swift /Users/jeonsihyeon/factory/workspace/ios/Shared/UnfadingTheme.swift (in target 'MemoryMap' from project 'MemoryMap')
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Shared/UnfadingPhotoGrid.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Shared/UnfadingTheme.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal x86_64 Compiling\ UnfadingPhotoGrid.swift,\ UnfadingTheme.swift /Users/jeonsihyeon/factory/workspace/ios/Shared/UnfadingPhotoGrid.swift /Users/jeonsihyeon/factory/workspace/ios/Shared/UnfadingTheme.swift (in target 'MemoryMap' from project 'MemoryMap')
+
+** BUILD FAILED **
+
+
+The following build commands failed:
+	SwiftEmitModule normal arm64 Emitting\ module\ for\ MemoryMap (in target 'MemoryMap' from project 'MemoryMap')
+	EmitSwiftModule normal arm64 (in target 'MemoryMap' from project 'MemoryMap')
+	Building project MemoryMap with scheme MemoryMap
+(3 failures)
+
+diff --git a/workspace/ios/Shared/SampleModels.swift b/workspace/ios/Shared/SampleModels.swift
+index f120749f3b329ad53e299dc811768b10dd3e5a96..efee63e069d8a5e88dc188176869234525ab1a88
+--- a/workspace/ios/Shared/SampleModels.swift
++++ b/workspace/ios/Shared/SampleModels.swift
+@@ -1,7 +1,7 @@
+ import CoreLocation
+ import SwiftUI
+ 
+-struct SampleMemoryPin: Identifiable {
++struct SampleMemoryPin: Identifiable, Hashable {
+     let id: UUID
+     let title: String
+     let shortLabel: String
+@@ -9,6 +9,14 @@
+     let symbol: String
+     let color: Color
+ 
++    static func == (lhs: SampleMemoryPin, rhs: SampleMemoryPin) -> Bool {
++        lhs.id == rhs.id
++    }
++
++    func hash(into hasher: inout Hasher) {
++        hasher.combine(id)
++    }
++
+     static let samples: [SampleMemoryPin] = [
+         .init(id: UUID(uuidString: "11111111-1111-4111-8111-111111111111")!, title: "Rooftop Dinner", shortLabel: "Dinner", coordinate: .init(latitude: 37.5519, longitude: 126.9215), symbol: "fork.knife", color: UnfadingTheme.Color.primary),
+         .init(id: UUID(uuidString: "22222222-2222-4222-8222-222222222222")!, title: "Han River Ride", shortLabel: "Ride", coordinate: .init(latitude: 37.5283, longitude: 126.9326), symbol: "bicycle", color: UnfadingTheme.Color.lavender),
+
+codex
+Implemented the Hashable fix.
+
+Edited:
+- `workspace/ios/Shared/SampleModels.swift` — `SampleMemoryPin` now conforms to `Hashable` with manual id-based `==` and `hash(into:)`, avoiding `Color` conformance issues.
+
+Verification:
+- `xcodegen generate`: SUCCEEDED.
+- `xcodebuild test -destination 'platform=iOS Simulator,name=iPhone 17'`: could not run here because the named simulator is unavailable in this sandbox (`Unable to find a device matching ... iPhone 17`).
+- `xcodebuild build -destination 'generic/platform=iOS Simulator'`: still fails due the known sandbox SwiftUI `#Preview` macro plugin error (`PreviewsMacros.SwiftUIView could not be found` / `sandbox-exec: sandbox_apply: Operation not permitted`). The earlier `SampleMemoryPin Hashable` diagnostic is no longer present.
+
+Final test run should be done in the normal Claude Code environment with the simulator available.
+diff --git a/workspace/ios/Shared/SampleModels.swift b/workspace/ios/Shared/SampleModels.swift
+index f120749f3b329ad53e299dc811768b10dd3e5a96..efee63e069d8a5e88dc188176869234525ab1a88
+--- a/workspace/ios/Shared/SampleModels.swift
++++ b/workspace/ios/Shared/SampleModels.swift
+@@ -1,7 +1,7 @@
+ import CoreLocation
+ import SwiftUI
+ 
+-struct SampleMemoryPin: Identifiable {
++struct SampleMemoryPin: Identifiable, Hashable {
+     let id: UUID
+     let title: String
+     let shortLabel: String
+@@ -9,6 +9,14 @@
+     let symbol: String
+     let color: Color
+ 
++    static func == (lhs: SampleMemoryPin, rhs: SampleMemoryPin) -> Bool {
++        lhs.id == rhs.id
++    }
++
++    func hash(into hasher: inout Hasher) {
++        hasher.combine(id)
++    }
++
+     static let samples: [SampleMemoryPin] = [
+         .init(id: UUID(uuidString: "11111111-1111-4111-8111-111111111111")!, title: "Rooftop Dinner", shortLabel: "Dinner", coordinate: .init(latitude: 37.5519, longitude: 126.9215), symbol: "fork.knife", color: UnfadingTheme.Color.primary),
+         .init(id: UUID(uuidString: "22222222-2222-4222-8222-222222222222")!, title: "Han River Ride", shortLabel: "Ride", coordinate: .init(latitude: 37.5283, longitude: 126.9326), symbol: "bicycle", color: UnfadingTheme.Color.lavender),
+
+tokens used
+3,489,367
+Implemented the Hashable fix.
+
+Edited:
+- `workspace/ios/Shared/SampleModels.swift` — `SampleMemoryPin` now conforms to `Hashable` with manual id-based `==` and `hash(into:)`, avoiding `Color` conformance issues.
+
+Verification:
+- `xcodegen generate`: SUCCEEDED.
+- `xcodebuild test -destination 'platform=iOS Simulator,name=iPhone 17'`: could not run here because the named simulator is unavailable in this sandbox (`Unable to find a device matching ... iPhone 17`).
+- `xcodebuild build -destination 'generic/platform=iOS Simulator'`: still fails due the known sandbox SwiftUI `#Preview` macro plugin error (`PreviewsMacros.SwiftUIView could not be found` / `sandbox-exec: sandbox_apply: Operation not permitted`). The earlier `SampleMemoryPin Hashable` diagnostic is no longer present.
+
+Final test run should be done in the normal Claude Code environment with the simulator available.

@@ -16,6 +16,7 @@ struct MemoryMapHomeView: View {
     @State private var showingComposer = false
     @State private var didPresentEvidenceComposer = false
     @State private var showingGroupHub = false
+    @State private var detailPin: SampleMemoryPin?
     @State private var cameraPosition: MapCameraPosition = .region(
         MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
@@ -47,7 +48,10 @@ struct MemoryMapHomeView: View {
                         }
 
                     UnfadingBottomSheet(snap: $selection.sheetSnap) {
-                        MemorySummaryCard(selectedPin: selection.selectedPin(from: SampleMemoryPin.samples))
+                        MemorySummaryCard(
+                            selectedPin: selection.selectedPin(from: SampleMemoryPin.samples),
+                            onDetailTap: openDetail
+                        )
                     }
                     .ignoresSafeArea(.container, edges: .bottom)
                     .zIndex(1)
@@ -74,6 +78,9 @@ struct MemoryMapHomeView: View {
             }
             .sheet(isPresented: $showingGroupHub) {
                 GroupHubView()
+            }
+            .navigationDestination(item: $detailPin) { pin in
+                MemoryDetailView(pin: pin)
             }
             .confirmationDialog(
                 locationPermissionStore.recoveryPrompt?.title ?? "",
@@ -217,6 +224,11 @@ struct MemoryMapHomeView: View {
         case .continueWithoutLocation:
             break
         }
+    }
+
+    // vibe-limit-checked: 1 parent owns navigation, 12 navigation state transition testable
+    private func openDetail() {
+        detailPin = selection.selectedPin(from: SampleMemoryPin.samples) ?? SampleMemoryPin.samples.first
     }
 }
 

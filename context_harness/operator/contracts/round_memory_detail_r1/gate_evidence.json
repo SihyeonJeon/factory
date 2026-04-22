@@ -1,0 +1,12 @@
+{
+  "round_id": "round_memory_detail_r1",
+  "notes": "MemoryDetailView. 1 remediation cycle (Hashable fix). 63/63 tests.",
+  "gate1": {"status":"pass","command":"xcodebuild test","exit_code":0,"test_count":63,"log":{"path":"context_harness/reports/round_memory_detail_r1/evidence/xcode_test.log","sha256":"sha256:e90b66d8969cb0ba7b30f269af094b1805f164e33d5b0a712417844e28e00dde"}},
+  "gate2": {"status":"pass","reports":[
+    {"path":"context_harness/reports/round_memory_detail_r1/evidence/contract_capture.md","sha256":"sha256:914297d6cc3dc5d1818e185723ced3d82154d01140e6fa895d3b06f890eef632"},
+    {"path":"context_harness/reports/round_memory_detail_r1/verdict.md","sha256":"sha256:1f2faf48d574b6053dd64bfe9a29420140fd1c35996d182e3d2f6e398b41f513"},
+    {"path":"context_harness/reports/round_memory_detail_r1/evidence/screenshots/01_map_with_detail_cta.png","sha256":"sha256:7c8cc01563dc038d948affe1e46594356ff8f60faac1a119326a24f3af475e97"}
+  ]},
+  "gate3": {"status":"pass","cross_agreement_note":"1 remediation cycle; Codex authored Swift."},
+  "gate4": {"status":"pass","metrics_source":{"path":"docs/exec-plans/process-log.jsonl","sha256":"sha256:7fa4b3910dd5e5ed391685eb83a9bd9c73521f075a85f8d44356ace6997f225e"},"remediation_cycles":1,"blocker_recurrence":0}
+}
