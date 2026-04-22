@@ -1,45 +1,54 @@
 import SwiftUI
 
+// vibe-limit-checked: 7 immersive runtime fidelity, 8 44pt/a11y/Dynamic Type, 14 narrow reusable-token surface
 struct RewindMomentCard: View {
     let moment: RewindMoment
 
     var body: some View {
-        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.lg) {
-            RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card + 2, style: .continuous)
+        ZStack(alignment: .bottomLeading) {
+            RoundedRectangle(cornerRadius: UnfadingTheme.Radius.sheet, style: .continuous)
                 .fill(moment.gradient)
-                .frame(height: 180)
-                .overlay(alignment: .bottomLeading) {
-                    VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs + 2) {
-                        Text(moment.dateLabel)
-                            .font(UnfadingTheme.Font.captionSemibold())
-                        Text(moment.title)
-                            .font(UnfadingTheme.Font.title3Bold())
-                    }
-                    .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
-                    .padding(UnfadingTheme.Spacing.lg + 2)
-                }
 
-            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.sm) {
-                Text(moment.location)
-                    .font(.headline)
-                    .foregroundStyle(UnfadingTheme.Color.textPrimary)
-                Text(moment.summary)
-                    .font(UnfadingTheme.Font.subheadline())
-                    .foregroundStyle(UnfadingTheme.Color.textSecondary)
-            }
-
-            HStack {
-                Label(moment.people, systemImage: "person.2.fill")
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.lg) {
                 Spacer()
-                Label(moment.mood, systemImage: "heart.fill")
+
+                VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.sm) {
+                    Text(UnfadingLocalized.Rewind.dateLabel(for: moment))
+                        .font(UnfadingTheme.Font.captionSemibold())
+                    Text(UnfadingLocalized.Rewind.title(for: moment))
+                        .font(UnfadingTheme.Font.title())
+                    Text(UnfadingLocalized.Rewind.location(for: moment))
+                        .font(UnfadingTheme.Font.subheadlineSemibold())
+                    Text(UnfadingLocalized.Rewind.summary(for: moment))
+                        .font(UnfadingTheme.Font.subheadline())
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
+
+                HStack(spacing: UnfadingTheme.Spacing.sm) {
+                    Button {
+                    } label: {
+                        Label(UnfadingLocalized.Rewind.shareLabel, systemImage: "square.and.arrow.up")
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(UnfadingTheme.Color.primary)
+
+                    Button {
+                    } label: {
+                        Label(UnfadingLocalized.Rewind.rewatchLabel, systemImage: "arrow.counterclockwise")
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                    }
+                    .buttonStyle(.bordered)
+                }
             }
-            .font(UnfadingTheme.Font.footnoteSemibold())
-            .foregroundStyle(UnfadingTheme.Color.textSecondary)
+            .padding(UnfadingTheme.Spacing.xl)
         }
-        .padding(UnfadingTheme.Spacing.lg + 2)
+        .aspectRatio(3.0 / 4.0, contentMode: .fit)
         .unfadingCardBackground(
-            fill: UnfadingTheme.Color.card,
-            radius: UnfadingTheme.Radius.sheet
+            fill: UnfadingTheme.Color.surface,
+            radius: UnfadingTheme.Radius.sheet,
+            shadow: true
         )
     }
 }

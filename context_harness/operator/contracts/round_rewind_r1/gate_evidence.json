@@ -1,0 +1,11 @@
+{
+  "round_id":"round_rewind_r1","notes":"Rewind immersive. 72/72 tests.",
+  "gate1":{"status":"pass","command":"xcodebuild test","exit_code":0,"test_count":72,"log":{"path":"context_harness/reports/round_rewind_r1/evidence/xcode_test.log","sha256":"sha256:16242a1d0752dc9583c8b8dcaf31c7d5334e1a87dc03a5ebd31a47ebcfe3af35"}},
+  "gate2":{"status":"pass","reports":[
+    {"path":"context_harness/reports/round_rewind_r1/evidence/contract_capture.md","sha256":"sha256:ae1122d3beb6c6102f8dde8d81d15c7f1d49bc408f3a686221da3b7d7e051f51"},
+    {"path":"context_harness/reports/round_rewind_r1/verdict.md","sha256":"sha256:387c36df08508efdefe80d0f9e5123261d29cba8bb683eea2f09af9137704218"},
+    {"path":"context_harness/reports/round_rewind_r1/evidence/screenshots/01_entry.png","sha256":"sha256:2c8f7008c54349242a6641a5192a3855322eaafe2cc97fd68a9e2faa3e6618ca"}
+  ]},
+  "gate3":{"status":"pass","cross_agreement_note":"Codex Swift author."},
+  "gate4":{"status":"pass","metrics_source":{"path":"docs/exec-plans/process-log.jsonl","sha256":"sha256:1bffd4f7378d5c40576fd570f1e9b5965d7d30e6514d4875fbcfce49aa988322"},"remediation_cycles":0,"blocker_recurrence":0}
+}

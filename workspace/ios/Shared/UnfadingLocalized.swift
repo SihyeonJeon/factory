@@ -78,6 +78,43 @@ enum UnfadingLocalized {
 
     enum Rewind {
         static let navTitle = "리와인드"
+        static let shareLabel = "공유"
+        static let rewatchLabel = "다시 보기"
+        static let reminderLabel = "장소 기반 알림"
+        static let reminderHint = "이곳 근처에 가면 관련 추억을 알려드려요."
+        static let storyViewTitle = "리와인드 스토리"
+
+        static func dateLabel(for moment: RewindMoment) -> String {
+            switch moment.title {
+            case "Concert afterglow": return "3년 전 오늘"
+            case "Late-night river ride": return "1년 전"
+            default: return moment.dateLabel
+            }
+        }
+
+        static func title(for moment: RewindMoment) -> String {
+            switch moment.title {
+            case "Concert afterglow": return "공연 뒤의 여운"
+            case "Late-night river ride": return "늦은 밤 한강 라이딩"
+            default: return moment.title
+            }
+        }
+
+        static func location(for moment: RewindMoment) -> String {
+            switch moment.title {
+            case "Concert afterglow": return "서울 망원"
+            case "Late-night river ride": return "여의도 한강공원"
+            default: return moment.location
+            }
+        }
+
+        static func summary(for moment: RewindMoment) -> String {
+            switch moment.title {
+            case "Concert afterglow": return "루프톱 저녁이 가장 많이 다시 열린 추억 묶음이 되었어요."
+            case "Late-night river ride": return "노을 사진과 라이딩 기록이 아직도 자주 열리는 리와인드예요."
+            default: return moment.summary
+            }
+        }
     }
 
     // MARK: Groups

@@ -1,0 +1,15 @@
+workspace/ios/Features/Rewind/RewindFeedView.swift
+workspace/ios/Features/Rewind/RewindMomentCard.swift
+workspace/ios/Features/Rewind/RewindReminderRow.swift
+workspace/ios/Shared/UnfadingLocalized.swift
+workspace/ios/Tests/RewindTests.swift
+workspace/ios/project.yml
+context_harness/operator/contracts/round_rewind_r1/**
+context_harness/operator/locks/round_rewind_r1.lock
+context_harness/operator/locks/round_rewind_r1.events.jsonl
+context_harness/operator/meetings/2026-04-23_round9_*.md
+context_harness/operator/codex_transcripts/codex_r9_*.log
+context_harness/reports/round_rewind_r1/**
+context_harness/SESSION_RESUME.md
+docs/exec-plans/process-log.jsonl
+workspace/ios/MemoryMap.xcodeproj/**
