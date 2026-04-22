@@ -636,15 +636,24 @@ def check_commit_traceability(lock: dict, report: CheckReport) -> None:
         report.blocker(f"git diff base..HEAD failed: {e}")
         return
     try:
-        # Uncommitted (working tree + staged)
+        # Uncommitted (working tree + staged). `-uall` expands untracked directories to individual files
+        # so we don't miss files hidden inside a bare directory entry.
+        # NOTE: do NOT .strip() the whole output — porcelain lines begin with a leading space
+        # when only the worktree (not index) is modified, and strip() eats it, corrupting parsing.
         dirty = subprocess.check_output(
-            ["git", "status", "--porcelain"], cwd=REPO, text=True
-        ).strip().splitlines()
+            ["git", "status", "--porcelain", "-uall"], cwd=REPO, text=True
+        ).splitlines()
         for ln in dirty:
             # porcelain format: XY <filename>[ -> <renamed>]
             if len(ln) < 4:
                 continue
             fn = ln[3:].split(" -> ")[-1].strip()
+            # Strip surrounding quotes added by git for paths containing spaces or non-ASCII
+            if len(fn) >= 2 and fn[0] == '"' and fn[-1] == '"':
+                fn = fn[1:-1]
+            # Skip bare directory entries (trailing slash) — -uall should prevent these, but be defensive
+            if fn.endswith("/"):
+                continue
             if fn:
                 touched.add(fn)
     except Exception as e:

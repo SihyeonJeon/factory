@@ -6,3 +6,4 @@ __pycache__/
 .worktrees/
 archived_workspaces/
 .mcp.json
+docs/design-docs/travel deepsight.zip
