@@ -37,8 +37,9 @@
 ## Running the checker
 
 - Script: `harness/check_operator_round.py`
-- Lint config (operator-doc scope): `context_harness/operator/lint_config.yaml`
-- Checker commands: `lock <round>` | `gates <round>` | `audit-operator-layer`
+- Lint config (operator-doc scope, TOML): `context_harness/operator/lint_config.toml`
+- Checker commands: `lint` | `lock <round>` | `gates <round>` | `close <round>` | `audit-operator-layer`
+- Process log (append-only JSONL, one event per decided meeting): `docs/exec-plans/process-log.jsonl`
 
 ## Working on iOS code (Claude Code domain)
 

@@ -12,9 +12,9 @@ schema_version = 1
 "context_harness/operator/OPERATOR.md" = 120
 "context_harness/operator/FILE_INDEX.md" = 250
 
-# Line count warnings (advisory, not blocker).
+# Line count warnings (advisory, not blocker). Warn threshold < cap gives an advisory window.
 [line_warnings]
-"context_harness/operator/FILE_INDEX.md" = 250
+"context_harness/operator/FILE_INDEX.md" = 225
 
 # Required frontmatter keys on meeting files.
 meeting_required_frontmatter = [
@@ -66,9 +66,16 @@ decision_required_keywords = [
 ]
 
 # FILE_INDEX coverage.
+# Scan all top-level operator/* files (including non-MD governance files like lint_config.toml),
+# exempt meeting/proposal/retro/contract/lock/index subdirs, CHANGELOG, and FILE_INDEX itself.
 [file_index_coverage]
 target = "context_harness/operator/FILE_INDEX.md"
-required_scan_globs = ["context_harness/operator/*.md"]
+required_scan_globs = [
+  "context_harness/operator/*.md",
+  "context_harness/operator/*.toml",
+  "context_harness/operator/*.yaml",
+  "context_harness/operator/*.yml",
+]
 exempt = [
   "context_harness/operator/CHANGELOG.md",
   "context_harness/operator/FILE_INDEX.md",

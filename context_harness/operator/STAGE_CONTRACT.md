@@ -12,21 +12,27 @@ This document defines the stages of a round, who performs each, who cross-valida
 
 Every stage has exactly one **Performer** and one **Cross-Validator**. Self-approval forbidden.
 
-| # | Stage | Performer | Cross-Validator | Pattern | Artifact |
-|---|-------|-----------|----------------|---------|----------|
-| 1 | Overall Planning | Claude Code + Codex (co-propose) | Human | Serial (propose → approve) | `meetings/<round>_plan.md` |
-| 2 | Detailed Design | Codex | Claude Code | Serial | `contracts/<round>/spec.md` |
-| 3 | Convention / Linter Lock | Claude Code | Codex | Serial | `contracts/<round>/convention_version.txt`, `lint_config.txt` |
-| 4 | Eval Protocol Authoring | Codex | Claude Code | Serial | `contracts/<round>/eval_protocol.md` |
-| 5 | Acceptance Criteria | Codex | Claude Code | Serial | `contracts/<round>/acceptance.md` |
-| 6 | Round Lock Creation | Claude Code (runs checker) | Codex (reviews lock JSON) | Serial | `locks/<round>.lock` |
-| 7 | Coding 1st Pass | Claude Code | Codex (architecture + code review) | Parallel only with disjoint whitelists/worktrees | Commit(s) + `meetings/<round>_review1.md` |
-| 8 | Runtime Evidence Capture | Claude Code (following §4 eval protocol) | Codex (reviews report completeness) | Parallel across screens/scenarios | `reports/<round>/evidence/*` |
-| 9 | Evaluation Verdict | Codex | Claude Code (checks verdict is grounded in evidence) | Serial | `reports/<round>/verdict.md` |
-| 10 | Gate 2 Three-Evaluator | red_team_reviewer, hig_guardian, visual_qa (parallel fork) | Cross-agreement rule (Gate 3) | **Parallel** | `reports/<round>/gate2/*` |
-| 11 | Coding 2nd Pass (remediation) | Codex + Claude Code (co-decide) → Claude Code (implements) | Codex (re-reviews) | Serial | Commit(s) + `meetings/<round>_review2.md` |
-| 12 | Round Retro | Claude Code + Codex | Human | Serial | `round_retro/<round>.md` |
-| 13 | Regulation Update (if any) | Proposer operator | Other operator | Serial | Amendment meeting + CHANGELOG |
+The `stage_id` column is the canonical identifier used in meeting frontmatter, lock `stages_completed[]`, and `lint_config.toml`. Display names are human labels only — never cite them in frontmatter.
+
+| # | stage_id | Display | Performer | Cross-Validator | Pattern | Artifact |
+|---|----------|---------|-----------|----------------|---------|----------|
+| 1 | `overall_planning` | Overall Planning | Claude Code + Codex (co-propose) | Human | Serial | `meetings/<round>_plan.md` |
+| 2 | `detailed_design` | Detailed Design | Codex | Claude Code | Serial | `contracts/<round>/spec.md` |
+| 3 | `convention_lock` | Convention / Linter Lock | Claude Code | Codex | Serial | `contracts/<round>/convention_version.txt`, `lint_config.txt` |
+| 4 | `eval_protocol` | Eval Protocol Authoring | Codex | Claude Code | Serial | `contracts/<round>/eval_protocol.md` |
+| 5 | `acceptance` | Acceptance Criteria | Codex | Claude Code | Serial | `contracts/<round>/acceptance.md` |
+| 6 | `round_lock` | Round Lock Creation | Claude Code (runs checker) | Codex (reviews lock JSON) | Serial | `locks/<round>.lock` |
+| 7 | `coding_1st` | Coding 1st Pass | Claude Code | Codex (architecture + code review) | Parallel only with disjoint whitelists/worktrees | Commit(s) + `meetings/<round>_review1.md` |
+| 8 | `runtime_capture` | Runtime Evidence Capture | Claude Code (following §5 eval protocol) | Codex (reviews report completeness) | Parallel across screens/scenarios | `context_harness/reports/<round_id>/evidence/*` |
+| 9 | `evaluation_verdict` | Evaluation Verdict | Codex | Claude Code (checks verdict is grounded in evidence) | Serial | `context_harness/reports/<round_id>/verdict.md` |
+| 10 | `gate2` | Gate 2 Three-Evaluator | red_team_reviewer, hig_guardian, visual_qa (parallel fork) | Cross-agreement rule (Gate 3) | **Parallel** | `context_harness/reports/<round_id>/gate2/*` |
+| 11 | `coding_2nd` | Coding 2nd Pass (remediation) | Codex + Claude Code (co-decide) → Claude Code (implements) | Codex (re-reviews) | Serial | Commit(s) + `meetings/<round>_review2.md` |
+| 12 | `retro` | Round Retro | Claude Code + Codex | Human | Serial | `round_retro/<round>.md` |
+| 13 | `regulation_update` | Regulation Update (if any) | Proposer operator | Other operator | Serial | Amendment meeting + CHANGELOG |
+
+Additional non-round stage_ids used in meeting frontmatter:
+- `operator_amendment` — corrective edits to operator docs outside an active round
+- `factual_verification` — purely factual/status-check meetings (no normative decision)
 
 ### Stage precedence within a round
 
@@ -58,7 +64,7 @@ Default ownership determines who drafts without a meeting. Crossing zones requir
 - `operator/contracts/<round>/spec.md` and amendments
 - `operator/contracts/<round>/acceptance.md`
 - `operator/contracts/<round>/eval_protocol.md`
-- `reports/<round>/verdict.md`
+- `context_harness/reports/<round_id>/verdict.md`
 - `docs/design-docs/ios-architecture.md` (architecture-level edits)
 - `docs/product-specs/*` (acceptance criteria docs)
 - `AGENTS.md` invocation notes (persona section only; shared body requires meeting)
@@ -71,7 +77,7 @@ Default ownership determines who drafts without a meeting. Crossing zones requir
 - `operator/contracts/<round>/convention_version.txt`
 - `operator/contracts/<round>/lint_config.txt`
 - `context_harness/handoffs/<round>*.md` (implementation briefs)
-- `reports/<round>/evidence/*` (runtime capture outputs — evidence, not verdict)
+- `context_harness/reports/<round_id>/evidence/*` (runtime capture outputs — evidence, not verdict)
 - `.claude/CLAUDE.md` invocation notes (persona section only; shared body requires meeting)
 - `harness/*.py` (orchestration infrastructure)
 
@@ -80,7 +86,7 @@ Default ownership determines who drafts without a meeting. Crossing zones requir
 - `operator/OPERATOR.md`, `operator/REGULATION.md`, `operator/STAGE_CONTRACT.md`, `operator/MEETING_PROTOCOL.md`, `operator/PROCESS_AUDIT_CHECKLIST.md`
 - `operator/FILE_INDEX.md` (any addition must reference the file's existence)
 - `operator/CHANGELOG.md`
-- `operator/lint_config.yaml`
+- `operator/lint_config.toml`
 - Body of `AGENTS.md` and `.claude/CLAUDE.md` outside their persona-notes sections
 - `SKILLS.md` and `SECURITY.md`
 - `SESSION_RESUME.md` — live state snapshot (not meeting-gated per Codex R3), but contradictions caught by drift audit

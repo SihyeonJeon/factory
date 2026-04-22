@@ -23,7 +23,7 @@ Files I may author without a meeting (draft, then peer reviews):
 - `context_harness/operator/contracts/<round>/spec.md` and `spec.amendment.N.md`
 - `context_harness/operator/contracts/<round>/acceptance.md`
 - `context_harness/operator/contracts/<round>/eval_protocol.md`
-- `reports/<round>/verdict.md` (evaluation verdict — interpretation of evidence)
+- `context_harness/reports/<round_id>/verdict.md` (evaluation verdict — interpretation of evidence)
 - `docs/design-docs/ios-architecture.md` (architecture edits; Claude Code reviews)
 - `docs/product-specs/*`
 - This file's invocation/tooling notes section only

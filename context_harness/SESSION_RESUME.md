@@ -1,4 +1,4 @@
-# Factory Session Resume — 2026-04-19
+# Factory Session Resume — 2026-04-22
 
 **Single source of truth for resuming development.**
 
@@ -27,8 +27,9 @@
 - `docs/design-docs/multi-agent-architecture.md` marked **SUPERSEDED** (still readable for history; may not be cited to override v5).
 
 **Bootstrap meeting:** [`operator/meetings/2026-04-19_v5_kickoff.md`](operator/meetings/2026-04-19_v5_kickoff.md) — 3-round peer review, CONVERGED.
+**Drift fix (v5.1, 2026-04-22):** [`operator/meetings/2026-04-22_v5_bootstrap_drift.md`](operator/meetings/2026-04-22_v5_bootstrap_drift.md) — Codex stop-hook review caught 12 blockers + 3 advisories; all resolved as routine amendments (no v5 decisions reopened). Checker expanded with `close` subcommand, live hash checks, commit traceability, factual-evidence enforcement, operator-layer drift audit.
 
-**Checker:** `python3 harness/check_operator_round.py lint|gates <round>|audit-operator-layer|lock <round>`. At bootstrap: **0 blockers, 0 advisories, 14 passes.**
+**Checker:** `python3 harness/check_operator_round.py lint|gates <round>|audit-operator-layer|lock <round>|close <round>`. Post-drift-fix: **0 blockers, 1 advisory (metrics.jsonl empty), 17+ passes.**
 
 **Next round:** Deepsight redesign processing (8-screen prototype at `docs/design-docs/travel_deepsight/`). Sliced per `design-revision-workflow.md` Phase 3.
 
@@ -38,16 +39,16 @@
 
 | Item | Status |
 |---|---|
-| Date | 2026-04-19 |
+| Date | 2026-04-22 |
 | Branch | `master` |
 | App name | **Unfading** |
 | Last green | Sprint 51 (140/140 — Unit 130 + UI 10) |
 | Tests | 130 unit + 10 XCUITest = 140 total |
 | Integration worktree | `/Users/jeonsihyeon/factory/.worktrees/_integration` |
 | Supabase | 7 tables, RLS enabled, MCP connected |
-| Architecture version | **v5** (equal co-operators + contract/lock + Gate 5) |
+| Architecture version | **v5.1** (equal co-operators + contract/lock + Gate 5 + drift-fix enforcement) |
 | Runtime QA | XCUITest pipeline integrated — `harness/runtime_qa.py` |
-| Operator checker | `harness/check_operator_round.py` — lint passes 0/0/14 |
+| Operator checker | `harness/check_operator_round.py` (v5.1) — lint + audit + close; 0 blockers |
 
 ---
 

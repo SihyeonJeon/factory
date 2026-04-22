@@ -61,7 +61,7 @@ contract_hash: <sha of active spec.md, or "none">
 1. Open a planning meeting with the human (Claude Code + Codex co-propose).
 2. Create `operator/contracts/<round_id>/` with `spec.md`, `file_whitelist.txt`, `convention_version.txt`, `lint_config.txt`, `acceptance.md`, `eval_protocol.md` (Codex authors spec/eval; Claude Code authors whitelist/convention_version; mutual review).
 3. Run `harness/check_operator_round.py lock <round_id>` to compute hashes and create the lock file.
-4. Verify checker output says `ready`. Only then start stage execution.
+4. Require exit code 0 **and** zero blockers in the checker output before starting stage execution. Any blocker → stop and fix; advisories may be accepted with a recorded note in the planning meeting.
 
 ## How to close a round
 
@@ -69,7 +69,7 @@ contract_hash: <sha of active spec.md, or "none">
 2. Codex writes evaluation verdict in a separate review artifact.
 3. Gate 1-5 check (`harness/check_operator_round.py gates <round_id>`).
 4. If all pass: retro meeting (both operators). SKILLS update decision (§10 REGULATION). SESSION_RESUME update.
-5. Checker transitions lock `status: closed`.
+5. Run `harness/check_operator_round.py close <round_id>` — checker verifies all gates then sets lock `status: closed` + `closed_at`. Operators do NOT hand-edit the lock.
 
 ## Refusal cases
 

@@ -18,7 +18,7 @@
 - [ ] `harness/check_operator_round.py gates <round>` exits 0
 - [ ] `harness/check_operator_round.py audit-operator-layer` exits 0 (no role matrix contradictions, no stale pointers, no divergent stage names)
 - [ ] No legacy doc was cited in this round's meetings to override a v5 operator doc
-- [ ] Lock `status` ready to transition to `closed` (not `active`, `paused`, `escalated`, `aborted`)
+- [ ] Lock `status` is `active` (ready for transition to `closed`); not `paused`, `escalated`, or `aborted`
 - [ ] If any Gate 1-4 had a remediation: its remediation meeting exists and was reviewed
 
 ### Advisories (record in retro; do NOT block close)
@@ -71,7 +71,7 @@ Even if Gate 5 passes, the retro meeting must include:
 2. Check each box with evidence or a short note
 3. Attach checker output at the bottom
 4. Review meeting: both operators sign the retro (frontmatter `participants: [claude_code, codex]`)
-5. On all blockers green: lock transitions to `closed` via checker
+5. On all blockers green: run `harness/check_operator_round.py close <round_id>` — checker re-verifies gates and writes `status: closed` + `closed_at`
 
 ## Amendment
 
