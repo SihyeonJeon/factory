@@ -92,6 +92,16 @@ sqlite 방식(구 포맷)과 활동 기반 방식(신 포맷) 모두 `payloadId`
 - 잘못된 순서: `codex exec review -m model -C /path` → "unexpected argument '-C'" 에러
 - 일반 `codex exec <prompt>` 에서는 `-C`가 prompt 뒤에 와도 됨.
 
+### S-18: Codex CLI session resume for multi-round peer meetings (v5)
+Operator↔operator peer 회의는 **같은 codex 세션을 여러 턴에 걸쳐 이어가야** 문맥이 유지된다. 패턴:
+1. 첫 호출: `codex exec --sandbox read-only --skip-git-repo-check "<prompt>"` — 출력에서 `session id: <uuid>` 캡처.
+2. 후속 턴: `codex exec --sandbox read-only --skip-git-repo-check resume <uuid> "<prompt>"`.
+3. **플래그 순서 주의:** `--sandbox`, `--skip-git-repo-check` 등 옵션은 `resume` 서브커맨드 **앞**에 와야 함. 뒤에 놓으면 `error: unexpected argument '--sandbox'`.
+4. 각 회의마다 새 세션. 다른 회의를 같은 세션에 섞지 말 것 (cross-meeting 오염).
+5. 401 / idle timeout 발생 시: blackboard에 기록 → `/codex:setup` 재실행 → 필요하면 escalation ladder(REGULATION §6) 타기. 조용한 재시도 금지.
+
+**왜:** 2026-04-19 v5 kickoff meeting에서 rescue 스킬이 401/hang으로 막혔고, codex CLI 직접 호출 + resume으로 3-round peer review를 성공적으로 수렴했다. `codex:rescue`는 fork 실행 모델이라 세션 공유가 어려움 — 공동 운영자 모델에서는 **resume 기반 단일 세션**이 표준.
+
 ---
 
 ## S-17: 바이브 코딩 안티패턴 방지 규율

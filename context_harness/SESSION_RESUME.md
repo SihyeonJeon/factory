@@ -1,6 +1,36 @@
-# Factory Session Resume — 2026-04-14
+# Factory Session Resume — 2026-04-19
 
 **Single source of truth for resuming development.**
+
+---
+
+## 0. Harness v5 Bootstrap (2026-04-19)
+
+**Status:** ACTIVE. Replaces v4.
+
+**Read first this session:**
+1. Your loader: `.claude/CLAUDE.md` (Claude Code Operator) or `AGENTS.md` (Codex Operator)
+2. Shared persona: `context_harness/operator/OPERATOR.md`
+3. Index: `context_harness/operator/FILE_INDEX.md`
+4. Precedence + locks + Gate 5: `context_harness/operator/REGULATION.md`
+5. Stage matrix + ownership: `context_harness/operator/STAGE_CONTRACT.md`
+
+**Key changes from v4:**
+- Claude Code + Codex are EQUAL co-operators. No principal/secondary.
+- Every stage has 1 Performer + 1 Cross-Validator. See STAGE_CONTRACT §1.
+- Round contracts + locks enforce immutability. Base files never edited post-lock.
+- Meetings require Challenge Section (objection/risk/rejected alt/uncertainty). Fake dissent forbidden.
+- Gate 5 added (process integrity). Gate 5 blockers: lock mapping, contract mutation, missing challenge section, FILE_INDEX coverage, lint hash, operator-layer drift.
+- Gemini = advisory only (tier-3, technical disputes). Never routine.
+- Real-use eval split: rubric=Codex, capture=Claude Code (evidence only, no verdict), review=Codex.
+- Precedence ladder: active round contract+lock > REGULATION > STAGE_CONTRACT > OPERATOR > domain workflows > legacy docs.
+- `docs/design-docs/multi-agent-architecture.md` marked **SUPERSEDED** (still readable for history; may not be cited to override v5).
+
+**Bootstrap meeting:** [`operator/meetings/2026-04-19_v5_kickoff.md`](operator/meetings/2026-04-19_v5_kickoff.md) — 3-round peer review, CONVERGED.
+
+**Checker:** `python3 harness/check_operator_round.py lint|gates <round>|audit-operator-layer|lock <round>`. At bootstrap: **0 blockers, 0 advisories, 14 passes.**
+
+**Next round:** Deepsight redesign processing (8-screen prototype at `docs/design-docs/travel_deepsight/`). Sliced per `design-revision-workflow.md` Phase 3.
 
 ---
 
@@ -8,15 +38,16 @@
 
 | Item | Status |
 |---|---|
-| Date | 2026-04-14 |
+| Date | 2026-04-19 |
 | Branch | `master` |
 | App name | **Unfading** |
 | Last green | Sprint 51 (140/140 — Unit 130 + UI 10) |
 | Tests | 130 unit + 10 XCUITest = 140 total |
 | Integration worktree | `/Users/jeonsihyeon/factory/.worktrees/_integration` |
 | Supabase | 7 tables, RLS enabled, MCP connected |
-| Architecture version | **v4** (role restructure + process quality) |
+| Architecture version | **v5** (equal co-operators + contract/lock + Gate 5) |
 | Runtime QA | XCUITest pipeline integrated — `harness/runtime_qa.py` |
+| Operator checker | `harness/check_operator_round.py` — lint passes 0/0/14 |
 
 ---
 

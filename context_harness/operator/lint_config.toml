@@ -1,0 +1,114 @@
+# Operator-doc lint config — Harness v5.0
+# Scope: operator/**/*.md, AGENTS.md, .claude/CLAUDE.md (round-0 scope per Codex R3).
+# Swift/Python linting intentionally out of scope for round 0.
+# Runner: harness/check_operator_round.py
+
+schema_version = 1
+
+# Line count caps. Exceeding = Gate 5 blocker.
+[line_caps]
+"AGENTS.md" = 80
+".claude/CLAUDE.md" = 80
+"context_harness/operator/OPERATOR.md" = 120
+"context_harness/operator/FILE_INDEX.md" = 250
+
+# Line count warnings (advisory, not blocker).
+[line_warnings]
+"context_harness/operator/FILE_INDEX.md" = 250
+
+# Required frontmatter keys on meeting files.
+meeting_required_frontmatter = [
+  "round",
+  "stage",
+  "status",
+  "participants",
+  "decision_id",
+  "contract_hash",
+  "created_at",
+]
+
+# Allowed values for meeting frontmatter fields.
+[meeting_frontmatter_allowed]
+status = ["draft", "in_review", "decided", "escalated", "abandoned"]
+stage = [
+  "overall_planning",
+  "detailed_design",
+  "convention_lock",
+  "eval_protocol",
+  "acceptance",
+  "round_lock",
+  "coding_1st",
+  "runtime_capture",
+  "evaluation_verdict",
+  "gate2",
+  "coding_2nd",
+  "retro",
+  "regulation_update",
+  "operator_amendment",
+  "factual_verification",
+]
+
+[meeting_required_sections]
+any = ["## Context"]
+decided = ["## Decision", "## Challenge Section"]
+
+# Challenge Section content rule.
+[challenge_section]
+factual_stages = ["factual_verification"]
+factual_required_phrase = "No normative decision; verified facts only"
+decision_required_keywords = [
+  "Objection",
+  "Risk",
+  "Rejected alternative",
+  "Uncertainty",
+  "rejected",
+  "dissent",
+]
+
+# FILE_INDEX coverage.
+[file_index_coverage]
+target = "context_harness/operator/FILE_INDEX.md"
+required_scan_globs = ["context_harness/operator/*.md"]
+exempt = [
+  "context_harness/operator/CHANGELOG.md",
+  "context_harness/operator/FILE_INDEX.md",
+  "context_harness/operator/meetings/**",
+  "context_harness/operator/proposals/**",
+  "context_harness/operator/round_retro/**",
+  "context_harness/operator/contracts/**",
+  "context_harness/operator/locks/**",
+  "context_harness/operator/indexes/**",
+]
+
+# Loader pointer rule.
+[[loader_pointers]]
+file = ".claude/CLAUDE.md"
+must_reference = "context_harness/operator/OPERATOR.md"
+
+[[loader_pointers]]
+file = "AGENTS.md"
+must_reference = "context_harness/operator/OPERATOR.md"
+
+# Legacy docs marked SUPERSEDED.
+superseded_docs = ["docs/design-docs/multi-agent-architecture.md"]
+
+# Forbidden language in Claude Code's evidence capture reports.
+evidence_forbidden_language = [
+  "PASS",
+  "BLOCKER",
+  "ADVISORY",
+  "verdict",
+  "regression",
+  "acceptable",
+]
+
+# Precedence order (1 = highest).
+precedence = [
+  "active_round_contract_lock",
+  "context_harness/operator/REGULATION.md",
+  "context_harness/operator/STAGE_CONTRACT.md",
+  "context_harness/operator/OPERATOR.md",
+  "docs/design-docs/design-revision-workflow.md",
+  "docs/design-docs/multi-agent-architecture.md",
+  "context_harness/00_system_rules.md",
+]

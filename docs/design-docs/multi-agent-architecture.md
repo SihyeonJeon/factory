@@ -1,8 +1,16 @@
 # Multi-Agent Architecture — v4 (Role Restructure + Process Quality)
 
-**Date:** 2026-04-14
-**Status:** Active
-**Reference:** Claude Code source leak analysis (2026-03-31)
+**Status:** SUPERSEDED by Harness v5.0 on 2026-04-19
+**Successor:** `context_harness/operator/` (OPERATOR.md, REGULATION.md, STAGE_CONTRACT.md, MEETING_PROTOCOL.md, PROCESS_AUDIT_CHECKLIST.md, FILE_INDEX.md, CHANGELOG.md)
+**Precedence:** This file is legacy. An operator may not cite any section below to override a v5 operator doc (see `operator/REGULATION.md §1`).
+**Historical purpose:** Retained for rationale and migration reference. Do not treat as active doctrine.
+
+> **v5 summary:** Claude Code and Codex are now EQUAL co-operators (no principal/secondary). Every stage has one Performer + one Cross-Validator. Round contracts + locks enforce immutability. Meetings require Challenge Sections. Gate 5 adds process-integrity blockers. Gemini is advisory only.
+
+---
+
+**Original date:** 2026-04-14
+**Original reference:** Claude Code source leak analysis (2026-03-31)
 
 ---
 
