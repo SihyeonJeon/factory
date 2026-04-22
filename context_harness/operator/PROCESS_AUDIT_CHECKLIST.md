@@ -1,6 +1,6 @@
 # PROCESS_AUDIT_CHECKLIST — Harness v5
 
-**Version:** v5.4
+**Version:** v5.5
 **Use:** Fill this out at Gate 5 before closing a round. Also run `harness/check_operator_round.py gates <round>` and attach its output.
 
 ---

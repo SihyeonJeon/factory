@@ -4,6 +4,54 @@ Append-only. Every operator-doc amendment must add an entry with date, summary, 
 
 ---
 
+## v5.5 — Amend Flow Safety Fixes (2026-04-22)
+
+**Trigger:** Stop-hook after `cfd9890` flagged "new amend flow cannot safely ship". Codex R7 critique enumerated 5 REAL issues + 3 theoretical. All REAL issues addressed; theoretical deferred per trust-model scope.
+
+**Evidence of empirical gap in v5.4:** my v5.4 smoke test only exercised `.md` amendments (happy path + invalid target). `.txt` amendment path was never exercised — and it turns out v5.4 `.txt` amendments ALWAYS rolled back because `supersedes=[]` failed `validate_amendments`'s missing-metadata check. Classic untested-path regression.
+
+### Fixed (5 REAL)
+
+1. **`.txt` amendment default `supersedes=[target]`** — was empty list, which `validate_amendments` treated as missing metadata and rejected. Made `.txt` amendments functionally broken. Empirically verified fixed on `test_amend_r2` (new smoke).
+
+2. **Path containment on `amendment_file` argument** — previously could accept `../other_round/foo`. Now enforces `Path(amendment_file).name == amendment_file` (basename-only) AND post-join resolve check (`ap.resolve().parent == round_dir.resolve()`). Empirically verified: `../round_deepsight_r1/spec.md` rejected with "must be a basename".
+
+3. **Meeting path canonicalization** — v5.4 compared raw strings, so `context_harness/operator/meetings/foo.md` in frontmatter vs `foo.md` as CLI arg rejected even though they resolved to the same file. v5.5 canonicalizes both to `context_harness/operator/meetings/<name>.md` and compares/stores canonical form. Empirically verified: bare filename CLI arg now resolves correctly.
+
+4. **Pre-write validation** — v5.4 wrote lock then validated then rolled back on failure (disk flicker, stranded-lock risk on crash). v5.5 simulates the new lock in memory, runs `validate_amendments` before any disk write. Lock only written on validation success. Also added exception handling on `_append_lock_event` with rollback. Empirically verified: invalid meeting caught pre-write with message "amend refused; lock unchanged" (no rollback message).
+
+5. **Closed-round deliverable revalidation** — v5.4's `commit_traceability` skip for closed rounds left round deliverables (gate_evidence.json's embedded path+sha references) mutable without detection. v5.5: after verifying `gate_evidence.json` sha itself matches lock, ALSO re-runs `load_gate_evidence()` to verify all embedded path+sha references. Any deliverable mutation post-close → blocker. Empirically verified on `round_deepsight_r1`: appended a line to `deepsight_tokens.md` → blocker `gate_evidence.gate2.reports[0] sha mismatch`.
+
+### Deferred (3 THEORETICAL, fault-only)
+
+1. Crash between lock write and event append (fault-only; longer-term: temp files + fsync)
+2. Event append disk-full/permission error (narrow catch added in v5.5; full solution same as #1)
+3. Greedy `.txt` regex (already rejected by `REQUIRED_CONTRACT_FILES` check; v5.5 tightened regex to `[A-Za-z0-9_]+` for base)
+
+### Lesson recorded from round_deepsight_r1 retrospective
+
+**Do NOT point `gate_evidence` at live-snapshot files.** Round 1 used `SESSION_RESUME.md` as `gate1.log` (baseline reuse for contract-only round) and `process-log.jsonl` as `gate4.metrics_source`. Both files are legitimately mutable outside any specific round. After close, every subsequent update to them trips the v5.5 deliverable revalidation check when `gates round_deepsight_r1` runs. Operational workaround: accept the drift as an audit trail showing "round 1 was closed at this point in time; live snapshots have moved on." For round 2+: use immutable logs (e.g., a dedicated `xcode_test_round2.log` copy) for `gate1.log`, and consider freezing a metrics snapshot at close.
+
+### Empirical test summary
+
+- `test_amend_r2` smoke:
+  - `.txt` amendment (`file_whitelist.amendment.1.txt`) registered + `amended` event with post-sha ✓
+  - path escape (`../round_deepsight_r1/spec.md`) rejected ✓
+  - bare filename meeting (`2026-04-22_test_amend_r2_txt.md`) canonical match proceeds to content validation ✓
+  - invalid name (`notabase.amendment.1.txt`) rejected by stricter regex ✓
+- `round_deepsight_r1` post-close deliverable tamper:
+  - append line to `deepsight_tokens.md` → `gate_evidence.gate2.reports[0] sha mismatch` ✓
+  - restore → integrity verified ✓
+
+Test artifacts cleaned up after verification.
+
+Checker post-v5.5 state:
+- lint: 7 passes / 0 blockers
+- audit-operator-layer: 10 passes / 1 advisory (allowlisted future path)
+- `gates round_deepsight_r1`: depends on whether SESSION_RESUME/process-log have moved since round close; blockers are accepted drift, not bugs
+
+---
+
 ## v5.4 — Real-Use P0 Fixes (2026-04-22)
 
 **Evidence:** `context_harness/reports/round_deepsight_r1/evidence/checker_friction.md`

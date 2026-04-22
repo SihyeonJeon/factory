@@ -1,0 +1,1099 @@
+OpenAI Codex v0.121.0 (research preview)
+--------
+workdir: /Users/jeonsihyeon/factory
+model: gpt-5.4
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: none
+reasoning summaries: none
+session id: 019db43d-746e-73b3-b33c-5dda3770df91
+--------
+user
+Codex — stop-hook flagged "new amend flow cannot safely ship" after cfd9890. User pattern is: verify claims by real-use evidence rather than iterate forever on theory.
+
+Read the actual committed code at `harness/check_operator_round.py` `cmd_amend` (look for the function — recent addition). Also look at `check_commit_traceability` and `validate_amendments` since they interact.
+
+Please enumerate specific bugs or safety issues. For each:
+
+1. File:line or function reference
+2. Concrete reproduction or scenario that breaks
+3. Severity per honest-agent model: REAL (can be triggered by operator sequence) vs THEORETICAL (only under adversarial action)
+4. Fix recommendation (short)
+
+Focus areas:
+
+a. **Rollback atomicity** — I claimed "atomic failure, no stranded event" because I write lock, validate, restore on failure BEFORE appending event. But:
+   - Does `validate_amendments(new_lock, report)` work when it scans disk files? The amendment file IS on disk, the lock is newly-written. Is the validation reading what I expect?
+   - If Python crashes AFTER lock write but BEFORE validation, we're stranded with a new lock text and no event. `gates` would then fail with sha mismatch.
+   - If validation passes but the `_append_lock_event` call fails (disk full, permission), we have post-write lock without an `amended` event. Same stranding issue.
+
+b. **Meeting path resolution for amend** — I accept two forms:
+   - `context_harness/...` absolute-from-repo path
+   - bare filename resolved to `operator/meetings/<name>`
+   Is this dual mode a footgun? Could two different filenames resolve to the same physical meeting, letting one amendment claim another's authorization?
+
+c. **Meeting content validation in amend** — I check only existence in `cmd_amend`. The deeper validation (meeting round matches, status=decided, stage amendment-eligible, `## Amendment Detail` contains filename) only runs in `validate_amendments` post-write. If that check fails, we roll back, but the error reporting points at the post-write step. Should these checks be pre-write to avoid rollback cost?
+
+d. **.txt amendment target inference** — I use `r"(.+)\.amendment\.\d+\.txt$"` regex. Does this correctly handle edge cases like `weird.name.amendment.9.amendment.1.txt`? (regex is greedy, so it would match target=`weird.name.amendment.9`). That target isn't in REQUIRED_CONTRACT_FILES so the next check would reject, but it's fragile.
+
+e. **`cmd_amend` precondition ordering** — I do:
+   1. Load lock
+   2. Status=active check
+   3. gate_evidence_sha256/closed_at guards
+   4. tamper-evident check
+   5. amendment file existence
+   6. duplicate guard
+   7. target inference + validation
+   8. meeting existence
+   9. sha compute + write new lock
+   10. validate_amendments
+   11. on failure: rollback
+   12. on success: event append
+
+   Is there a step order issue? Specifically, should I run validate_amendments BEFORE writing the lock, just to simulate? Currently I write-validate-rollback which means disk state flickers.
+
+f. **Commit traceability skip for closed rounds** — I added `if lock.get("status") != "closed": check_commit_traceability(lock, report)`. This means a closed round's `gates` no longer validates commit traceability. What if an operator post-close makes commits that touch the closed round's own files? The `gate_evidence_sha256` check catches `gate_evidence.json` specifically. What about post-close edits to `spec.md` or `file_whitelist.txt`? Those ARE still caught by the "Contract file MUTATED after lock" hash check (that runs unconditionally). So contract files are still protected. But whitelist changes through actual git commits on unrelated paths are no longer traced. Is that acceptable, or does it create a new governance gap?
+
+g. **Other issues you see** — anything I missed.
+
+Scope: review only. Do not modify code. Return structured:
+
+## REAL issues (reproducible sequence)
+## THEORETICAL issues (adversarial only)
+## Recommendation: ship as-is / ship with patches / block
+
+Be concrete. Avoid purely-theoretical concerns unless they compound into a real scenario.
+codex
+I’ll read the committed `cmd_amend`, `validate_amendments`, and commit-traceability paths directly, then separate reproducible operator-flow bugs from adversarial-only concerns. No file edits.
+exec
+/bin/zsh -lc "nl -ba harness/check_operator_round.py | sed -n '600,1040p'" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+   600	
+   601	
+   602	def check_commit_traceability(lock: dict, report: CheckReport) -> None:
+   603	    """Item 11 (v5.1) + v5.2 fixes: commits AND uncommitted changes since lock base_commit
+   604	    must touch only whitelisted files. Uses proper glob matching."""
+   605	    base = lock.get("base_commit")
+   606	    round_dir = CONTRACTS_DIR / lock["round_id"]
+   607	    wl_path = round_dir / "file_whitelist.txt"
+   608	    if not base:
+   609	        report.advisory("lock has no base_commit — commit traceability cannot be verified (legacy lock)")
+   610	        return
+   611	    if not wl_path.exists():
+   612	        report.blocker("file_whitelist.txt missing — cannot verify commit traceability")
+   613	        return
+   614	    # Effective whitelist = base + amendments (additive/subtractive via + / -)
+   615	    whitelist: set[str] = set()
+   616	    for ln in wl_path.read_text().splitlines():
+   617	        ln = ln.strip()
+   618	        if ln and not ln.startswith("#"):
+   619	            whitelist.add(ln)
+   620	    for amend in lock.get("amendments", []):
+   621	        fname = amend.get("file", "")
+   622	        apath = round_dir / fname
+   623	        if apath.exists() and fname.startswith("file_whitelist.amendment."):
+   624	            for ln in apath.read_text().splitlines():
+   625	                ln = ln.strip()
+   626	                if ln.startswith("+"):
+   627	                    whitelist.add(ln[1:].strip())
+   628	                elif ln.startswith("-"):
+   629	                    whitelist.discard(ln[1:].strip())
+   630	    # Collect touched files: committed + uncommitted + staged
+   631	    touched: set[str] = set()
+   632	    try:
+   633	        committed = subprocess.check_output(
+   634	            ["git", "diff", "--name-only", f"{base}..HEAD"], cwd=REPO, text=True
+   635	        ).strip().splitlines()
+   636	        touched.update(f for f in committed if f)
+   637	    except Exception as e:
+   638	        report.blocker(f"git diff base..HEAD failed: {e}")
+   639	        return
+   640	    try:
+   641	        # Uncommitted (working tree + staged). `-uall` expands untracked directories to individual files
+   642	        # so we don't miss files hidden inside a bare directory entry.
+   643	        # NOTE: do NOT .strip() the whole output — porcelain lines begin with a leading space
+   644	        # when only the worktree (not index) is modified, and strip() eats it, corrupting parsing.
+   645	        dirty = subprocess.check_output(
+   646	            ["git", "status", "--porcelain", "-uall"], cwd=REPO, text=True
+   647	        ).splitlines()
+   648	        for ln in dirty:
+   649	            # porcelain format: XY <filename>[ -> <renamed>]
+   650	            if len(ln) < 4:
+   651	                continue
+   652	            fn = ln[3:].split(" -> ")[-1].strip()
+   653	            # Strip surrounding quotes added by git for paths containing spaces or non-ASCII
+   654	            if len(fn) >= 2 and fn[0] == '"' and fn[-1] == '"':
+   655	                fn = fn[1:-1]
+   656	            # Skip bare directory entries (trailing slash) — -uall should prevent these, but be defensive
+   657	            if fn.endswith("/"):
+   658	                continue
+   659	            if fn:
+   660	                touched.add(fn)
+   661	    except Exception as e:
+   662	        report.advisory(f"git status --porcelain unavailable: {e}")
+   663	    out_of_scope = [f for f in sorted(touched) if not _matches_any(f, whitelist)]
+   664	    if out_of_scope:
+   665	        for f in out_of_scope:
+   666	            report.blocker(f"commit/working-tree touches out-of-whitelist path: {f}")
+   667	    else:
+   668	        report.ok(f"commit traceability ok ({len(touched)} file(s) vs whitelist)")
+   669	
+   670	
+   671	def check_live_pointer_hashes(lock: dict, report: CheckReport) -> None:
+   672	    """Item 5 (v5.1) + v5.2: pointer files must be `<path>\\n<sha>` format. Malformed = BLOCKER."""
+   673	    round_dir = CONTRACTS_DIR / lock["round_id"]
+   674	    for name in ("lint_config.txt", "convention_version.txt"):
+   675	        p = round_dir / name
+   676	        entry = read_pointer_file(p)
+   677	        if entry is None:
+   678	            report.blocker(f"{name} malformed (expected `<path>\\n<sha256:...>` 2-line format)")
+   679	            continue
+   680	        target_rel, expected = entry
+   681	        if not expected.startswith("sha256:"):
+   682	            report.blocker(f"{name} second line must start with `sha256:` — got `{expected[:20]}...`")
+   683	            continue
+   684	        target = REPO / target_rel
+   685	        if not target.exists():
+   686	            report.blocker(f"{name} points at missing target: {target_rel}")
+   687	            continue
+   688	        actual = sha256_file(target)
+   689	        if actual != expected:
+   690	            report.blocker(f"{name} target {target_rel} live SHA differs from locked SHA")
+   691	        else:
+   692	            report.ok(f"{name} live hash matches locked target")
+   693	
+   694	
+   695	def validate_amendments(lock: dict, report: CheckReport) -> None:
+   696	    """v5.3: disk-scan for unregistered amendments + strict lock metadata + .txt support.
+   697	    Every amendment:
+   698	      - lock entry requires: file, target, sha256 (sha256:...), supersedes, meeting
+   699	      - file exists on disk
+   700	      - live sha matches lock entry
+   701	      - .md: frontmatter target/supersedes/meeting match lock entry
+   702	      - referenced meeting: same round, status=decided, stage in amendment-eligible set,
+   703	        body contains `## Amendment Detail` and amendment filename
+   704	      - no amendment file on disk may be absent from lock.amendments[]
+   705	    """
+   706	    round_dir = CONTRACTS_DIR / lock["round_id"]
+   707	    base_files = set(REQUIRED_CONTRACT_FILES)
+   708	    lock_round = lock.get("round_id")
+   709	    # Build set of amendment files actually on disk
+   710	    on_disk = {p.name for p in round_dir.glob("*.amendment.*") if p.is_file()}
+   711	    in_lock: set[str] = set()
+   712	    for amend in lock.get("amendments", []):
+   713	        fname = amend.get("file")
+   714	        if not fname:
+   715	            report.blocker(f"amendment entry missing `file`: {amend}")
+   716	            continue
+   717	        in_lock.add(fname)
+   718	        apath = round_dir / fname
+   719	        # All required lock metadata (v5.3: applies to both .md and .txt)
+   720	        missing_meta = [k for k in ("target", "sha256", "supersedes", "meeting") if not amend.get(k)]
+   721	        if missing_meta:
+   722	            report.blocker(f"amendment {fname} lock entry missing: {missing_meta}")
+   723	            continue
+   724	        expected = amend["sha256"]
+   725	        if not isinstance(expected, str) or not expected.startswith("sha256:"):
+   726	            report.blocker(f"amendment {fname} lock sha256 format invalid: {expected}")
+   727	            continue
+   728	        if not apath.exists():
+   729	            report.blocker(f"amendment file missing on disk: {fname}")
+   730	            continue
+   731	        if sha256_file(apath) != expected:
+   732	            report.blocker(f"amendment {fname} live sha differs from lock")
+   733	            continue
+   734	        if amend["target"] not in base_files:
+   735	            report.blocker(f"amendment {fname} target `{amend['target']}` not a base contract file")
+   736	            continue
+   737	        # .md: frontmatter must match lock entry
+   738	        if fname.endswith(".md"):
+   739	            text = apath.read_text()
+   740	            fm_match = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
+   741	            if not fm_match:
+   742	                report.blocker(f"amendment {fname} missing frontmatter")
+   743	                continue
+   744	            fm = parse_simple_frontmatter(fm_match.group(1))
+   745	            for k in ("target", "supersedes", "meeting"):
+   746	                if k not in fm:
+   747	                    report.blocker(f"amendment {fname} frontmatter missing `{k}`")
+   748	                    continue
+   749	            # target must match lock
+   750	            if fm.get("target") != amend["target"]:
+   751	                report.blocker(f"amendment {fname} frontmatter target mismatch: lock={amend['target']} file={fm.get('target')}")
+   752	            if fm.get("meeting") != amend["meeting"]:
+   753	                report.blocker(f"amendment {fname} frontmatter meeting mismatch with lock")
+   754	        # .txt: body format sanity
+   755	        elif fname.endswith(".txt"):
+   756	            body = apath.read_text().splitlines()
+   757	            bad = [ln for ln in body if ln.strip() and not ln.strip().startswith("#") and not ln.strip().startswith(("+", "-"))]
+   758	            if bad:
+   759	                report.blocker(f"amendment {fname} has non-directive lines (expected `+path`/`-path`): {bad[:3]}")
+   760	        # Meeting validation (shared between .md and .txt)
+   761	        meeting_rel = amend["meeting"]
+   762	        mp = REPO / meeting_rel if meeting_rel.startswith("context_harness/") else OPERATOR_DIR / "meetings" / Path(meeting_rel).name
+   763	        if not mp.exists():
+   764	            report.blocker(f"amendment {fname} meeting not found: {meeting_rel}")
+   765	            continue
+   766	        mtext = mp.read_text()
+   767	        fm_match = re.match(r"^---\n(.*?)\n---\n", mtext, re.DOTALL)
+   768	        if not fm_match:
+   769	            report.blocker(f"amendment {fname} meeting {mp.name} has no frontmatter")
+   770	            continue
+   771	        mfm = parse_simple_frontmatter(fm_match.group(1))
+   772	        if mfm.get("status") != "decided":
+   773	            report.blocker(f"amendment {fname} references non-decided meeting: {mp.name}")
+   774	        if mfm.get("round") != lock_round:
+   775	            report.blocker(f"amendment {fname} meeting round mismatch: lock={lock_round} meeting={mfm.get('round')}")
+   776	        if mfm.get("stage") not in ("operator_amendment", "detailed_design", "eval_protocol", "acceptance", "convention_lock"):
+   777	            report.blocker(f"amendment {fname} meeting stage not amendment-eligible: {mfm.get('stage')}")
+   778	        if "## Amendment Detail" not in mtext:
+   779	            report.blocker(f"amendment {fname} meeting lacks `## Amendment Detail` section")
+   780	        elif fname not in mtext:
+   781	            report.blocker(f"amendment {fname} meeting body does not reference amendment filename")
+   782	        report.ok(f"amendment valid: {fname}")
+   783	    # v5.3: every on-disk amendment must be registered in lock
+   784	    unregistered = on_disk - in_lock
+   785	    for name in sorted(unregistered):
+   786	        report.blocker(f"amendment file on disk but not in lock.amendments[]: {name}")
+   787	
+   788	
+   789	def validate_stages_completed(lock: dict, cfg: dict, report: CheckReport) -> None:
+   790	    """v5.2: lock.stages_completed[] entries must be valid stage_ids from lint config."""
+   791	    allowed = set(cfg.get("meeting_frontmatter_allowed", {}).get("stage", []))
+   792	    for sid in lock.get("stages_completed", []):
+   793	        if sid not in allowed:
+   794	            report.blocker(f"lock.stages_completed contains invalid stage_id: {sid}")
+   795	    if lock.get("stages_completed"):
+   796	        report.ok(f"stages_completed structurally valid ({len(lock['stages_completed'])} entries)")
+   797	
+   798	
+   799	GATE_EVIDENCE_REQUIRED_FIELDS = {
+   800	    "gate1": ("status", "command", "exit_code", "test_count", "log"),
+   801	    "gate2": ("status", "reports"),
+   802	    "gate3": ("status",),  # at minimum; either cross_agreement_note OR summary required (checked below)
+   803	    "gate4": ("status", "metrics_source", "remediation_cycles", "blocker_recurrence"),
+   804	}
+   805	
+   806	
+   807	def _validate_path_hash_field(field: dict, round_id: str, gate: str, report: CheckReport, field_name: str) -> bool:
+   808	    """Validate a {path, sha256} dict: referenced path exists and sha matches."""
+   809	    if not isinstance(field, dict):
+   810	        report.blocker(f"gate_evidence.{gate}.{field_name} must be object with path+sha256")
+   811	        return False
+   812	    rel = field.get("path")
+   813	    sha = field.get("sha256")
+   814	    if not rel or not isinstance(sha, str) or not sha.startswith("sha256:"):
+   815	        report.blocker(f"gate_evidence.{gate}.{field_name} missing path or sha256")
+   816	        return False
+   817	    p = REPO / rel
+   818	    if not p.exists():
+   819	        report.blocker(f"gate_evidence.{gate}.{field_name} path missing: {rel}")
+   820	        return False
+   821	    if sha256_file(p) != sha:
+   822	        report.blocker(f"gate_evidence.{gate}.{field_name} sha mismatch for {rel}")
+   823	        return False
+   824	    return True
+   825	
+   826	
+   827	def load_gate_evidence(round_id: str, report: CheckReport) -> dict | None:
+   828	    """v5.3: strict per-gate schema. Files referenced must exist and match sha."""
+   829	    p = CONTRACTS_DIR / round_id / "gate_evidence.json"
+   830	    if not p.exists():
+   831	        report.blocker(f"gate_evidence.json missing at {p}")
+   832	        return None
+   833	    try:
+   834	        ev = json.loads(p.read_text())
+   835	    except json.JSONDecodeError as e:
+   836	        report.blocker(f"gate_evidence.json invalid JSON: {e}")
+   837	        return None
+   838	    for gate, required in GATE_EVIDENCE_REQUIRED_FIELDS.items():
+   839	        g_ev = ev.get(gate)
+   840	        if not isinstance(g_ev, dict):
+   841	            report.blocker(f"gate_evidence.{gate} not present as object")
+   842	            continue
+   843	        if g_ev.get("status") != "pass":
+   844	            report.blocker(f"gate_evidence.{gate}.status != pass (got {g_ev.get('status')})")
+   845	        for k in required:
+   846	            if k not in g_ev:
+   847	                report.blocker(f"gate_evidence.{gate} missing field: {k}")
+   848	    # gate1: log path+sha
+   849	    if "gate1" in ev and isinstance(ev["gate1"], dict) and "log" in ev["gate1"]:
+   850	        _validate_path_hash_field(ev["gate1"]["log"], round_id, "gate1", report, "log")
+   851	    # gate2: reports array (3 expected)
+   852	    g2 = ev.get("gate2")
+   853	    if isinstance(g2, dict):
+   854	        reports = g2.get("reports")
+   855	        if not isinstance(reports, list) or len(reports) < 3:
+   856	            report.blocker("gate_evidence.gate2.reports must be array of 3 objects (path+sha)")
+   857	        else:
+   858	            for i, r in enumerate(reports):
+   859	                _validate_path_hash_field(r, round_id, "gate2", report, f"reports[{i}]")
+   860	    # gate3: at least cross_agreement_note OR summary path+sha
+   861	    g3 = ev.get("gate3")
+   862	    if isinstance(g3, dict):
+   863	        if not (g3.get("cross_agreement_note") or isinstance(g3.get("summary"), dict)):
+   864	            report.blocker("gate_evidence.gate3 requires `cross_agreement_note` (string) or `summary` (path+sha)")
+   865	        elif isinstance(g3.get("summary"), dict):
+   866	            _validate_path_hash_field(g3["summary"], round_id, "gate3", report, "summary")
+   867	    # gate4: metrics_source path+sha
+   868	    g4 = ev.get("gate4")
+   869	    if isinstance(g4, dict) and isinstance(g4.get("metrics_source"), dict):
+   870	        _validate_path_hash_field(g4["metrics_source"], round_id, "gate4", report, "metrics_source")
+   871	    if not any(m.startswith("gate_evidence.") for m in report.blockers):
+   872	        report.ok("gate_evidence schema valid (all 4 gates pass + referenced artifacts verified)")
+   873	    return ev
+   874	
+   875	
+   876	def check_lock_tamper_evidence(round_id: str, lock_path: Path, report: CheckReport) -> None:
+   877	    """v5.3: current lock sha must match the last authorized event in the event log."""
+   878	    last = _last_lock_event(round_id)
+   879	    if last is None:
+   880	        report.blocker(f"no lock event log found for {round_id} (expected at {_events_path(round_id)})")
+   881	        return
+   882	    current_sha = sha256_file(lock_path)
+   883	    expected = last.get("lock_sha256")
+   884	    if current_sha != expected:
+   885	        report.blocker(f"lock sha mismatch with last event: current={current_sha[:20]}... expected={(expected or '')[:20]}... (tampering suspected)")
+   886	    else:
+   887	        report.ok(f"lock tamper-evident check ok (last action={last.get('action')})")
+   888	
+   889	
+   890	def cmd_gates(round_id: str) -> CheckReport:
+   891	    cfg = load_lint_config()
+   892	    report = CheckReport()
+   893	    lock_path = LOCKS_DIR / f"{round_id}.lock"
+   894	    if not lock_path.exists():
+   895	        report.blocker(f"lock missing: {lock_path}")
+   896	        return report
+   897	    try:
+   898	        lock = json.loads(lock_path.read_text())
+   899	    except json.JSONDecodeError as e:
+   900	        report.blocker(f"lock JSON invalid: {e}")
+   901	        return report
+   902	    round_dir = CONTRACTS_DIR / round_id
+   903	    # v5.3: tamper-evident lock check
+   904	    check_lock_tamper_evidence(round_id, lock_path, report)
+   905	    # Contract immutability
+   906	    for fname, expected in lock.get("hashes", {}).items():
+   907	        p = round_dir / fname
+   908	        if not p.exists():
+   909	            report.blocker(f"contract file missing (hashed at lock): {fname}")
+   910	            continue
+   911	        actual = sha256_file(p)
+   912	        if actual != expected:
+   913	            report.blocker(f"contract file MUTATED after lock: {fname} expected {expected[:20]} got {actual[:20]}")
+   914	        else:
+   915	            report.ok(f"contract file immutable: {fname}")
+   916	    # Live pointer hashes (lint/convention)
+   917	    check_live_pointer_hashes(lock, report)
+   918	    # v5.3: amendment disk-scan + metadata validation
+   919	    validate_amendments(lock, report)
+   920	    # v5.3: stages_completed = informational; ID membership only
+   921	    validate_stages_completed(lock, cfg, report)
+   922	    # Commit traceability (v5.2+: includes uncommitted).
+   923	    # v5.4: skip for closed rounds — their whitelist is historical; new work belongs to a new round.
+   924	    if lock.get("status") != "closed":
+   925	        check_commit_traceability(lock, report)
+   926	    else:
+   927	        report.ok("commit traceability skipped (closed round; historical whitelist)")
+   928	    # v5.4: post-close gate_evidence revalidation (Codex blocker #4 fix)
+   929	    if lock.get("status") == "closed" and lock.get("gate_evidence_sha256"):
+   930	        ev_path = CONTRACTS_DIR / round_id / "gate_evidence.json"
+   931	        if not ev_path.exists():
+   932	            report.blocker("gate_evidence.json missing after close")
+   933	        else:
+   934	            actual = sha256_file(ev_path)
+   935	            if actual != lock["gate_evidence_sha256"]:
+   936	                report.blocker(f"gate_evidence.json tampered after close: locked={lock['gate_evidence_sha256'][:20]}... live={actual[:20]}...")
+   937	            else:
+   938	                report.ok("gate_evidence.json post-close integrity verified")
+   939	    # Lint + audit
+   940	    lint_report = cmd_lint()
+   941	    audit_report = cmd_audit_operator_layer()
+   942	    report.merge(lint_report)
+   943	    report.merge(audit_report)
+   944	    return report
+   945	
+   946	
+   947	def cmd_amend(round_id: str, amendment_file: str, meeting_path: str) -> CheckReport:
+   948	    """v5.4: evented amendment flow. Validates amendment, updates lock.amendments[], writes lock,
+   949	    then appends `amended` event with post-amend lock sha. Rollback on validation failure.
+   950	
+   951	    Codex R5 blocker #1 fix + R7 adjustments:
+   952	    - .txt amendments infer target from filename (<base>.amendment.N.txt → <base>.txt)
+   953	    - Reject if gate_evidence_sha256 already set or closed_at non-null (close-state corruption guard)
+   954	    - On post-write validate_amendments() failure, restore old lock text BEFORE appending event
+   955	    """
+   956	    report = CheckReport()
+   957	    lock_path = LOCKS_DIR / f"{round_id}.lock"
+   958	    if not lock_path.exists():
+   959	        report.blocker(f"lock missing: {lock_path}")
+   960	        return report
+   961	    try:
+   962	        old_lock_text = lock_path.read_text()
+   963	        lock = json.loads(old_lock_text)
+   964	    except json.JSONDecodeError as e:
+   965	        report.blocker(f"lock JSON invalid: {e}")
+   966	        return report
+   967	    # Status guards
+   968	    if lock.get("status") != "active":
+   969	        report.blocker(f"amend refused: lock status is '{lock.get('status')}', must be 'active'")
+   970	        return report
+   971	    # Codex R7 Q4: close-state corruption guard
+   972	    if lock.get("gate_evidence_sha256") is not None:
+   973	        report.blocker("amend refused: lock.gate_evidence_sha256 already set (close-state corruption)")
+   974	        return report
+   975	    if lock.get("closed_at") is not None:
+   976	        report.blocker("amend refused: lock.closed_at already set (close-state corruption)")
+   977	        return report
+   978	    # Tamper-evident precheck
+   979	    check_lock_tamper_evidence(round_id, lock_path, report)
+   980	    if report.blockers:
+   981	        return report
+   982	    # Amendment file presence
+   983	    round_dir = CONTRACTS_DIR / round_id
+   984	    ap = round_dir / amendment_file
+   985	    if not ap.exists():
+   986	        report.blocker(f"amendment file missing: {round_dir.name}/{amendment_file}")
+   987	        return report
+   988	    # Duplicate guard
+   989	    if any(a.get("file") == amendment_file for a in lock.get("amendments", [])):
+   990	        report.blocker(f"amendment {amendment_file} already registered in lock")
+   991	        return report
+   992	    # Determine target + supersedes
+   993	    target: str | None = None
+   994	    supersedes: list = []
+   995	    if amendment_file.endswith(".md"):
+   996	        text = ap.read_text()
+   997	        fm_match = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
+   998	        if not fm_match:
+   999	            report.blocker(f"amendment {amendment_file} missing frontmatter")
+  1000	            return report
+  1001	        fm = parse_simple_frontmatter(fm_match.group(1))
+  1002	        target = fm.get("target")
+  1003	        supersedes = fm.get("supersedes", [])
+  1004	        if not isinstance(supersedes, list):
+  1005	            supersedes = [supersedes]
+  1006	        fm_meeting = fm.get("meeting")
+  1007	        if not target:
+  1008	            report.blocker(f"amendment {amendment_file} frontmatter missing target")
+  1009	            return report
+  1010	        if fm_meeting and fm_meeting != meeting_path:
+  1011	            report.blocker(f"amendment {amendment_file} frontmatter meeting='{fm_meeting}' but CLI arg meeting='{meeting_path}'")
+  1012	            return report
+  1013	    elif amendment_file.endswith(".txt"):
+  1014	        # Infer target: <base>.amendment.N.txt → <base>.txt
+  1015	        m = re.match(r"(.+)\.amendment\.\d+\.txt$", amendment_file)
+  1016	        if not m:
+  1017	            report.blocker(f"amendment {amendment_file} filename must match `<base>.amendment.N.txt`")
+  1018	            return report
+  1019	        target = m.group(1) + ".txt"
+  1020	    else:
+  1021	        report.blocker(f"amendment {amendment_file} extension must be .md or .txt")
+  1022	        return report
+  1023	    # Target must be a base contract file (Codex R7 Q1: validate exactly)
+  1024	    if target not in REQUIRED_CONTRACT_FILES:
+  1025	        report.blocker(f"amendment target '{target}' not in REQUIRED_CONTRACT_FILES")
+  1026	        return report
+  1027	    # Meeting existence (same resolution logic as validate_amendments)
+  1028	    mp = REPO / meeting_path if meeting_path.startswith("context_harness/") else OPERATOR_DIR / "meetings" / Path(meeting_path).name
+  1029	    if not mp.exists():
+  1030	        report.blocker(f"meeting not found: {meeting_path}")
+  1031	        return report
+  1032	    # Compute amendment sha
+  1033	    amendment_sha = sha256_file(ap)
+  1034	    # Build entry
+  1035	    entry = {
+  1036	        "file": amendment_file,
+  1037	        "target": target,
+  1038	        "sha256": amendment_sha,
+  1039	        "supersedes": supersedes,
+  1040	        "meeting": meeting_path,
+
+exec
+/bin/zsh -lc "nl -ba harness/check_operator_round.py | sed -n '1,240p' && nl -ba harness/check_operator_round.py | sed -n '1040,1130p'" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+     1	#!/usr/bin/env python3
+     2	"""
+     3	Operator-round checker for Harness v5.
+     4	
+     5	Commands:
+     6	  lint                              Lint operator docs against lint_config.toml
+     7	  audit-operator-layer              Operator-layer drift audit (REG §7)
+     8	  lock   <round_id>                 Create lock from contract files + append `created` event
+     9	  amend  <round_id> <file> <meeting> v5.4: validate + register amendment, append `amended` event
+    10	                                    with post-amend lock sha. Rollback on validation failure.
+    11	  gates  <round_id>                 Gate 5 checks. Post-close also revalidates gate_evidence.json sha.
+    12	  close  <round_id>                 Run gates + gate_evidence.json schema; transition to `closed`
+    13	
+    14	Exits 0 on pass, non-zero on any blocker. Pure stdlib (Python 3.11+ tomllib).
+    15	"""
+    16	
+    17	from __future__ import annotations
+    18	
+    19	import fnmatch
+    20	import hashlib
+    21	import json
+    22	import os
+    23	import re
+    24	import subprocess
+    25	import sys
+    26	from dataclasses import dataclass, field
+    27	from datetime import datetime, timezone
+    28	from pathlib import Path, PurePosixPath
+    29	
+    30	try:
+    31	    import tomllib  # Python 3.11+
+    32	except ImportError:  # pragma: no cover
+    33	    try:
+    34	        import tomli as tomllib  # type: ignore
+    35	    except ImportError:
+    36	        sys.stderr.write("tomllib (Python 3.11+) or tomli package required.\n")
+    37	        sys.exit(2)
+    38	
+    39	
+    40	REPO = Path(__file__).resolve().parent.parent
+    41	OPERATOR_DIR = REPO / "context_harness" / "operator"
+    42	LINT_CONFIG = OPERATOR_DIR / "lint_config.toml"
+    43	LOCKS_DIR = OPERATOR_DIR / "locks"
+    44	CONTRACTS_DIR = OPERATOR_DIR / "contracts"
+    45	FILE_INDEX = OPERATOR_DIR / "FILE_INDEX.md"
+    46	STAGE_CONTRACT_DOC = OPERATOR_DIR / "STAGE_CONTRACT.md"
+    47	REGULATION_DOC = OPERATOR_DIR / "REGULATION.md"
+    48	OPERATOR_DOC = OPERATOR_DIR / "OPERATOR.md"
+    49	MEETING_PROTOCOL_DOC = OPERATOR_DIR / "MEETING_PROTOCOL.md"
+    50	SESSION_RESUME = REPO / "context_harness" / "SESSION_RESUME.md"
+    51	PROCESS_LOG = REPO / "docs" / "exec-plans" / "process-log.jsonl"
+    52	
+    53	# Normative decision stages — factual meetings may not use these.
+    54	NORMATIVE_STAGES = {
+    55	    "overall_planning",
+    56	    "detailed_design",
+    57	    "convention_lock",
+    58	    "eval_protocol",
+    59	    "acceptance",
+    60	    "round_lock",
+    61	    "coding_1st",
+    62	    "evaluation_verdict",
+    63	    "coding_2nd",
+    64	    "retro",
+    65	    "regulation_update",
+    66	    "operator_amendment",
+    67	}
+    68	
+    69	FACTUAL_EVIDENCE_PATTERN = re.compile(
+    70	    r"Evidence\s*:\s*\n((?:\s*[-*]\s+.+\n?)+)",
+    71	    re.MULTILINE,
+    72	)
+    73	EVIDENCE_REF_PATTERN = re.compile(r"[-*]\s+.*?(?:`[^`]+`|\b\S+/\S+|\.(?:md|py|txt|yaml|yml|toml|json|swift|sh)\b|sha256:)")
+    74	
+    75	
+    76	@dataclass
+    77	class CheckReport:
+    78	    blockers: list[str] = field(default_factory=list)
+    79	    advisories: list[str] = field(default_factory=list)
+    80	    passes: list[str] = field(default_factory=list)
+    81	
+    82	    def blocker(self, msg: str) -> None:
+    83	        self.blockers.append(msg)
+    84	
+    85	    def advisory(self, msg: str) -> None:
+    86	        self.advisories.append(msg)
+    87	
+    88	    def ok(self, msg: str) -> None:
+    89	        self.passes.append(msg)
+    90	
+    91	    def merge(self, other: "CheckReport") -> None:
+    92	        self.blockers.extend(other.blockers)
+    93	        self.advisories.extend(other.advisories)
+    94	        self.passes.extend(other.passes)
+    95	
+    96	    def exit_code(self) -> int:
+    97	        return 1 if self.blockers else 0
+    98	
+    99	    def render(self) -> str:
+   100	        lines = []
+   101	        for msg in self.passes:
+   102	            lines.append(f"  ok       {msg}")
+   103	        for msg in self.advisories:
+   104	            lines.append(f"  advisory {msg}")
+   105	        for msg in self.blockers:
+   106	            lines.append(f"  BLOCKER  {msg}")
+   107	        lines.append("")
+   108	        lines.append(f"blockers:   {len(self.blockers)}")
+   109	        lines.append(f"advisories: {len(self.advisories)}")
+   110	        lines.append(f"passes:     {len(self.passes)}")
+   111	        return "\n".join(lines)
+   112	
+   113	
+   114	def sha256_file(p: Path) -> str:
+   115	    h = hashlib.sha256()
+   116	    h.update(p.read_bytes())
+   117	    return "sha256:" + h.hexdigest()
+   118	
+   119	
+   120	def load_lint_config() -> dict:
+   121	    if not LINT_CONFIG.exists():
+   122	        raise SystemExit(f"lint config missing: {LINT_CONFIG}")
+   123	    return tomllib.loads(LINT_CONFIG.read_text())
+   124	
+   125	
+   126	def parse_simple_frontmatter(block: str) -> dict:
+   127	    """Minimal YAML-subset parser for meeting frontmatter.
+   128	    Supports: `key: value`, `key: [a, b, c]`. No multiline or anchors.
+   129	    """
+   130	    out: dict = {}
+   131	    for raw in block.splitlines():
+   132	        line = raw.rstrip()
+   133	        if not line or line.lstrip().startswith("#"):
+   134	            continue
+   135	        if ":" not in line:
+   136	            continue
+   137	        key, _, value = line.partition(":")
+   138	        key = key.strip()
+   139	        value = value.strip()
+   140	        if value.startswith(("\"", "'")) and value.endswith(value[0]):
+   141	            value = value[1:-1]
+   142	        if value.startswith("[") and value.endswith("]"):
+   143	            inner = value[1:-1].strip()
+   144	            items = [x.strip().strip("\"'") for x in inner.split(",")] if inner else []
+   145	            out[key] = items
+   146	        else:
+   147	            out[key] = value
+   148	    return out
+   149	
+   150	
+   151	def line_count(p: Path) -> int:
+   152	    if not p.exists():
+   153	        return 0
+   154	    return len(p.read_text().splitlines())
+   155	
+   156	
+   157	# -----------------------------------------------------------------
+   158	# lint
+   159	# -----------------------------------------------------------------
+   160	
+   161	
+   162	def check_line_caps(cfg: dict, report: CheckReport) -> None:
+   163	    caps = cfg.get("line_caps", {})
+   164	    warnings = cfg.get("line_warnings", {})
+   165	    for rel, cap in caps.items():
+   166	        p = REPO / rel
+   167	        if not p.exists():
+   168	            report.blocker(f"line-cap target missing: {rel}")
+   169	            continue
+   170	        n = line_count(p)
+   171	        if n > cap:
+   172	            report.blocker(f"line cap exceeded: {rel} = {n} lines (cap {cap})")
+   173	        else:
+   174	            report.ok(f"line cap: {rel} = {n}/{cap}")
+   175	    for rel, warn in warnings.items():
+   176	        p = REPO / rel
+   177	        if p.exists():
+   178	            n = line_count(p)
+   179	            if n >= warn:
+   180	                report.advisory(f"line warning: {rel} = {n} (warn ≥ {warn})")
+   181	
+   182	
+   183	def check_loader_pointers(cfg: dict, report: CheckReport) -> None:
+   184	    for entry in cfg.get("loader_pointers", []):
+   185	        f = REPO / entry["file"]
+   186	        must = entry["must_reference"]
+   187	        if not f.exists():
+   188	            report.blocker(f"loader missing: {entry['file']}")
+   189	            continue
+   190	        if must not in f.read_text():
+   191	            report.blocker(f"loader {entry['file']} does not reference {must}")
+   192	        else:
+   193	            report.ok(f"loader references target: {entry['file']} → {must}")
+   194	
+   195	
+   196	def _match_glob_exempt(rel_path: str, exempt_globs: list[str]) -> bool:
+   197	    for g in exempt_globs:
+   198	        if g.endswith("/**"):
+   199	            if rel_path.startswith(g[:-3]):
+   200	                return True
+   201	        elif rel_path == g:
+   202	            return True
+   203	    return False
+   204	
+   205	
+   206	def check_file_index_coverage(cfg: dict, report: CheckReport) -> None:
+   207	    coverage = cfg.get("file_index_coverage", {})
+   208	    if not coverage:
+   209	        return
+   210	    target = REPO / coverage["target"]
+   211	    if not target.exists():
+   212	        report.blocker(f"FILE_INDEX target missing: {coverage['target']}")
+   213	        return
+   214	    index_text = target.read_text()
+   215	    exempt_globs = coverage.get("exempt", [])
+   216	    candidates: list[Path] = []
+   217	    for pattern in coverage.get("required_scan_globs", []):
+   218	        candidates.extend(REPO.glob(pattern))
+   219	
+   220	    missing: list[str] = []
+   221	    for p in sorted(set(candidates)):
+   222	        rel = p.relative_to(REPO).as_posix()
+   223	        if _match_glob_exempt(rel, exempt_globs):
+   224	            continue
+   225	        if rel in index_text or p.name in index_text:
+   226	            continue
+   227	        missing.append(rel)
+   228	    if missing:
+   229	        for m in missing:
+   230	            report.blocker(f"FILE_INDEX missing entry for: {m}")
+   231	    else:
+   232	        report.ok("FILE_INDEX coverage complete")
+   233	
+   234	
+   235	CODEX_SESSION_ID_RE = re.compile(r"^[A-Za-z0-9._:-]{8,}$")
+   236	
+   237	
+   238	def check_meeting_frontmatter(cfg: dict, report: CheckReport) -> None:
+   239	    meetings_dir = OPERATOR_DIR / "meetings"
+   240	    if not meetings_dir.exists():
+  1040	        "meeting": meeting_path,
+  1041	    }
+  1042	    # Write new lock
+  1043	    new_lock = dict(lock)
+  1044	    new_lock["amendments"] = list(lock.get("amendments", [])) + [entry]
+  1045	    lock_path.write_text(json.dumps(new_lock, indent=2) + "\n")
+  1046	    # Post-write validation (rollback on failure — Codex R7 Q2)
+  1047	    validate_report = CheckReport()
+  1048	    validate_amendments(new_lock, validate_report)
+  1049	    if validate_report.blockers:
+  1050	        lock_path.write_text(old_lock_text)  # rollback BEFORE appending event
+  1051	        for b in validate_report.blockers:
+  1052	            report.blocker(f"post-write validation failed: {b}")
+  1053	        report.blocker(f"amend rolled back; lock restored to pre-amend state")
+  1054	        return report
+  1055	    # Append amended event with post-amend lock sha
+  1056	    post_sha = sha256_file(lock_path)
+  1057	    _append_lock_event(round_id, "amended", post_sha, lock.get("base_commit"), amendment_file)
+  1058	    report.ok(f"amendment registered: {amendment_file} → target={target}")
+  1059	    report.ok(f"event logged: amended (lock sha advanced to {post_sha[:20]}...)")
+  1060	    return report
+  1061	
+  1062	
+  1063	def cmd_close(round_id: str) -> CheckReport:
+  1064	    """v5.3: close requires Gate 5 + gate_evidence.json (strict schema); records post-close lock sha."""
+  1065	    report = cmd_gates(round_id)
+  1066	    # v5.3: strict gate_evidence.json validation
+  1067	    load_gate_evidence(round_id, report)
+  1068	    if report.blockers:
+  1069	        report.blocker(f"close refused: {len(report.blockers)} blocker(s) present")
+  1070	        return report
+  1071	    lock_path = LOCKS_DIR / f"{round_id}.lock"
+  1072	    lock = json.loads(lock_path.read_text())
+  1073	    if lock.get("status") != "active":
+  1074	        report.blocker(f"close refused: lock status is '{lock.get('status')}', must be 'active'")
+  1075	        return report
+  1076	    # v5.3: record gate_evidence sha in lock before writing close
+  1077	    ev_path = CONTRACTS_DIR / round_id / "gate_evidence.json"
+  1078	    lock["gate_evidence_sha256"] = sha256_file(ev_path)
+  1079	    lock["status"] = "closed"
+  1080	    lock["closed_at"] = datetime.now(timezone.utc).isoformat()
+  1081	    lock_path.write_text(json.dumps(lock, indent=2) + "\n")
+  1082	    # v5.3: post-close event records the NEW sha (Codex 6th must-fix)
+  1083	    post_sha = sha256_file(lock_path)
+  1084	    _append_lock_event(round_id, "closed", post_sha, lock.get("base_commit"))
+  1085	    report.ok(f"lock {round_id} transitioned to closed at {lock['closed_at']}")
+  1086	    report.ok(f"gate_evidence_sha256 recorded: {lock['gate_evidence_sha256'][:20]}...")
+  1087	    return report
+  1088	
+  1089	
+  1090	# -----------------------------------------------------------------
+  1091	# main
+  1092	# -----------------------------------------------------------------
+  1093	
+  1094	
+  1095	def main(argv: list[str]) -> int:
+  1096	    if len(argv) < 2:
+  1097	        print(__doc__)
+  1098	        return 2
+  1099	    cmd = argv[1]
+  1100	    if cmd == "lint":
+  1101	        report = cmd_lint()
+  1102	    elif cmd == "audit-operator-layer":
+  1103	        report = cmd_audit_operator_layer()
+  1104	    elif cmd == "lock" and len(argv) >= 3:
+  1105	        report = cmd_lock(argv[2])
+  1106	    elif cmd == "amend" and len(argv) >= 5:
+  1107	        report = cmd_amend(argv[2], argv[3], argv[4])
+  1108	    elif cmd == "gates" and len(argv) >= 3:
+  1109	        report = cmd_gates(argv[2])
+  1110	    elif cmd == "close" and len(argv) >= 3:
+  1111	        report = cmd_close(argv[2])
+  1112	    else:
+  1113	        print(__doc__)
+  1114	        return 2
+  1115	    print(report.render())
+  1116	    return report.exit_code()
+  1117	
+  1118	
+  1119	if __name__ == "__main__":
+  1120	    sys.exit(main(sys.argv))
+
+exec
+/bin/zsh -lc 'git rev-parse --short HEAD && git status --short && rg -n "def cmd_amend|def validate_amendments|def check_commit_traceability|def check_lock_tamper_evidence|def cmd_gates|def cmd_close|_append_lock_event|_events_path|gate_evidence_sha256|schema_version" harness/check_operator_round.py' in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+cfd9890
+487:def _events_path(round_id: str) -> Path:
+491:def _append_lock_event(round_id: str, action: str, lock_sha: str, base_commit: str | None, amendment_file: str | None = None) -> None:
+499:    _events_path(round_id).open("a").write(json.dumps(ev) + "\n")
+503:    p = _events_path(round_id)
+551:        "schema_version": 2,  # bumped in v5.3
+562:        "gate_evidence_sha256": None,
+568:    _append_lock_event(round_id, "created", lock_sha, base_commit, None)
+570:    report.ok(f"lock event logged: {_events_path(round_id).name}")
+602:def check_commit_traceability(lock: dict, report: CheckReport) -> None:
+695:def validate_amendments(lock: dict, report: CheckReport) -> None:
+876:def check_lock_tamper_evidence(round_id: str, lock_path: Path, report: CheckReport) -> None:
+880:        report.blocker(f"no lock event log found for {round_id} (expected at {_events_path(round_id)})")
+890:def cmd_gates(round_id: str) -> CheckReport:
+929:    if lock.get("status") == "closed" and lock.get("gate_evidence_sha256"):
+935:            if actual != lock["gate_evidence_sha256"]:
+936:                report.blocker(f"gate_evidence.json tampered after close: locked={lock['gate_evidence_sha256'][:20]}... live={actual[:20]}...")
+947:def cmd_amend(round_id: str, amendment_file: str, meeting_path: str) -> CheckReport:
+953:    - Reject if gate_evidence_sha256 already set or closed_at non-null (close-state corruption guard)
+972:    if lock.get("gate_evidence_sha256") is not None:
+973:        report.blocker("amend refused: lock.gate_evidence_sha256 already set (close-state corruption)")
+1057:    _append_lock_event(round_id, "amended", post_sha, lock.get("base_commit"), amendment_file)
+1063:def cmd_close(round_id: str) -> CheckReport:
+1078:    lock["gate_evidence_sha256"] = sha256_file(ev_path)
+1084:    _append_lock_event(round_id, "closed", post_sha, lock.get("base_commit"))
+1086:    report.ok(f"gate_evidence_sha256 recorded: {lock['gate_evidence_sha256'][:20]}...")
+
+exec
+/bin/zsh -lc "nl -ba harness/check_operator_round.py | sed -n '947,1060p'" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+   947	def cmd_amend(round_id: str, amendment_file: str, meeting_path: str) -> CheckReport:
+   948	    """v5.4: evented amendment flow. Validates amendment, updates lock.amendments[], writes lock,
+   949	    then appends `amended` event with post-amend lock sha. Rollback on validation failure.
+   950	
+   951	    Codex R5 blocker #1 fix + R7 adjustments:
+   952	    - .txt amendments infer target from filename (<base>.amendment.N.txt → <base>.txt)
+   953	    - Reject if gate_evidence_sha256 already set or closed_at non-null (close-state corruption guard)
+   954	    - On post-write validate_amendments() failure, restore old lock text BEFORE appending event
+   955	    """
+   956	    report = CheckReport()
+   957	    lock_path = LOCKS_DIR / f"{round_id}.lock"
+   958	    if not lock_path.exists():
+   959	        report.blocker(f"lock missing: {lock_path}")
+   960	        return report
+   961	    try:
+   962	        old_lock_text = lock_path.read_text()
+   963	        lock = json.loads(old_lock_text)
+   964	    except json.JSONDecodeError as e:
+   965	        report.blocker(f"lock JSON invalid: {e}")
+   966	        return report
+   967	    # Status guards
+   968	    if lock.get("status") != "active":
+   969	        report.blocker(f"amend refused: lock status is '{lock.get('status')}', must be 'active'")
+   970	        return report
+   971	    # Codex R7 Q4: close-state corruption guard
+   972	    if lock.get("gate_evidence_sha256") is not None:
+   973	        report.blocker("amend refused: lock.gate_evidence_sha256 already set (close-state corruption)")
+   974	        return report
+   975	    if lock.get("closed_at") is not None:
+   976	        report.blocker("amend refused: lock.closed_at already set (close-state corruption)")
+   977	        return report
+   978	    # Tamper-evident precheck
+   979	    check_lock_tamper_evidence(round_id, lock_path, report)
+   980	    if report.blockers:
+   981	        return report
+   982	    # Amendment file presence
+   983	    round_dir = CONTRACTS_DIR / round_id
+   984	    ap = round_dir / amendment_file
+   985	    if not ap.exists():
+   986	        report.blocker(f"amendment file missing: {round_dir.name}/{amendment_file}")
+   987	        return report
+   988	    # Duplicate guard
+   989	    if any(a.get("file") == amendment_file for a in lock.get("amendments", [])):
+   990	        report.blocker(f"amendment {amendment_file} already registered in lock")
+   991	        return report
+   992	    # Determine target + supersedes
+   993	    target: str | None = None
+   994	    supersedes: list = []
+   995	    if amendment_file.endswith(".md"):
+   996	        text = ap.read_text()
+   997	        fm_match = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
+   998	        if not fm_match:
+   999	            report.blocker(f"amendment {amendment_file} missing frontmatter")
+  1000	            return report
+  1001	        fm = parse_simple_frontmatter(fm_match.group(1))
+  1002	        target = fm.get("target")
+  1003	        supersedes = fm.get("supersedes", [])
+  1004	        if not isinstance(supersedes, list):
+  1005	            supersedes = [supersedes]
+  1006	        fm_meeting = fm.get("meeting")
+  1007	        if not target:
+  1008	            report.blocker(f"amendment {amendment_file} frontmatter missing target")
+  1009	            return report
+  1010	        if fm_meeting and fm_meeting != meeting_path:
+  1011	            report.blocker(f"amendment {amendment_file} frontmatter meeting='{fm_meeting}' but CLI arg meeting='{meeting_path}'")
+  1012	            return report
+  1013	    elif amendment_file.endswith(".txt"):
+  1014	        # Infer target: <base>.amendment.N.txt → <base>.txt
+  1015	        m = re.match(r"(.+)\.amendment\.\d+\.txt$", amendment_file)
+  1016	        if not m:
+  1017	            report.blocker(f"amendment {amendment_file} filename must match `<base>.amendment.N.txt`")
+  1018	            return report
+  1019	        target = m.group(1) + ".txt"
+  1020	    else:
+  1021	        report.blocker(f"amendment {amendment_file} extension must be .md or .txt")
+  1022	        return report
+  1023	    # Target must be a base contract file (Codex R7 Q1: validate exactly)
+  1024	    if target not in REQUIRED_CONTRACT_FILES:
+  1025	        report.blocker(f"amendment target '{target}' not in REQUIRED_CONTRACT_FILES")
+  1026	        return report
+  1027	    # Meeting existence (same resolution logic as validate_amendments)
+  1028	    mp = REPO / meeting_path if meeting_path.startswith("context_harness/") else OPERATOR_DIR / "meetings" / Path(meeting_path).name
+  1029	    if not mp.exists():
+  1030	        report.blocker(f"meeting not found: {meeting_path}")
+  1031	        return report
+  1032	    # Compute amendment sha
+  1033	    amendment_sha = sha256_file(ap)
+  1034	    # Build entry
+  1035	    entry = {
+  1036	        "file": amendment_file,
+  1037	        "target": target,
+  1038	        "sha256": amendment_sha,
+  1039	        "supersedes": supersedes,
+  1040	        "meeting": meeting_path,
+  1041	    }
+  1042	    # Write new lock
+  1043	    new_lock = dict(lock)
+  1044	    new_lock["amendments"] = list(lock.get("amendments", [])) + [entry]
+  1045	    lock_path.write_text(json.dumps(new_lock, indent=2) + "\n")
+  1046	    # Post-write validation (rollback on failure — Codex R7 Q2)
+  1047	    validate_report = CheckReport()
+  1048	    validate_amendments(new_lock, validate_report)
+  1049	    if validate_report.blockers:
+  1050	        lock_path.write_text(old_lock_text)  # rollback BEFORE appending event
+  1051	        for b in validate_report.blockers:
+  1052	            report.blocker(f"post-write validation failed: {b}")
+  1053	        report.blocker(f"amend rolled back; lock restored to pre-amend state")
+  1054	        return report
+  1055	    # Append amended event with post-amend lock sha
+  1056	    post_sha = sha256_file(lock_path)
+  1057	    _append_lock_event(round_id, "amended", post_sha, lock.get("base_commit"), amendment_file)
+  1058	    report.ok(f"amendment registered: {amendment_file} → target={target}")
+  1059	    report.ok(f"event logged: amended (lock sha advanced to {post_sha[:20]}...)")
+  1060	    return report
+
+codex
+## REAL issues (reproducible sequence)
+
+1. **`.txt` amendments roll back because `supersedes` is empty**
+   - File/function: `cmd_amend()` [harness/check_operator_round.py:993-1040]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:993), `validate_amendments()` [harness/check_operator_round.py:719-723]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:719)
+   - Repro: create `file_whitelist.amendment.1.txt`, run `amend <round> file_whitelist.amendment.1.txt <meeting>`. `cmd_amend` infers `target`, but leaves `supersedes = []`. Post-write `validate_amendments` treats empty `supersedes` as missing metadata and rolls back.
+   - Severity: REAL.
+   - Fix: for `.txt` amendments, set `supersedes = [target]` by default, or add a required fourth CLI arg. Defaulting to `[target]` is fine for whitelist amendments.
+
+2. **`amendment_file` is not constrained to a basename inside the round contract dir**
+   - File/function: `cmd_amend()` [harness/check_operator_round.py:982-987]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:982)
+   - Repro: pass `../other_round/file_whitelist.amendment.1.txt` or a nested path. `ap = round_dir / amendment_file` can resolve outside the intended round dir if the path exists. The command says amendment file must exist in `contracts/<round_id>/`, but code does not enforce containment.
+   - Severity: REAL.
+   - Fix: reject if `Path(amendment_file).name != amendment_file`, or resolve and require `ap.resolve().parent == round_dir.resolve()`.
+
+3. **Meeting path equivalence can false-reject legitimate `.md` amendments**
+   - File/function: `cmd_amend()` [harness/check_operator_round.py:1006-1012]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:1006), meeting resolution [harness/check_operator_round.py:1027-1031]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:1027)
+   - Repro: amendment frontmatter says `meeting: context_harness/operator/meetings/foo.md`, operator invokes `amend <round> spec.amendment.1.md foo.md`. Both resolve to the same file, but raw string compare rejects.
+   - Severity: REAL flow friction, not a governance bypass.
+   - Fix: canonicalize meeting path once to repo-relative `context_harness/operator/meetings/<name>.md`, compare/store the canonical form.
+
+4. **Detailed amendment meeting validation happens only after lock write**
+   - File/function: `cmd_amend()` [harness/check_operator_round.py:1042-1054]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:1042), `validate_amendments()` [harness/check_operator_round.py:760-781]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:760)
+   - Repro: use a meeting that exists but lacks `## Amendment Detail` or has wrong round/status. `cmd_amend` writes the new lock, then validation fails and rollback restores old lock.
+   - Severity: REAL disk-state flicker; usually recovered, but unnecessary.
+   - Fix: construct `new_lock` in memory and run `validate_amendments(new_lock, report)` before writing. It already reads the amendment file from disk and uses the passed lock object, so this should work.
+
+5. **Closed-round gates skip commit traceability, so closed round outputs can mutate unnoticed**
+   - File/function: `cmd_gates()` [harness/check_operator_round.py:922-938]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:922)
+   - Repro: after a round is closed, edit `docs/design-docs/deepsight_tokens.md` or another round output that is not a base contract file and not `gate_evidence.json`; run `gates <round>`. Contract hashes still match, gate evidence hash still matches, commit traceability is skipped, so gates can exit 0.
+   - Severity: REAL if closed-round deliverables are expected to remain protected.
+   - Fix: for closed rounds, skip broad commit traceability but validate a closed artifact manifest. Minimal: add `closed_artifacts` or require `gate_evidence.json` to include output artifact paths+sha and have `gates` re-run `load_gate_evidence()` or a post-close artifact integrity check.
+
+## THEORETICAL issues (adversarial/fault only)
+
+1. **Crash after lock write but before rollback/event strands the lock**
+   - File/function: `cmd_amend()` [harness/check_operator_round.py:1045-1057]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:1045)
+   - Scenario: process dies after `lock_path.write_text(...)` and before validation rollback or event append. Next `gates` fails SHA mismatch.
+   - Severity: THEORETICAL under normal operation; real only on crash/disk failure.
+   - Fix: pre-validate before write. Then only write lock once after validation; append event immediately after. That reduces the window.
+
+2. **Event append failure after successful lock write strands the lock**
+   - File/function: `cmd_amend()` [harness/check_operator_round.py:1055-1057]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:1055), `_append_lock_event()` [harness/check_operator_round.py:489-499]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:489)
+   - Scenario: disk full/permission error during event append after lock SHA changed.
+   - Severity: THEORETICAL/fault-only.
+   - Fix: catch event append exceptions and restore `old_lock_text`; longer-term use temp files/fsync.
+
+3. **Greedy `.txt` regex is fragile but currently rejected by target validation**
+   - File/function: [harness/check_operator_round.py:1013-1025]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:1013)
+   - Scenario: `weird.name.amendment.9.amendment.1.txt` infers `weird.name.amendment.9.txt`, then target validation rejects.
+   - Severity: THEORETICAL; no bypass.
+   - Fix: optional: use a stricter target pattern from `REQUIRED_CONTRACT_FILES`, e.g. split around `.amendment.` and compare inferred target.
+
+## Recommendation: block
+
+Do not ship cfd9890 as-is. The `.txt` amendment path, which is the most likely real use for whitelist expansion, currently rolls back because `supersedes` is empty. Also fix path containment and pre-write validation while you are in the function. The closed-round artifact integrity gap can be patched narrowly by revalidating a post-close artifact manifest; otherwise closed deliverables remain mutable while `gates` stays green.
+tokens used
+1,320,673
+## REAL issues (reproducible sequence)
+
+1. **`.txt` amendments roll back because `supersedes` is empty**
+   - File/function: `cmd_amend()` [harness/check_operator_round.py:993-1040]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:993), `validate_amendments()` [harness/check_operator_round.py:719-723]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:719)
+   - Repro: create `file_whitelist.amendment.1.txt`, run `amend <round> file_whitelist.amendment.1.txt <meeting>`. `cmd_amend` infers `target`, but leaves `supersedes = []`. Post-write `validate_amendments` treats empty `supersedes` as missing metadata and rolls back.
+   - Severity: REAL.
+   - Fix: for `.txt` amendments, set `supersedes = [target]` by default, or add a required fourth CLI arg. Defaulting to `[target]` is fine for whitelist amendments.
+
+2. **`amendment_file` is not constrained to a basename inside the round contract dir**
+   - File/function: `cmd_amend()` [harness/check_operator_round.py:982-987]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:982)
+   - Repro: pass `../other_round/file_whitelist.amendment.1.txt` or a nested path. `ap = round_dir / amendment_file` can resolve outside the intended round dir if the path exists. The command says amendment file must exist in `contracts/<round_id>/`, but code does not enforce containment.
+   - Severity: REAL.
+   - Fix: reject if `Path(amendment_file).name != amendment_file`, or resolve and require `ap.resolve().parent == round_dir.resolve()`.
+
+3. **Meeting path equivalence can false-reject legitimate `.md` amendments**
+   - File/function: `cmd_amend()` [harness/check_operator_round.py:1006-1012]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:1006), meeting resolution [harness/check_operator_round.py:1027-1031]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:1027)
+   - Repro: amendment frontmatter says `meeting: context_harness/operator/meetings/foo.md`, operator invokes `amend <round> spec.amendment.1.md foo.md`. Both resolve to the same file, but raw string compare rejects.
+   - Severity: REAL flow friction, not a governance bypass.
+   - Fix: canonicalize meeting path once to repo-relative `context_harness/operator/meetings/<name>.md`, compare/store the canonical form.
+
+4. **Detailed amendment meeting validation happens only after lock write**
+   - File/function: `cmd_amend()` [harness/check_operator_round.py:1042-1054]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:1042), `validate_amendments()` [harness/check_operator_round.py:760-781]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:760)
+   - Repro: use a meeting that exists but lacks `## Amendment Detail` or has wrong round/status. `cmd_amend` writes the new lock, then validation fails and rollback restores old lock.
+   - Severity: REAL disk-state flicker; usually recovered, but unnecessary.
+   - Fix: construct `new_lock` in memory and run `validate_amendments(new_lock, report)` before writing. It already reads the amendment file from disk and uses the passed lock object, so this should work.
+
+5. **Closed-round gates skip commit traceability, so closed round outputs can mutate unnoticed**
+   - File/function: `cmd_gates()` [harness/check_operator_round.py:922-938]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:922)
+   - Repro: after a round is closed, edit `docs/design-docs/deepsight_tokens.md` or another round output that is not a base contract file and not `gate_evidence.json`; run `gates <round>`. Contract hashes still match, gate evidence hash still matches, commit traceability is skipped, so gates can exit 0.
+   - Severity: REAL if closed-round deliverables are expected to remain protected.
+   - Fix: for closed rounds, skip broad commit traceability but validate a closed artifact manifest. Minimal: add `closed_artifacts` or require `gate_evidence.json` to include output artifact paths+sha and have `gates` re-run `load_gate_evidence()` or a post-close artifact integrity check.
+
+## THEORETICAL issues (adversarial/fault only)
+
+1. **Crash after lock write but before rollback/event strands the lock**
+   - File/function: `cmd_amend()` [harness/check_operator_round.py:1045-1057]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:1045)
+   - Scenario: process dies after `lock_path.write_text(...)` and before validation rollback or event append. Next `gates` fails SHA mismatch.
+   - Severity: THEORETICAL under normal operation; real only on crash/disk failure.
+   - Fix: pre-validate before write. Then only write lock once after validation; append event immediately after. That reduces the window.
+
+2. **Event append failure after successful lock write strands the lock**
+   - File/function: `cmd_amend()` [harness/check_operator_round.py:1055-1057]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:1055), `_append_lock_event()` [harness/check_operator_round.py:489-499]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:489)
+   - Scenario: disk full/permission error during event append after lock SHA changed.
+   - Severity: THEORETICAL/fault-only.
+   - Fix: catch event append exceptions and restore `old_lock_text`; longer-term use temp files/fsync.
+
+3. **Greedy `.txt` regex is fragile but currently rejected by target validation**
+   - File/function: [harness/check_operator_round.py:1013-1025]( /Users/jeonsihyeon/factory/harness/check_operator_round.py:1013)
+   - Scenario: `weird.name.amendment.9.amendment.1.txt` infers `weird.name.amendment.9.txt`, then target validation rejects.
+   - Severity: THEORETICAL; no bypass.
+   - Fix: optional: use a stricter target pattern from `REQUIRED_CONTRACT_FILES`, e.g. split around `.amendment.` and compare inferred target.
+
+## Recommendation: block
+
+Do not ship cfd9890 as-is. The `.txt` amendment path, which is the most likely real use for whitelist expansion, currently rolls back because `supersedes` is empty. Also fix path containment and pre-write validation while you are in the function. The closed-round artifact integrity gap can be patched narrowly by revalidating a post-close artifact manifest; otherwise closed deliverables remain mutable while `gates` stays green.
