@@ -129,6 +129,54 @@ struct GroupPreview: Identifiable {
     ]
 }
 
+enum GroupMode: String, CaseIterable, Hashable {
+    case couple
+    case general
+
+    var koreanTitle: String {
+        self == .couple ? "커플" : "그룹"
+    }
+}
+
+struct SampleGroupMember: Identifiable, Hashable {
+    let id: UUID = UUID()
+    let name: String
+    let initial: String
+    let relation: String
+}
+
+struct SampleGroup: Identifiable, Hashable {
+    let id: UUID = UUID()
+    let name: String
+    let mode: GroupMode
+    let members: [SampleGroupMember]
+    let coverEmojis: [String]
+
+    // vibe-limit-checked: 11 sample group data maps future persisted group model
+    static let sampleCouple = SampleGroup(
+        name: "우리의 지도",
+        mode: .couple,
+        members: [
+            .init(name: "시현", initial: "시", relation: "파트너"),
+            .init(name: "지호", initial: "지", relation: "파트너")
+        ],
+        coverEmojis: ["🌸", "🗺️", "☕️"]
+    )
+
+    static let sampleGeneral = SampleGroup(
+        name: "주말 모임",
+        mode: .general,
+        members: [
+            .init(name: "시현", initial: "시", relation: "친구"),
+            .init(name: "민지", initial: "민", relation: "친구"),
+            .init(name: "준호", initial: "준", relation: "친구"),
+            .init(name: "유나", initial: "유", relation: "친구"),
+            .init(name: "하루", initial: "하", relation: "친구")
+        ],
+        coverEmojis: ["🚲", "🍜", "🎧", "🌉"]
+    )
+}
+
 struct PlaceSuggestion: Identifiable, Equatable {
     let id: String
     let title: String

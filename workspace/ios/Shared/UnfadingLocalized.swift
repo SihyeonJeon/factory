@@ -121,6 +121,18 @@ enum UnfadingLocalized {
 
     enum Groups {
         static let navTitle = "그룹"
+        static let membersLabel = "멤버"
+        static let inviteCta = "초대"
+        static let coverEyebrow = "함께한 기록"
+        static let modePickerLabel = "모드"
+
+        static func dayCountFormat(_ days: Int) -> String {
+            "함께한 지 \(days)일"
+        }
+
+        static func memberCountFormat(_ count: Int) -> String {
+            "\(count)명"
+        }
     }
 
     // MARK: Calendar (stub in R3; full impl in R8)

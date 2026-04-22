@@ -1,0 +1,16 @@
+workspace/ios/Features/Groups/GroupHubView.swift
+workspace/ios/Features/Groups/GroupStore.swift
+workspace/ios/Shared/UnfadingAvatarStack.swift
+workspace/ios/Shared/SampleModels.swift
+workspace/ios/Shared/UnfadingLocalized.swift
+workspace/ios/Tests/GroupHubTests.swift
+workspace/ios/project.yml
+context_harness/operator/contracts/round_group_hub_r1/**
+context_harness/operator/locks/round_group_hub_r1.lock
+context_harness/operator/locks/round_group_hub_r1.events.jsonl
+context_harness/operator/meetings/2026-04-23_round10_*.md
+context_harness/operator/codex_transcripts/codex_r10_*.log
+context_harness/reports/round_group_hub_r1/**
+context_harness/SESSION_RESUME.md
+docs/exec-plans/process-log.jsonl
+workspace/ios/MemoryMap.xcodeproj/**
