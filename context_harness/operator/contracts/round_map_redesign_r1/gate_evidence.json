@@ -1,0 +1,32 @@
+{
+  "round_id": "round_map_redesign_r1",
+  "notes": "Map redesign: persistent 3-snap UnfadingBottomSheet + UnfadingFilterChip + MemorySelectionState + FAB + group chip + search. Codex code review found 2 blockers (FAB invisible at runtime, drag gesture hit area) + 4 advisories; both blockers fixed via Codex dispatch (operator did not edit code). 51/51 tests pass. Runtime screenshot confirms FAB visible after fix.",
+  "gate1": {
+    "status": "pass",
+    "command": "xcodebuild test (iPhone 17 sim)",
+    "exit_code": 0,
+    "test_count": 51,
+    "log": {
+      "path": "context_harness/reports/round_map_redesign_r1/evidence/xcode_test.log",
+      "sha256": "sha256:ec02165e65093bfe9f7ca13e5807a561aa5f417edd30b57b1333bd509e79e4bc"
+    }
+  },
+  "gate2": {
+    "status": "pass",
+    "reports": [
+      {"path": "context_harness/reports/round_map_redesign_r1/evidence/contract_capture.md", "sha256": "sha256:79605c1d2de27e9887cca586690b95e202c639d9c121f8032e8dfa5acd53a4c7"},
+      {"path": "context_harness/reports/round_map_redesign_r1/verdict.md", "sha256": "sha256:de897e1ad13471e50dc9c69faf433b00b1bb28cab504b8cc08154547462d99d3"},
+      {"path": "context_harness/reports/round_map_redesign_r1/evidence/screenshots/02_map_after_fab_fix.png", "sha256": "sha256:910940e689e3934645d13f6baaa09e111ac04518c4ff97615e84b6f7fe319306"}
+    ]
+  },
+  "gate3": {
+    "status": "pass",
+    "cross_agreement_note": "Codex code-review cycle: 2 blockers (FAB invisibility; drag gesture hit area) + 4 advisories → both blockers fixed via Codex-dispatched edit (operator did not touch code), 4 advisories carried to future rounds. Codex verdict after fixes: PASS."
+  },
+  "gate4": {
+    "status": "pass",
+    "metrics_source": {"path": "docs/exec-plans/process-log.jsonl", "sha256": "sha256:43c79f2cd1f152ddb1e0878befaad3a5a9dbb8649fbcfc34819f41b50e6ae775"},
+    "remediation_cycles": 1,
+    "blocker_recurrence": 0
+  }
+}

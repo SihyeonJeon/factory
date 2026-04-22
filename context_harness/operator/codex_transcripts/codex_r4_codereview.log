@@ -1,0 +1,798 @@
+OpenAI Codex v0.121.0 (research preview)
+--------
+workdir: /Users/jeonsihyeon/factory
+model: gpt-5.4
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: none
+reasoning summaries: none
+session id: 019db43d-746e-73b3-b33c-5dda3770df91
+--------
+user
+Codex — R4 round_map_redesign_r1 implementation complete. Build ✅, 51 tests pass, runtime screenshot captured.
+
+BUT the runtime screenshot at context_harness/reports/round_map_redesign_r1/evidence/screenshots/01_map_default.png shows a UI issue: the FAB ("추억 기록") is NOT visible. Expected placement was bottom-right above the bottom sheet, but it seems hidden or absent.
+
+Peer-review the R4 Swift diff AND diagnose the missing-FAB issue. Files to review:
+
+- workspace/ios/Features/Home/MemoryMapHomeView.swift (ZStack/overlay composition, FAB placement)
+- workspace/ios/Shared/UnfadingBottomSheet.swift (drag gesture, layer interaction)
+- workspace/ios/Shared/UnfadingFilterChip.swift
+- workspace/ios/Features/Home/MemorySelectionState.swift
+- workspace/ios/Features/Home/MemorySummaryCard.swift (selected-pin wiring)
+
+Focus:
+1. **FAB missing from runtime** — diagnose and suggest fix. My hypothesis: the overlay(alignment: .bottomTrailing) is being clipped by the bottom sheet's z-order, OR `bottomSheetReservedHeight: 200` pushed it below tab bar.
+2. **Bottom sheet math** — is `frame(height: max(80, min(fullHeight * expanded.fraction, targetHeight)))` correct? Expand-height saturation?
+3. **Drag gesture** — does it steal gestures from map pan/zoom underneath?
+4. **Selection wiring** — is `selection.selectedPin(from:)` resolving correctly when a pin tap happens? (Tests pass but runtime user flow not exercised.)
+5. **Filter chips** — are they accessible via keyboard/VoiceOver? Any UX friction?
+
+Respond with:
+## Blockers (must fix before close)
+## Advisories (can defer)
+## Diagnosis of FAB issue (specific fix)
+## Code quality nits
+
+Scope: review only. Don't write files. If blockers, I will DISPATCH Codex (fork/new session) to fix — NOT edit myself. New user directive: operator doesn't modify code; Codex does via dispatch.
+codex
+I’ll inspect the R4 Swift files and the runtime screenshot, then separate close-blocking issues from deferrable polish. No edits.
+exec
+/bin/zsh -lc "sed -n '1,320p' workspace/ios/Features/Home/MemoryMapHomeView.swift" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+import MapKit
+import SwiftUI
+import UIKit
+
+/// Main map surface redesigned per deepsight spec in R4 `round_map_redesign_r1`:
+/// persistent 3-snap bottom sheet, filter chip row, FAB (coral), top-left group
+/// chip, top-right search. Pin taps update `MemorySelectionState` which drives
+/// both summary content and sheet snap.
+struct MemoryMapHomeView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
+    private let evidenceMode: MemoryComposerEvidenceMode
+    @StateObject private var locationPermissionStore = LocationPermissionStore()
+    @StateObject private var selection = MemorySelectionState()
+    @State private var showingComposer = false
+    @State private var didPresentEvidenceComposer = false
+    @State private var showingGroupHub = false
+    @State private var cameraPosition: MapCameraPosition = .region(
+        MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
+            span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)
+        )
+    )
+
+    init(evidenceMode: MemoryComposerEvidenceMode = .none) {
+        self.evidenceMode = evidenceMode
+    }
+
+    var body: some View {
+        NavigationStack {
+            ZStack(alignment: .bottom) {
+                mapLayer
+                    .ignoresSafeArea(edges: .top)
+                    .overlay(alignment: .top) {
+                        topChrome
+                            .padding(.horizontal, UnfadingTheme.Spacing.lg)
+                            .padding(.top, UnfadingTheme.Spacing.sm)
+                    }
+                    .overlay(alignment: .topTrailing) {
+                        filterRow
+                            .padding(.top, 64)
+                            .padding(.horizontal, UnfadingTheme.Spacing.md)
+                    }
+                    .overlay(alignment: .bottomTrailing) {
+                        fab
+                            .padding(.trailing, UnfadingTheme.Spacing.lg)
+                            .padding(.bottom, bottomSheetReservedHeight + UnfadingTheme.Spacing.lg)
+                    }
+
+                UnfadingBottomSheet(snap: $selection.sheetSnap) {
+                    MemorySummaryCard(selectedPin: selection.selectedPin(from: SampleMemoryPin.samples))
+                }
+                .ignoresSafeArea(.container, edges: .bottom)
+            }
+            .navigationTitle(UnfadingLocalized.Home.navTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $showingComposer) {
+                MemoryComposerSheet(
+                    initialLocationPermissionState: .denied,
+                    evidenceMode: evidenceMode
+                )
+                .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.medium, .large])
+                .presentationDragIndicator(.visible)
+            }
+            .sheet(isPresented: $showingGroupHub) {
+                GroupHubView()
+            }
+            .confirmationDialog(
+                locationPermissionStore.recoveryPrompt?.title ?? "",
+                isPresented: recoveryPromptIsPresented,
+                titleVisibility: .visible
+            ) {
+                if let prompt = locationPermissionStore.recoveryPrompt {
+                    ForEach(prompt.actions) { action in
+                        Button(action.title) { handleRecoveryAction(action) }
+                    }
+                }
+                Button(UnfadingLocalized.Common.cancel, role: .cancel) {
+                    locationPermissionStore.dismissRecoveryPrompt()
+                }
+            } message: {
+                if let prompt = locationPermissionStore.recoveryPrompt {
+                    Text(prompt.message)
+                }
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active { locationPermissionStore.refresh() }
+            }
+            .onAppear {
+                guard evidenceMode != .none, didPresentEvidenceComposer == false else { return }
+                didPresentEvidenceComposer = true
+                showingComposer = true
+            }
+        }
+    }
+
+    // MARK: Layers
+
+    private var mapLayer: some View {
+        Map(position: $cameraPosition, selection: .constant(nil as UUID?)) {
+            ForEach(SampleMemoryPin.samples) { pin in
+                Annotation(pin.title, coordinate: pin.coordinate) {
+                    Button {
+                        selection.select(pinID: pin.id)
+                    } label: {
+                        MemoryPinMarker(pin: pin)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .mapStyle(.standard(elevation: .realistic))
+    }
+
+    private var topChrome: some View {
+        HStack(spacing: UnfadingTheme.Spacing.sm) {
+            Button {
+                showingGroupHub = true
+            } label: {
+                HStack(spacing: UnfadingTheme.Spacing.xs) {
+                    Image(systemName: "person.2.fill")
+                        .imageScale(.small)
+                    Text(UnfadingLocalized.Home.groupChipPlaceholder)
+                        .font(UnfadingTheme.Font.footnoteSemibold())
+                    Image(systemName: "chevron.down")
+                        .imageScale(.small)
+                }
+                .padding(.horizontal, UnfadingTheme.Spacing.md)
+                .padding(.vertical, UnfadingTheme.Spacing.sm)
+                .frame(minHeight: 44)
+                .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                .background(
+                    UnfadingTheme.Color.sheet,
+                    in: Capsule()
+                )
+                .shadow(color: UnfadingTheme.Color.shadow, radius: 6, x: 0, y: 2)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(UnfadingLocalized.Home.groupChipPlaceholder)
+            .accessibilityHint(UnfadingLocalized.Home.groupChipHint)
+
+            Spacer()
+
+            Button {
+                // Search stub — full implementation in a future round.
+            } label: {
+                Image(systemName: "magnifyingglass")
+                    .imageScale(.medium)
+                    .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                    .frame(width: 44, height: 44)
+                    .background(UnfadingTheme.Color.sheet, in: Circle())
+                    .shadow(color: UnfadingTheme.Color.shadow, radius: 6, x: 0, y: 2)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(UnfadingLocalized.Home.searchLabel)
+            .accessibilityHint(UnfadingLocalized.Home.searchHint)
+        }
+    }
+
+    private var filterRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: UnfadingTheme.Spacing.sm) {
+                ForEach(MemorySelectionState.Filter.allCases, id: \.self) { filter in
+                    UnfadingFilterChip(
+                        title: filter.title,
+                        isSelected: selection.activeFilter == filter
+                    ) {
+                        selection.toggleFilter(filter)
+                    }
+                }
+            }
+            .padding(.horizontal, UnfadingTheme.Spacing.sm)
+        }
+    }
+
+    private var fab: some View {
+        Button {
+            showingComposer = true
+        } label: {
+            HStack(spacing: UnfadingTheme.Spacing.xs) {
+                Image(systemName: "plus")
+                    .imageScale(.medium)
+                Text(UnfadingLocalized.Home.addMemoryFab)
+                    .font(UnfadingTheme.Font.footnoteSemibold())
+            }
+        }
+        .buttonStyle(.unfadingPrimary)
+        .accessibilityLabel(UnfadingLocalized.Accessibility.addMemoryLabel)
+    }
+
+    /// Reserve enough bottom-edge padding for the FAB so the default-snap sheet
+    /// doesn't collide with it. 200pt accommodates the default (~52%) snap on
+    /// the smallest supported iPhone.
+    private var bottomSheetReservedHeight: CGFloat { 200 }
+
+    // MARK: Helpers
+
+    private var recoveryPromptIsPresented: Binding<Bool> {
+        Binding(
+            get: { locationPermissionStore.recoveryPrompt != nil },
+            set: { isPresented in
+                if !isPresented { locationPermissionStore.dismissRecoveryPrompt() }
+            }
+        )
+    }
+
+    private func handleRecoveryAction(_ action: LocationPermissionRecoveryAction) {
+        switch locationPermissionStore.handleRecoveryAction(action) {
+        case .openSettings:
+            guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else { return }
+            openURL(settingsURL)
+        case .continueWithoutLocation:
+            break
+        }
+    }
+}
+
+#Preview {
+    MemoryMapHomeView()
+}
+
+exec
+/bin/zsh -lc "sed -n '1,320p' workspace/ios/Shared/UnfadingBottomSheet.swift && sed -n '1,220p' workspace/ios/Shared/UnfadingFilterChip.swift" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+import SwiftUI
+
+/// Persistent, draggable 3-snap bottom sheet container for map-like surfaces
+/// where the sheet is part of the chrome (not a modal). Snap fractions come
+/// from `UnfadingTheme.Sheet` (0.22 / 0.52 / 0.88) per deepsight spec.
+///
+/// Usage:
+///   ```swift
+///   @State private var snap: BottomSheetSnap = .default_
+///   ZStack {
+///       mapContent
+///       UnfadingBottomSheet(snap: $snap) { MemorySummaryCard() }
+///   }
+///   ```
+public enum BottomSheetSnap: CaseIterable, Hashable {
+    case collapsed
+    case `default_`
+    case expanded
+
+    /// Snap-point fraction of the container height.
+    public var fraction: Double {
+        switch self {
+        case .collapsed: return UnfadingTheme.Sheet.collapsed
+        case .default_: return UnfadingTheme.Sheet.default
+        case .expanded: return UnfadingTheme.Sheet.expanded
+        }
+    }
+
+    /// Ordering used by drag-release snapping logic.
+    public static let ordered: [BottomSheetSnap] = [.collapsed, .default_, .expanded]
+
+    /// Returns the snap whose fraction is closest to `fraction`.
+    public static func nearest(to fraction: Double) -> BottomSheetSnap {
+        Self.ordered.min(by: { abs($0.fraction - fraction) < abs($1.fraction - fraction) }) ?? .default_
+    }
+}
+
+struct UnfadingBottomSheet<Content: View>: View {
+    @Binding var snap: BottomSheetSnap
+    @ViewBuilder let content: () -> Content
+    @State private var dragOffset: CGFloat = 0
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    var body: some View {
+        GeometryReader { proxy in
+            let fullHeight = proxy.size.height
+            let targetHeight = fullHeight * snap.fraction - dragOffset
+
+            VStack(spacing: 0) {
+                handle
+                content()
+                    .frame(maxHeight: .infinity, alignment: .top)
+                    .clipped()
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: max(80, min(fullHeight * BottomSheetSnap.expanded.fraction, targetHeight)))
+            .background(
+                UnfadingTheme.Color.sheet,
+                in: UnevenRoundedRectangle(
+                    topLeadingRadius: UnfadingTheme.Radius.sheet,
+                    topTrailingRadius: UnfadingTheme.Radius.sheet
+                )
+            )
+            .shadow(color: UnfadingTheme.Color.shadow, radius: 16, x: 0, y: -4)
+            .frame(maxHeight: .infinity, alignment: .bottom)
+            .gesture(dragGesture(fullHeight: fullHeight))
+            .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.85), value: snap)
+        }
+    }
+
+    private var handle: some View {
+        Capsule()
+            .fill(UnfadingTheme.Color.textTertiary.opacity(0.55))
+            .frame(width: 40, height: 4)
+            .padding(.top, 10)
+            .padding(.bottom, UnfadingTheme.Spacing.sm)
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle().inset(by: -16))
+    }
+
+    private func dragGesture(fullHeight: CGFloat) -> some Gesture {
+        DragGesture(minimumDistance: 4)
+            .onChanged { value in
+                dragOffset = value.translation.height
+            }
+            .onEnded { value in
+                let endFraction = (fullHeight * snap.fraction - value.translation.height) / fullHeight
+                let clamped = min(max(endFraction, UnfadingTheme.Sheet.collapsed * 0.9), UnfadingTheme.Sheet.expanded * 1.05)
+                snap = BottomSheetSnap.nearest(to: clamped)
+                dragOffset = 0
+            }
+    }
+}
+import SwiftUI
+
+/// Reusable selectable filter chip. Coral background when selected, cream/card
+/// background when not. 44pt minimum tap height. Used in the map filter row
+/// (전체 / 데이트 / 여행 / 기념일 / 맛집) per deepsight.
+struct UnfadingFilterChip: View {
+    let title: String
+    let systemImage: String?
+    let isSelected: Bool
+    let action: () -> Void
+
+    init(title: String, systemImage: String? = nil, isSelected: Bool, action: @escaping () -> Void) {
+        self.title = title
+        self.systemImage = systemImage
+        self.isSelected = isSelected
+        self.action = action
+    }
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: UnfadingTheme.Spacing.xs + 2) {
+                if let systemImage {
+                    Image(systemName: systemImage)
+                        .imageScale(.small)
+                }
+                Text(title)
+                    .font(UnfadingTheme.Font.footnoteSemibold())
+            }
+            .padding(.horizontal, UnfadingTheme.Spacing.md + 2)
+            .padding(.vertical, UnfadingTheme.Spacing.sm)
+            .frame(minHeight: 44)
+            .foregroundStyle(foreground)
+            .background(
+                background,
+                in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.chip, style: .continuous)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: UnfadingTheme.Radius.chip, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    private var foreground: Color {
+        isSelected ? UnfadingTheme.Color.textOnPrimary : UnfadingTheme.Color.textPrimary
+    }
+
+    private var background: Color {
+        isSelected ? UnfadingTheme.Color.primary : UnfadingTheme.Color.card
+    }
+}
+
+exec
+/bin/zsh -lc "sed -n '1,240p' workspace/ios/Features/Home/MemorySelectionState.swift && sed -n '1,260p' workspace/ios/Features/Home/MemorySummaryCard.swift" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+import Foundation
+import SwiftUI
+
+/// Selection + filter + sheet-snap state for the main map surface. Extracted
+/// from `MemoryMapHomeView` so behavior is testable without spinning up a
+/// SwiftUI host. `@MainActor` because all writes originate from the UI thread
+/// (pin taps, chip taps, sheet drag ends).
+@MainActor
+final class MemorySelectionState: ObservableObject {
+
+    /// Filter categories shown in the map filter chip row. `all` is the default
+    /// non-filtered state.
+    enum Filter: String, CaseIterable, Hashable {
+        case all
+        case date
+        case trip
+        case anniversary
+        case food
+
+        /// Korean display title resolved at render time.
+        var title: String {
+            switch self {
+            case .all: return UnfadingLocalized.Home.filterAll
+            case .date: return UnfadingLocalized.Home.filterDate
+            case .trip: return UnfadingLocalized.Home.filterTrip
+            case .anniversary: return UnfadingLocalized.Home.filterAnniversary
+            case .food: return UnfadingLocalized.Home.filterFood
+            }
+        }
+    }
+
+    @Published private(set) var selectedPinID: UUID?
+    @Published private(set) var activeFilter: Filter = .all
+    @Published var sheetSnap: BottomSheetSnap = .default_
+
+    /// Select a pin. Selecting snaps the sheet to expanded; selecting the
+    /// currently-selected pin again clears the selection and returns the sheet
+    /// to its default snap.
+    func select(pinID: UUID) {
+        if selectedPinID == pinID {
+            clearSelection()
+            return
+        }
+        selectedPinID = pinID
+        sheetSnap = .expanded
+    }
+
+    /// Clear any active pin selection and restore the default sheet snap.
+    func clearSelection() {
+        selectedPinID = nil
+        sheetSnap = .default_
+    }
+
+    /// Toggle a filter. Selecting the currently-active filter reverts to
+    /// `.all`; selecting a different filter replaces the active filter.
+    /// Filtering does not modify sheet snap or selection.
+    func toggleFilter(_ filter: Filter) {
+        activeFilter = activeFilter == filter ? .all : filter
+    }
+
+    /// Resolve the currently-selected pin from a sample set. Returns `nil`
+    /// when nothing is selected or when the ID is not in the set (treated as
+    /// a no-op rather than an error per honest-agent defensive semantics).
+    func selectedPin(from pins: [SampleMemoryPin]) -> SampleMemoryPin? {
+        guard let id = selectedPinID else { return nil }
+        return pins.first(where: { $0.id == id })
+    }
+}
+import SwiftUI
+
+struct MemorySummaryCard: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    /// When a pin is selected on the map, the card shows that pin's title and
+    /// short label. When nil, it shows the default sample "오늘의 리와인드" copy.
+    var selectedPin: SampleMemoryPin? = nil
+
+    var body: some View {
+        ScrollView(.vertical, showsIndicators: dynamicTypeSize.isAccessibilitySize) {
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.lg - 2) {
+                header
+
+                Text(selectedPinBody)
+                    .font(UnfadingTheme.Font.subheadline())
+                    .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                tagSection
+            }
+            .padding(UnfadingTheme.Spacing.xl)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxHeight: dynamicTypeSize.isAccessibilitySize ? 320 : nil, alignment: .top)
+    }
+
+    @ViewBuilder
+    private var header: some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
+                titleBlock
+                peopleBadge
+            }
+        } else {
+            HStack(alignment: .top, spacing: UnfadingTheme.Spacing.md) {
+                titleBlock
+                Spacer(minLength: UnfadingTheme.Spacing.md)
+                peopleBadge
+            }
+        }
+    }
+
+    private var titleBlock: some View {
+        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
+            Text(selectedPinEyebrow)
+                .font(UnfadingTheme.Font.captionSemibold())
+                .foregroundStyle(UnfadingTheme.Color.textSecondary)
+            Text(selectedPinTitle)
+                .font(UnfadingTheme.Font.title3Bold())
+                .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var peopleBadge: some View {
+        Label(UnfadingLocalized.Summary.friendCount, systemImage: "person.3.fill")
+            .font(UnfadingTheme.Font.footnoteSemibold())
+            .foregroundStyle(UnfadingTheme.Color.textPrimary)
+            .padding(.horizontal, UnfadingTheme.Spacing.sm + 2)
+            .padding(.vertical, UnfadingTheme.Spacing.sm)
+            .frame(minHeight: 44)
+            .background(
+                UnfadingTheme.Color.primarySoft,
+                in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.button, style: .continuous)
+            )
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var tagSection: some View {
+        ViewThatFits(in: .vertical) {
+            HStack(spacing: UnfadingTheme.Spacing.md) {
+                MemoryTag(title: UnfadingLocalized.Summary.joyTag, systemImage: "sparkles")
+                MemoryTag(title: UnfadingLocalized.Summary.nightOutTag, systemImage: "moon.stars.fill")
+                MemoryTag(title: UnfadingLocalized.Summary.photoSetTag, systemImage: "photo.on.rectangle")
+            }
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.sm + 2) {
+                MemoryTag(title: UnfadingLocalized.Summary.joyTag, systemImage: "sparkles")
+                MemoryTag(title: UnfadingLocalized.Summary.nightOutTag, systemImage: "moon.stars.fill")
+                MemoryTag(title: UnfadingLocalized.Summary.photoSetTag, systemImage: "photo.on.rectangle")
+            }
+        }
+    }
+
+    // MARK: Selected-pin-aware content
+
+    private var selectedPinEyebrow: String {
+        selectedPin == nil ? UnfadingLocalized.Summary.tonightsRewind : UnfadingLocalized.Summary.selectedEyebrow
+    }
+
+    private var selectedPinTitle: String {
+        selectedPin?.title ?? UnfadingLocalized.Summary.sampleTitle
+    }
+
+    private var selectedPinBody: String {
+        if let short = selectedPin?.shortLabel {
+            return UnfadingLocalized.Summary.selectedBodyTemplate(short: short)
+        }
+        return UnfadingLocalized.Summary.sampleBody
+    }
+}
+
+private struct MemoryTag: View {
+    let title: String
+    let systemImage: String
+
+    var body: some View {
+        Label(title, systemImage: systemImage)
+            .font(UnfadingTheme.Font.footnoteSemibold())
+            .foregroundStyle(UnfadingTheme.Color.textPrimary)
+            .padding(.horizontal, UnfadingTheme.Spacing.md)
+            .padding(.vertical, UnfadingTheme.Spacing.sm)
+            .frame(minHeight: 44)
+            .background(
+                UnfadingTheme.Color.primarySoft,
+                in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.button, style: .continuous)
+            )
+            .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+2026-04-22T16:20:27.659094Z ERROR codex_core::tools::router: error=exec_command failed for `/bin/zsh -lc "file context_harness/reports/round_map_redesign_r1/evidence/screenshots/01_map_default.png && python3 - <<'PY'
+from PIL import Image
+p='context_harness/reports/round_map_redesign_r1/evidence/screenshots/01_map_default.png'
+im=Image.open(p)
+print(im.size)
+PY"`: CreateProcess { message: "Codex(Sandbox(Denied { output: ExecToolCallOutput { exit_code: 1, stdout: StreamOutput { text: \"\", truncated_after_lines: None }, stderr: StreamOutput { text: \"context_harness/reports/round_map_redesign_r1/evidence/screenshots/01_map_default.png: PNG image data, 1206 x 2622, 8-bit/color RGBA, non-interlaced\\nzsh:1: can't create temp file for here document: operation not permitted\\n\", truncated_after_lines: None }, aggregated_output: StreamOutput { text: \"context_harness/reports/round_map_redesign_r1/evidence/screenshots/01_map_default.png: PNG image data, 1206 x 2622, 8-bit/color RGBA, non-interlaced\\nzsh:1: can't create temp file for here document: operation not permitted\\n\", truncated_after_lines: None }, duration: 0ns, timed_out: false }, network_policy_decision: None }))" }
+codex
+I read the Swift files. The code-level issue is visible before image analysis: the FAB is placed inside an overlay on `mapLayer`, while the bottom sheet is a later sibling in the parent `ZStack`, so the sheet will draw over the FAB. I’m opening the screenshot visually to confirm the runtime symptom.
+codex
+## Blockers (must fix before close)
+
+1. **FAB is rendered underneath the bottom sheet and its vertical offset is too small**
+   - File: `workspace/ios/Features/Home/MemoryMapHomeView.swift`
+   - Cause: `fab` is attached as `.overlay(alignment: .bottomTrailing)` on `mapLayer`, while `UnfadingBottomSheet` is a later sibling in the parent `ZStack`, so the sheet draws over it. Also `bottomSheetReservedHeight = 200` is lower than the default sheet height. On an 874pt-tall device, default sheet height is about `874 * 0.52 = 454pt`, so a 200pt bottom offset still places the FAB inside the sheet’s covered region.
+   - Runtime confirmation: screenshot shows the sheet covers the area where the button should appear; no “추억 기록” FAB is visible.
+   - Required fix: move FAB to the parent `ZStack` as a sibling above the sheet, give it a higher `zIndex`, and compute bottom padding from the active sheet snap height, not a hardcoded 200.
+   - Suggested shape:
+     ```swift
+     GeometryReader { proxy in
+         let sheetHeight = proxy.size.height * CGFloat(selection.sheetSnap.fraction)
+
+         ZStack(alignment: .bottom) {
+             mapLayer ...
+             UnfadingBottomSheet(...)
+                 .zIndex(1)
+
+             if selection.sheetSnap != .expanded {
+                 fab
+                     .padding(.trailing, UnfadingTheme.Spacing.lg)
+                     .padding(.bottom, sheetHeight + UnfadingTheme.Spacing.lg)
+                     .zIndex(2)
+             }
+         }
+     }
+     ```
+
+2. **Bottom sheet drag gesture may steal map gestures outside the visible sheet**
+   - File: `workspace/ios/Shared/UnfadingBottomSheet.swift`
+   - Cause: the `.gesture(dragGesture(...))` is applied after `.frame(maxHeight: .infinity, alignment: .bottom)`. That means the gesture may be attached to the full-height layout frame, not just the visible sheet.
+   - Risk: map pan/zoom/tap gestures can be intercepted by the sheet container even above the sheet.
+   - Required fix: attach the gesture before expanding to the full-height alignment frame, and set the content shape to the visible sheet bounds.
+   - Suggested shape:
+     ```swift
+     VStack(spacing: 0) { ... }
+         .frame(maxWidth: .infinity)
+         .frame(height: sheetHeight)
+         .contentShape(Rectangle())
+         .gesture(dragGesture(fullHeight: fullHeight))
+         .frame(maxHeight: .infinity, alignment: .bottom)
+     ```
+
+## Advisories (can defer)
+
+1. **Bottom sheet drag can conflict with inner scroll content**
+   - `MemorySummaryCard` contains a vertical `ScrollView`, while the sheet has a vertical `DragGesture`. Once the card grows, sheet drag and content scroll may compete. This is acceptable for the current lightweight card but should be revisited when the sheet contains real archive content.
+
+2. **Expanded-state FAB policy should be explicit**
+   - If sheet is expanded to 88%, placing the FAB above the sheet may push it near or off the top of the device. Hiding FAB while expanded is likely the cleanest behavior, but codify this in tests/evidence.
+
+3. **Selected-pin sample copy may surface English**
+   - `MemorySummaryCard` uses `selectedPin?.title` and `selectedPin?.shortLabel`. If `SampleMemoryPin` still contains English titles, selecting a pin may reintroduce English UI via model data. This is not the same as literal view strings, but it should be localized or mapped in a future data-localization pass.
+
+4. **Filter chips are basically accessible but could be richer**
+   - `UnfadingFilterChip` exposes button text and `.isSelected`, which is acceptable. Later, add hints or accessibility values such as “선택됨” if VoiceOver feedback feels ambiguous.
+
+## Diagnosis of FAB issue (specific fix)
+
+The FAB is not merely clipped; it is both **behind the sheet** and **positioned too low**.
+
+Current structure:
+
+```swift
+mapLayer
+    .overlay(alignment: .bottomTrailing) {
+        fab
+            .padding(.bottom, bottomSheetReservedHeight + ...)
+    }
+
+UnfadingBottomSheet(...)
+```
+
+Because the bottom sheet is a later sibling in the `ZStack`, it draws above the map-layer overlay. And because `bottomSheetReservedHeight` is hardcoded to `200`, the FAB is still within the default sheet’s occupied vertical area.
+
+Specific fix:
+
+- Remove the FAB overlay from `mapLayer`.
+- Wrap the parent `ZStack` in `GeometryReader`.
+- Compute `sheetHeight = proxy.size.height * CGFloat(selection.sheetSnap.fraction)`.
+- Add the FAB as a parent `ZStack` sibling after the sheet, with `zIndex(2)`.
+- Bottom-pad it by `sheetHeight + spacing`.
+- Hide or disable the FAB when `selection.sheetSnap == .expanded`.
+
+This is close-blocking because the expected primary creation affordance is absent at runtime.
+
+## Code quality nits
+
+- `bottomSheetReservedHeight` should be deleted after dynamic sheet-height positioning lands.
+- `UnfadingBottomSheet` math is mostly sound for snap saturation: drag up increases height, drag down decreases height, and height is capped at expanded. The issue is gesture hit area, not the basic height formula.
+- `MemorySelectionState.selectedPin(from:)` is straightforward and likely correct. The runtime pin-tap path is not fully exercised by the screenshot, so add a later UI test for pin tap → selected summary + expanded sheet.
+- `UnfadingFilterChip` is reusable and clean. Consider adding an optional `accessibilityHint` parameter later if filter behavior becomes less obvious.
+tokens used
+2,083,185
+## Blockers (must fix before close)
+
+1. **FAB is rendered underneath the bottom sheet and its vertical offset is too small**
+   - File: `workspace/ios/Features/Home/MemoryMapHomeView.swift`
+   - Cause: `fab` is attached as `.overlay(alignment: .bottomTrailing)` on `mapLayer`, while `UnfadingBottomSheet` is a later sibling in the parent `ZStack`, so the sheet draws over it. Also `bottomSheetReservedHeight = 200` is lower than the default sheet height. On an 874pt-tall device, default sheet height is about `874 * 0.52 = 454pt`, so a 200pt bottom offset still places the FAB inside the sheet’s covered region.
+   - Runtime confirmation: screenshot shows the sheet covers the area where the button should appear; no “추억 기록” FAB is visible.
+   - Required fix: move FAB to the parent `ZStack` as a sibling above the sheet, give it a higher `zIndex`, and compute bottom padding from the active sheet snap height, not a hardcoded 200.
+   - Suggested shape:
+     ```swift
+     GeometryReader { proxy in
+         let sheetHeight = proxy.size.height * CGFloat(selection.sheetSnap.fraction)
+
+         ZStack(alignment: .bottom) {
+             mapLayer ...
+             UnfadingBottomSheet(...)
+                 .zIndex(1)
+
+             if selection.sheetSnap != .expanded {
+                 fab
+                     .padding(.trailing, UnfadingTheme.Spacing.lg)
+                     .padding(.bottom, sheetHeight + UnfadingTheme.Spacing.lg)
+                     .zIndex(2)
+             }
+         }
+     }
+     ```
+
+2. **Bottom sheet drag gesture may steal map gestures outside the visible sheet**
+   - File: `workspace/ios/Shared/UnfadingBottomSheet.swift`
+   - Cause: the `.gesture(dragGesture(...))` is applied after `.frame(maxHeight: .infinity, alignment: .bottom)`. That means the gesture may be attached to the full-height layout frame, not just the visible sheet.
+   - Risk: map pan/zoom/tap gestures can be intercepted by the sheet container even above the sheet.
+   - Required fix: attach the gesture before expanding to the full-height alignment frame, and set the content shape to the visible sheet bounds.
+   - Suggested shape:
+     ```swift
+     VStack(spacing: 0) { ... }
+         .frame(maxWidth: .infinity)
+         .frame(height: sheetHeight)
+         .contentShape(Rectangle())
+         .gesture(dragGesture(fullHeight: fullHeight))
+         .frame(maxHeight: .infinity, alignment: .bottom)
+     ```
+
+## Advisories (can defer)
+
+1. **Bottom sheet drag can conflict with inner scroll content**
+   - `MemorySummaryCard` contains a vertical `ScrollView`, while the sheet has a vertical `DragGesture`. Once the card grows, sheet drag and content scroll may compete. This is acceptable for the current lightweight card but should be revisited when the sheet contains real archive content.
+
+2. **Expanded-state FAB policy should be explicit**
+   - If sheet is expanded to 88%, placing the FAB above the sheet may push it near or off the top of the device. Hiding FAB while expanded is likely the cleanest behavior, but codify this in tests/evidence.
+
+3. **Selected-pin sample copy may surface English**
+   - `MemorySummaryCard` uses `selectedPin?.title` and `selectedPin?.shortLabel`. If `SampleMemoryPin` still contains English titles, selecting a pin may reintroduce English UI via model data. This is not the same as literal view strings, but it should be localized or mapped in a future data-localization pass.
+
+4. **Filter chips are basically accessible but could be richer**
+   - `UnfadingFilterChip` exposes button text and `.isSelected`, which is acceptable. Later, add hints or accessibility values such as “선택됨” if VoiceOver feedback feels ambiguous.
+
+## Diagnosis of FAB issue (specific fix)
+
+The FAB is not merely clipped; it is both **behind the sheet** and **positioned too low**.
+
+Current structure:
+
+```swift
+mapLayer
+    .overlay(alignment: .bottomTrailing) {
+        fab
+            .padding(.bottom, bottomSheetReservedHeight + ...)
+    }
+
+UnfadingBottomSheet(...)
+```
+
+Because the bottom sheet is a later sibling in the `ZStack`, it draws above the map-layer overlay. And because `bottomSheetReservedHeight` is hardcoded to `200`, the FAB is still within the default sheet’s occupied vertical area.
+
+Specific fix:
+
+- Remove the FAB overlay from `mapLayer`.
+- Wrap the parent `ZStack` in `GeometryReader`.
+- Compute `sheetHeight = proxy.size.height * CGFloat(selection.sheetSnap.fraction)`.
+- Add the FAB as a parent `ZStack` sibling after the sheet, with `zIndex(2)`.
+- Bottom-pad it by `sheetHeight + spacing`.
+- Hide or disable the FAB when `selection.sheetSnap == .expanded`.
+
+This is close-blocking because the expected primary creation affordance is absent at runtime.
+
+## Code quality nits
+
+- `bottomSheetReservedHeight` should be deleted after dynamic sheet-height positioning lands.
+- `UnfadingBottomSheet` math is mostly sound for snap saturation: drag up increases height, drag down decreases height, and height is capped at expanded. The issue is gesture hit area, not the basic height formula.
+- `MemorySelectionState.selectedPin(from:)` is straightforward and likely correct. The runtime pin-tap path is not fully exercised by the screenshot, so add a later UI test for pin tap → selected summary + expanded sheet.
+- `UnfadingFilterChip` is reusable and clean. Consider adding an optional `accessibilityHint` parameter later if filter behavior becomes less obvious.

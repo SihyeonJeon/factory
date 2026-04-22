@@ -1,0 +1,20 @@
+# round_map_redesign_r1 whitelist
+workspace/ios/Shared/UnfadingBottomSheet.swift
+workspace/ios/Shared/UnfadingFilterChip.swift
+workspace/ios/Shared/UnfadingLocalized.swift
+workspace/ios/Features/Home/MemoryMapHomeView.swift
+workspace/ios/Features/Home/MemorySummaryCard.swift
+workspace/ios/Features/Home/MemorySelectionState.swift
+workspace/ios/Tests/UnfadingBottomSheetTests.swift
+workspace/ios/Tests/UnfadingFilterChipTests.swift
+workspace/ios/Tests/MemorySelectionStateTests.swift
+workspace/ios/project.yml
+context_harness/operator/contracts/round_map_redesign_r1/**
+context_harness/operator/locks/round_map_redesign_r1.lock
+context_harness/operator/locks/round_map_redesign_r1.events.jsonl
+context_harness/operator/meetings/2026-04-23_round4_*.md
+context_harness/operator/codex_transcripts/codex_r4_*.log
+context_harness/reports/round_map_redesign_r1/**
+context_harness/SESSION_RESUME.md
+docs/exec-plans/process-log.jsonl
+workspace/ios/MemoryMap.xcodeproj/**

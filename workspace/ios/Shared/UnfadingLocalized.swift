@@ -46,6 +46,16 @@ enum UnfadingLocalized {
     enum Home {
         static let newMemory = "새 추억"
         static let navTitle = "추억 지도"
+        static let searchLabel = "검색"
+        static let searchHint = "장소나 추억을 검색합니다."
+        static let addMemoryFab = "추억 기록"
+        static let groupChipPlaceholder = "우리 그룹"
+        static let groupChipHint = "현재 그룹을 바꾸거나 그룹 허브를 엽니다."
+        static let filterAll = "전체"
+        static let filterDate = "데이트"
+        static let filterTrip = "여행"
+        static let filterAnniversary = "기념일"
+        static let filterFood = "맛집"
     }
 
     // MARK: Common
@@ -94,12 +104,19 @@ enum UnfadingLocalized {
 
     enum Summary {
         static let tonightsRewind = "오늘의 리와인드"
+        static let selectedEyebrow = "선택한 추억"
         static let sampleTitle = "상수 루프톱 저녁"
         static let sampleBody = "3년 전 오늘, 이곳에서 공연 뒤 함께 핀을 남겼습니다. 오늘 아침 새 반응 2개가 도착했습니다."
         static let friendCount = "친구 4명"
         static let joyTag = "기쁨"
         static let nightOutTag = "밤 나들이"
         static let photoSetTag = "사진 모음"
+
+        /// Body text for the selected-pin state. Short-label is the pin's short
+        /// label (e.g., "Dinner"); we interpolate that into a Korean sentence.
+        static func selectedBodyTemplate(short: String) -> String {
+            "이 핀에 남겨진 추억입니다. 짧은 메모: \(short). 전체 기록은 상세 화면에서 볼 수 있습니다."
+        }
     }
 
     // MARK: Composer

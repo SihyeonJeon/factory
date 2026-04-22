@@ -3,12 +3,16 @@ import SwiftUI
 struct MemorySummaryCard: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
+    /// When a pin is selected on the map, the card shows that pin's title and
+    /// short label. When nil, it shows the default sample "오늘의 리와인드" copy.
+    var selectedPin: SampleMemoryPin? = nil
+
     var body: some View {
         ScrollView(.vertical, showsIndicators: dynamicTypeSize.isAccessibilitySize) {
             VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.lg - 2) {
                 header
 
-                Text(UnfadingLocalized.Summary.sampleBody)
+                Text(selectedPinBody)
                     .font(UnfadingTheme.Font.subheadline())
                     .foregroundStyle(UnfadingTheme.Color.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -20,11 +24,6 @@ struct MemorySummaryCard: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(maxHeight: dynamicTypeSize.isAccessibilitySize ? 320 : nil, alignment: .top)
-        .unfadingCardBackground(
-            fill: UnfadingTheme.Color.sheet,
-            radius: UnfadingTheme.Radius.sheet,
-            material: .regular
-        )
     }
 
     @ViewBuilder
@@ -45,10 +44,10 @@ struct MemorySummaryCard: View {
 
     private var titleBlock: some View {
         VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
-            Text(UnfadingLocalized.Summary.tonightsRewind)
+            Text(selectedPinEyebrow)
                 .font(UnfadingTheme.Font.captionSemibold())
                 .foregroundStyle(UnfadingTheme.Color.textSecondary)
-            Text(UnfadingLocalized.Summary.sampleTitle)
+            Text(selectedPinTitle)
                 .font(UnfadingTheme.Font.title3Bold())
                 .foregroundStyle(UnfadingTheme.Color.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -76,13 +75,29 @@ struct MemorySummaryCard: View {
                 MemoryTag(title: UnfadingLocalized.Summary.nightOutTag, systemImage: "moon.stars.fill")
                 MemoryTag(title: UnfadingLocalized.Summary.photoSetTag, systemImage: "photo.on.rectangle")
             }
-
             VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.sm + 2) {
                 MemoryTag(title: UnfadingLocalized.Summary.joyTag, systemImage: "sparkles")
                 MemoryTag(title: UnfadingLocalized.Summary.nightOutTag, systemImage: "moon.stars.fill")
                 MemoryTag(title: UnfadingLocalized.Summary.photoSetTag, systemImage: "photo.on.rectangle")
             }
         }
+    }
+
+    // MARK: Selected-pin-aware content
+
+    private var selectedPinEyebrow: String {
+        selectedPin == nil ? UnfadingLocalized.Summary.tonightsRewind : UnfadingLocalized.Summary.selectedEyebrow
+    }
+
+    private var selectedPinTitle: String {
+        selectedPin?.title ?? UnfadingLocalized.Summary.sampleTitle
+    }
+
+    private var selectedPinBody: String {
+        if let short = selectedPin?.shortLabel {
+            return UnfadingLocalized.Summary.selectedBodyTemplate(short: short)
+        }
+        return UnfadingLocalized.Summary.sampleBody
     }
 }
 
