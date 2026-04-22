@@ -1,4 +1,15 @@
-workspace/
+# round_foundation_reset_r1: un-gitignore iOS source + project spec; keep generated Xcode output ignored
+workspace/*
+!workspace/ios/
+workspace/ios/*
+!workspace/ios/App/
+!workspace/ios/Features/
+!workspace/ios/Shared/
+!workspace/ios/Tests/
+!workspace/ios/project.yml
+workspace/ios/MemoryMap.xcodeproj/
+workspace/ios/.build/
+workspace/ios/.deriveddata/
 .env
 __pycache__/
 .claude/
@@ -7,3 +18,4 @@ __pycache__/
 archived_workspaces/
 .mcp.json
 docs/design-docs/travel deepsight.zip
+docs/design-docs/unfading.zip

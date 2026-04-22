@@ -1,0 +1,53 @@
+name: MemoryMap
+options:
+  bundleIdPrefix: com.jeonsihyeon
+  deploymentTarget:
+    iOS: "18.0"
+settings:
+  base:
+    PRODUCT_BUNDLE_IDENTIFIER: com.jeonsihyeon.memorymap
+    DEVELOPMENT_TEAM: ""
+targets:
+  MemoryMap:
+    type: application
+    platform: iOS
+    sources:
+      - App
+      - Features
+      - Shared
+    info:
+      path: App/Info.plist
+      properties:
+        UILaunchScreen:
+          UIColorName: ""
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        NSLocationWhenInUseUsageDescription: "Show nearby memory pins and place-based rewind moments."
+        NSLocationAlwaysAndWhenInUseUsageDescription: "Deliver rewind moments when you return to meaningful places."
+        NSPhotoLibraryAddUsageDescription: "Save shared memory photos to your library."
+        NSPhotoLibraryUsageDescription: "Attach photos to group memories."
+        UNUserNotificationCenterUsageDescription: "Send rewind reminders and group updates."
+    settings:
+      base:
+        INFOPLIST_KEY_CFBundleDisplayName: MemoryMap
+        SWIFT_VERSION: "5.10"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: NO
+    dependencies:
+      - sdk: MapKit.framework
+  MemoryMapTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - Tests
+    dependencies:
+      - target: MemoryMap
+schemes:
+  MemoryMap:
+    build:
+      targets:
+        MemoryMap: all
+        MemoryMapTests: [test]
+    test:
+      targets:
+        - MemoryMapTests

@@ -1,0 +1,560 @@
+OpenAI Codex v0.121.0 (research preview)
+--------
+workdir: /Users/jeonsihyeon/factory
+model: gpt-5.4
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: none
+reasoning summaries: none
+session id: 019db43d-746e-73b3-b33c-5dda3770df91
+--------
+user
+Codex — round 2 planning. User directive (2026-04-23):
+- dual-operator cross-validation harness with autonomous loop
+- strict spec/convention/governance/linter compliance
+- **code as reusable assets/units** (explicit emphasis)
+- prior workspace code predates these rules, needs major reset via harness loop
+- quality context recorded/updated after every process
+
+CRITICAL real-state discovery (verified today): `workspace/ios/` has 12 Swift files, 10 tests, 3 tabs (Map/Rewind/Groups), NO UnfadingTheme, NO Korean UI. SESSION_RESUME's Sprint 51 / 140-test narrative does NOT match this workspace. Most deepsight screens don't exist. `workspace/` is gitignored. Round 1's verdict advisory on UnfadingTheme was tip of this iceberg.
+
+Read:
+- `context_harness/operator/meetings/2026-04-23_round2_foundation_reset_plan.md` (full scope + 8 questions)
+- `docs/design-docs/deepsight_tokens.md` (still valid — same source as unfading.zip per SHA match)
+- `docs/design-docs/deepsight_slicing_manifest.md`
+- `workspace/ios/App/RootTabView.swift` (representative of current state)
+- `workspace/ios/Features/Home/MemorySummaryCard.swift` (shows Color.white inline usage)
+
+8 questions in the meeting file, all gating round 2 scope:
+
+Q1 — scope (theme-only vs foundation+refactor+localization vs include screen)
+Q2 — module granularity (file count vs cohesion)
+Q3 — Korean localization mechanism (plain Swift vs xcstrings)
+Q4 — un-gitignore `workspace/` or keep evidence-manifest audit
+Q5 — doc reconciliation discipline (SESSION_RESUME rewrite vs preamble)
+Q6 — acceptance criteria teeth (specific grep-checkable rules)
+Q7 — Swift linter now vs later
+Q8 — cross-validation ownership split per stage
+
+My leans: (b) foundation+refactor+localization, one file per module, plain Swift namespace, un-gitignore workspace, rewrite SESSION_RESUME + archive old narrative, adopt the listed acceptance criteria, add minimal grep lint now, Codex on design artifacts + review / Claude Code on Swift + capture / Codex on verdict.
+
+Respond short. Agree or counter on each. If you want to add a 9th must-address item, name it. If we converge, you'll author spec/acceptance/eval_protocol next.
+
+Scope: review + planning. Do not write files yet.
+codex
+I’ll read the round 2 planning meeting and the specific source/context files, then answer the eight scope questions directly with any needed counters. No writes.
+exec
+/bin/zsh -lc "sed -n '1,260p' context_harness/operator/meetings/2026-04-23_round2_foundation_reset_plan.md" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+---
+round: round_foundation_reset_r1
+stage: overall_planning
+status: in_review
+participants: [claude_code, codex]
+decision_id: 20260423-round2-foundation-reset-plan
+contract_hash: none
+created_at: 2026-04-23T00:10:00Z
+codex_session_id: 019db43d-746e-73b3-b33c-5dda3770df91
+---
+
+# Meeting — Round 2 Plan: `round_foundation_reset_r1`
+
+**Purpose:** Kick off implementation rounds for the Unfading UI/UX redesign. Round 1 produced contract-only analysis (tokens/gap/slicing). This round must confront a bigger gap than round 1 foresaw and establish the reusable-asset foundation every subsequent slice will compose against.
+
+**Chair:** Claude Code Operator
+**Peer:** Codex Operator (same session)
+**User directive (2026-04-23):** dual-operator harness + spec/convention/governance/linter compliance + code-as-reusable-assets + autonomous cross-validation loop. Docs-vs-code gap predates these rules; fix via harness loop.
+
+## Context — real-state discovery (authoritative)
+
+Targeted inspection of `workspace/ios/` today shows the actual app is at MVP scale, not at the advanced state SESSION_RESUME.md narrates. Facts:
+
+- **12 Swift files, 1,135 lines total (including tests).** Not the Sprint 51 140-test history.
+- **10 tests** in `Tests/MemoryMapTests.swift`, not 140.
+- **3 tabs** (Map / Rewind / Groups) in `RootTabView.swift`. No Calendar, no Settings, no Memory Detail, no archive.
+- **No `UnfadingTheme`** anywhere; code uses `Color.accentColor` and inline `Color.white.opacity(...)`.
+- **No Korean** in Swift source; tab labels literal `"Map"`, `"Rewind"`, `"Groups"`.
+- **`workspace/` gitignored** — Swift changes won't appear in git commit traceability; governance audit will be evidence-hash based, not git-diff based.
+
+`docs/references/coding-conventions.md`, `docs/design-docs/ios-architecture.md`, and `SKILLS.md` S-17 all describe governance that the actual code violates from day one. Round 1's verdict advisory #2 (UnfadingTheme missing) was the tip of this iceberg.
+
+Raw deepsight inputs at `docs/design-docs/unfading_design/` are SHA-identical to `docs/design-docs/travel_deepsight/` (verified via `shasum`). The user renamed/relocated; content is unchanged. Round 1 analysis artifacts (`deepsight_tokens.md`, `deepsight_gap_analysis.md`, `deepsight_slicing_manifest.md`) remain valid inputs for planning.
+
+## Proposal — round 2 scope
+
+**Name:** `round_foundation_reset_r1`
+**Type:** implementation (Swift + operator doc reconciliation)
+**Principle:** build reusable modules, not one-shot features. Each module must be importable and composable by future screen/navigation slices without modification.
+
+### Deliverables (reusable assets)
+
+1. **`workspace/ios/Shared/UnfadingTheme.swift`** — canonical token namespace. Namespaces: `UnfadingTheme.Color`, `.Font`, `.Radius`, `.Spacing`, `.Sheet` (snap points). Values from `deepsight_tokens.md`. No colors defined anywhere else.
+2. **`workspace/ios/Shared/UnfadingLocalized.swift`** (or `Localizable.xcstrings` sidecar) — Korean string keys for current UI (3 tabs + navigation titles + existing MemoryComposerSheet). Establishes `String(localized:)` pattern.
+3. **`workspace/ios/Shared/UnfadingButtonStyle.swift`** — reusable press style (coral primary fill + press feedback) per deepsight component observations.
+4. **`workspace/ios/Shared/UnfadingCardBackground.swift`** — reusable card surface (cream/warm + radius 20 + subtle shadow).
+5. **Refactors (minimum viable)** to use the new modules:
+   - `RootTabView.swift`: tab labels → Korean via `UnfadingLocalized`; tint → `UnfadingTheme.Color.primary`
+   - `MemoryMapHomeView.swift`, `MemoryComposerSheet.swift`, `MemorySummaryCard.swift`: replace inline `Color.accentColor` / `Color.white.opacity(...)` with `UnfadingTheme.Color.*`
+6. **Test additions** exercising the new modules:
+   - `UnfadingThemeTests.swift` — asserts key token values (coral hex, radii) and non-empty localizations
+   - Target: 10 baseline → ≥ 18 tests after this round
+7. **Doc reconciliation:**
+   - `SESSION_RESUME.md` — truthful "Reality Baseline" section replacing the Sprint 51 narrative; old narrative moved to `docs/exec-plans/sprint-history-pre-v5.md` as an explicitly-labeled archive
+   - `docs/references/coding-conventions.md` — amendment-style note that `UnfadingTheme` began this round and prior inline-color rules applied only post-v5.6
+   - `SKILLS.md` S-17 — clarify that the checklist is forward-looking, pre-round-2 code did not comply
+8. **Governance decision:**
+   - Decide whether to un-gitignore `workspace/` so Swift changes land in git (makes commit traceability real) OR keep gitignored with evidence-manifest audit
+
+### Non-goals (explicitly deferred)
+
+- New screens (Calendar / Settings / MemoryDetail / archive) — future rounds
+- Navigation restructure (still 3 tabs this round; 5-tab deepsight layout is a later slice)
+- Map redesign beyond token swap
+- Rewind / Groups feature expansion
+- MemoryComposer restructure (only color/string surface refactor)
+
+## Questions for Codex
+
+**Q1 — Scope.** Is this the right first implementation round? Alternatives: (a) even smaller (theme-only, no localization), (b) this proposal, (c) include one screen redesign. I lean (b). Your take?
+
+**Q2 — Reusable-asset unit.** The user explicitly said "재사용 가능한 자산/에셋 단위로 코딩." How granular should modules be? My proposal: one file per module (Theme / Localized / ButtonStyle / CardBackground). Should we split further (e.g., separate `UnfadingColors.swift` from `UnfadingRadii.swift`) or combine? Trade-off: file count vs cohesion.
+
+**Q3 — Korean localization mechanism.** `Localizable.xcstrings` (SwiftUI 5.9+ native, tooling-supported) vs a plain Swift namespace `UnfadingLocalized.tabMap = "지도"`. Plain Swift is simpler for v1; xcstrings scales to future localization. I lean plain Swift namespace for this round, xcstrings migration as a later slice if we ever need multi-locale. Counter?
+
+**Q4 — gitignore decision.** `workspace/` is currently gitignored. Commit traceability doesn't see Swift changes. Options: (a) remove `workspace/` from .gitignore so round commits actually prove Swift landed; (b) keep gitignored, require `gate_evidence.json` to include an `output_artifacts` array with Swift file paths + SHAs for every implementation round. I lean (a) — un-gitignore now, before the repo gets too big. Governance much tighter. Your view?
+
+**Q5 — Doc reconciliation discipline.** SESSION_RESUME has been carrying forward false history. The clean fix is: truthful rewrite of current state + archive of prior narrative labeled clearly. Any objection to that approach, or do you prefer a less destructive reconciliation (e.g., preamble noting "pre-v5 narrative below" without rewriting)?
+
+**Q6 — Round acceptance criteria teeth.** I want specific, checkable acceptance:
+- Zero `Color.white`, `Color.black`, `Color.accentColor`, `Color(red:...)` outside `UnfadingTheme.swift`
+- Zero literal English strings in `*View.swift` files except identifiers
+- All 5 modules exist and are imported at least once
+- Tests ≥ 18 and all pass
+- `UnfadingTheme.Color.coral` sha-stable value matching `deepsight_tokens.md` Coral `#F5998C`
+Any additions or concerns?
+
+**Q7 — Linter.** Round 1 linter scope was operator docs only (not Swift). This round introduces reusable Swift modules. Do we expand `lint_config.toml` to cover Swift conventions NOW (e.g., forbidden `Color.white` check via grep pattern) or defer to a v5.7 amendment? I lean: add a minimal grep-based Swift lint in this round's acceptance, full Swift linting deferred.
+
+**Q8 — Cross-validation pattern.** Per user directive, Codex and I cross-validate. Suggested per-slice split:
+- Spec/acceptance/eval_protocol: Codex authors, Claude Code reviews
+- Swift implementation: Claude Code authors, Codex code-review
+- Evidence capture: Claude Code (factual only)
+- Verdict: Codex
+Agree or rebalance?
+
+Respond with:
+- position on Q1-Q8
+- any dependency you'd insert (e.g., "do X before Y")
+- any Open Question the gap analysis raised that we must resolve BEFORE this round (e.g., Calendar placement, map palette, UnfadingTheme strategy)
+
+If converged: I'll update meeting status to decided, you author spec/acceptance/eval_protocol, I author whitelist/convention/lint pointers, lock, then iterate the implementation stages.
+
+## Counter / Review
+(Codex response appended here.)
+
+## Convergence
+(Iterated here.)
+
+## Decision
+(After convergence.)
+
+## Challenge Section
+(Required at decided status.)
+
+## Amendment Detail
+N/A — planning meeting.
+
+exec
+/bin/zsh -lc "sed -n '1,220p' docs/design-docs/deepsight_tokens.md && sed -n '1,180p' docs/design-docs/deepsight_slicing_manifest.md" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+# Deepsight Design Tokens
+
+## Source Inventory
+
+| Source | SHA-256 | Notes |
+|---|---|---|
+| `docs/design-docs/travel_deepsight/Unfading Prototype.html` | `sha256:df8fe6badd57d17805a36385c1d9f62efd4d964efca3aa7bdc8d9c2189cb471e` | Interactive web prototype. Contains the highest-signal token data in an embedded `THEME` object and screen scene list. |
+| `docs/design-docs/travel_deepsight/check.png` | `sha256:cb14f4bb14080f84d8c1b8ef4cce095505f778548ab998a6514038da7242e614` | Eight-screen overview. Confirms screen list and high-level tokens shown in the right panel. |
+| `docs/design-docs/travel_deepsight/debug.png` | `sha256:0bfe72e4668458114180ea91d60ae019c99e46994ea7326ba7ae33c855947d92` | Mostly black/low-signal image during this extraction pass. |
+
+## Color Tokens
+
+The prototype defines the following core theme values in `Unfading Prototype.html`.
+
+| Prototype token | Value | Proposed semantic role | Existing contract mapping note |
+|---|---:|---|---|
+| `primary` | `#F5998C` | Warm coral primary action/accent | Candidate for `UnfadingTheme.primary`. |
+| `primaryLight` | `#FAC7BC` | Soft coral highlight/background gradient stop | Candidate for a primary-light token. |
+| `secondary` | `#C2B0DE` | Lavender secondary accent | Candidate for `UnfadingTheme.secondary`. |
+| `secondaryLight` | `#E3D9F2` | Soft lavender highlight/background gradient stop | Candidate for a secondary-light token. |
+| `card` | `#FFFAF5` | Cream card background | Candidate for card/background token. |
+| `sheet` | `#FFF8F0` | Warm sheet background | Candidate for bottom-sheet surface token. |
+| `surface` | `#FAF2EB` | Warm app surface/map-adjacent surface | Candidate for grouped surface token. |
+| `textPrimary` | `#403833` | Primary warm dark text | Candidate for `UnfadingTheme.textPrimary`. |
+| `textSecondary` | `#8C8078` | Secondary warm gray text | Candidate for `UnfadingTheme.textSecondary`. |
+| `textTertiary` | `#B5A89E` | Tertiary/muted warm gray text | Candidate for tertiary text token. |
+| `accentSoft` | `rgba(245,153,140,0.15)` | Soft primary tint | Candidate for selected/background tint token. |
+| `chipBg` | `#F5EBE1` | Filter chip background | Candidate for chip/background token. |
+| `divider` | `rgba(64,56,51,0.08)` | Hairline divider | Candidate for divider token. |
+
+Additional repeated palette values appear in mock data and map styles:
+
+| Value | Observed use |
+|---:|---|
+| `#8FB7A8` | Green member color, place/trip gradients, general-group mode accents. |
+| `#E4B978` | Gold member color and warm photo/event gradients. |
+| `#A9A1C7`, `#9A85C0` | Purple/lavender member and gradient values. |
+| `#7B9FD4`, `#D48FB2`, `#8FA88B`, `#C7A77B`, `#7BAFB1` | Member/avatar colors. |
+| `#F4ECE3` | Outer prototype/background canvas. |
+
+Map-style palettes are present for multiple themes:
+
+| Map theme area | Values observed |
+|---|---|
+| Default light map | `#F0EBE3`, `#F7F1E8`, `#D8E4E6`, `#FFFFFF`, `#E3E9D6`, `#E8DFD0`, `#8C8078` |
+| Warm map | `#F4ECE3`, `#FAF2EB`, `#E0D4C6`, `#FFF8F0`, `#E8DFD0`, `#EEDFC9`, `#A8968A` |
+| Vintage map | `#EADFCB`, `#F3E7CE`, `#D6BFA0`, `#FDF5E3`, `#D9CBA6`, `#E8D6B2`, `#8A7555` |
+| Dark map | `#2A2320`, `#322A26`, `#1F1B19`, `#3F3631`, `#3A322C`, `#473C36`, `#8C8078` |
+
+## Typography Tokens
+
+| Source value | Observed use | Mapping note |
+|---|---|---|
+| `Gowun Dodum` | Primary Korean UI font in the prototype body and scene controls | Native implementation should map to semantic SwiftUI fonts, not a hardcoded custom size. |
+| `Nunito` | Secondary Latin/UI font in prototype labels and notes | Native implementation should avoid hardcoded custom font unless product explicitly adopts it. |
+| `JetBrains Mono` | Imported by prototype; no required product use identified from the visible scenes | No native token proposed yet. |
+| `17`, `13`, `10.5` px examples | Scene rail title, buttons, caption-style text | Exact native values should be translated into semantic Dynamic Type styles during Phase 2 contract update. |
+
+The existing coding conventions forbid hardcoded font sizes in Swift and require semantic styles or scaled metrics. Therefore these prototype typography values are extraction inputs, not direct Swift values.
+
+## Spacing And Radius
+
+Core radius tokens from the prototype `THEME` object:
+
+| Prototype token | Value | Observed use |
+|---|---:|---|
+| `cardRadius` | `20` | Cards and large content modules. |
+| `buttonRadius` | `16` | Buttons and medium controls. |
+| `chipRadius` | `12` | Filter chips and compact controls. |
+| `sheetRadius` | `28` | Bottom sheet top corners when not fully expanded. |
+
+The `check.png` design panel confirms radii `20/16/12/8` and sheet snaps `22%/52%/88%`. The HTML `THEME` object confirms `20/16/12/28`; an explicit `8` token was visible in control padding/radius usage but not in the main `THEME` object.
+
+Sheet snap points:
+
+| State | Value | Observed behavior |
+|---|---:|---|
+| Collapsed | `22%` | Summary-only sheet state. |
+| Default | `52%` | Main browsing state. |
+| Expanded | `88%` | Cluster/marker filtered browsing state. |
+
+Other repeated spacing values observed in the prototype include `8`, `12`, `14`, `18`, `20`, and `28` px in padding/gap/frame contexts. These are not yet proposed as final Swift spacing tokens because the source does not define a named spacing scale.
+
+## Component Tokens
+
+| Component family | Prototype token/behavior | Implementation mapping note |
+|---|---|---|
+| Bottom sheet | Warm sheet surface, 3 snap states, top radius `28`, expanded radius `0`, height animation `340ms cubic-bezier(0.32, 0.72, 0, 1)` | Maps to main map bottom-sheet contract. Swift implementation should preserve native gesture behavior. |
+| Cards | Cream/warm card surfaces, radius `20`, subtle warm shadows/dividers | Requires centralized theme colors before screen work. |
+| Buttons | Coral primary fill, radius `16`, white text/icons | Map to themed button styles, not inline colors. |
+| Chips/segmented controls | `chipBg`, `chipRadius 12`, selected coral state | Map to filter chip and sheet tab components. |
+| Pins/markers | Coral primary pin, selected marker scale/shadow, cluster count state | Map to `MemoryPinMarker` and map clustering visuals. |
+| Avatars/member colors | Per-member accent palette | Needs domain-safe member color handling or deterministic palette. |
+| Map controls | Warm sheet surface buttons above the sheet | Maps to current locate/reset controls. |
+| Rewind card | Coral immersive gradient, white overlay text/actions | Maps to Rewind surface and shareable card concept. |
+| Group mode presentation | Couple/general mode changes wording and cover gradients, not domain model | Preserve single group domain model. |
+
+## Open Questions
+
+- The active Swift workspace does not expose `UnfadingTheme.swift` during targeted search, while `ios-architecture.md` and `coding-conventions.md` require `UnfadingTheme`. Phase 2 must confirm whether to create, restore, or update the theme file before implementing tokens.
+- Exact Dynamic Type mappings for prototype typography are not derivable from CSS pixel values alone.
+- The role of the `8` radius value should be confirmed. It is visible in the design panel and some control usage, but not named in the prototype `THEME` object.
+- The low-signal `debug.png` did not provide usable additional token data.
+- Map palette tokens need product direction before native implementation: direct custom map styling may not map cleanly to the current iOS map stack.
+# Deepsight Slicing Manifest
+
+## Source Inventory
+
+| Source | SHA-256 | Notes |
+|---|---|---|
+| `docs/design-docs/travel_deepsight/Unfading Prototype.html` | `sha256:df8fe6badd57d17805a36385c1d9f62efd4d964efca3aa7bdc8d9c2189cb471e` | Primary source for scenes, tokens, and interaction notes. |
+| `docs/design-docs/travel_deepsight/check.png` | `sha256:cb14f4bb14080f84d8c1b8ef4cce095505f778548ab998a6514038da7242e614` | Confirms eight-screen overview and high-level token panel. |
+| `docs/design-docs/travel_deepsight/debug.png` | `sha256:0bfe72e4668458114180ea91d60ae019c99e46994ea7326ba7ae33c855947d92` | Low-signal image; no additional slicing input extracted. |
+
+## Slicing Principles
+
+- Follow `docs/design-docs/design-revision-workflow.md` Phase 3.
+- One implementation round should affect at most 1-2 app screens where practical.
+- Token/theme work comes first so later screen slices share stable inputs.
+- Navigation work comes before screen redesign if Calendar or Group Hub placement changes.
+- Screen slices should keep file whitelists narrow and avoid unrelated refactors.
+- Accessibility and HIG review should be a final sweep after visual/interaction slices land.
+- Raw Deepsight inputs stay read-only; derived contracts and implementation briefs reference hashes.
+
+## Proposed Sequence
+
+1. **Contract update round**: update product/design contracts from this gap analysis after human approval.
+2. **Token/theme round**: establish native theme tokens for Deepsight palette, radius scale, text colors, sheet/card/chip surfaces, and selected marker states.
+3. **Navigation round**: decide and implement root navigation placement for Map, Calendar, Rewind, and Group Hub if the product accepts Deepsight's first-class Calendar.
+4. **Map shell round**: map default state, top chrome, sheet defaults, FAB, filter chips, and map controls.
+5. **Map selected-context round**: cluster selected and pin selected states, including raised sheet, selected marker styling, clear action, and filtered content.
+6. **Memory detail round**: member contribution cards, emotion/cost/location sections, and previous/next context navigation.
+7. **Memory composer round**: photo grid, source options, inferred place/time confirmation UI, and selected-context entry paths.
+8. **Calendar round**: month/year picker, day memory dots, selected-date event cards, and cost summary.
+9. **Rewind round**: immersive rewind card, place-sensitive reminder affordance, and share/shareable-card behavior.
+10. **Group Hub round**: cover/avatar header, mode toggle, member/invite management, map theme/pin pack/premium surfaces.
+11. **Accessibility/HIG sweep**: VoiceOver labels/order, 44pt targets, Dynamic Type, Korean copy, and visual QA across redesigned screens.
+
+## Sprint Slices
+
+| Slice | Primary output | Screens affected | Dependencies |
+|---|---|---|---|
+| Contract update | Updated `ui_ux_screen_contract.md`, `ios-architecture.md`, coding-convention token notes, and round acceptance file | None directly | Human approval of Deepsight direction |
+| Token/theme | Native theme source of truth and token mappings | Shared | Contract update |
+| Navigation | Root routing model and tab/surface placement | Map, Calendar, Rewind, Group Hub | Contract update |
+| Map shell | Default map browsing surface | Main Map | Token/theme, navigation if changed |
+| Map selected context | Cluster selected and pin selected map states | Main Map states | Map shell |
+| Memory detail | Detail reading surface | Memory Detail | Token/theme |
+| Memory composer | Creation flow | Create/Edit Memory | Token/theme, selected-context decisions |
+| Calendar | Dedicated calendar browsing | Calendar | Navigation decision |
+| Rewind | Rewind surface | Rewind | Token/theme |
+| Group Hub | Group management and mode presentation | Group Hub | Navigation decision, token/theme |
+| Accessibility/HIG sweep | Cross-screen quality and native compliance | All redesigned screens | All prior slices |
+
+## Dependencies
+
+- Human approval is needed before product contract changes that alter navigation or screen inventory.
+- Theme source of truth must be resolved before visual implementation because docs require centralized `UnfadingTheme` usage, but targeted search did not find an active Swift theme file.
+- Calendar placement must be decided before implementing Calendar visuals.
+- Map selected-context behavior depends on stable bottom-sheet states.
+- Composer confirmation behavior depends on place/time inference contracts already present in `ui_ux_screen_contract.md`.
+- Accessibility acceptance criteria should be attached to each screen brief and rechecked in the final sweep.
+
+## Non-Goals
+
+This manifest does not:
+
+- Implement Swift changes
+- Change navigation by itself
+- Approve the Deepsight redesign for production
+- Decide exact Korean copy
+- Decide exact native map styling feasibility
+- Replace per-round file whitelists or acceptance criteria
+
+## Open Questions
+
+- Should the token/theme round create a new `UnfadingTheme.swift`, restore an expected missing file, or map tokens into another existing theme mechanism?
+- Should Calendar be restored as a first-class tab/surface, or stay reachable from Map/Rewind flows?
+- Which map palette is product-approved for native implementation: default, warm, vintage, dark, or a subset?
+- Should Group Hub include settings/premium controls, or should those remain separate in a future settings surface?
+- Should sheet snap points be exact `22%/52%/88%` values, or native approximations derived during implementation?
+- Does `debug.png` have intended content that should be re-exported before implementation planning continues?
+
+exec
+/bin/zsh -lc "sed -n '1,220p' workspace/ios/App/RootTabView.swift && sed -n '1,180p' workspace/ios/Features/Home/MemorySummaryCard.swift" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+import SwiftUI
+
+struct RootTabView: View {
+    private let evidenceMode: MemoryComposerEvidenceMode
+
+    init(evidenceMode: MemoryComposerEvidenceMode = .none) {
+        self.evidenceMode = evidenceMode
+    }
+
+    var body: some View {
+        TabView {
+            MemoryMapHomeView(evidenceMode: evidenceMode)
+                .tabItem {
+                    Label("Map", systemImage: "map")
+                }
+                .accessibilityLabel("Map tab")
+                .accessibilityHint("Browse memory pins and place history on the map.")
+
+            RewindFeedView()
+                .tabItem {
+                    Label("Rewind", systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                }
+                .accessibilityLabel("Rewind tab")
+                .accessibilityHint("Review rewind moments and reminder settings.")
+
+            GroupHubView()
+                .tabItem {
+                    Label("Groups", systemImage: "person.3")
+                }
+                .accessibilityLabel("Groups tab")
+                .accessibilityHint("Create groups, join groups, and manage invites.")
+        }
+        .tint(Color.accentColor)
+    }
+}
+
+#Preview {
+    RootTabView()
+}
+import SwiftUI
+
+struct MemorySummaryCard: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    var body: some View {
+        ScrollView(.vertical, showsIndicators: dynamicTypeSize.isAccessibilitySize) {
+            VStack(alignment: .leading, spacing: 14) {
+                header
+
+                Text("Three years ago today, your group dropped a pin here after the concert. Two new reactions arrived this morning.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                tagSection
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxHeight: dynamicTypeSize.isAccessibilitySize ? 320 : nil, alignment: .top)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+    }
+
+    @ViewBuilder
+    private var header: some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 12) {
+                titleBlock
+                peopleBadge
+            }
+        } else {
+            HStack(alignment: .top, spacing: 12) {
+                titleBlock
+                Spacer(minLength: 12)
+                peopleBadge
+            }
+        }
+    }
+
+    private var titleBlock: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Tonight's rewind")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+            Text("Sangsu rooftop dinner")
+                .font(.title3.weight(.bold))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var peopleBadge: some View {
+        Label("4 friends", systemImage: "person.3.fill")
+            .font(.footnote.weight(.semibold))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .frame(minHeight: 44)
+            .background(Color.white.opacity(0.16), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var tagSection: some View {
+        ViewThatFits(in: .vertical) {
+            HStack(spacing: 12) {
+                MemoryTag(title: "Joy", systemImage: "sparkles")
+                MemoryTag(title: "Night out", systemImage: "moon.stars.fill")
+                MemoryTag(title: "Photo set", systemImage: "photo.on.rectangle")
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                MemoryTag(title: "Joy", systemImage: "sparkles")
+                MemoryTag(title: "Night out", systemImage: "moon.stars.fill")
+                MemoryTag(title: "Photo set", systemImage: "photo.on.rectangle")
+            }
+        }
+    }
+}
+
+private struct MemoryTag: View {
+    let title: String
+    let systemImage: String
+
+    var body: some View {
+        Label(title, systemImage: systemImage)
+            .font(.footnote.weight(.semibold))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .frame(minHeight: 44)
+            .background(Color.accentColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+codex
+Q1: agree with **(b) foundation + refactor + localization**. Do not include a screen redesign yet. This round should create reusable assets and make existing MVP code comply enough for future slices.
+
+Q2: agree with one file per module. Keep `UnfadingTheme.swift` cohesive with nested namespaces (`Color`, `Font`, `Radius`, `Spacing`, `Sheet`). Do not split into many token files yet.
+
+Q3: agree with plain Swift namespace for now: `UnfadingLocalized`. Use Korean strings there. Defer `Localizable.xcstrings` until multi-locale becomes real.
+
+Q4: counter slightly. Do **not** un-gitignore all `workspace/`; un-gitignore source/project inputs only:
+- `workspace/ios/App/**`
+- `workspace/ios/Features/**`
+- `workspace/ios/Shared/**`
+- `workspace/ios/Tests/**`
+- `workspace/ios/project.yml`
+Keep generated `*.xcodeproj`, build outputs, DerivedData ignored. This gives commit traceability without committing generated Xcode noise.
+
+Q5: agree. Rewrite `SESSION_RESUME.md` to truthful current state and archive the old narrative as explicitly pre-v5/unverified history. Do not keep false Sprint 51/140-test data in the active state snapshot.
+
+Q6: agree, with two refinements:
+- “Zero literal English strings” should mean user-facing SwiftUI text/accessibility strings, not `systemImage`, identifiers, enum cases, or test names.
+- Add `git grep`/`rg` checks for `Color.accentColor`, `Color.white`, `Color.black`, `Color(red:`, and user-facing `Text("...English...")`/`Label("...English...")` patterns in touched view files at minimum. Whole-workspace enforcement is fine if current scope absorbs all violations.
+
+Q7: agree. Add minimal grep-based Swift lint now as acceptance/evidence checks. Do not expand the operator `lint_config.toml` into a full Swift linter yet unless the checker already supports it cleanly.
+
+Q8: agree with proposed split:
+- Codex authors spec/acceptance/eval protocol
+- Claude Code implements Swift + doc reconciliation
+- Codex reviews Swift/design compliance
+- Claude Code captures evidence
+- Codex writes verdict
+
+Dependency to insert: first decide/commit the `workspace/` tracking policy before Swift implementation starts. Otherwise commit traceability remains compromised.
+
+Open questions before this round: none that block this foundation round. Calendar placement, map palette, and full navigation can remain deferred. The only required decision now is the theme strategy: create `UnfadingTheme.swift` as the canonical source going forward.
+
+9th must-address item: add reusable asset import/use proof. Each new reusable module should be used by at least one production Swift file and at least one test, otherwise we risk creating nominal assets that future slices ignore.
+tokens used
+1,619,575
+Q1: agree with **(b) foundation + refactor + localization**. Do not include a screen redesign yet. This round should create reusable assets and make existing MVP code comply enough for future slices.
+
+Q2: agree with one file per module. Keep `UnfadingTheme.swift` cohesive with nested namespaces (`Color`, `Font`, `Radius`, `Spacing`, `Sheet`). Do not split into many token files yet.
+
+Q3: agree with plain Swift namespace for now: `UnfadingLocalized`. Use Korean strings there. Defer `Localizable.xcstrings` until multi-locale becomes real.
+
+Q4: counter slightly. Do **not** un-gitignore all `workspace/`; un-gitignore source/project inputs only:
+- `workspace/ios/App/**`
+- `workspace/ios/Features/**`
+- `workspace/ios/Shared/**`
+- `workspace/ios/Tests/**`
+- `workspace/ios/project.yml`
+Keep generated `*.xcodeproj`, build outputs, DerivedData ignored. This gives commit traceability without committing generated Xcode noise.
+
+Q5: agree. Rewrite `SESSION_RESUME.md` to truthful current state and archive the old narrative as explicitly pre-v5/unverified history. Do not keep false Sprint 51/140-test data in the active state snapshot.
+
+Q6: agree, with two refinements:
+- “Zero literal English strings” should mean user-facing SwiftUI text/accessibility strings, not `systemImage`, identifiers, enum cases, or test names.
+- Add `git grep`/`rg` checks for `Color.accentColor`, `Color.white`, `Color.black`, `Color(red:`, and user-facing `Text("...English...")`/`Label("...English...")` patterns in touched view files at minimum. Whole-workspace enforcement is fine if current scope absorbs all violations.
+
+Q7: agree. Add minimal grep-based Swift lint now as acceptance/evidence checks. Do not expand the operator `lint_config.toml` into a full Swift linter yet unless the checker already supports it cleanly.
+
+Q8: agree with proposed split:
+- Codex authors spec/acceptance/eval protocol
+- Claude Code implements Swift + doc reconciliation
+- Codex reviews Swift/design compliance
+- Claude Code captures evidence
+- Codex writes verdict
+
+Dependency to insert: first decide/commit the `workspace/` tracking policy before Swift implementation starts. Otherwise commit traceability remains compromised.
+
+Open questions before this round: none that block this foundation round. Calendar placement, map palette, and full navigation can remain deferred. The only required decision now is the theme strategy: create `UnfadingTheme.swift` as the canonical source going forward.
+
+9th must-address item: add reusable asset import/use proof. Each new reusable module should be used by at least one production Swift file and at least one test, otherwise we risk creating nominal assets that future slices ignore.
