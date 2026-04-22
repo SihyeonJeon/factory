@@ -92,6 +92,22 @@ enum UnfadingLocalized {
         static let navTitle = "캘린더"
         static let stubTitle = "달력 화면 준비 중"
         static let stubBody = "다가오는 라운드에서 월별 격자와 날짜별 추억 점을 구현합니다."
+        static let weekdayHeaders = ["일", "월", "화", "수", "목", "금", "토"]
+        static let previousMonthHint = "이전 달"
+        static let nextMonthHint = "다음 달"
+        static let emptyDayTitle = "이 날의 추억이 없어요"
+        static let emptyDayBody = "지도에서 새 추억을 기록해 이 자리를 채워보세요."
+
+        static func memoryCountFormat(_ count: Int) -> String {
+            "\(count)개의 추억"
+        }
+
+        static func monthYearFormat(_ date: Date) -> String {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "ko_KR")
+            formatter.dateFormat = "yyyy년 M월"
+            return formatter.string(from: date)
+        }
     }
 
     // MARK: Settings (stub in R3; full impl in R11)

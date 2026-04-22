@@ -1,0 +1,12 @@
+{
+  "round_id": "round_calendar_r1",
+  "notes": "Calendar full impl; 70/70 tests; 2 remediation cycles.",
+  "gate1": {"status":"pass","command":"xcodebuild test","exit_code":0,"test_count":70,"log":{"path":"context_harness/reports/round_calendar_r1/evidence/xcode_test.log","sha256":"sha256:bf2f053e4c5bc1552733b098de952d3d43ec3f6b50efd7e358879e300e08593d"}},
+  "gate2": {"status":"pass","reports":[
+    {"path":"context_harness/reports/round_calendar_r1/evidence/contract_capture.md","sha256":"sha256:38130a85e92e80dac0fb885ee5590e232ca7ea75a7ce3643e37367a1717b0875"},
+    {"path":"context_harness/reports/round_calendar_r1/verdict.md","sha256":"sha256:1ae227dc2946ff96f7827e3111cef675eeaf84e72327ca554ca20198ba2ca628"},
+    {"path":"context_harness/reports/round_calendar_r1/evidence/screenshots/01_entry_then_calendar.png","sha256":"sha256:caa5a781926f1779f990cfeeaa554f36d118940e8e1658ffc8106c043e507766"}
+  ]},
+  "gate3": {"status":"pass","cross_agreement_note":"2 remediation cycles; Codex Swift author."},
+  "gate4": {"status":"pass","metrics_source":{"path":"docs/exec-plans/process-log.jsonl","sha256":"sha256:8c31eca8bb8df6311b8c69af695b294bc272069dd19e27d6ad9fc570db659fc7"},"remediation_cycles":2,"blocker_recurrence":0}
+}

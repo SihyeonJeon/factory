@@ -1,0 +1,16 @@
+workspace/ios/Features/Calendar/CalendarView.swift
+workspace/ios/Features/Calendar/MemoryCalendarStore.swift
+workspace/ios/Shared/UnfadingMonthGrid.swift
+workspace/ios/Shared/UnfadingLocalized.swift
+workspace/ios/Tests/MemoryCalendarStoreTests.swift
+workspace/ios/Tests/UnfadingMonthGridTests.swift
+workspace/ios/project.yml
+context_harness/operator/contracts/round_calendar_r1/**
+context_harness/operator/locks/round_calendar_r1.lock
+context_harness/operator/locks/round_calendar_r1.events.jsonl
+context_harness/operator/meetings/2026-04-23_round8_*.md
+context_harness/operator/codex_transcripts/codex_r8_*.log
+context_harness/reports/round_calendar_r1/**
+context_harness/SESSION_RESUME.md
+docs/exec-plans/process-log.jsonl
+workspace/ios/MemoryMap.xcodeproj/**
