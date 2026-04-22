@@ -85,6 +85,7 @@ exempt = [
   "context_harness/operator/contracts/**",
   "context_harness/operator/locks/**",
   "context_harness/operator/indexes/**",
+  "context_harness/operator/codex_transcripts/**",
 ]
 
 # Loader pointer rule.

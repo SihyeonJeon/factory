@@ -32,7 +32,9 @@
 
 - Template: `context_harness/operator/meetings/_template.md`
 - Existing meetings: `context_harness/operator/meetings/<ISO>_<topic>.md`
+- Codex session transcripts (persist for tamper-evidence): `context_harness/operator/codex_transcripts/`
 - Process log (append JSONL on decided): `docs/exec-plans/process-log.jsonl`
+- Lock event log (per-round append-only, tamper-evident): `context_harness/operator/locks/<round_id>.events.jsonl`
 
 ## Running the checker
 

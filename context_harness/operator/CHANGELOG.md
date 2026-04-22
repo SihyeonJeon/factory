@@ -4,6 +4,63 @@ Append-only. Every operator-doc amendment must add an entry with date, summary, 
 
 ---
 
+## v5.3 — Governance Bypass Fix (2026-04-22)
+
+**Meeting:** [`meetings/2026-04-22_v5.3_bypass_fix.md`](meetings/2026-04-22_v5.3_bypass_fix.md)
+**Decision ID:** `20260422-v5.3-bypass-fix`
+**Trigger:** Stop-hook review after `d1cf6b4` flagged "v5.2 amendment validation still leaves governance bypasses". Third iteration. Codex moved from drift to enumerating **11 specific exploits** + 3 residual drift items, recommended **block**.
+
+### Trust model (new, ratified in this meeting)
+
+v5 is an **honest-agent error-reduction regime with tamper-evident audit trail**. NOT malicious-fabrication resistant. Rationale: operators are OAuth-authenticated sessions; true adversarial resistance needs external trust anchor. Deferred explicitly: cryptographic identity proof, external trusted logs, human-approval gate on close.
+
+### Tamper-evident primitives (new)
+
+- **Per-round lock event log**: `operator/locks/<round_id>.events.jsonl`. Append-only `{ts, action, lock_sha256, base_commit, amendment_file}` on `created`/`amended`/`closed`. Checker recomputes current lock sha and blocks if it differs from the last event. `close` is the only action that advances sha; records post-close sha (Codex R4 Q6 fix).
+- **Gate evidence hashed into lock at close** — new field `lock.gate_evidence_sha256`. Later edits detectable.
+- **Codex identity presence** — meeting frontmatter `codex_session_id` (regex `[A-Za-z0-9._:-]{8,}`) and/or `codex_transcript` (file path must exist). Required when `codex` is in participants. Transcripts persisted at `context_harness/operator/codex_transcripts/`.
+
+### Amendment bypass closure (blockers 1-4, 9 of Codex enumeration)
+
+- Checker disk-scans `*.amendment.*` files; unregistered file = blocker
+- Every amendment requires: `file`, `target`, `sha256` (starts with `sha256:`), `supersedes`, `meeting` in lock
+- `.md` amendments: frontmatter `target`/`meeting` must match lock entry
+- `.txt` amendments: body format (`+path`/`-path` lines) validated
+- Meeting must be `status: decided`, `round` matching lock, stage amendment-eligible, and body contains `## Amendment Detail` referencing amendment filename
+
+### Gate evidence strict schema (blocker 7-8)
+
+`gate_evidence.json` per-gate required fields:
+- `gate1`: status, command, exit_code, test_count, log (path+sha256)
+- `gate2`: status, reports (array of 3 path+sha)
+- `gate3`: status, cross_agreement_note OR summary (path+sha)
+- `gate4`: status, metrics_source (path+sha), remediation_cycles, blocker_recurrence
+
+Checker verifies all referenced paths exist and SHAs match.
+
+### Other fixes
+
+- **`cmd_lock` refuses pre-existing amendment files** (blocker surface for silent rebinding)
+- **`stages_completed` demoted to informational** — ID membership only, never gates
+- **Residual doc drift**: REGULATION `.effective.*` claim removed; PROCESS_AUDIT role matrix line aligned with v5.2 NOT-enforced list; CHANGELOG v5.2 13/14 note retained with explicit known edge case
+
+### Lock schema bump
+
+Schema version `1` → `2`. New fields: `gate_evidence_sha256`. Field `stages_completed` now informational.
+
+### Convergence trend
+
+| Iteration | Blockers found | Advisories | Notes |
+|---|---:|---:|---|
+| v5.0 bootstrap | 12 | 3 | Drift audit |
+| v5.1 drift fix | 7 | 3 | Drift audit |
+| v5.2 drift fix | 11 | 3 | Exploit enumeration (new axis) |
+| v5.3 bypass fix | 0 | 1 | Expected — next stop-hook may still find the boundary of honest-agent scope |
+
+Next stop-hook iteration: if Codex finds more, they're either (a) further bypasses within honest-agent scope = routine fix, or (b) explicitly into malicious-fabrication territory = deferred per trust model.
+
+---
+
 ## v5.2 — Second Drift Fix (2026-04-22)
 
 **Meeting:** [`meetings/2026-04-22_v5.2_drift_fix.md`](meetings/2026-04-22_v5.2_drift_fix.md)

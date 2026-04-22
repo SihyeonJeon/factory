@@ -1,0 +1,2503 @@
+OpenAI Codex v0.121.0 (research preview)
+--------
+workdir: /Users/jeonsihyeon/factory
+model: gpt-5.4
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: none
+reasoning summaries: none
+session id: 019db43d-746e-73b3-b33c-5dda3770df91
+--------
+user
+Codex Operator — stop-hook review flagged specifically "v5.2 amendment validation still leaves governance bypasses" after commit d1cf6b4. Third iteration. We're converging (12→7→?) but you've identified that my v5.2 amendment validation has holes.
+
+Please enumerate every governance bypass that still exists, whether in the amendment flow or elsewhere. For each:
+1. File + line range
+2. The specific bypass (what could an operator do to violate governance while passing the checker?)
+3. Severity: blocker vs advisory per REGULATION §5.1
+4. Recommended fix (short — I'll implement)
+5. Classification: routine vs needs peer review
+
+Focus areas to inspect (but don't limit to these):
+- `validate_amendments()` in harness/check_operator_round.py — what can slip through?
+  - Missing SHA field handling
+  - Amendment files not in lock.amendments[] but present on disk
+  - Amendment with valid frontmatter pointing at wrong meeting
+  - Can amendments be added between `lock` and `gates` runs without lock update?
+  - Is the sha256 field in amend dict actually populated? My `cmd_lock` doesn't add amendments at creation time, so the validation only fires if someone manually edits the lock.
+- `cmd_lock` — does it create lock correctly when amendments already exist?
+- `cmd_gates` / `cmd_close` — can a round close with lock.amendments[] empty while amendment files sit on disk?
+- `file_whitelist.amendment.N.txt` mixed with `file_whitelist.txt` hash check — does modifying the amendment file (after being locked in) bypass any check?
+- `gate_evidence.json` — can it be crafted to pass? What blocks a dishonest operator from hand-writing all gates as "pass" without real evidence?
+- Lock file tampering — is there any integrity check on the lock itself?
+- Stage transitions — can stages_completed be filled with arbitrary entries?
+- Base_commit tampering — what stops an operator from setting base_commit = HEAD after making changes?
+- Session/identity — how do we know Codex really reviewed the meeting? The meeting file lists participants, but nothing verifies Codex actually wrote its section.
+
+Also: smoke-test the checker against a worst-case scenario. If I hypothetically ran through a fake round with only Claude Code Operator and no real Codex review, what checks would fail vs pass? That tells us the actual attack surface.
+
+Scope: review only. No writes. Return:
+
+## Governance Bypasses (specific exploits, not just drift)
+## Checker Implementation Holes
+## Recommended Fixes (ranked by severity)
+## Residual Drift (if any) — narrower items not worth calling bypasses
+## Classification
+## Recommendation: merge-with-changes / merge-as-is / block
+codex
+I’ll review d1cf6b4 read-only and focus on exploitability: what a dishonest or sloppy operator could do while still getting a green checker. I’ll inspect the new amendment/evidence/lock code and docs, then reason through a fake single-operator round against the actual checks.
+exec
+/bin/zsh -lc 'git rev-parse --short HEAD && git status --short && wc -l harness/check_operator_round.py context_harness/operator/REGULATION.md context_harness/operator/STAGE_CONTRACT.md context_harness/operator/PROCESS_AUDIT_CHECKLIST.md context_harness/operator/CHANGELOG.md context_harness/operator/lint_config.toml context_harness/operator/MEETING_PROTOCOL.md context_harness/operator/OPERATOR.md' in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+d1cf6b4
+?? "docs/design-docs/travel deepsight.zip"
+     796 harness/check_operator_round.py
+     247 context_harness/operator/REGULATION.md
+     140 context_harness/operator/STAGE_CONTRACT.md
+      78 context_harness/operator/PROCESS_AUDIT_CHECKLIST.md
+     134 context_harness/operator/CHANGELOG.md
+     134 context_harness/operator/lint_config.toml
+     143 context_harness/operator/MEETING_PROTOCOL.md
+      91 context_harness/operator/OPERATOR.md
+    1763 total
+
+exec
+/bin/zsh -lc "sed -n '1,280p' context_harness/operator/REGULATION.md" in /Users/jeonsihyeon/factory
+exec
+/bin/zsh -lc "sed -n '1,860p' harness/check_operator_round.py" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+# REGULATION — Harness v5
+
+**Version:** v5.2
+**Bootstrapped:** 2026-04-19
+**Last amended:** 2026-04-22 (v5.2 drift fix, meeting `meetings/2026-04-22_v5.2_drift_fix.md`)
+**Authority:** Second-highest. Only an active round contract + lock supersedes this file.
+**Amend via:** Meeting (see `MEETING_PROTOCOL.md`) + CHANGELOG bump + convention_version increment.
+
+This document is normative. Two equal operators (Claude Code Operator, Codex Operator) execute under it. When operators disagree, this file's rules and precedence ladder decide — not either operator's intuition.
+
+---
+
+## §1. Precedence Ladder
+
+When any two documents conflict, higher precedence wins. An operator may never cite a lower-precedence doc to override a higher one. Citation of a legacy doc to justify a v5 violation = immediate hard stop.
+
+1. **Active round contract + lock** (`operator/contracts/<round_id>/` + `operator/locks/<round_id>.lock`)
+2. **`operator/REGULATION.md`** (this file)
+3. **`operator/STAGE_CONTRACT.md`**
+4. **`operator/OPERATOR.md`**
+5. **Domain workflows** (e.g., `docs/design-docs/design-revision-workflow.md`)
+6. **Legacy architecture docs** (e.g., `docs/design-docs/multi-agent-architecture.md`) — only if explicitly marked ACTIVE in their own header. Default = SUPERSEDED.
+
+## §2. The Two Operators
+
+- **Claude Code Operator** — persona loader at `.claude/CLAUDE.md` (≤80 lines, thin pointer).
+- **Codex Operator** — persona loader at `AGENTS.md` at repo root (≤80 lines, thin pointer).
+- Both read `OPERATOR.md` and `FILE_INDEX.md` every session. Both equal.
+- Neither commands the other. Every cross-operator exchange goes through `MEETING_PROTOCOL.md`.
+- Zone-default ownership (see `STAGE_CONTRACT.md §Ownership`): Codex owns design/spec drafts, acceptance criteria, eval rubrics, architecture reviews, `AGENTS.md` invocation notes. Claude Code owns implementation briefs, Swift code, runtime capture, `.claude/CLAUDE.md` invocation notes. All other operator/* edits require a meeting.
+
+## §3. Contract & Lock
+
+### Per-round directory
+
+```
+operator/contracts/<round_id>/
+├── spec.md                      ← base input spec. IMMUTABLE after lock.
+├── spec.amendment.1.md          ← amendments only as new files
+├── spec.amendment.N.md
+├── spec.effective.md            ← generated = base + amendments (regenerated by checker)
+├── file_whitelist.txt           ← writable paths for this round. IMMUTABLE after lock.
+├── file_whitelist.amendment.N.txt  ← whitelist amendments (additive or subtractive)
+├── convention_version.txt       ← active coding-conventions path + SHA at lock time
+├── lint_config.txt              ← active lint-config path + SHA at lock time
+├── acceptance.md                ← success criteria. IMMUTABLE after lock.
+├── acceptance.amendment.N.md    ← acceptance amendments
+├── eval_protocol.md             ← Codex-authored capture protocol. IMMUTABLE after lock.
+└── eval_protocol.amendment.N.md ← eval protocol amendments
+```
+
+### Amendment artifact format
+
+All amendments share a common structure:
+- Filename: `<base_filename>.amendment.<N>.<ext>` where N is a monotonically increasing integer per target
+- YAML frontmatter (required, validated by checker):
+  ```yaml
+  ---
+  target: <base_filename>
+  supersedes: [<section-id or line-range>]
+  meeting: <path-to-decided-meeting>
+  ---
+  ```
+- Recorded in lock's `amendments[]` array with `{file, target, sha256, supersedes, meeting}`
+- Consumers compute effective state by reading base + amendments in order. The checker **validates** amendments (file exists + sha matches lock + frontmatter present + meeting exists and `status: decided` + target ∈ base files) but does NOT regenerate `.effective.*` artifacts — consumers (e.g., operators running checks) compute effective state on read.
+
+### Pointer file format (`lint_config.txt`, `convention_version.txt`)
+
+Each is a 2-line UTF-8 file:
+
+```
+<repo-relative path to the active resource>
+sha256:<64-hex>
+```
+
+Example for `lint_config.txt`:
+```
+context_harness/operator/lint_config.toml
+sha256:a1b2c3...e7f8
+```
+
+Malformed format (missing lines, wrong prefix) = Gate 5 blocker.
+
+### Lock file schema
+
+`operator/locks/<round_id>.lock` is a single JSON object:
+
+```json
+{
+  "round_id": "round_deepsight_r1",
+  "schema_version": 1,
+  "started_at": "2026-04-19T12:00:00Z",
+  "status": "active",
+  "operators": {
+    "claude_code": { "session": "this-session", "role_default": "implementer" },
+    "codex": { "session": "019db43d-...", "role_default": "designer_reviewer" }
+  },
+  "hashes": {
+    "spec.md": "sha256:...",
+    "file_whitelist.txt": "sha256:...",
+    "convention_version.txt": "sha256:...",
+    "lint_config.txt": "sha256:...",
+    "acceptance.md": "sha256:...",
+    "eval_protocol.md": "sha256:..."
+  },
+  "amendments": [
+    { "file": "spec.amendment.1.md", "sha256": "...", "supersedes": ["spec.md#section-3"], "meeting": "meetings/2026-04-20_amend1.md" }
+  ],
+  "stages_completed": ["overall_planning", "detailed_design"],
+  "closed_at": null
+}
+```
+
+`status` values: `active` | `paused` | `escalated` | `closed` | `aborted`.
+
+### Immutability rules
+
+- Base contract files (`spec.md`, `file_whitelist.txt`, `convention_version.txt`, `lint_config.txt`, `acceptance.md`, `eval_protocol.md`) are **NEVER edited** after lock creation.
+- Direct diff to any base file while `status == active` = hard stop. Checker refuses to advance stages.
+- Changes require: (a) amendment meeting → (b) new `<base_filename>.amendment.<N>.<ext>` with frontmatter `target`, `supersedes`, `meeting` → (c) lock's `amendments[]` appended → (d) `<base>.effective.<ext>` regenerated by checker.
+- **Whitelist changes** (both expansion AND shrinking) go via `file_whitelist.amendment.N.txt` amendment. No exception. "Shrink without meeting" is forbidden — mutating the locked hash, regardless of direction, breaks the immutability invariant.
+- `status` transitions: `close <round>` subcommand of `harness/check_operator_round.py` transitions to `closed` only if (a) Gate 5 structural integrity passes AND (b) `contracts/<round>/gate_evidence.json` is present with `gate1..gate4` all marked `pass`. The checker enforces Gate 5 directly and refuses close if the `gate_evidence.json` is missing, malformed, or any gate is not `pass`. Operators may transition to `paused` or `escalated` via meeting; `aborted` only via human. Operators may NOT hand-edit `status` in the lock file.
+- `lint_config.txt` and `convention_version.txt` contain `<path>\n<sha256>`. Checker at Gate 5 recomputes the live SHA of the referenced path and compares — mismatch = blocker.
+
+## §4. Challenge Section (anti-hallucination tripwire)
+
+Every meeting whose purpose is a **decision** (normative, design-affecting, or contract-changing) must include a Challenge Section with at least ONE of:
+
+- Concrete objection with reasoning
+- Named risk with mitigation or acceptance
+- Rejected alternative with why-not
+- Explicit uncertainty that was consciously deferred
+
+Meetings that are **purely factual** (verification, status check, evidence pointer) must state: **"No normative decision; verified facts only"** and list the evidence references.
+
+Forbidden: fake dissent (reviewer nitpicking to satisfy the rule). If the reviewer genuinely has no objection, the meeting is factual by definition — state that.
+
+Missing Challenge Section on a decision meeting = Gate 5 blocker.
+
+## §5. Gate Structure
+
+Gates 1–4 from v4 retained with enforcement clarified; Gate 5 added.
+
+| Gate | Name | Check | Blocker |
+|------|------|-------|---------|
+| 1 | Build & Test | `xcodegen generate && xcodebuild test` passes, test count ≥ baseline | Any failure |
+| 2 | 3-Evaluator Review | red_team + hig_guardian + visual_qa reports produced | Any evaluator missing or empty |
+| 3 | Cross-Agreement | 2+ evaluators agreeing on a file → required fix | Unresolved 2+ agreement |
+| 4 | Process Metrics | remediation cycles ≤ 2, BLOCKER recurrence = 0, brief accuracy ≥ 90%, SKILLS miss ≤ 5% | Any metric out of range |
+| 5 | Process Integrity | see §5.1 below | see §5.1 blockers |
+
+### §5.1 Gate 5 — Process Integrity
+
+Blockers (round cannot close):
+- Any commit in this round not traceable to a contract lock
+- Any edit to a base contract file (§3 immutability)
+- Any decision meeting without a Challenge Section
+- Any new operator/* file not registered in `FILE_INDEX.md`
+- Lock hash mismatch for any base contract file
+- Lint checker missing, failing, or unrunnable (`harness/check_operator_round.py` exit != 0)
+- Operator-layer drift audit reports contradictions (see §7)
+
+Advisories (noted in retro, do not block):
+- No new SKILLS.md entry — acceptable if retro explicitly classifies "no novel pattern"
+- FILE_INDEX line-count warning (between 250 and 300 lines)
+- SESSION_RESUME.md staleness > 48h
+
+## §6. Deadlock Escalation Ladder
+
+When two operators cannot converge in a meeting:
+
+1. **Reframe meeting** — each operator restates the OTHER'S position in their own words. Names the real decision axis. Frequently resolves miscommunication-based disputes.
+2. **Default-reversible rule** — if the dispute is low-impact and reversible, pick the option with smaller blast radius, easier rollback, or better auditability. Record both positions; implementer proceeds. No human, no Gemini.
+3. **Gemini advisory** — for **bounded technical disputes only** (lint rule choice, file layout, test strategy, refactor approach). Gemini provides ANALYSIS, not VERDICT. Claude/Codex still make the decision and record whether they accepted or rejected the advice.
+4. **Human escalation** — required for: product-impact, user-visible design direction, security/privacy policy, architecture change, irreversible migration, or unresolved operator deadlock after Gemini advisory.
+
+Timebox: 2 written counter-rounds OR 24 hours — whichever first — before moving to the next tier.
+
+Lock `status` transitions to `escalated` at Tier 4. Must record: both positions, tier path taken, what was asked of the human.
+
+## §7. Operator-Layer Drift Audit
+
+Runs at Gate 5 and after every operator-doc amendment. Implemented in `harness/check_operator_round.py` (section `audit_operator_layer`).
+
+**Checks currently enforced by the checker** (authoritative — if it's not in this list, don't assume it's checked):
+1. Stage IDs consistent across `lint_config.toml`, `STAGE_CONTRACT.md`, and `MEETING_PROTOCOL.md`
+2. Every path-like reference in operator docs resolves (repo-root OR `operator/` shorthand inside operator docs); unresolved = blocker unless in configured allowlist
+3. Every operator/*.{md,toml,yaml,yml} file is indexed in FILE_INDEX.md (except meetings, proposals, retros, contracts, locks, CHANGELOG, FILE_INDEX itself)
+4. Line-count caps: AGENTS.md ≤80, .claude/CLAUDE.md ≤80, OPERATOR.md ≤120, FILE_INDEX.md ≤250 (warn at 225)
+5. Loader pointers: `.claude/CLAUDE.md` and `AGENTS.md` reference `context_harness/operator/OPERATOR.md`
+6. Legacy SUPERSEDED markers on docs listed in `lint_config.superseded_docs` (first 10 lines must contain SUPERSEDED or ACTIVE)
+7. SESSION_RESUME.md freshness: ≤48h = pass, 48h-7d = advisory, >7d = blocker
+8. Meeting files: required frontmatter keys, allowed stage/status values, Challenge Section content rule (normative stages require ≥1 keyword; factual meetings require "No normative decision" phrase + `Evidence:` section with ≥1 path/command reference)
+9. `lock.stages_completed[]` entries are valid stage_ids from lint config
+
+Any contradiction on (1)-(9) → Gate 5 blocker. Resolution path: amendment meeting.
+
+**Explicitly NOT enforced in v5.2** (do not cite as audited):
+- Full role matrix consistency (agent/role/stage cross-check against STAGE_CONTRACT table) — structural stage_id validation only.
+- Process-log event count matching meeting decision count (advisory in PROCESS_AUDIT, not blocked).
+- Effective amendment file regeneration (consumers compute on read).
+- Gate 1-4 content (build/test/evaluator reports) — these come from `gate_evidence.json`, not this audit.
+
+If operators need any of the "not enforced" items, open an amendment meeting to either implement or keep REGULATION honest.
+
+## §8. Linter Enforcement
+
+- Config: `operator/lint_config.toml`
+- Runner: `harness/check_operator_round.py`
+- Enforcement owner: cross-validator of the stage, not the performer (performer may run it to catch own errors, but the stage-gate check is on the cross-validator)
+- Round 0 scope: **operator docs only** (filename patterns, line caps, required sections, frontmatter validity for meetings, index coverage). Swift linting intentionally out of scope for v5.0; revisit in retro.
+- Fail-closed: missing config, missing runner, or non-zero exit = Gate 5 blocker. No "best effort" pass.
+
+## §9. Context Discipline
+
+- **Always-read** per session: persona loader (`.claude/CLAUDE.md` or `AGENTS.md`), `OPERATOR.md`, `FILE_INDEX.md`, active lock if any.
+- **On-demand**: use `FILE_INDEX.md` to pick exact files. Targeted `ls`, `rg`, `git diff --name-only` permitted for verification.
+- **Forbidden**: undirected bulk-loading (e.g., reading every file in a directory to "build context"), citing legacy docs as authority (see §1), dumping full evaluation reports into meeting bodies (link + hash instead).
+- **Unindexed file opens** (opening a file not listed in FILE_INDEX): permitted, but log one line in `context_harness/blackboard.md` with reason. If the file should have been indexed, amend FILE_INDEX.
+
+## §10. SKILLS.md Update Protocol
+
+At round close retro:
+1. Classify: did this round reveal a durable pattern not already in SKILLS?
+2. If yes → append with S-number, name, pattern, example, why it matters. Mandatory.
+3. If no → state explicitly in retro: "no novel pattern identified". Gate 5 advisory, not blocker.
+
+Forbidden: synthesizing a "lesson" from a routine round just to satisfy the rule. Explicit opt-out is preferred to fake content.
+
+## §11. Amendment Protocol for This File
+
+Changes to `REGULATION.md` require:
+1. A meeting with `status: decided` and a Challenge Section (§4)
+2. CHANGELOG.md entry with date, summary, meeting pointer
+3. Version bump (v5.0 → v5.1 for substantive changes)
+4. Operator-layer drift audit re-run to confirm no new contradictions
+
+---
+
+## Appendix A — Terminology
+
+- **Operator** = one of the two top-level agents (Claude Code, Codex)
+- **Performer** = the agent producing an artifact in a given stage
+- **Cross-Validator** = the agent reviewing the Performer's artifact in that stage
+- **Round** = one execution of plan → design → code → eval → close, bounded by a single contract+lock
+- **Stage** = named phase within a round (see `STAGE_CONTRACT.md`)
+- **Meeting** = written, markdown exchange between operators with required frontmatter
+
+ succeeded in 0ms:
+#!/usr/bin/env python3
+"""
+Operator-round checker for Harness v5.
+
+Commands:
+  lint                       Lint operator docs against lint_config.toml (line caps, loader pointers, FILE_INDEX coverage, meeting frontmatter + Challenge Section)
+  audit-operator-layer       Operator-layer drift audit (REG §7): stage IDs, path existence, SESSION_RESUME freshness, legacy SUPERSEDED headers, file index coverage
+  lock <round_id>            Create operator/locks/<round_id>.lock from contract files (sha256 of all base files)
+  gates <round_id>           Gate 5 process-integrity checks for a round (contract immutability, live lint/convention hash, commit traceability, meeting integrity, operator-layer drift)
+  close <round_id>           Run gates; if all pass, transition lock status to `closed` with closed_at timestamp
+
+Exits 0 on pass, non-zero on any blocker. Pure stdlib (Python 3.11+ tomllib).
+"""
+
+from __future__ import annotations
+
+import fnmatch
+import hashlib
+import json
+import os
+import re
+import subprocess
+import sys
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path, PurePosixPath
+
+try:
+    import tomllib  # Python 3.11+
+except ImportError:  # pragma: no cover
+    try:
+        import tomli as tomllib  # type: ignore
+    except ImportError:
+        sys.stderr.write("tomllib (Python 3.11+) or tomli package required.\n")
+        sys.exit(2)
+
+
+REPO = Path(__file__).resolve().parent.parent
+OPERATOR_DIR = REPO / "context_harness" / "operator"
+LINT_CONFIG = OPERATOR_DIR / "lint_config.toml"
+LOCKS_DIR = OPERATOR_DIR / "locks"
+CONTRACTS_DIR = OPERATOR_DIR / "contracts"
+FILE_INDEX = OPERATOR_DIR / "FILE_INDEX.md"
+STAGE_CONTRACT_DOC = OPERATOR_DIR / "STAGE_CONTRACT.md"
+REGULATION_DOC = OPERATOR_DIR / "REGULATION.md"
+OPERATOR_DOC = OPERATOR_DIR / "OPERATOR.md"
+MEETING_PROTOCOL_DOC = OPERATOR_DIR / "MEETING_PROTOCOL.md"
+SESSION_RESUME = REPO / "context_harness" / "SESSION_RESUME.md"
+PROCESS_LOG = REPO / "docs" / "exec-plans" / "process-log.jsonl"
+
+# Normative decision stages — factual meetings may not use these.
+NORMATIVE_STAGES = {
+    "overall_planning",
+    "detailed_design",
+    "convention_lock",
+    "eval_protocol",
+    "acceptance",
+    "round_lock",
+    "coding_1st",
+    "evaluation_verdict",
+    "coding_2nd",
+    "retro",
+    "regulation_update",
+    "operator_amendment",
+}
+
+FACTUAL_EVIDENCE_PATTERN = re.compile(
+    r"Evidence\s*:\s*\n((?:\s*[-*]\s+.+\n?)+)",
+    re.MULTILINE,
+)
+EVIDENCE_REF_PATTERN = re.compile(r"[-*]\s+.*?(?:`[^`]+`|\b\S+/\S+|\.(?:md|py|txt|yaml|yml|toml|json|swift|sh)\b|sha256:)")
+
+
+@dataclass
+class CheckReport:
+    blockers: list[str] = field(default_factory=list)
+    advisories: list[str] = field(default_factory=list)
+    passes: list[str] = field(default_factory=list)
+
+    def blocker(self, msg: str) -> None:
+        self.blockers.append(msg)
+
+    def advisory(self, msg: str) -> None:
+        self.advisories.append(msg)
+
+    def ok(self, msg: str) -> None:
+        self.passes.append(msg)
+
+    def merge(self, other: "CheckReport") -> None:
+        self.blockers.extend(other.blockers)
+        self.advisories.extend(other.advisories)
+        self.passes.extend(other.passes)
+
+    def exit_code(self) -> int:
+        return 1 if self.blockers else 0
+
+    def render(self) -> str:
+        lines = []
+        for msg in self.passes:
+            lines.append(f"  ok       {msg}")
+        for msg in self.advisories:
+            lines.append(f"  advisory {msg}")
+        for msg in self.blockers:
+            lines.append(f"  BLOCKER  {msg}")
+        lines.append("")
+        lines.append(f"blockers:   {len(self.blockers)}")
+        lines.append(f"advisories: {len(self.advisories)}")
+        lines.append(f"passes:     {len(self.passes)}")
+        return "\n".join(lines)
+
+
+def sha256_file(p: Path) -> str:
+    h = hashlib.sha256()
+    h.update(p.read_bytes())
+    return "sha256:" + h.hexdigest()
+
+
+def load_lint_config() -> dict:
+    if not LINT_CONFIG.exists():
+        raise SystemExit(f"lint config missing: {LINT_CONFIG}")
+    return tomllib.loads(LINT_CONFIG.read_text())
+
+
+def parse_simple_frontmatter(block: str) -> dict:
+    """Minimal YAML-subset parser for meeting frontmatter.
+    Supports: `key: value`, `key: [a, b, c]`. No multiline or anchors.
+    """
+    out: dict = {}
+    for raw in block.splitlines():
+        line = raw.rstrip()
+        if not line or line.lstrip().startswith("#"):
+            continue
+        if ":" not in line:
+            continue
+        key, _, value = line.partition(":")
+        key = key.strip()
+        value = value.strip()
+        if value.startswith(("\"", "'")) and value.endswith(value[0]):
+            value = value[1:-1]
+        if value.startswith("[") and value.endswith("]"):
+            inner = value[1:-1].strip()
+            items = [x.strip().strip("\"'") for x in inner.split(",")] if inner else []
+            out[key] = items
+        else:
+            out[key] = value
+    return out
+
+
+def line_count(p: Path) -> int:
+    if not p.exists():
+        return 0
+    return len(p.read_text().splitlines())
+
+
+# -----------------------------------------------------------------
+# lint
+# -----------------------------------------------------------------
+
+
+def check_line_caps(cfg: dict, report: CheckReport) -> None:
+    caps = cfg.get("line_caps", {})
+    warnings = cfg.get("line_warnings", {})
+    for rel, cap in caps.items():
+        p = REPO / rel
+        if not p.exists():
+            report.blocker(f"line-cap target missing: {rel}")
+            continue
+        n = line_count(p)
+        if n > cap:
+            report.blocker(f"line cap exceeded: {rel} = {n} lines (cap {cap})")
+        else:
+            report.ok(f"line cap: {rel} = {n}/{cap}")
+    for rel, warn in warnings.items():
+        p = REPO / rel
+        if p.exists():
+            n = line_count(p)
+            if n >= warn:
+                report.advisory(f"line warning: {rel} = {n} (warn ≥ {warn})")
+
+
+def check_loader_pointers(cfg: dict, report: CheckReport) -> None:
+    for entry in cfg.get("loader_pointers", []):
+        f = REPO / entry["file"]
+        must = entry["must_reference"]
+        if not f.exists():
+            report.blocker(f"loader missing: {entry['file']}")
+            continue
+        if must not in f.read_text():
+            report.blocker(f"loader {entry['file']} does not reference {must}")
+        else:
+            report.ok(f"loader references target: {entry['file']} → {must}")
+
+
+def _match_glob_exempt(rel_path: str, exempt_globs: list[str]) -> bool:
+    for g in exempt_globs:
+        if g.endswith("/**"):
+            if rel_path.startswith(g[:-3]):
+                return True
+        elif rel_path == g:
+            return True
+    return False
+
+
+def check_file_index_coverage(cfg: dict, report: CheckReport) -> None:
+    coverage = cfg.get("file_index_coverage", {})
+    if not coverage:
+        return
+    target = REPO / coverage["target"]
+    if not target.exists():
+        report.blocker(f"FILE_INDEX target missing: {coverage['target']}")
+        return
+    index_text = target.read_text()
+    exempt_globs = coverage.get("exempt", [])
+    candidates: list[Path] = []
+    for pattern in coverage.get("required_scan_globs", []):
+        candidates.extend(REPO.glob(pattern))
+
+    missing: list[str] = []
+    for p in sorted(set(candidates)):
+        rel = p.relative_to(REPO).as_posix()
+        if _match_glob_exempt(rel, exempt_globs):
+            continue
+        if rel in index_text or p.name in index_text:
+            continue
+        missing.append(rel)
+    if missing:
+        for m in missing:
+            report.blocker(f"FILE_INDEX missing entry for: {m}")
+    else:
+        report.ok("FILE_INDEX coverage complete")
+
+
+def check_meeting_frontmatter(cfg: dict, report: CheckReport) -> None:
+    meetings_dir = OPERATOR_DIR / "meetings"
+    if not meetings_dir.exists():
+        return
+    required = cfg.get("meeting_required_frontmatter", [])
+    allowed = cfg.get("meeting_frontmatter_allowed", {})
+    decided_sections = cfg.get("meeting_required_sections", {}).get("decided", [])
+    challenge = cfg.get("challenge_section", {})
+    factual_stages = set(challenge.get("factual_stages", []))
+    factual_phrase = challenge.get("factual_required_phrase", "")
+    decision_keywords = challenge.get("decision_required_keywords", [])
+
+    for mp in sorted(meetings_dir.glob("*.md")):
+        if mp.name.startswith("_"):
+            continue
+        text = mp.read_text()
+        fm_match = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
+        if not fm_match:
+            report.blocker(f"meeting missing frontmatter: {mp.name}")
+            continue
+        try:
+            fm = parse_simple_frontmatter(fm_match.group(1))
+        except Exception as e:
+            report.blocker(f"meeting frontmatter invalid ({mp.name}): {e}")
+            continue
+        for k in required:
+            if k not in fm:
+                report.blocker(f"meeting {mp.name} missing frontmatter key: {k}")
+        for k, vals in allowed.items():
+            v = fm.get(k)
+            if v is not None and v not in vals:
+                report.blocker(f"meeting {mp.name} frontmatter {k}={v} not in allowed")
+        status = fm.get("status")
+        stage = fm.get("stage")
+        if status == "decided":
+            for sec in decided_sections:
+                if sec not in text:
+                    report.blocker(f"meeting {mp.name} status=decided missing: {sec}")
+            cs_match = re.search(r"## Challenge Section\s*(.*?)(?=\n## |\Z)", text, re.DOTALL)
+            cs_body = cs_match.group(1) if cs_match else ""
+            if stage in factual_stages:
+                if factual_phrase not in cs_body:
+                    report.blocker(f"meeting {mp.name} (factual) Challenge missing required phrase")
+                else:
+                    # Require Evidence: section with ≥1 path/command reference
+                    ev_match = FACTUAL_EVIDENCE_PATTERN.search(cs_body)
+                    if not ev_match:
+                        report.blocker(f"meeting {mp.name} (factual) missing Evidence: section with bullet list")
+                    else:
+                        bullets = ev_match.group(1)
+                        if not EVIDENCE_REF_PATTERN.search(bullets):
+                            report.blocker(f"meeting {mp.name} (factual) Evidence bullets lack any path/command/hash reference")
+            else:
+                if stage in NORMATIVE_STAGES and not any(kw.lower() in cs_body.lower() for kw in decision_keywords):
+                    report.blocker(f"meeting {mp.name} Challenge Section lacks any of: {decision_keywords}")
+
+
+def cmd_lint() -> CheckReport:
+    cfg = load_lint_config()
+    report = CheckReport()
+    check_line_caps(cfg, report)
+    check_loader_pointers(cfg, report)
+    check_file_index_coverage(cfg, report)
+    check_meeting_frontmatter(cfg, report)
+    return report
+
+
+# -----------------------------------------------------------------
+# audit-operator-layer  (REG §7)
+# -----------------------------------------------------------------
+
+
+def parse_stage_ids_from_stage_contract() -> set[str]:
+    """Extract `stage_id` values from the stage matrix table in STAGE_CONTRACT.md."""
+    if not STAGE_CONTRACT_DOC.exists():
+        return set()
+    text = STAGE_CONTRACT_DOC.read_text()
+    ids: set[str] = set()
+    # backtick-quoted snake_case ids in table rows
+    for m in re.finditer(r"`([a-z][a-z0-9_]+)`", text):
+        ids.add(m.group(1))
+    # Filter by ones that look like stage_ids — cross-check with known set at call site.
+    return ids
+
+
+def check_session_resume_freshness(report: CheckReport) -> None:
+    if not SESSION_RESUME.exists():
+        report.blocker("SESSION_RESUME.md missing")
+        return
+    mtime = datetime.fromtimestamp(SESSION_RESUME.stat().st_mtime, tz=timezone.utc)
+    age_hours = (datetime.now(timezone.utc) - mtime).total_seconds() / 3600
+    if age_hours > 168:  # 7 days
+        report.blocker(f"SESSION_RESUME.md stale > 7d ({age_hours:.1f}h)")
+    elif age_hours > 48:
+        report.advisory(f"SESSION_RESUME.md stale > 48h ({age_hours:.1f}h)")
+    else:
+        report.ok(f"SESSION_RESUME.md fresh ({age_hours:.1f}h)")
+
+
+def check_legacy_superseded_headers(cfg: dict, report: CheckReport) -> None:
+    for rel in cfg.get("superseded_docs", []):
+        p = REPO / rel
+        if not p.exists():
+            report.advisory(f"superseded doc missing on disk: {rel}")
+            continue
+        head = "\n".join(p.read_text().splitlines()[:10])
+        if "SUPERSEDED" not in head and "ACTIVE" not in head:
+            report.blocker(f"legacy doc {rel} lacks SUPERSEDED/ACTIVE marker in first 10 lines")
+        elif "SUPERSEDED" in head:
+            report.ok(f"legacy doc marked SUPERSEDED: {rel}")
+        else:
+            report.advisory(f"legacy doc marked ACTIVE: {rel} — verify intentional")
+
+
+def audit_operator_layer(report: CheckReport, cfg: dict) -> None:
+    # Doc existence
+    required_docs = [
+        "OPERATOR.md",
+        "FILE_INDEX.md",
+        "STAGE_CONTRACT.md",
+        "MEETING_PROTOCOL.md",
+        "REGULATION.md",
+        "PROCESS_AUDIT_CHECKLIST.md",
+        "CHANGELOG.md",
+    ]
+    for d in required_docs:
+        p = OPERATOR_DIR / d
+        if not p.exists():
+            report.blocker(f"operator doc missing: {d}")
+        else:
+            report.ok(f"operator doc present: {d}")
+
+    # Stage ID consistency
+    allowed_stages = set(cfg.get("meeting_frontmatter_allowed", {}).get("stage", []))
+    if allowed_stages and STAGE_CONTRACT_DOC.exists():
+        sc_text = STAGE_CONTRACT_DOC.read_text()
+        missing_in_sc = [s for s in allowed_stages if s not in sc_text]
+        if missing_in_sc:
+            for s in missing_in_sc:
+                report.blocker(f"stage_id '{s}' in lint_config.stage but absent from STAGE_CONTRACT.md")
+        else:
+            report.ok(f"stage_ids consistent across lint_config + STAGE_CONTRACT.md ({len(allowed_stages)})")
+
+    # Stage IDs referenced in MEETING_PROTOCOL
+    if allowed_stages and MEETING_PROTOCOL_DOC.exists():
+        mp_text = MEETING_PROTOCOL_DOC.read_text()
+        missing_in_mp = [s for s in allowed_stages if s not in mp_text]
+        if missing_in_mp:
+            for s in missing_in_mp:
+                report.blocker(f"stage_id '{s}' not documented in MEETING_PROTOCOL.md")
+        else:
+            report.ok("stage_ids all present in MEETING_PROTOCOL.md")
+
+    # Precedence — REGULATION lists all precedence entries from lint config
+    precedence = cfg.get("precedence", [])
+    if REGULATION_DOC.exists():
+        reg = REGULATION_DOC.read_text()
+        if "Precedence Ladder" not in reg:
+            report.blocker("REGULATION.md missing Precedence Ladder section")
+        else:
+            for doc in precedence:
+                if isinstance(doc, str) and doc.startswith("context_harness/operator/") and doc not in reg:
+                    report.advisory(f"precedence entry '{doc}' not textually present in REGULATION.md")
+
+    # Referenced file existence — v5.2: missing paths = BLOCKER (with allowlist).
+    allowlist = set(cfg.get("path_existence", {}).get("allowlist_placeholders", []))
+    path_like = re.compile(r"(?:`|\()((?:context_harness|docs|harness|workspace|reports|operator)/[a-zA-Z0-9_./-]+)(?:`|\))")
+    broken: list[tuple[str, str]] = []
+    for doc_path in [OPERATOR_DOC, REGULATION_DOC, STAGE_CONTRACT_DOC, MEETING_PROTOCOL_DOC, FILE_INDEX, OPERATOR_DIR / "PROCESS_AUDIT_CHECKLIST.md"]:
+        if not doc_path.exists():
+            continue
+        doc_is_in_operator = OPERATOR_DIR in doc_path.resolve().parents or doc_path.resolve() == OPERATOR_DIR
+        for m in path_like.finditer(doc_path.read_text()):
+            rel = m.group(1)
+            if "<" in rel or ">" in rel or "**" in rel or "*" in rel or "..." in rel:
+                continue
+            # Build candidate relative paths (raw + shorthand expansion)
+            rel_candidates = [rel]
+            if rel.startswith("operator/") and doc_is_in_operator:
+                rel_candidates.append("context_harness/" + rel)
+            # Existence check — any candidate resolving ⇒ OK
+            if any((REPO / rc).exists() for rc in rel_candidates):
+                continue
+            # Allowlist check — any candidate (with or without trailing slash) in allowlist ⇒ advisory
+            if any(rc in allowlist or rc.rstrip("/") in allowlist for rc in rel_candidates):
+                report.advisory(f"operator doc {doc_path.name} points at allowlisted future/shorthand path: {rel}")
+                continue
+            broken.append((doc_path.name, rel))
+    if broken:
+        seen = set()
+        for doc_name, rel in broken:
+            key = (doc_name, rel)
+            if key in seen:
+                continue
+            seen.add(key)
+            report.blocker(f"operator doc {doc_name} references missing path: {rel}")
+
+    # SESSION_RESUME freshness
+    check_session_resume_freshness(report)
+
+    # Legacy SUPERSEDED headers
+    check_legacy_superseded_headers(cfg, report)
+
+
+def cmd_audit_operator_layer() -> CheckReport:
+    cfg = load_lint_config()
+    report = CheckReport()
+    audit_operator_layer(report, cfg)
+    return report
+
+
+# -----------------------------------------------------------------
+# lock / gates / close
+# -----------------------------------------------------------------
+
+
+REQUIRED_CONTRACT_FILES = [
+    "spec.md",
+    "file_whitelist.txt",
+    "convention_version.txt",
+    "lint_config.txt",
+    "acceptance.md",
+    "eval_protocol.md",
+]
+
+
+def read_pointer_file(p: Path) -> tuple[str, str] | None:
+    """Read `lint_config.txt` or `convention_version.txt` — expects `<path>\\n<sha256:...>`."""
+    if not p.exists():
+        return None
+    lines = [ln.strip() for ln in p.read_text().splitlines() if ln.strip() and not ln.strip().startswith("#")]
+    if len(lines) < 2:
+        return None
+    return lines[0], lines[1]
+
+
+def cmd_lock(round_id: str) -> CheckReport:
+    report = CheckReport()
+    round_dir = CONTRACTS_DIR / round_id
+    if not round_dir.exists():
+        report.blocker(f"contract directory missing: {round_dir}")
+        return report
+    hashes: dict[str, str] = {}
+    for f in REQUIRED_CONTRACT_FILES:
+        p = round_dir / f
+        if not p.exists():
+            report.blocker(f"contract file missing: {round_id}/{f}")
+            continue
+        hashes[f] = sha256_file(p)
+        report.ok(f"hashed {round_id}/{f}")
+    if report.blockers:
+        return report
+    LOCKS_DIR.mkdir(parents=True, exist_ok=True)
+    lock_path = LOCKS_DIR / f"{round_id}.lock"
+    if lock_path.exists():
+        report.blocker(f"lock already exists: {lock_path}")
+        return report
+    # base_commit for commit traceability (item 11)
+    try:
+        base_commit = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=REPO, text=True
+        ).strip()
+    except Exception:
+        base_commit = None
+    lock = {
+        "round_id": round_id,
+        "schema_version": 1,
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "status": "active",
+        "operators": {
+            "claude_code": {"session": "this-session", "role_default": "implementer"},
+            "codex": {"session": "", "role_default": "designer_reviewer"},
+        },
+        "base_commit": base_commit,
+        "hashes": hashes,
+        "amendments": [],
+        "stages_completed": [],
+        "closed_at": None,
+    }
+    lock_path.write_text(json.dumps(lock, indent=2) + "\n")
+    report.ok(f"lock created: {lock_path} (base_commit={base_commit or 'unknown'})")
+    report.ok("ready")
+    return report
+
+
+def _match_glob(rel: str, pattern: str) -> bool:
+    """Glob matcher with strict POSIX-style semantics:
+      * = [^/]*    (does NOT cross directory separators)
+      ** = .*      (crosses directories; must be a full segment — we normalize `**/` and `/**`)
+      ? = [^/]
+    Exact match short-circuits. Implementation: escape pattern → substitute glob tokens → regex match.
+    """
+    if pattern == rel:
+        return True
+    # Escape pattern then substitute glob tokens back in.
+    escaped = re.escape(pattern)
+    # Order matters: `**/` and `/**` must be handled before `**` and `*`.
+    escaped = escaped.replace(r"\*\*/", "(?:.*/)?")
+    escaped = escaped.replace(r"/\*\*", "(?:/.*)?")
+    escaped = escaped.replace(r"\*\*", ".*")
+    escaped = escaped.replace(r"\*", "[^/]*")
+    escaped = escaped.replace(r"\?", "[^/]")
+    return re.match("^" + escaped + "$", rel) is not None
+
+
+def _matches_any(rel: str, patterns) -> bool:
+    for pat in patterns:
+        if _match_glob(rel, pat):
+            return True
+    return False
+
+
+def check_commit_traceability(lock: dict, report: CheckReport) -> None:
+    """Item 11 (v5.1) + v5.2 fixes: commits AND uncommitted changes since lock base_commit
+    must touch only whitelisted files. Uses proper glob matching."""
+    base = lock.get("base_commit")
+    round_dir = CONTRACTS_DIR / lock["round_id"]
+    wl_path = round_dir / "file_whitelist.txt"
+    if not base:
+        report.advisory("lock has no base_commit — commit traceability cannot be verified (legacy lock)")
+        return
+    if not wl_path.exists():
+        report.blocker("file_whitelist.txt missing — cannot verify commit traceability")
+        return
+    # Effective whitelist = base + amendments (additive/subtractive via + / -)
+    whitelist: set[str] = set()
+    for ln in wl_path.read_text().splitlines():
+        ln = ln.strip()
+        if ln and not ln.startswith("#"):
+            whitelist.add(ln)
+    for amend in lock.get("amendments", []):
+        fname = amend.get("file", "")
+        apath = round_dir / fname
+        if apath.exists() and fname.startswith("file_whitelist.amendment."):
+            for ln in apath.read_text().splitlines():
+                ln = ln.strip()
+                if ln.startswith("+"):
+                    whitelist.add(ln[1:].strip())
+                elif ln.startswith("-"):
+                    whitelist.discard(ln[1:].strip())
+    # Collect touched files: committed + uncommitted + staged
+    touched: set[str] = set()
+    try:
+        committed = subprocess.check_output(
+            ["git", "diff", "--name-only", f"{base}..HEAD"], cwd=REPO, text=True
+        ).strip().splitlines()
+        touched.update(f for f in committed if f)
+    except Exception as e:
+        report.blocker(f"git diff base..HEAD failed: {e}")
+        return
+    try:
+        # Uncommitted (working tree + staged)
+        dirty = subprocess.check_output(
+            ["git", "status", "--porcelain"], cwd=REPO, text=True
+        ).strip().splitlines()
+        for ln in dirty:
+            # porcelain format: XY <filename>[ -> <renamed>]
+            if len(ln) < 4:
+                continue
+            fn = ln[3:].split(" -> ")[-1].strip()
+            if fn:
+                touched.add(fn)
+    except Exception as e:
+        report.advisory(f"git status --porcelain unavailable: {e}")
+    out_of_scope = [f for f in sorted(touched) if not _matches_any(f, whitelist)]
+    if out_of_scope:
+        for f in out_of_scope:
+            report.blocker(f"commit/working-tree touches out-of-whitelist path: {f}")
+    else:
+        report.ok(f"commit traceability ok ({len(touched)} file(s) vs whitelist)")
+
+
+def check_live_pointer_hashes(lock: dict, report: CheckReport) -> None:
+    """Item 5 (v5.1) + v5.2: pointer files must be `<path>\\n<sha>` format. Malformed = BLOCKER."""
+    round_dir = CONTRACTS_DIR / lock["round_id"]
+    for name in ("lint_config.txt", "convention_version.txt"):
+        p = round_dir / name
+        entry = read_pointer_file(p)
+        if entry is None:
+            report.blocker(f"{name} malformed (expected `<path>\\n<sha256:...>` 2-line format)")
+            continue
+        target_rel, expected = entry
+        if not expected.startswith("sha256:"):
+            report.blocker(f"{name} second line must start with `sha256:` — got `{expected[:20]}...`")
+            continue
+        target = REPO / target_rel
+        if not target.exists():
+            report.blocker(f"{name} points at missing target: {target_rel}")
+            continue
+        actual = sha256_file(target)
+        if actual != expected:
+            report.blocker(f"{name} target {target_rel} live SHA differs from locked SHA")
+        else:
+            report.ok(f"{name} live hash matches locked target")
+
+
+def validate_amendments(lock: dict, report: CheckReport) -> None:
+    """v5.2: every amendment in lock.amendments[] must be a valid artifact.
+    Check: file exists, sha matches lock entry, frontmatter (target/supersedes/meeting) present,
+    meeting exists with status: decided, target ∈ base contract files.
+    """
+    round_dir = CONTRACTS_DIR / lock["round_id"]
+    base_files = set(REQUIRED_CONTRACT_FILES)
+    for amend in lock.get("amendments", []):
+        fname = amend.get("file")
+        if not fname:
+            report.blocker(f"amendment entry missing `file`: {amend}")
+            continue
+        apath = round_dir / fname
+        if not apath.exists():
+            report.blocker(f"amendment file missing: {fname}")
+            continue
+        # Hash
+        expected = amend.get("sha256")
+        if expected and sha256_file(apath) != expected:
+            report.blocker(f"amendment {fname} SHA differs from lock")
+        # Frontmatter (for .md amendments; .txt uses the lock entry for metadata)
+        text = apath.read_text()
+        if fname.endswith(".md"):
+            fm_match = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
+            if not fm_match:
+                report.blocker(f"amendment {fname} missing frontmatter")
+                continue
+            fm = parse_simple_frontmatter(fm_match.group(1))
+            for k in ("target", "supersedes", "meeting"):
+                if k not in fm:
+                    report.blocker(f"amendment {fname} frontmatter missing `{k}`")
+            target = fm.get("target")
+            if target and target not in base_files:
+                report.blocker(f"amendment {fname} target `{target}` not a base contract file")
+            meeting_path = fm.get("meeting")
+            if meeting_path:
+                mp = REPO / meeting_path if meeting_path.startswith("context_harness/") else OPERATOR_DIR / "meetings" / Path(meeting_path).name
+                if not mp.exists():
+                    report.blocker(f"amendment {fname} meeting not found: {meeting_path}")
+                else:
+                    mtext = mp.read_text()
+                    fm_match = re.match(r"^---\n(.*?)\n---\n", mtext, re.DOTALL)
+                    if fm_match:
+                        mfm = parse_simple_frontmatter(fm_match.group(1))
+                        if mfm.get("status") != "decided":
+                            report.blocker(f"amendment {fname} references non-decided meeting: {meeting_path}")
+        report.ok(f"amendment valid: {fname}")
+
+
+def validate_stages_completed(lock: dict, cfg: dict, report: CheckReport) -> None:
+    """v5.2: lock.stages_completed[] entries must be valid stage_ids from lint config."""
+    allowed = set(cfg.get("meeting_frontmatter_allowed", {}).get("stage", []))
+    for sid in lock.get("stages_completed", []):
+        if sid not in allowed:
+            report.blocker(f"lock.stages_completed contains invalid stage_id: {sid}")
+    if lock.get("stages_completed"):
+        report.ok(f"stages_completed structurally valid ({len(lock['stages_completed'])} entries)")
+
+
+def load_gate_evidence(round_id: str, report: CheckReport) -> dict | None:
+    """v5.2: `close` requires contracts/<round>/gate_evidence.json with all 4 gates pass."""
+    p = CONTRACTS_DIR / round_id / "gate_evidence.json"
+    if not p.exists():
+        report.blocker(f"gate_evidence.json missing at {p}")
+        return None
+    try:
+        ev = json.loads(p.read_text())
+    except json.JSONDecodeError as e:
+        report.blocker(f"gate_evidence.json invalid JSON: {e}")
+        return None
+    for g in ("gate1", "gate2", "gate3", "gate4"):
+        g_ev = ev.get(g)
+        if not isinstance(g_ev, dict) or g_ev.get("status") != "pass":
+            report.blocker(f"gate_evidence.{g} is not `pass`: {g_ev}")
+        else:
+            report.ok(f"gate_evidence.{g} = pass")
+    return ev
+
+
+def cmd_gates(round_id: str) -> CheckReport:
+    cfg = load_lint_config()
+    report = CheckReport()
+    lock_path = LOCKS_DIR / f"{round_id}.lock"
+    if not lock_path.exists():
+        report.blocker(f"lock missing: {lock_path}")
+        return report
+    try:
+        lock = json.loads(lock_path.read_text())
+    except json.JSONDecodeError as e:
+        report.blocker(f"lock JSON invalid: {e}")
+        return report
+    round_dir = CONTRACTS_DIR / round_id
+    # Contract immutability
+    for fname, expected in lock.get("hashes", {}).items():
+        p = round_dir / fname
+        if not p.exists():
+            report.blocker(f"contract file missing (hashed at lock): {fname}")
+            continue
+        actual = sha256_file(p)
+        if actual != expected:
+            report.blocker(f"contract file MUTATED after lock: {fname} expected {expected[:20]} got {actual[:20]}")
+        else:
+            report.ok(f"contract file immutable: {fname}")
+    # Live pointer hashes (lint/convention) — v5.2 malformed = blocker
+    check_live_pointer_hashes(lock, report)
+    # v5.2: amendment validation
+    validate_amendments(lock, report)
+    # v5.2: stages_completed structural check
+    validate_stages_completed(lock, cfg, report)
+    # Commit traceability (v5.2: includes uncommitted)
+    check_commit_traceability(lock, report)
+    # Lint + audit
+    lint_report = cmd_lint()
+    audit_report = cmd_audit_operator_layer()
+    report.merge(lint_report)
+    report.merge(audit_report)
+    return report
+
+
+def cmd_close(round_id: str) -> CheckReport:
+    """v5.2: close requires Gate 5 pass AND contracts/<round>/gate_evidence.json with gate1..gate4 all pass."""
+    report = cmd_gates(round_id)
+    # v5.2: require external gate_evidence.json for Gates 1-4
+    load_gate_evidence(round_id, report)
+    if report.blockers:
+        report.blocker(f"close refused: {len(report.blockers)} blocker(s) present")
+        return report
+    lock_path = LOCKS_DIR / f"{round_id}.lock"
+    lock = json.loads(lock_path.read_text())
+    if lock.get("status") != "active":
+        report.blocker(f"close refused: lock status is '{lock.get('status')}', must be 'active'")
+        return report
+    lock["status"] = "closed"
+    lock["closed_at"] = datetime.now(timezone.utc).isoformat()
+    lock_path.write_text(json.dumps(lock, indent=2) + "\n")
+    report.ok(f"lock {round_id} transitioned to closed at {lock['closed_at']}")
+    return report
+
+
+# -----------------------------------------------------------------
+# main
+# -----------------------------------------------------------------
+
+
+def main(argv: list[str]) -> int:
+    if len(argv) < 2:
+        print(__doc__)
+        return 2
+    cmd = argv[1]
+    if cmd == "lint":
+        report = cmd_lint()
+    elif cmd == "audit-operator-layer":
+        report = cmd_audit_operator_layer()
+    elif cmd == "lock" and len(argv) >= 3:
+        report = cmd_lock(argv[2])
+    elif cmd == "gates" and len(argv) >= 3:
+        report = cmd_gates(argv[2])
+    elif cmd == "close" and len(argv) >= 3:
+        report = cmd_close(argv[2])
+    else:
+        print(__doc__)
+        return 2
+    print(report.render())
+    return report.exit_code()
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
+
+exec
+/bin/zsh -lc "nl -ba harness/check_operator_round.py | sed -n '430,830p'" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+   430	    # SESSION_RESUME freshness
+   431	    check_session_resume_freshness(report)
+   432	
+   433	    # Legacy SUPERSEDED headers
+   434	    check_legacy_superseded_headers(cfg, report)
+   435	
+   436	
+   437	def cmd_audit_operator_layer() -> CheckReport:
+   438	    cfg = load_lint_config()
+   439	    report = CheckReport()
+   440	    audit_operator_layer(report, cfg)
+   441	    return report
+   442	
+   443	
+   444	# -----------------------------------------------------------------
+   445	# lock / gates / close
+   446	# -----------------------------------------------------------------
+   447	
+   448	
+   449	REQUIRED_CONTRACT_FILES = [
+   450	    "spec.md",
+   451	    "file_whitelist.txt",
+   452	    "convention_version.txt",
+   453	    "lint_config.txt",
+   454	    "acceptance.md",
+   455	    "eval_protocol.md",
+   456	]
+   457	
+   458	
+   459	def read_pointer_file(p: Path) -> tuple[str, str] | None:
+   460	    """Read `lint_config.txt` or `convention_version.txt` — expects `<path>\\n<sha256:...>`."""
+   461	    if not p.exists():
+   462	        return None
+   463	    lines = [ln.strip() for ln in p.read_text().splitlines() if ln.strip() and not ln.strip().startswith("#")]
+   464	    if len(lines) < 2:
+   465	        return None
+   466	    return lines[0], lines[1]
+   467	
+   468	
+   469	def cmd_lock(round_id: str) -> CheckReport:
+   470	    report = CheckReport()
+   471	    round_dir = CONTRACTS_DIR / round_id
+   472	    if not round_dir.exists():
+   473	        report.blocker(f"contract directory missing: {round_dir}")
+   474	        return report
+   475	    hashes: dict[str, str] = {}
+   476	    for f in REQUIRED_CONTRACT_FILES:
+   477	        p = round_dir / f
+   478	        if not p.exists():
+   479	            report.blocker(f"contract file missing: {round_id}/{f}")
+   480	            continue
+   481	        hashes[f] = sha256_file(p)
+   482	        report.ok(f"hashed {round_id}/{f}")
+   483	    if report.blockers:
+   484	        return report
+   485	    LOCKS_DIR.mkdir(parents=True, exist_ok=True)
+   486	    lock_path = LOCKS_DIR / f"{round_id}.lock"
+   487	    if lock_path.exists():
+   488	        report.blocker(f"lock already exists: {lock_path}")
+   489	        return report
+   490	    # base_commit for commit traceability (item 11)
+   491	    try:
+   492	        base_commit = subprocess.check_output(
+   493	            ["git", "rev-parse", "HEAD"], cwd=REPO, text=True
+   494	        ).strip()
+   495	    except Exception:
+   496	        base_commit = None
+   497	    lock = {
+   498	        "round_id": round_id,
+   499	        "schema_version": 1,
+   500	        "started_at": datetime.now(timezone.utc).isoformat(),
+   501	        "status": "active",
+   502	        "operators": {
+   503	            "claude_code": {"session": "this-session", "role_default": "implementer"},
+   504	            "codex": {"session": "", "role_default": "designer_reviewer"},
+   505	        },
+   506	        "base_commit": base_commit,
+   507	        "hashes": hashes,
+   508	        "amendments": [],
+   509	        "stages_completed": [],
+   510	        "closed_at": None,
+   511	    }
+   512	    lock_path.write_text(json.dumps(lock, indent=2) + "\n")
+   513	    report.ok(f"lock created: {lock_path} (base_commit={base_commit or 'unknown'})")
+   514	    report.ok("ready")
+   515	    return report
+   516	
+   517	
+   518	def _match_glob(rel: str, pattern: str) -> bool:
+   519	    """Glob matcher with strict POSIX-style semantics:
+   520	      * = [^/]*    (does NOT cross directory separators)
+   521	      ** = .*      (crosses directories; must be a full segment — we normalize `**/` and `/**`)
+   522	      ? = [^/]
+   523	    Exact match short-circuits. Implementation: escape pattern → substitute glob tokens → regex match.
+   524	    """
+   525	    if pattern == rel:
+   526	        return True
+   527	    # Escape pattern then substitute glob tokens back in.
+   528	    escaped = re.escape(pattern)
+   529	    # Order matters: `**/` and `/**` must be handled before `**` and `*`.
+   530	    escaped = escaped.replace(r"\*\*/", "(?:.*/)?")
+   531	    escaped = escaped.replace(r"/\*\*", "(?:/.*)?")
+   532	    escaped = escaped.replace(r"\*\*", ".*")
+   533	    escaped = escaped.replace(r"\*", "[^/]*")
+   534	    escaped = escaped.replace(r"\?", "[^/]")
+   535	    return re.match("^" + escaped + "$", rel) is not None
+   536	
+   537	
+   538	def _matches_any(rel: str, patterns) -> bool:
+   539	    for pat in patterns:
+   540	        if _match_glob(rel, pat):
+   541	            return True
+   542	    return False
+   543	
+   544	
+   545	def check_commit_traceability(lock: dict, report: CheckReport) -> None:
+   546	    """Item 11 (v5.1) + v5.2 fixes: commits AND uncommitted changes since lock base_commit
+   547	    must touch only whitelisted files. Uses proper glob matching."""
+   548	    base = lock.get("base_commit")
+   549	    round_dir = CONTRACTS_DIR / lock["round_id"]
+   550	    wl_path = round_dir / "file_whitelist.txt"
+   551	    if not base:
+   552	        report.advisory("lock has no base_commit — commit traceability cannot be verified (legacy lock)")
+   553	        return
+   554	    if not wl_path.exists():
+   555	        report.blocker("file_whitelist.txt missing — cannot verify commit traceability")
+   556	        return
+   557	    # Effective whitelist = base + amendments (additive/subtractive via + / -)
+   558	    whitelist: set[str] = set()
+   559	    for ln in wl_path.read_text().splitlines():
+   560	        ln = ln.strip()
+   561	        if ln and not ln.startswith("#"):
+   562	            whitelist.add(ln)
+   563	    for amend in lock.get("amendments", []):
+   564	        fname = amend.get("file", "")
+   565	        apath = round_dir / fname
+   566	        if apath.exists() and fname.startswith("file_whitelist.amendment."):
+   567	            for ln in apath.read_text().splitlines():
+   568	                ln = ln.strip()
+   569	                if ln.startswith("+"):
+   570	                    whitelist.add(ln[1:].strip())
+   571	                elif ln.startswith("-"):
+   572	                    whitelist.discard(ln[1:].strip())
+   573	    # Collect touched files: committed + uncommitted + staged
+   574	    touched: set[str] = set()
+   575	    try:
+   576	        committed = subprocess.check_output(
+   577	            ["git", "diff", "--name-only", f"{base}..HEAD"], cwd=REPO, text=True
+   578	        ).strip().splitlines()
+   579	        touched.update(f for f in committed if f)
+   580	    except Exception as e:
+   581	        report.blocker(f"git diff base..HEAD failed: {e}")
+   582	        return
+   583	    try:
+   584	        # Uncommitted (working tree + staged)
+   585	        dirty = subprocess.check_output(
+   586	            ["git", "status", "--porcelain"], cwd=REPO, text=True
+   587	        ).strip().splitlines()
+   588	        for ln in dirty:
+   589	            # porcelain format: XY <filename>[ -> <renamed>]
+   590	            if len(ln) < 4:
+   591	                continue
+   592	            fn = ln[3:].split(" -> ")[-1].strip()
+   593	            if fn:
+   594	                touched.add(fn)
+   595	    except Exception as e:
+   596	        report.advisory(f"git status --porcelain unavailable: {e}")
+   597	    out_of_scope = [f for f in sorted(touched) if not _matches_any(f, whitelist)]
+   598	    if out_of_scope:
+   599	        for f in out_of_scope:
+   600	            report.blocker(f"commit/working-tree touches out-of-whitelist path: {f}")
+   601	    else:
+   602	        report.ok(f"commit traceability ok ({len(touched)} file(s) vs whitelist)")
+   603	
+   604	
+   605	def check_live_pointer_hashes(lock: dict, report: CheckReport) -> None:
+   606	    """Item 5 (v5.1) + v5.2: pointer files must be `<path>\\n<sha>` format. Malformed = BLOCKER."""
+   607	    round_dir = CONTRACTS_DIR / lock["round_id"]
+   608	    for name in ("lint_config.txt", "convention_version.txt"):
+   609	        p = round_dir / name
+   610	        entry = read_pointer_file(p)
+   611	        if entry is None:
+   612	            report.blocker(f"{name} malformed (expected `<path>\\n<sha256:...>` 2-line format)")
+   613	            continue
+   614	        target_rel, expected = entry
+   615	        if not expected.startswith("sha256:"):
+   616	            report.blocker(f"{name} second line must start with `sha256:` — got `{expected[:20]}...`")
+   617	            continue
+   618	        target = REPO / target_rel
+   619	        if not target.exists():
+   620	            report.blocker(f"{name} points at missing target: {target_rel}")
+   621	            continue
+   622	        actual = sha256_file(target)
+   623	        if actual != expected:
+   624	            report.blocker(f"{name} target {target_rel} live SHA differs from locked SHA")
+   625	        else:
+   626	            report.ok(f"{name} live hash matches locked target")
+   627	
+   628	
+   629	def validate_amendments(lock: dict, report: CheckReport) -> None:
+   630	    """v5.2: every amendment in lock.amendments[] must be a valid artifact.
+   631	    Check: file exists, sha matches lock entry, frontmatter (target/supersedes/meeting) present,
+   632	    meeting exists with status: decided, target ∈ base contract files.
+   633	    """
+   634	    round_dir = CONTRACTS_DIR / lock["round_id"]
+   635	    base_files = set(REQUIRED_CONTRACT_FILES)
+   636	    for amend in lock.get("amendments", []):
+   637	        fname = amend.get("file")
+   638	        if not fname:
+   639	            report.blocker(f"amendment entry missing `file`: {amend}")
+   640	            continue
+   641	        apath = round_dir / fname
+   642	        if not apath.exists():
+   643	            report.blocker(f"amendment file missing: {fname}")
+   644	            continue
+   645	        # Hash
+   646	        expected = amend.get("sha256")
+   647	        if expected and sha256_file(apath) != expected:
+   648	            report.blocker(f"amendment {fname} SHA differs from lock")
+   649	        # Frontmatter (for .md amendments; .txt uses the lock entry for metadata)
+   650	        text = apath.read_text()
+   651	        if fname.endswith(".md"):
+   652	            fm_match = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
+   653	            if not fm_match:
+   654	                report.blocker(f"amendment {fname} missing frontmatter")
+   655	                continue
+   656	            fm = parse_simple_frontmatter(fm_match.group(1))
+   657	            for k in ("target", "supersedes", "meeting"):
+   658	                if k not in fm:
+   659	                    report.blocker(f"amendment {fname} frontmatter missing `{k}`")
+   660	            target = fm.get("target")
+   661	            if target and target not in base_files:
+   662	                report.blocker(f"amendment {fname} target `{target}` not a base contract file")
+   663	            meeting_path = fm.get("meeting")
+   664	            if meeting_path:
+   665	                mp = REPO / meeting_path if meeting_path.startswith("context_harness/") else OPERATOR_DIR / "meetings" / Path(meeting_path).name
+   666	                if not mp.exists():
+   667	                    report.blocker(f"amendment {fname} meeting not found: {meeting_path}")
+   668	                else:
+   669	                    mtext = mp.read_text()
+   670	                    fm_match = re.match(r"^---\n(.*?)\n---\n", mtext, re.DOTALL)
+   671	                    if fm_match:
+   672	                        mfm = parse_simple_frontmatter(fm_match.group(1))
+   673	                        if mfm.get("status") != "decided":
+   674	                            report.blocker(f"amendment {fname} references non-decided meeting: {meeting_path}")
+   675	        report.ok(f"amendment valid: {fname}")
+   676	
+   677	
+   678	def validate_stages_completed(lock: dict, cfg: dict, report: CheckReport) -> None:
+   679	    """v5.2: lock.stages_completed[] entries must be valid stage_ids from lint config."""
+   680	    allowed = set(cfg.get("meeting_frontmatter_allowed", {}).get("stage", []))
+   681	    for sid in lock.get("stages_completed", []):
+   682	        if sid not in allowed:
+   683	            report.blocker(f"lock.stages_completed contains invalid stage_id: {sid}")
+   684	    if lock.get("stages_completed"):
+   685	        report.ok(f"stages_completed structurally valid ({len(lock['stages_completed'])} entries)")
+   686	
+   687	
+   688	def load_gate_evidence(round_id: str, report: CheckReport) -> dict | None:
+   689	    """v5.2: `close` requires contracts/<round>/gate_evidence.json with all 4 gates pass."""
+   690	    p = CONTRACTS_DIR / round_id / "gate_evidence.json"
+   691	    if not p.exists():
+   692	        report.blocker(f"gate_evidence.json missing at {p}")
+   693	        return None
+   694	    try:
+   695	        ev = json.loads(p.read_text())
+   696	    except json.JSONDecodeError as e:
+   697	        report.blocker(f"gate_evidence.json invalid JSON: {e}")
+   698	        return None
+   699	    for g in ("gate1", "gate2", "gate3", "gate4"):
+   700	        g_ev = ev.get(g)
+   701	        if not isinstance(g_ev, dict) or g_ev.get("status") != "pass":
+   702	            report.blocker(f"gate_evidence.{g} is not `pass`: {g_ev}")
+   703	        else:
+   704	            report.ok(f"gate_evidence.{g} = pass")
+   705	    return ev
+   706	
+   707	
+   708	def cmd_gates(round_id: str) -> CheckReport:
+   709	    cfg = load_lint_config()
+   710	    report = CheckReport()
+   711	    lock_path = LOCKS_DIR / f"{round_id}.lock"
+   712	    if not lock_path.exists():
+   713	        report.blocker(f"lock missing: {lock_path}")
+   714	        return report
+   715	    try:
+   716	        lock = json.loads(lock_path.read_text())
+   717	    except json.JSONDecodeError as e:
+   718	        report.blocker(f"lock JSON invalid: {e}")
+   719	        return report
+   720	    round_dir = CONTRACTS_DIR / round_id
+   721	    # Contract immutability
+   722	    for fname, expected in lock.get("hashes", {}).items():
+   723	        p = round_dir / fname
+   724	        if not p.exists():
+   725	            report.blocker(f"contract file missing (hashed at lock): {fname}")
+   726	            continue
+   727	        actual = sha256_file(p)
+   728	        if actual != expected:
+   729	            report.blocker(f"contract file MUTATED after lock: {fname} expected {expected[:20]} got {actual[:20]}")
+   730	        else:
+   731	            report.ok(f"contract file immutable: {fname}")
+   732	    # Live pointer hashes (lint/convention) — v5.2 malformed = blocker
+   733	    check_live_pointer_hashes(lock, report)
+   734	    # v5.2: amendment validation
+   735	    validate_amendments(lock, report)
+   736	    # v5.2: stages_completed structural check
+   737	    validate_stages_completed(lock, cfg, report)
+   738	    # Commit traceability (v5.2: includes uncommitted)
+   739	    check_commit_traceability(lock, report)
+   740	    # Lint + audit
+   741	    lint_report = cmd_lint()
+   742	    audit_report = cmd_audit_operator_layer()
+   743	    report.merge(lint_report)
+   744	    report.merge(audit_report)
+   745	    return report
+   746	
+   747	
+   748	def cmd_close(round_id: str) -> CheckReport:
+   749	    """v5.2: close requires Gate 5 pass AND contracts/<round>/gate_evidence.json with gate1..gate4 all pass."""
+   750	    report = cmd_gates(round_id)
+   751	    # v5.2: require external gate_evidence.json for Gates 1-4
+   752	    load_gate_evidence(round_id, report)
+   753	    if report.blockers:
+   754	        report.blocker(f"close refused: {len(report.blockers)} blocker(s) present")
+   755	        return report
+   756	    lock_path = LOCKS_DIR / f"{round_id}.lock"
+   757	    lock = json.loads(lock_path.read_text())
+   758	    if lock.get("status") != "active":
+   759	        report.blocker(f"close refused: lock status is '{lock.get('status')}', must be 'active'")
+   760	        return report
+   761	    lock["status"] = "closed"
+   762	    lock["closed_at"] = datetime.now(timezone.utc).isoformat()
+   763	    lock_path.write_text(json.dumps(lock, indent=2) + "\n")
+   764	    report.ok(f"lock {round_id} transitioned to closed at {lock['closed_at']}")
+   765	    return report
+   766	
+   767	
+   768	# -----------------------------------------------------------------
+   769	# main
+   770	# -----------------------------------------------------------------
+   771	
+   772	
+   773	def main(argv: list[str]) -> int:
+   774	    if len(argv) < 2:
+   775	        print(__doc__)
+   776	        return 2
+   777	    cmd = argv[1]
+   778	    if cmd == "lint":
+   779	        report = cmd_lint()
+   780	    elif cmd == "audit-operator-layer":
+   781	        report = cmd_audit_operator_layer()
+   782	    elif cmd == "lock" and len(argv) >= 3:
+   783	        report = cmd_lock(argv[2])
+   784	    elif cmd == "gates" and len(argv) >= 3:
+   785	        report = cmd_gates(argv[2])
+   786	    elif cmd == "close" and len(argv) >= 3:
+   787	        report = cmd_close(argv[2])
+   788	    else:
+   789	        print(__doc__)
+   790	        return 2
+   791	    print(report.render())
+   792	    return report.exit_code()
+   793	
+   794	
+   795	if __name__ == "__main__":
+   796	    sys.exit(main(sys.argv))
+
+exec
+/bin/zsh -lc "nl -ba context_harness/operator/REGULATION.md | sed -n '35,240p' && nl -ba context_harness/operator/PROCESS_AUDIT_CHECKLIST.md | sed -n '1,95p'" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+    35	
+    36	```
+    37	operator/contracts/<round_id>/
+    38	├── spec.md                      ← base input spec. IMMUTABLE after lock.
+    39	├── spec.amendment.1.md          ← amendments only as new files
+    40	├── spec.amendment.N.md
+    41	├── spec.effective.md            ← generated = base + amendments (regenerated by checker)
+    42	├── file_whitelist.txt           ← writable paths for this round. IMMUTABLE after lock.
+    43	├── file_whitelist.amendment.N.txt  ← whitelist amendments (additive or subtractive)
+    44	├── convention_version.txt       ← active coding-conventions path + SHA at lock time
+    45	├── lint_config.txt              ← active lint-config path + SHA at lock time
+    46	├── acceptance.md                ← success criteria. IMMUTABLE after lock.
+    47	├── acceptance.amendment.N.md    ← acceptance amendments
+    48	├── eval_protocol.md             ← Codex-authored capture protocol. IMMUTABLE after lock.
+    49	└── eval_protocol.amendment.N.md ← eval protocol amendments
+    50	```
+    51	
+    52	### Amendment artifact format
+    53	
+    54	All amendments share a common structure:
+    55	- Filename: `<base_filename>.amendment.<N>.<ext>` where N is a monotonically increasing integer per target
+    56	- YAML frontmatter (required, validated by checker):
+    57	  ```yaml
+    58	  ---
+    59	  target: <base_filename>
+    60	  supersedes: [<section-id or line-range>]
+    61	  meeting: <path-to-decided-meeting>
+    62	  ---
+    63	  ```
+    64	- Recorded in lock's `amendments[]` array with `{file, target, sha256, supersedes, meeting}`
+    65	- Consumers compute effective state by reading base + amendments in order. The checker **validates** amendments (file exists + sha matches lock + frontmatter present + meeting exists and `status: decided` + target ∈ base files) but does NOT regenerate `.effective.*` artifacts — consumers (e.g., operators running checks) compute effective state on read.
+    66	
+    67	### Pointer file format (`lint_config.txt`, `convention_version.txt`)
+    68	
+    69	Each is a 2-line UTF-8 file:
+    70	
+    71	```
+    72	<repo-relative path to the active resource>
+    73	sha256:<64-hex>
+    74	```
+    75	
+    76	Example for `lint_config.txt`:
+    77	```
+    78	context_harness/operator/lint_config.toml
+    79	sha256:a1b2c3...e7f8
+    80	```
+    81	
+    82	Malformed format (missing lines, wrong prefix) = Gate 5 blocker.
+    83	
+    84	### Lock file schema
+    85	
+    86	`operator/locks/<round_id>.lock` is a single JSON object:
+    87	
+    88	```json
+    89	{
+    90	  "round_id": "round_deepsight_r1",
+    91	  "schema_version": 1,
+    92	  "started_at": "2026-04-19T12:00:00Z",
+    93	  "status": "active",
+    94	  "operators": {
+    95	    "claude_code": { "session": "this-session", "role_default": "implementer" },
+    96	    "codex": { "session": "019db43d-...", "role_default": "designer_reviewer" }
+    97	  },
+    98	  "hashes": {
+    99	    "spec.md": "sha256:...",
+   100	    "file_whitelist.txt": "sha256:...",
+   101	    "convention_version.txt": "sha256:...",
+   102	    "lint_config.txt": "sha256:...",
+   103	    "acceptance.md": "sha256:...",
+   104	    "eval_protocol.md": "sha256:..."
+   105	  },
+   106	  "amendments": [
+   107	    { "file": "spec.amendment.1.md", "sha256": "...", "supersedes": ["spec.md#section-3"], "meeting": "meetings/2026-04-20_amend1.md" }
+   108	  ],
+   109	  "stages_completed": ["overall_planning", "detailed_design"],
+   110	  "closed_at": null
+   111	}
+   112	```
+   113	
+   114	`status` values: `active` | `paused` | `escalated` | `closed` | `aborted`.
+   115	
+   116	### Immutability rules
+   117	
+   118	- Base contract files (`spec.md`, `file_whitelist.txt`, `convention_version.txt`, `lint_config.txt`, `acceptance.md`, `eval_protocol.md`) are **NEVER edited** after lock creation.
+   119	- Direct diff to any base file while `status == active` = hard stop. Checker refuses to advance stages.
+   120	- Changes require: (a) amendment meeting → (b) new `<base_filename>.amendment.<N>.<ext>` with frontmatter `target`, `supersedes`, `meeting` → (c) lock's `amendments[]` appended → (d) `<base>.effective.<ext>` regenerated by checker.
+   121	- **Whitelist changes** (both expansion AND shrinking) go via `file_whitelist.amendment.N.txt` amendment. No exception. "Shrink without meeting" is forbidden — mutating the locked hash, regardless of direction, breaks the immutability invariant.
+   122	- `status` transitions: `close <round>` subcommand of `harness/check_operator_round.py` transitions to `closed` only if (a) Gate 5 structural integrity passes AND (b) `contracts/<round>/gate_evidence.json` is present with `gate1..gate4` all marked `pass`. The checker enforces Gate 5 directly and refuses close if the `gate_evidence.json` is missing, malformed, or any gate is not `pass`. Operators may transition to `paused` or `escalated` via meeting; `aborted` only via human. Operators may NOT hand-edit `status` in the lock file.
+   123	- `lint_config.txt` and `convention_version.txt` contain `<path>\n<sha256>`. Checker at Gate 5 recomputes the live SHA of the referenced path and compares — mismatch = blocker.
+   124	
+   125	## §4. Challenge Section (anti-hallucination tripwire)
+   126	
+   127	Every meeting whose purpose is a **decision** (normative, design-affecting, or contract-changing) must include a Challenge Section with at least ONE of:
+   128	
+   129	- Concrete objection with reasoning
+   130	- Named risk with mitigation or acceptance
+   131	- Rejected alternative with why-not
+   132	- Explicit uncertainty that was consciously deferred
+   133	
+   134	Meetings that are **purely factual** (verification, status check, evidence pointer) must state: **"No normative decision; verified facts only"** and list the evidence references.
+   135	
+   136	Forbidden: fake dissent (reviewer nitpicking to satisfy the rule). If the reviewer genuinely has no objection, the meeting is factual by definition — state that.
+   137	
+   138	Missing Challenge Section on a decision meeting = Gate 5 blocker.
+   139	
+   140	## §5. Gate Structure
+   141	
+   142	Gates 1–4 from v4 retained with enforcement clarified; Gate 5 added.
+   143	
+   144	| Gate | Name | Check | Blocker |
+   145	|------|------|-------|---------|
+   146	| 1 | Build & Test | `xcodegen generate && xcodebuild test` passes, test count ≥ baseline | Any failure |
+   147	| 2 | 3-Evaluator Review | red_team + hig_guardian + visual_qa reports produced | Any evaluator missing or empty |
+   148	| 3 | Cross-Agreement | 2+ evaluators agreeing on a file → required fix | Unresolved 2+ agreement |
+   149	| 4 | Process Metrics | remediation cycles ≤ 2, BLOCKER recurrence = 0, brief accuracy ≥ 90%, SKILLS miss ≤ 5% | Any metric out of range |
+   150	| 5 | Process Integrity | see §5.1 below | see §5.1 blockers |
+   151	
+   152	### §5.1 Gate 5 — Process Integrity
+   153	
+   154	Blockers (round cannot close):
+   155	- Any commit in this round not traceable to a contract lock
+   156	- Any edit to a base contract file (§3 immutability)
+   157	- Any decision meeting without a Challenge Section
+   158	- Any new operator/* file not registered in `FILE_INDEX.md`
+   159	- Lock hash mismatch for any base contract file
+   160	- Lint checker missing, failing, or unrunnable (`harness/check_operator_round.py` exit != 0)
+   161	- Operator-layer drift audit reports contradictions (see §7)
+   162	
+   163	Advisories (noted in retro, do not block):
+   164	- No new SKILLS.md entry — acceptable if retro explicitly classifies "no novel pattern"
+   165	- FILE_INDEX line-count warning (between 250 and 300 lines)
+   166	- SESSION_RESUME.md staleness > 48h
+   167	
+   168	## §6. Deadlock Escalation Ladder
+   169	
+   170	When two operators cannot converge in a meeting:
+   171	
+   172	1. **Reframe meeting** — each operator restates the OTHER'S position in their own words. Names the real decision axis. Frequently resolves miscommunication-based disputes.
+   173	2. **Default-reversible rule** — if the dispute is low-impact and reversible, pick the option with smaller blast radius, easier rollback, or better auditability. Record both positions; implementer proceeds. No human, no Gemini.
+   174	3. **Gemini advisory** — for **bounded technical disputes only** (lint rule choice, file layout, test strategy, refactor approach). Gemini provides ANALYSIS, not VERDICT. Claude/Codex still make the decision and record whether they accepted or rejected the advice.
+   175	4. **Human escalation** — required for: product-impact, user-visible design direction, security/privacy policy, architecture change, irreversible migration, or unresolved operator deadlock after Gemini advisory.
+   176	
+   177	Timebox: 2 written counter-rounds OR 24 hours — whichever first — before moving to the next tier.
+   178	
+   179	Lock `status` transitions to `escalated` at Tier 4. Must record: both positions, tier path taken, what was asked of the human.
+   180	
+   181	## §7. Operator-Layer Drift Audit
+   182	
+   183	Runs at Gate 5 and after every operator-doc amendment. Implemented in `harness/check_operator_round.py` (section `audit_operator_layer`).
+   184	
+   185	**Checks currently enforced by the checker** (authoritative — if it's not in this list, don't assume it's checked):
+   186	1. Stage IDs consistent across `lint_config.toml`, `STAGE_CONTRACT.md`, and `MEETING_PROTOCOL.md`
+   187	2. Every path-like reference in operator docs resolves (repo-root OR `operator/` shorthand inside operator docs); unresolved = blocker unless in configured allowlist
+   188	3. Every operator/*.{md,toml,yaml,yml} file is indexed in FILE_INDEX.md (except meetings, proposals, retros, contracts, locks, CHANGELOG, FILE_INDEX itself)
+   189	4. Line-count caps: AGENTS.md ≤80, .claude/CLAUDE.md ≤80, OPERATOR.md ≤120, FILE_INDEX.md ≤250 (warn at 225)
+   190	5. Loader pointers: `.claude/CLAUDE.md` and `AGENTS.md` reference `context_harness/operator/OPERATOR.md`
+   191	6. Legacy SUPERSEDED markers on docs listed in `lint_config.superseded_docs` (first 10 lines must contain SUPERSEDED or ACTIVE)
+   192	7. SESSION_RESUME.md freshness: ≤48h = pass, 48h-7d = advisory, >7d = blocker
+   193	8. Meeting files: required frontmatter keys, allowed stage/status values, Challenge Section content rule (normative stages require ≥1 keyword; factual meetings require "No normative decision" phrase + `Evidence:` section with ≥1 path/command reference)
+   194	9. `lock.stages_completed[]` entries are valid stage_ids from lint config
+   195	
+   196	Any contradiction on (1)-(9) → Gate 5 blocker. Resolution path: amendment meeting.
+   197	
+   198	**Explicitly NOT enforced in v5.2** (do not cite as audited):
+   199	- Full role matrix consistency (agent/role/stage cross-check against STAGE_CONTRACT table) — structural stage_id validation only.
+   200	- Process-log event count matching meeting decision count (advisory in PROCESS_AUDIT, not blocked).
+   201	- Effective amendment file regeneration (consumers compute on read).
+   202	- Gate 1-4 content (build/test/evaluator reports) — these come from `gate_evidence.json`, not this audit.
+   203	
+   204	If operators need any of the "not enforced" items, open an amendment meeting to either implement or keep REGULATION honest.
+   205	
+   206	## §8. Linter Enforcement
+   207	
+   208	- Config: `operator/lint_config.toml`
+   209	- Runner: `harness/check_operator_round.py`
+   210	- Enforcement owner: cross-validator of the stage, not the performer (performer may run it to catch own errors, but the stage-gate check is on the cross-validator)
+   211	- Round 0 scope: **operator docs only** (filename patterns, line caps, required sections, frontmatter validity for meetings, index coverage). Swift linting intentionally out of scope for v5.0; revisit in retro.
+   212	- Fail-closed: missing config, missing runner, or non-zero exit = Gate 5 blocker. No "best effort" pass.
+   213	
+   214	## §9. Context Discipline
+   215	
+   216	- **Always-read** per session: persona loader (`.claude/CLAUDE.md` or `AGENTS.md`), `OPERATOR.md`, `FILE_INDEX.md`, active lock if any.
+   217	- **On-demand**: use `FILE_INDEX.md` to pick exact files. Targeted `ls`, `rg`, `git diff --name-only` permitted for verification.
+   218	- **Forbidden**: undirected bulk-loading (e.g., reading every file in a directory to "build context"), citing legacy docs as authority (see §1), dumping full evaluation reports into meeting bodies (link + hash instead).
+   219	- **Unindexed file opens** (opening a file not listed in FILE_INDEX): permitted, but log one line in `context_harness/blackboard.md` with reason. If the file should have been indexed, amend FILE_INDEX.
+   220	
+   221	## §10. SKILLS.md Update Protocol
+   222	
+   223	At round close retro:
+   224	1. Classify: did this round reveal a durable pattern not already in SKILLS?
+   225	2. If yes → append with S-number, name, pattern, example, why it matters. Mandatory.
+   226	3. If no → state explicitly in retro: "no novel pattern identified". Gate 5 advisory, not blocker.
+   227	
+   228	Forbidden: synthesizing a "lesson" from a routine round just to satisfy the rule. Explicit opt-out is preferred to fake content.
+   229	
+   230	## §11. Amendment Protocol for This File
+   231	
+   232	Changes to `REGULATION.md` require:
+   233	1. A meeting with `status: decided` and a Challenge Section (§4)
+   234	2. CHANGELOG.md entry with date, summary, meeting pointer
+   235	3. Version bump (v5.0 → v5.1 for substantive changes)
+   236	4. Operator-layer drift audit re-run to confirm no new contradictions
+   237	
+   238	---
+   239	
+   240	## Appendix A — Terminology
+     1	# PROCESS_AUDIT_CHECKLIST — Harness v5
+     2	
+     3	**Version:** v5.2
+     4	**Use:** Fill this out at Gate 5 before closing a round. Also run `harness/check_operator_round.py gates <round>` and attach its output.
+     5	
+     6	---
+     7	
+     8	## Gate 5 — Process Integrity
+     9	
+    10	### Blockers (round cannot close if any fail)
+    11	
+    12	- [ ] Every commit in this round is traceable to the active lock (lock `started_at` ≤ commit ts ≤ `closed_at` or now; commit touches only whitelisted files)
+    13	- [ ] No edit to any base contract file after lock creation (verified by hash match in lock)
+    14	- [ ] Every decision meeting (`stage` in normative set) has a non-empty Challenge Section
+    15	- [ ] Every factual meeting (`stage: factual_verification` or equivalent) has at least one evidence reference
+    16	- [ ] Every new operator/* file created this round is indexed in `FILE_INDEX.md`
+    17	- [ ] Line-count caps honored: `AGENTS.md` ≤80, `.claude/CLAUDE.md` ≤80, `OPERATOR.md` ≤120, `FILE_INDEX.md` ≤250
+    18	- [ ] `harness/check_operator_round.py gates <round>` exits 0
+    19	- [ ] `harness/check_operator_round.py audit-operator-layer` exits 0 (no role matrix contradictions, no stale pointers, no divergent stage names)
+    20	- [ ] No legacy doc was cited in this round's meetings to override a v5 operator doc
+    21	- [ ] Lock `status` is `active` (ready for transition to `closed`); not `paused`, `escalated`, or `aborted`
+    22	- [ ] If any Gate 1-4 had a remediation: its remediation meeting exists and was reviewed
+    23	
+    24	### Advisories (record in retro; do NOT block close)
+    25	
+    26	- [ ] `SKILLS.md` update decision classified in retro (append OR explicit "no novel pattern")
+    27	- [ ] `SESSION_RESUME.md` updated within last 48h
+    28	- [ ] `process-log.jsonl` event count matches decision meeting count
+    29	- [ ] `FILE_INDEX.md` line count: warn at configured threshold (currently 225), block above cap (250)
+    30	- [ ] Operator loaders (`.claude/CLAUDE.md`, `AGENTS.md`) both exist and point to `operator/OPERATOR.md`
+    31	- [ ] If any meeting went through escalation ladder: ladder tier path recorded
+    32	
+    33	## Output Quality — Gates 1-4 (from v4, retained)
+    34	
+    35	### Gate 1 — Build & Test
+    36	- [ ] `xcodegen generate` succeeds
+    37	- [ ] `xcodebuild test` zero failures
+    38	- [ ] Test count ≥ baseline from SESSION_RESUME.md (currently 140)
+    39	
+    40	### Gate 2 — 3-Evaluator Review
+    41	- [ ] `red_team_reviewer` report produced and non-empty
+    42	- [ ] `hig_guardian` report produced and non-empty
+    43	- [ ] `visual_qa` report produced and non-empty
+    44	
+    45	### Gate 3 — Cross-Agreement
+    46	- [ ] For every file flagged by 2+ evaluators: fix verified OR explicit override meeting with Challenge Section
+    47	- [ ] For every file flagged by 1 evaluator: fix OR documented disagreement
+    48	
+    49	### Gate 4 — Process Metrics
+    50	- [ ] Remediation cycles this round ≤ 2
+    51	- [ ] BLOCKER recurrence (same BLOCKER type repeating): 0
+    52	- [ ] Brief-accuracy ≥ 90% (dispatches that didn't need whitelist amendment)
+    53	- [ ] SKILLS.md reference miss-rate ≤ 5% (dispatches that ignored a relevant S-*)
+    54	
+    55	## Retro — mandatory content
+    56	
+    57	Even if Gate 5 passes, the retro meeting must include:
+    58	
+    59	- [ ] What Performer missed (both stages' performers, 1 line each)
+    60	- [ ] What Cross-Validator caught late (both stages' cross-validators, 1 line each)
+    61	- [ ] One durable lesson OR explicit "no novel pattern identified"
+    62	- [ ] Regulation debt: any rule that was cited but didn't actually enforce what it was meant to
+    63	- [ ] Operator-layer debt: any contradiction or staleness found in OPERATOR/STAGE_CONTRACT/REGULATION during the round
+    64	- [ ] Next-round readiness: does SESSION_RESUME.md reflect the true state?
+    65	
+    66	---
+    67	
+    68	## How to use this file
+    69	
+    70	1. Copy it to `round_retro/<round_id>.md`
+    71	2. Check each box with evidence or a short note
+    72	3. Attach checker output at the bottom
+    73	4. Review meeting: both operators sign the retro (frontmatter `participants: [claude_code, codex]`)
+    74	5. On all blockers green: run `harness/check_operator_round.py close <round_id>` — checker re-verifies gates and writes `status: closed` + `closed_at`
+    75	
+    76	## Amendment
+    77	
+    78	Changes to this checklist are a REGULATION amendment (see REGULATION §11). Don't edit boxes silently between rounds.
+
+exec
+/bin/zsh -lc 'python3 harness/check_operator_round.py lint && python3 harness/check_operator_round.py audit-operator-layer' in /Users/jeonsihyeon/factory
+ succeeded in 154ms:
+  ok       operator doc present: OPERATOR.md
+  ok       operator doc present: FILE_INDEX.md
+  ok       operator doc present: STAGE_CONTRACT.md
+  ok       operator doc present: MEETING_PROTOCOL.md
+  ok       operator doc present: REGULATION.md
+  ok       operator doc present: PROCESS_AUDIT_CHECKLIST.md
+  ok       operator doc present: CHANGELOG.md
+  ok       stage_ids consistent across lint_config + STAGE_CONTRACT.md (15)
+  ok       stage_ids all present in MEETING_PROTOCOL.md
+  ok       SESSION_RESUME.md fresh (0.1h)
+  advisory operator doc FILE_INDEX.md points at allowlisted future/shorthand path: operator/indexes/
+
+blockers:   0
+advisories: 1
+passes:     10
+
+exec
+/bin/zsh -lc "nl -ba context_harness/operator/lint_config.toml | sed -n '1,155p'" in /Users/jeonsihyeon/factory
+exec
+/bin/zsh -lc "nl -ba context_harness/operator/CHANGELOG.md | sed -n '1,155p'" in /Users/jeonsihyeon/factory
+exec
+/bin/zsh -lc "nl -ba context_harness/operator/MEETING_PROTOCOL.md | sed -n '1,165p'" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+     1	# Operator-doc lint config — Harness v5.0
+     2	# Scope: operator/**/*.md, AGENTS.md, .claude/CLAUDE.md (round-0 scope per Codex R3).
+     3	# Swift/Python linting intentionally out of scope for round 0.
+     4	# Runner: harness/check_operator_round.py
+     5	
+     6	schema_version = 1
+     7	
+     8	# Line count caps. Exceeding = Gate 5 blocker.
+     9	[line_caps]
+    10	"AGENTS.md" = 80
+    11	".claude/CLAUDE.md" = 80
+    12	"context_harness/operator/OPERATOR.md" = 120
+    13	"context_harness/operator/FILE_INDEX.md" = 250
+    14	
+    15	# Line count warnings (advisory, not blocker). Warn threshold < cap gives an advisory window.
+    16	[line_warnings]
+    17	"context_harness/operator/FILE_INDEX.md" = 225
+    18	
+    19	# Required frontmatter keys on meeting files.
+    20	meeting_required_frontmatter = [
+    21	  "round",
+    22	  "stage",
+    23	  "status",
+    24	  "participants",
+    25	  "decision_id",
+    26	  "contract_hash",
+    27	  "created_at",
+    28	]
+    29	
+    30	# Allowed values for meeting frontmatter fields.
+    31	[meeting_frontmatter_allowed]
+    32	status = ["draft", "in_review", "decided", "escalated", "abandoned"]
+    33	stage = [
+    34	  "overall_planning",
+    35	  "detailed_design",
+    36	  "convention_lock",
+    37	  "eval_protocol",
+    38	  "acceptance",
+    39	  "round_lock",
+    40	  "coding_1st",
+    41	  "runtime_capture",
+    42	  "evaluation_verdict",
+    43	  "gate2",
+    44	  "coding_2nd",
+    45	  "retro",
+    46	  "regulation_update",
+    47	  "operator_amendment",
+    48	  "factual_verification",
+    49	]
+    50	
+    51	[meeting_required_sections]
+    52	any = ["## Context"]
+    53	decided = ["## Decision", "## Challenge Section"]
+    54	
+    55	# Challenge Section content rule.
+    56	[challenge_section]
+    57	factual_stages = ["factual_verification"]
+    58	factual_required_phrase = "No normative decision; verified facts only"
+    59	decision_required_keywords = [
+    60	  "Objection",
+    61	  "Risk",
+    62	  "Rejected alternative",
+    63	  "Uncertainty",
+    64	  "rejected",
+    65	  "dissent",
+    66	]
+    67	
+    68	# FILE_INDEX coverage.
+    69	# Scan all top-level operator/* files (including non-MD governance files like lint_config.toml),
+    70	# exempt meeting/proposal/retro/contract/lock/index subdirs, CHANGELOG, and FILE_INDEX itself.
+    71	[file_index_coverage]
+    72	target = "context_harness/operator/FILE_INDEX.md"
+    73	required_scan_globs = [
+    74	  "context_harness/operator/*.md",
+    75	  "context_harness/operator/*.toml",
+    76	  "context_harness/operator/*.yaml",
+    77	  "context_harness/operator/*.yml",
+    78	]
+    79	exempt = [
+    80	  "context_harness/operator/CHANGELOG.md",
+    81	  "context_harness/operator/FILE_INDEX.md",
+    82	  "context_harness/operator/meetings/**",
+    83	  "context_harness/operator/proposals/**",
+    84	  "context_harness/operator/round_retro/**",
+    85	  "context_harness/operator/contracts/**",
+    86	  "context_harness/operator/locks/**",
+    87	  "context_harness/operator/indexes/**",
+    88	]
+    89	
+    90	# Loader pointer rule.
+    91	[[loader_pointers]]
+    92	file = ".claude/CLAUDE.md"
+    93	must_reference = "context_harness/operator/OPERATOR.md"
+    94	
+    95	[[loader_pointers]]
+    96	file = "AGENTS.md"
+    97	must_reference = "context_harness/operator/OPERATOR.md"
+    98	
+    99	# Legacy docs marked SUPERSEDED.
+   100	superseded_docs = ["docs/design-docs/multi-agent-architecture.md"]
+   101	
+   102	# Path existence allowlist — references that legitimately point at future/shorthand/grep-hint paths.
+   103	# Missing paths NOT in this allowlist trigger Gate 5 blocker (not advisory).
+   104	[path_existence]
+   105	allowlist_placeholders = [
+   106	  # Future-structure references
+   107	  "context_harness/operator/indexes/",
+   108	  "context_harness/operator/indexes",
+   109	  # Grep hints (paths shown with shorthand to indicate "find via grep within round")
+   110	  "workspace/ios/.../UnfadingTheme.swift",
+   111	  # Placeholder artifacts that may be empty until first real round
+   112	  "docs/exec-plans/metrics.jsonl",
+   113	]
+   114	
+   115	# Forbidden language in Claude Code's evidence capture reports.
+   116	evidence_forbidden_language = [
+   117	  "PASS",
+   118	  "BLOCKER",
+   119	  "ADVISORY",
+   120	  "verdict",
+   121	  "regression",
+   122	  "acceptable",
+   123	]
+   124	
+   125	# Precedence order (1 = highest).
+   126	precedence = [
+   127	  "active_round_contract_lock",
+   128	  "context_harness/operator/REGULATION.md",
+   129	  "context_harness/operator/STAGE_CONTRACT.md",
+   130	  "context_harness/operator/OPERATOR.md",
+   131	  "docs/design-docs/design-revision-workflow.md",
+   132	  "docs/design-docs/multi-agent-architecture.md",
+   133	  "context_harness/00_system_rules.md",
+   134	]
+
+ succeeded in 0ms:
+     1	# MEETING_PROTOCOL — Harness v5
+     2	
+     3	**Version:** v5.2
+     4	**Precedence:** Below OPERATOR.md (informational + template); but its enforcement points are normative and echoed in REGULATION §4.
+     5	
+     6	---
+     7	
+     8	## §1. What counts as a meeting
+     9	
+    10	A **meeting** is a markdown file at `operator/meetings/<ISO>_<topic>.md` representing a written exchange between operators. All cross-operator coordination goes through meetings.
+    11	
+    12	A meeting is NOT:
+    13	- A Bash command
+    14	- A commit message
+    15	- A code comment
+    16	- An inline prompt without frontmatter
+    17	
+    18	If an operator tries to coordinate via anything other than a meeting file, the other operator should refuse and ask for a meeting file.
+    19	
+    20	## §2. File name
+    21	
+    22	`operator/meetings/YYYY-MM-DD_<kebab-topic>.md`
+    23	
+    24	Examples:
+    25	- `2026-04-19_v5_kickoff.md`
+    26	- `2026-04-20_round1_spec_review.md`
+    27	- `2026-04-21_amend1_whitelist_expansion.md`
+    28	
+    29	## §3. Required frontmatter (YAML)
+    30	
+    31	```yaml
+    32	---
+    33	round: <round_id or "none">
+    34	stage: <one of: overall_planning, detailed_design, convention_lock, eval_protocol, acceptance, round_lock, coding_1st, runtime_capture, evaluation_verdict, gate2, coding_2nd, retro, regulation_update, operator_amendment, factual_verification>
+    35	status: draft | in_review | decided | escalated | abandoned
+    36	participants: [claude_code, codex]
+    37	decision_id: <short slug, unique per repo>
+    38	contract_hash: <sha256:... of active spec.md, or "none">
+    39	created_at: <ISO timestamp>
+    40	---
+    41	```
+    42	
+    43	`decision_id` must be globally unique. Suggested format: `YYYYMMDD-<short-slug>`.
+    44	
+    45	## §4. Required sections
+    46	
+    47	```markdown
+    48	## Context
+    49	(≤5 bullets. File pointers only, not inline content dumps. Link hashes if referring to evidence.)
+    50	
+    51	## Proposal (or Question)
+    52	(One clear position or one answerable question.)
+    53	
+    54	## Questions
+    55	(Specific, answerable questions for the peer.)
+    56	
+    57	## Counter / Review
+    58	(Peer's response. Added when peer replies — append, don't overwrite.)
+    59	
+    60	## Convergence
+    61	(Iterative refinement. Each turn appended, not overwritten.)
+    62	
+    63	## Decision
+    64	(Final decision + reasoning. Present only when status == decided.)
+    65	
+    66	## Challenge Section
+    67	(See §5 below. Required for decision meetings. Must contain at least one of: objection, risk, rejected alternative, explicit uncertainty. For factual meetings, state: "No normative decision; verified facts only" + evidence refs.)
+    68	```
+    69	
+    70	Optional sections:
+    71	- `## Mea Culpa` — if an operator acknowledges a prior mistake
+    72	- `## Escalation Path` — if moving to the escalation ladder (REGULATION §6)
+    73	- `## Amendment Detail` — for contract amendments, listing `supersedes` targets
+    74	
+    75	## §5. Challenge Section Rule
+    76	
+    77	This is the anti-hallucination tripwire.
+    78	
+    79	**Decision meetings** (any meeting whose `stage` is normative: design, contract, planning, retro, regulation_update, operator_amendment) must include ≥1 of:
+    80	
+    81	- **Objection**: a concrete disagreement with stated reasoning
+    82	- **Risk**: a named risk with mitigation or conscious acceptance
+    83	- **Rejected alternative**: an option considered and discarded, with why-not
+    84	- **Explicit uncertainty**: a residual unknown that was consciously deferred (must state where/when it will be resolved)
+    85	
+    86	**Factual meetings** (stage: factual_verification, or purely status-check meetings) must state:
+    87	
+    88	```
+    89	## Challenge Section
+    90	
+    91	No normative decision; verified facts only.
+    92	
+    93	Evidence:
+    94	- <file path> @ sha256:... — <what was verified>
+    95	- <command output log> — <what was verified>
+    96	```
+    97	
+    98	**Forbidden:**
+    99	- Faking dissent ("I weakly disagree with N for the record") — if you have no real objection, it's factual
+   100	- Moving the objection to an unrecorded chat channel
+   101	- Deleting the Challenge Section after the decision
+   102	
+   103	Gate 5 blocker: decision meeting missing Challenge Section, OR factual meeting missing evidence refs.
+   104	
+   105	## §6. Flow
+   106	
+   107	1. **Initiator drafts** the meeting file with frontmatter `status: draft` + Context + Proposal + Questions.
+   108	2. **Sends the prompt** to the peer:
+   109	   - Claude Code → Codex: `codex exec resume <session_id> "<prompt>"` with the file path + ask
+   110	   - Codex → Claude Code: replies in the same file under `## Counter / Review`; Claude Code reads it next turn
+   111	3. **Peer adds `## Counter / Review` section**, changes `status: in_review`.
+   112	4. **Iterate**: Convergence section gets appended with each exchange. Each turn must cite the specific claim it's addressing.
+   113	5. **Converge or escalate**:
+   114	   - Converge: decision + Challenge Section written. `status: decided`. One JSONL event appended to `docs/exec-plans/process-log.jsonl`.
+   115	   - Escalate: see REGULATION §6 ladder. `status: escalated`.
+   116	6. **Abandon** (rare): if the topic is withdrawn. `status: abandoned` + one-line reason. Evidence retained.
+   117	
+   118	## §7. JSONL process-log event
+   119	
+   120	At `decided` status:
+   121	
+   122	```json
+   123	{"ts": "2026-04-19T14:22:00Z", "event": "meeting_decided", "meeting": "operator/meetings/2026-04-19_v5_kickoff.md", "round": "none", "stage": "operator_amendment", "participants": ["claude_code","codex"], "decision_id": "20260419-v5-bootstrap", "challenge_count": 7}
+   124	```
+   125	
+   126	Appended — never overwrite.
+   127	
+   128	## §8. Revival
+   129	
+   130	A `status: decided` meeting is immutable. If a decision needs revisiting:
+   131	- Open a new meeting referencing the prior `decision_id` in Context
+   132	- If the new meeting supersedes the old decision, say so in Decision + update CHANGELOG
+   133	
+   134	## §9. Codex CLI session lifecycle
+   135	
+   136	- First call to Codex per meeting chain: `codex exec --sandbox read-only --skip-git-repo-check "<prompt>"` → capture `session id` from output.
+   137	- Subsequent turns in the SAME meeting chain: `codex exec --sandbox read-only --skip-git-repo-check resume <session_id> "<prompt>"`.
+   138	- Different meeting chain → new session. Don't cross-thread meetings.
+   139	- If Codex returns 401 or idle timeout: record in blackboard, re-run `/codex:setup`, consider escalation. Don't silently retry.
+   140	
+   141	## §10. Templates
+   142	
+   143	Template lives at `operator/meetings/_template.md` (created at bootstrap). Copy + fill frontmatter to start a new meeting.
+
+ succeeded in 0ms:
+     1	# Operator CHANGELOG
+     2	
+     3	Append-only. Every operator-doc amendment must add an entry with date, summary, and meeting pointer.
+     4	
+     5	---
+     6	
+     7	## v5.2 — Second Drift Fix (2026-04-22)
+     8	
+     9	**Meeting:** [`meetings/2026-04-22_v5.2_drift_fix.md`](meetings/2026-04-22_v5.2_drift_fix.md)
+    10	**Decision ID:** `20260422-v5.2-drift-fix`
+    11	**Trigger:** Stop-hook review (Codex) after `d0e73bc` flagged "d0e73bc still leaves governance drift in the checker/docs". Second drift-fix iteration. 7 blockers + 3 advisories identified, all routine. Trend: converging (v5.0: 12+3 → v5.1: 7+3 → v5.2: hopefully 0+0).
+    12	
+    13	### Fixed (7 blockers)
+    14	
+    15	1. **Version header drift** — bumped REGULATION, STAGE_CONTRACT, OPERATOR, PROCESS_AUDIT_CHECKLIST, MEETING_PROTOCOL to `v5.2`. REG §11 version bump honored.
+    16	2. **Amendment schema now validated** — new `validate_amendments()` in checker verifies: file exists + SHA matches lock + frontmatter has `target`/`supersedes`/`meeting` + meeting exists with `status: decided` + target is a base contract file. REGULATION's "effective regeneration" claim narrowed to "consumers compute on read".
+    17	3. **`close` requires external gate evidence** — checker `cmd_close` now reads `contracts/<round>/gate_evidence.json` and refuses close if `gate1..gate4` are not all `status: pass`. REGULATION wording narrowed to "Gate 5 + gate_evidence for Gates 1-4".
+    18	4. **Commit traceability** — (a) includes uncommitted + staged via `git status --porcelain`; (b) glob matcher replaced with regex-based POSIX semantics (`*` = `[^/]*`, `**` = `.*`, with `/**` / `**/` normalization); (c) `workspace/ios/**/*.swift` now supported. 13/14 smoke tests pass.
+    19	5. **Malformed pointer file = blocker** (was advisory). Bad `lint_config.txt` / `convention_version.txt` format no longer silently bypasses live hash check.
+    20	6. **REG §7 honesty update** — operator-layer drift audit section rewritten to list ONLY what the checker enforces (9 checks). Explicitly marks role matrix full consistency, process-log event counts, and effective amendment regeneration as NOT enforced in v5.2.
+    21	7. **Missing referenced paths = blocker** (was advisory) with explicit allowlist from `lint_config.toml [path_existence].allowlist_placeholders`. Allowlisted paths still produce advisory (e.g., `operator/indexes/` future directory).
+    22	
+    23	### Fixed (3 advisories)
+    24	
+    25	1. **PROCESS_AUDIT warn band aligned** with lint config (225 warn, 250 cap).
+    26	2. **CHANGELOG v5.0 historical note** added — original YAML reference preserved verbatim with v5.2 annotation explaining migration.
+    27	3. **Pointer file format example** added to REGULATION §3 (`<path>\n<sha256>`).
+    28	
+    29	### Checker added in v5.2
+    30	
+    31	- `validate_amendments(lock)` — base contract amendment validation
+    32	- `validate_stages_completed(lock, cfg)` — structural stage_id validation
+    33	- `load_gate_evidence(round_id)` — external gate_evidence.json reader
+    34	- `_match_glob(rel, pattern)` — strict POSIX-semantics glob matcher replacing fragile prefix logic
+    35	- `check_commit_traceability` now also uses `git status --porcelain`
+    36	
+    37	### Narrowed REGULATION claims (honesty over aspiration)
+    38	
+    39	- Dropped "effective file regeneration" from amendment artifact description
+    40	- Narrowed `close` to "Gate 5 + gate_evidence.json"
+    41	- Narrowed REG §7 to enforced checks list; deferred full role-matrix validation to a future peer-review amendment if needed
+    42	
+    43	### Classification
+    44	All 10 items routine corrective amendments. No v5 principle reopened. Convergence expected — same stop-hook should no longer flag these specific patterns.
+    45	
+    46	---
+    47	
+    48	## v5.1 — Bootstrap Drift Fix (2026-04-22)
+    49	
+    50	**Meeting:** [`meetings/2026-04-22_v5_bootstrap_drift.md`](meetings/2026-04-22_v5_bootstrap_drift.md)
+    51	**Decision ID:** `20260422-v5-bootstrap-drift-fix`
+    52	**Trigger:** Stop-hook review (Codex) after `7f9789a` flagged "v5 bootstrap has governance drift that would make the new gate process unreliable". Exactly the cross-validation regime v5 exists to provide.
+    53	
+    54	### Fixed (12 blockers)
+    55	
+    56	1. **YAML/TOML path drift** — normalized all references to `operator/lint_config.toml` across REGULATION, STAGE_CONTRACT, FILE_INDEX, CHANGELOG, checker docstring.
+    57	2. **FILE_INDEX coverage scope** — extended scan globs to include `*.toml`, `*.yaml`, `*.yml`; added explicit `lint_config.toml` pointer in FILE_INDEX.
+    58	3. **Contract immutability contradiction** — removed the "whitelist shrinking allowed without meeting" exception. All whitelist changes (expand or shrink) now require amendment meeting.
+    59	4. **Generic amendment schema** — REGULATION §3 now defines `<base>.amendment.<N>.<ext>` pattern with `target`/`supersedes`/`meeting` frontmatter, applicable to whitelist/acceptance/eval_protocol/spec.
+    60	5. **Live lint/convention hash enforcement** — `lint_config.txt` and `convention_version.txt` now hold `<path>\n<sha>`; checker recomputes live SHA at Gate 5 and fails on mismatch.
+    61	6. **Operator-layer drift audit** — checker now implements: stage ID consistency across STAGE_CONTRACT/MEETING_PROTOCOL/lint_config, SESSION_RESUME freshness (>48h advisory, >7d blocker), legacy SUPERSEDED/ACTIVE header validation, referenced-path existence check (handles `operator/` shorthand).
+    62	7. **Stage ID vs display name split** — STAGE_CONTRACT adds canonical `stage_id` column matching lint config snake_case values; display names kept as labels only.
+    63	8. **Evaluation artifact paths** — normalized to `context_harness/reports/<round_id>/evidence|verdict|gate2/` across all operator docs.
+    64	9. **OPERATOR `ready` pseudo-token** — replaced with "exit code 0 and no blockers" rule.
+    65	10. **Close authority clarified** — new `close <round>` checker subcommand transitions lock `status: closed` + `closed_at` only after gates pass; operators may not hand-edit status. PROCESS_AUDIT line 21 rule corrected ("lock status is active before close" — not "not active").
+    66	11. **Commit traceability implemented** — lock now records `base_commit`; `gates` runs `git diff --name-only` since base and verifies all changed paths match effective whitelist (base + amendments).
+    67	12. **Factual meeting evidence refs enforced** — checker requires `Evidence:` section with ≥1 bullet containing a path or command reference (not only the factual phrase).
+    68	
+    69	### Fixed (3 advisories)
+    70	
+    71	1. **SESSION_RESUME freshness** — v5 section updated with drift-fix outcome, current date.
+    72	2. **Process log events** — retroactive `meeting_decided` JSONL events appended for bootstrap (`20260419-v5-bootstrap`) and drift-fix (`20260422-v5-bootstrap-drift-fix`) meetings.
+    73	3. **FILE_INDEX warn threshold** — lowered from 250 (= cap) to 225 for a useful advisory window.
+    74	
+    75	### Checker upgrade
+    76	
+    77	- New subcommand: `close <round_id>` — atomic gate pass + status transition.
+    78	- New Gate 5 checks: commit traceability, live pointer hashes, SESSION_RESUME freshness, legacy header markers, stage ID cross-doc consistency, factual meeting evidence refs.
+    79	- Path resolver handles `operator/<file>` shorthand inside operator docs.
+    80	
+    81	### No normative changes
+    82	All 15 items are corrective implementation drift from already-locked v5 decisions. No peer review needed per Codex's classification.
+    83	
+    84	---
+    85	
+    86	## v5.0 — Bootstrap (2026-04-19)
+    87	
+    88	> **Historical note (added in v5.2):** The original v5.0 entry below referenced `operator/lint_config.yaml`. During v5.1 bootstrap the config was migrated to TOML; this historical entry is preserved verbatim for audit trail. Active governance references all use `lint_config.toml` as of v5.1.
+    89	
+    90	
+    91	**Meeting:** [`meetings/2026-04-19_v5_kickoff.md`](meetings/2026-04-19_v5_kickoff.md)
+    92	**Decision ID:** `20260419-v5-bootstrap`
+    93	**Participants:** Claude Code Operator, Codex Operator (gpt-5.4, session `019db43d-746e-73b3-b33c-5dda3770df91`)
+    94	
+    95	### Added
+    96	- `operator/OPERATOR.md` — shared persona + decision principles (≤120 lines)
+    97	- `operator/REGULATION.md` — precedence ladder, lock schema, immutability, Challenge Section, Gate 5 split, deadlock escalation ladder, operator-layer drift audit, linter enforcement, SKILLS update protocol
+    98	- `operator/STAGE_CONTRACT.md` — 13-stage matrix with Performer/Cross-Validator/Pattern, parallel-vs-serial rules, ownership zones, evidence-vs-verdict rule
+    99	- `operator/MEETING_PROTOCOL.md` — meeting file template, frontmatter schema, Challenge Section rule, Codex CLI session lifecycle
+   100	- `operator/FILE_INDEX.md` — use-case → file pointer index (≤250 lines)
+   101	- `operator/PROCESS_AUDIT_CHECKLIST.md` — Gate 5 blockers/advisories + retro mandatory content
+   102	- `operator/proposals/v5_overhaul_proposal.md` — original proposal (draft that was reviewed)
+   103	- `operator/meetings/2026-04-19_v5_kickoff.md` — 3-round peer review meeting
+   104	- `operator/lint_config.yaml` — operator-doc lint rules (Round 0 scope: operator docs only)
+   105	- `harness/check_operator_round.py` — lock / gates / audit-operator-layer checker
+   106	
+   107	### Changed
+   108	- `.claude/CLAUDE.md` — shrunk to ≤80-line thin loader pointing to `operator/`
+   109	- `docs/design-docs/multi-agent-architecture.md` — marked SUPERSEDED (v4); header now points to v5 operator docs
+   110	- `context_harness/SESSION_RESUME.md` — added v5 bootstrap section
+   111	
+   112	### New file (previously missing)
+   113	- `AGENTS.md` (repo root) — Codex Operator thin loader pointing to `operator/`
+   114	
+   115	### Governance additions locked by this release
+   116	- Two equal co-operators (no principal/secondary)
+   117	- 14 decisions locked in the 2026-04-19 kickoff meeting
+   118	- Precedence ladder: active round contract+lock > REGULATION > STAGE_CONTRACT > OPERATOR > domain workflows > legacy docs
+   119	- Deadlock ladder: reframe → default-reversible → Gemini advisory (technical only) → human escalation
+   120	- Challenge Section mandatory on decision meetings; factual meetings state "No normative decision; verified facts only" + evidence refs
+   121	- Gate 5 blockers: lock mapping, contract immutability, unreviewed meetings, FILE_INDEX coverage, lint hash, operator-layer drift, escalation status
+   122	- Gate 5 advisories: SKILLS update conditional on novel pattern, SESSION_RESUME freshness
+   123	- Real-use evaluation split: rubric (Codex) / capture (Claude Code, evidence-only) / verdict (Codex)
+   124	- Contract immutability: base files never edited; amendments as `spec.amendment.N.md` + `supersedes` field in lock
+   125	
+   126	### Residual uncertainty (to resolve in first real round)
+   127	- Exact lock JSON schema subject to Codex review at first round creation
+   128	- Round 0 linter scope = operator docs only; Swift linter deferred to later retro
+   129	- SESSION_RESUME.md governance: live snapshot, not meeting-gated; contradictions caught by drift audit
+   130	
+   131	### Deferred to next rounds
+   132	- Deepsight redesign processing (will be Round 1 under v5, sliced per `design-revision-workflow.md` Phase 3)
+   133	- Round retro template instantiation (first use at Round 1 close)
+   134	- Gemini advisory invocation mechanics (document when first triggered)
+
+codex
+## Governance Bypasses (specific exploits, not just drift)
+
+- **Unregistered amendment files can sit on disk and be ignored**
+  - File/lines: `harness/check_operator_round.py:629-675`, `708-745`; `REGULATION.md:52-65,118-121`
+  - Bypass: create `spec.amendment.1.md`, `acceptance.amendment.1.md`, or `file_whitelist.amendment.1.txt` in `contracts/<round>/`, cite it in work/meetings, but do not add it to `lock.amendments[]`. Checker only iterates `lock.amendments[]`; it never scans the contract dir for unregistered amendment files.
+  - Severity: blocker. This bypasses the amendment-lock invariant.
+  - Fix: in `cmd_gates`, scan `round_dir.glob("*.amendment.*")`; every amendment file on disk must be present exactly once in `lock.amendments[]`, otherwise blocker. In `cmd_lock`, fail if amendment files already exist at initial lock creation unless explicitly supported.
+  - Classification: routine.
+
+- **Missing amendment SHA passes**
+  - File/lines: `harness/check_operator_round.py:645-648`
+  - Bypass: manually add an amendment entry to `lock.amendments[]` without `sha256`; checker skips hash validation because it only checks `if expected`.
+  - Severity: blocker. An amendment can be modified after lock update and still pass.
+  - Fix: require `sha256` field for every amendment, require it starts with `sha256:`, and require exact match.
+  - Classification: routine.
+
+- **`.txt` amendments have no validated governance metadata**
+  - File/lines: `harness/check_operator_round.py:649-675`; `REGULATION.md:52-65,96`
+  - Bypass: add `file_whitelist.amendment.1.txt` to the lock with no `target`, `supersedes`, `meeting`, or `sha256`; checker still applies `+`/`-` lines in `check_commit_traceability()` and reports amendment valid.
+  - Severity: blocker. Whitelist can be expanded without a decided amendment meeting.
+  - Fix: validate required lock metadata for all amendment types, including `.txt`: `file`, `target`, `sha256`, `supersedes`, `meeting`. For whitelist amendments, require `target == file_whitelist.txt`.
+  - Classification: routine.
+
+- **Amendment meeting can point to an unrelated decided meeting**
+  - File/lines: `harness/check_operator_round.py:663-674`; `MEETING_PROTOCOL.md:70-73`
+  - Bypass: amendment frontmatter can reference any existing meeting with `status: decided`; checker does not verify that the meeting is for the same round, same amendment file, same target, or contains an `## Amendment Detail` authorizing it.
+  - Severity: blocker. A random decided meeting can be reused as authorization.
+  - Fix: require referenced meeting frontmatter `round` matches lock round, status is `decided`, stage is `operator_amendment` or relevant contract stage, and body contains the amendment filename plus target in `## Amendment Detail`.
+  - Classification: routine.
+
+- **Lock tampering bypasses nearly everything**
+  - File/lines: `harness/check_operator_round.py:715-745,756-763`; `REGULATION.md:84-123`
+  - Bypass: edit the lock itself: update base file hashes after mutating contracts, set `base_commit = HEAD` after unauthorized commits, remove amendments, add fake `stages_completed`, or set operator session fields. Checker trusts the current lock and has no lock self-integrity check.
+  - Severity: blocker. This is the largest remaining governance bypass.
+  - Fix: make locks tamper-evident. Minimal practical version: require a `lock_created` process-log event containing lock path + lock sha256 + base_commit; `gates` recomputes lock sha and blocks if it differs unless the change is an allowed status transition through `close`. Stronger: add `lock_revision_log.jsonl` append-only entries for lock creation/amendment/close and validate transitions.
+  - Classification: likely needs peer review if you want a real trust model. A minimal tamper-evident log is routine, but “what prevents a malicious operator editing all files?” is architectural.
+
+- **`base_commit` can be moved forward**
+  - File/lines: `harness/check_operator_round.py:490-507,545-602`
+  - Bypass: after making unauthorized committed changes, edit `base_commit` in the lock to current `HEAD`. `git diff base..HEAD` becomes empty, so commit traceability passes.
+  - Severity: blocker.
+  - Fix: same as lock tamper-evidence. Also require `base_commit` exists in the `lock_created` event and matches.
+  - Classification: routine if solved by lock event validation; otherwise architectural trust issue.
+
+- **`gate_evidence.json` can be hand-written**
+  - File/lines: `harness/check_operator_round.py:688-705,748-755`; `REGULATION.md:122,198-202`
+  - Bypass: write:
+    ```json
+    {"gate1":{"status":"pass"},"gate2":{"status":"pass"},"gate3":{"status":"pass"},"gate4":{"status":"pass"}}
+    ```
+    with no build log, test count, evaluator report paths, hashes, or process metrics. `close` accepts it.
+  - Severity: blocker. A fake round can close without real Gates 1-4.
+  - Fix: require per-gate evidence schema with artifact paths and hashes. Minimum:
+    - gate1: command, exit code, test_count, log path+sha
+    - gate2: three report paths+sha, non-empty
+    - gate3: cross-agreement summary path+sha or explicit no-blocker result
+    - gate4: metrics source path+sha and values
+    Checker verifies files exist and hashes match.
+  - Classification: routine. Does not need peer review unless you redefine what counts as evidence.
+
+- **`gate_evidence.json` is not locked or traceable**
+  - File/lines: `harness/check_operator_round.py:688-705`; `REQUIRED_CONTRACT_FILES` at `449-456`
+  - Bypass: because `gate_evidence.json` is neither a base contract file nor amendment-validated, it can be rewritten immediately before `close` to say pass.
+  - Severity: blocker.
+  - Fix: not necessarily immutable from round start, but close should hash the evidence file and record it in the lock during close, or require a decided retro/evaluation meeting referencing the same hash. If `close` mutates lock, it can add `gate_evidence_sha256`.
+  - Classification: routine.
+
+- **`stages_completed[]` can be arbitrary valid IDs**
+  - File/lines: `harness/check_operator_round.py:678-685`; `REGULATION.md:194,198-202`
+  - Bypass: fill `stages_completed` with all valid stage IDs. Checker only validates IDs are in the allowed list, not that corresponding meetings/artifacts exist.
+  - Severity: blocker if anything treats `stages_completed` as authoritative; currently close does not depend on it, but the lock schema presents it as process state.
+  - Fix: either stop treating `stages_completed` as authoritative, or validate each completed stage has expected artifact/meeting. Minimal: if present, each stage requires a decided meeting with matching `round` and `stage`.
+  - Classification: routine.
+
+- **Codex review identity is not verified**
+  - File/lines: `MEETING_PROTOCOL.md:29-43,105-126,134-139`; `harness/check_operator_round.py:232-286`
+  - Bypass: Claude Code can write a meeting file listing `participants: [claude_code, codex]`, add a fake `## Counter / Review`, and satisfy the checker. No session id, transcript, or external proof is checked.
+  - Severity: blocker for the peer model, but not solvable cryptographically with current file-only checker.
+  - Fix: pragmatic: require decided meetings to include `codex_session_id` in frontmatter for Codex-reviewed meetings and a `Counter / Review` section containing a `Reviewed-by: Codex Operator <session>` line. Checker validates presence. Stronger: store raw Codex transcript path+sha or process-log event emitted by the caller. True identity proof needs an external trusted log.
+  - Classification: needs peer review if you want stronger-than-ritual identity guarantees. Presence checks are routine but not sufficient against dishonesty.
+
+- **A fake single-operator round can still close if it fabricates all artifacts consistently**
+  - File/lines: combined: `check_meeting_frontmatter()` at `232-286`, `load_gate_evidence()` at `688-705`, `cmd_close()` at `748-765`
+  - Bypass: one operator can create plausible meetings, fake Codex sections, fake gate evidence, broad whitelist, valid pointer hashes, and a lock with convenient `base_commit`. Checker cannot distinguish this from real collaboration.
+  - Severity: blocker for autonomy governance if adversarial operator behavior is in scope.
+  - Fix: decide threat model. If v5 is for honest-agent error reduction, add stronger consistency checks. If it must resist malicious/fabricated peer review, require external append-only transcripts or human approval for close.
+  - Classification: needs peer review because it changes the trust model.
+
+## Checker Implementation Holes
+
+- `validate_amendments()` does not require `sha256`; missing SHA passes.
+- `validate_amendments()` does not validate required lock metadata for `.txt` amendments.
+- `validate_amendments()` does not compare lock metadata (`target`, `supersedes`, `meeting`) to amendment frontmatter for `.md`.
+- `validate_amendments()` does not require the referenced meeting to mention or authorize the amendment file.
+- `validate_amendments()` does not scan for amendment files present on disk but absent from lock.
+- `cmd_lock()` creates a lock with `amendments: []` even if amendment files already exist.
+- `cmd_gates()` can pass with `lock.amendments[]` empty while amendment files sit on disk.
+- `load_gate_evidence()` checks only `status == pass`; it does not validate evidence files, hashes, commands, test counts, or evaluator report existence.
+- `cmd_close()` writes `closed_at` and `status` but does not record the `gate_evidence.json` hash into the lock.
+- `validate_stages_completed()` checks only valid IDs, not completion evidence.
+- Meeting validation checks formatting and challenge keywords, not actual peer authorship.
+
+## Recommended Fixes (ranked by severity)
+
+1. **Make lock tampering detectable.**
+   - Add lock creation/amendment/close events with lock sha/base_commit to `process-log.jsonl` or a dedicated append-only `operator/locks/<round>.events.jsonl`.
+   - `gates` verifies current lock matches the latest authorized event except allowed close transition.
+
+2. **Close the amendment bypasses.**
+   - Scan all `*.amendment.*` files and require lock entries.
+   - Require `sha256`, `target`, `supersedes`, `meeting` for every amendment entry.
+   - Validate referenced meeting round/status/stage and `## Amendment Detail` containing amendment filename.
+
+3. **Strengthen `gate_evidence.json`.**
+   - Require evidence paths + hashes and validate them.
+   - Record `gate_evidence_sha256` in lock at close.
+
+4. **Validate or demote `stages_completed`.**
+   - Either verify stage meetings/artifacts or explicitly mark it informational and avoid using it for gate decisions.
+
+5. **Add peer-review proof fields.**
+   - Require `codex_session_id` and `Reviewed-by` line for Codex-reviewed meetings.
+   - For stronger assurance, store raw transcript path+sha.
+
+6. **Make `cmd_lock` fail on pre-existing amendments.**
+   - Initial lock should start from base contract files only unless a deliberate `--include-amendments` flow is designed.
+
+## Residual Drift (if any) — narrower items not worth calling bypasses
+
+- `REGULATION.md:118-120` still says changes require `<base>.effective.<ext>` regenerated by checker, while `REGULATION.md:64-65,198-202` says checker does not regenerate effective artifacts. That is doc drift, not a direct bypass because the later text is more explicit. Fix line 120 to “effective state computed on read.”
+- `PROCESS_AUDIT_CHECKLIST.md:19` says audit has “no role matrix contradictions,” but REG v5.2 explicitly says full role matrix consistency is not enforced. This is stale checklist wording. Fix to “stage IDs/pointers only; role matrix full consistency not enforced in v5.2.”
+- `CHANGELOG.md:18` says commit traceability smoke tests had 13/14 pass. If one failed, the failed case should be named or the claim should be removed. Not a bypass, but weak audit trail.
+
+## Classification
+
+- Routine: amendment registration/SHA validation, gate evidence schema, stage artifact validation, checklist/doc wording, `cmd_lock` pre-existing amendment failure.
+- Needs peer review: lock tamper-evidence trust model and Codex identity proof. These decide whether v5 is an honest-agent process guard or a malicious/fabricated-record resistant governance system.
+- Fixability: most implementation holes are one more pass. The trust/identity layer needs a small explicit decision before implementation.
+
+## Recommendation: block
+
+Do not merge-as-is. v5.2 improved the checker, but it still permits fabricated amendments, fabricated gate evidence, lock/base_commit tampering, and fake peer review records. The next pass should split into two parts: routine checker hardening for amendment/evidence holes, and a short peer decision on the trust model for lock integrity and Codex review proof.
+tokens used
+225,962
+## Governance Bypasses (specific exploits, not just drift)
+
+- **Unregistered amendment files can sit on disk and be ignored**
+  - File/lines: `harness/check_operator_round.py:629-675`, `708-745`; `REGULATION.md:52-65,118-121`
+  - Bypass: create `spec.amendment.1.md`, `acceptance.amendment.1.md`, or `file_whitelist.amendment.1.txt` in `contracts/<round>/`, cite it in work/meetings, but do not add it to `lock.amendments[]`. Checker only iterates `lock.amendments[]`; it never scans the contract dir for unregistered amendment files.
+  - Severity: blocker. This bypasses the amendment-lock invariant.
+  - Fix: in `cmd_gates`, scan `round_dir.glob("*.amendment.*")`; every amendment file on disk must be present exactly once in `lock.amendments[]`, otherwise blocker. In `cmd_lock`, fail if amendment files already exist at initial lock creation unless explicitly supported.
+  - Classification: routine.
+
+- **Missing amendment SHA passes**
+  - File/lines: `harness/check_operator_round.py:645-648`
+  - Bypass: manually add an amendment entry to `lock.amendments[]` without `sha256`; checker skips hash validation because it only checks `if expected`.
+  - Severity: blocker. An amendment can be modified after lock update and still pass.
+  - Fix: require `sha256` field for every amendment, require it starts with `sha256:`, and require exact match.
+  - Classification: routine.
+
+- **`.txt` amendments have no validated governance metadata**
+  - File/lines: `harness/check_operator_round.py:649-675`; `REGULATION.md:52-65,96`
+  - Bypass: add `file_whitelist.amendment.1.txt` to the lock with no `target`, `supersedes`, `meeting`, or `sha256`; checker still applies `+`/`-` lines in `check_commit_traceability()` and reports amendment valid.
+  - Severity: blocker. Whitelist can be expanded without a decided amendment meeting.
+  - Fix: validate required lock metadata for all amendment types, including `.txt`: `file`, `target`, `sha256`, `supersedes`, `meeting`. For whitelist amendments, require `target == file_whitelist.txt`.
+  - Classification: routine.
+
+- **Amendment meeting can point to an unrelated decided meeting**
+  - File/lines: `harness/check_operator_round.py:663-674`; `MEETING_PROTOCOL.md:70-73`
+  - Bypass: amendment frontmatter can reference any existing meeting with `status: decided`; checker does not verify that the meeting is for the same round, same amendment file, same target, or contains an `## Amendment Detail` authorizing it.
+  - Severity: blocker. A random decided meeting can be reused as authorization.
+  - Fix: require referenced meeting frontmatter `round` matches lock round, status is `decided`, stage is `operator_amendment` or relevant contract stage, and body contains the amendment filename plus target in `## Amendment Detail`.
+  - Classification: routine.
+
+- **Lock tampering bypasses nearly everything**
+  - File/lines: `harness/check_operator_round.py:715-745,756-763`; `REGULATION.md:84-123`
+  - Bypass: edit the lock itself: update base file hashes after mutating contracts, set `base_commit = HEAD` after unauthorized commits, remove amendments, add fake `stages_completed`, or set operator session fields. Checker trusts the current lock and has no lock self-integrity check.
+  - Severity: blocker. This is the largest remaining governance bypass.
+  - Fix: make locks tamper-evident. Minimal practical version: require a `lock_created` process-log event containing lock path + lock sha256 + base_commit; `gates` recomputes lock sha and blocks if it differs unless the change is an allowed status transition through `close`. Stronger: add `lock_revision_log.jsonl` append-only entries for lock creation/amendment/close and validate transitions.
+  - Classification: likely needs peer review if you want a real trust model. A minimal tamper-evident log is routine, but “what prevents a malicious operator editing all files?” is architectural.
+
+- **`base_commit` can be moved forward**
+  - File/lines: `harness/check_operator_round.py:490-507,545-602`
+  - Bypass: after making unauthorized committed changes, edit `base_commit` in the lock to current `HEAD`. `git diff base..HEAD` becomes empty, so commit traceability passes.
+  - Severity: blocker.
+  - Fix: same as lock tamper-evidence. Also require `base_commit` exists in the `lock_created` event and matches.
+  - Classification: routine if solved by lock event validation; otherwise architectural trust issue.
+
+- **`gate_evidence.json` can be hand-written**
+  - File/lines: `harness/check_operator_round.py:688-705,748-755`; `REGULATION.md:122,198-202`
+  - Bypass: write:
+    ```json
+    {"gate1":{"status":"pass"},"gate2":{"status":"pass"},"gate3":{"status":"pass"},"gate4":{"status":"pass"}}
+    ```
+    with no build log, test count, evaluator report paths, hashes, or process metrics. `close` accepts it.
+  - Severity: blocker. A fake round can close without real Gates 1-4.
+  - Fix: require per-gate evidence schema with artifact paths and hashes. Minimum:
+    - gate1: command, exit code, test_count, log path+sha
+    - gate2: three report paths+sha, non-empty
+    - gate3: cross-agreement summary path+sha or explicit no-blocker result
+    - gate4: metrics source path+sha and values
+    Checker verifies files exist and hashes match.
+  - Classification: routine. Does not need peer review unless you redefine what counts as evidence.
+
+- **`gate_evidence.json` is not locked or traceable**
+  - File/lines: `harness/check_operator_round.py:688-705`; `REQUIRED_CONTRACT_FILES` at `449-456`
+  - Bypass: because `gate_evidence.json` is neither a base contract file nor amendment-validated, it can be rewritten immediately before `close` to say pass.
+  - Severity: blocker.
+  - Fix: not necessarily immutable from round start, but close should hash the evidence file and record it in the lock during close, or require a decided retro/evaluation meeting referencing the same hash. If `close` mutates lock, it can add `gate_evidence_sha256`.
+  - Classification: routine.
+
+- **`stages_completed[]` can be arbitrary valid IDs**
+  - File/lines: `harness/check_operator_round.py:678-685`; `REGULATION.md:194,198-202`
+  - Bypass: fill `stages_completed` with all valid stage IDs. Checker only validates IDs are in the allowed list, not that corresponding meetings/artifacts exist.
+  - Severity: blocker if anything treats `stages_completed` as authoritative; currently close does not depend on it, but the lock schema presents it as process state.
+  - Fix: either stop treating `stages_completed` as authoritative, or validate each completed stage has expected artifact/meeting. Minimal: if present, each stage requires a decided meeting with matching `round` and `stage`.
+  - Classification: routine.
+
+- **Codex review identity is not verified**
+  - File/lines: `MEETING_PROTOCOL.md:29-43,105-126,134-139`; `harness/check_operator_round.py:232-286`
+  - Bypass: Claude Code can write a meeting file listing `participants: [claude_code, codex]`, add a fake `## Counter / Review`, and satisfy the checker. No session id, transcript, or external proof is checked.
+  - Severity: blocker for the peer model, but not solvable cryptographically with current file-only checker.
+  - Fix: pragmatic: require decided meetings to include `codex_session_id` in frontmatter for Codex-reviewed meetings and a `Counter / Review` section containing a `Reviewed-by: Codex Operator <session>` line. Checker validates presence. Stronger: store raw Codex transcript path+sha or process-log event emitted by the caller. True identity proof needs an external trusted log.
+  - Classification: needs peer review if you want stronger-than-ritual identity guarantees. Presence checks are routine but not sufficient against dishonesty.
+
+- **A fake single-operator round can still close if it fabricates all artifacts consistently**
+  - File/lines: combined: `check_meeting_frontmatter()` at `232-286`, `load_gate_evidence()` at `688-705`, `cmd_close()` at `748-765`
+  - Bypass: one operator can create plausible meetings, fake Codex sections, fake gate evidence, broad whitelist, valid pointer hashes, and a lock with convenient `base_commit`. Checker cannot distinguish this from real collaboration.
+  - Severity: blocker for autonomy governance if adversarial operator behavior is in scope.
+  - Fix: decide threat model. If v5 is for honest-agent error reduction, add stronger consistency checks. If it must resist malicious/fabricated peer review, require external append-only transcripts or human approval for close.
+  - Classification: needs peer review because it changes the trust model.
+
+## Checker Implementation Holes
+
+- `validate_amendments()` does not require `sha256`; missing SHA passes.
+- `validate_amendments()` does not validate required lock metadata for `.txt` amendments.
+- `validate_amendments()` does not compare lock metadata (`target`, `supersedes`, `meeting`) to amendment frontmatter for `.md`.
+- `validate_amendments()` does not require the referenced meeting to mention or authorize the amendment file.
+- `validate_amendments()` does not scan for amendment files present on disk but absent from lock.
+- `cmd_lock()` creates a lock with `amendments: []` even if amendment files already exist.
+- `cmd_gates()` can pass with `lock.amendments[]` empty while amendment files sit on disk.
+- `load_gate_evidence()` checks only `status == pass`; it does not validate evidence files, hashes, commands, test counts, or evaluator report existence.
+- `cmd_close()` writes `closed_at` and `status` but does not record the `gate_evidence.json` hash into the lock.
+- `validate_stages_completed()` checks only valid IDs, not completion evidence.
+- Meeting validation checks formatting and challenge keywords, not actual peer authorship.
+
+## Recommended Fixes (ranked by severity)
+
+1. **Make lock tampering detectable.**
+   - Add lock creation/amendment/close events with lock sha/base_commit to `process-log.jsonl` or a dedicated append-only `operator/locks/<round>.events.jsonl`.
+   - `gates` verifies current lock matches the latest authorized event except allowed close transition.
+
+2. **Close the amendment bypasses.**
+   - Scan all `*.amendment.*` files and require lock entries.
+   - Require `sha256`, `target`, `supersedes`, `meeting` for every amendment entry.
+   - Validate referenced meeting round/status/stage and `## Amendment Detail` containing amendment filename.
+
+3. **Strengthen `gate_evidence.json`.**
+   - Require evidence paths + hashes and validate them.
+   - Record `gate_evidence_sha256` in lock at close.
+
+4. **Validate or demote `stages_completed`.**
+   - Either verify stage meetings/artifacts or explicitly mark it informational and avoid using it for gate decisions.
+
+5. **Add peer-review proof fields.**
+   - Require `codex_session_id` and `Reviewed-by` line for Codex-reviewed meetings.
+   - For stronger assurance, store raw transcript path+sha.
+
+6. **Make `cmd_lock` fail on pre-existing amendments.**
+   - Initial lock should start from base contract files only unless a deliberate `--include-amendments` flow is designed.
+
+## Residual Drift (if any) — narrower items not worth calling bypasses
+
+- `REGULATION.md:118-120` still says changes require `<base>.effective.<ext>` regenerated by checker, while `REGULATION.md:64-65,198-202` says checker does not regenerate effective artifacts. That is doc drift, not a direct bypass because the later text is more explicit. Fix line 120 to “effective state computed on read.”
+- `PROCESS_AUDIT_CHECKLIST.md:19` says audit has “no role matrix contradictions,” but REG v5.2 explicitly says full role matrix consistency is not enforced. This is stale checklist wording. Fix to “stage IDs/pointers only; role matrix full consistency not enforced in v5.2.”
+- `CHANGELOG.md:18` says commit traceability smoke tests had 13/14 pass. If one failed, the failed case should be named or the claim should be removed. Not a bypass, but weak audit trail.
+
+## Classification
+
+- Routine: amendment registration/SHA validation, gate evidence schema, stage artifact validation, checklist/doc wording, `cmd_lock` pre-existing amendment failure.
+- Needs peer review: lock tamper-evidence trust model and Codex identity proof. These decide whether v5 is an honest-agent process guard or a malicious/fabricated-record resistant governance system.
+- Fixability: most implementation holes are one more pass. The trust/identity layer needs a small explicit decision before implementation.
+
+## Recommendation: block
+
+Do not merge-as-is. v5.2 improved the checker, but it still permits fabricated amendments, fabricated gate evidence, lock/base_commit tampering, and fake peer review records. The next pass should split into two parts: routine checker hardening for amendment/evidence holes, and a short peer decision on the trust model for lock integrity and Codex review proof.

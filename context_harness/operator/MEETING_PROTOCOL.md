@@ -1,6 +1,6 @@
 # MEETING_PROTOCOL — Harness v5
 
-**Version:** v5.2
+**Version:** v5.3
 **Precedence:** Below OPERATOR.md (informational + template); but its enforcement points are normative and echoed in REGULATION §4.
 
 ---

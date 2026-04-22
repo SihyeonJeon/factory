@@ -1,6 +1,6 @@
 # PROCESS_AUDIT_CHECKLIST — Harness v5
 
-**Version:** v5.2
+**Version:** v5.3
 **Use:** Fill this out at Gate 5 before closing a round. Also run `harness/check_operator_round.py gates <round>` and attach its output.
 
 ---
@@ -16,7 +16,7 @@
 - [ ] Every new operator/* file created this round is indexed in `FILE_INDEX.md`
 - [ ] Line-count caps honored: `AGENTS.md` ≤80, `.claude/CLAUDE.md` ≤80, `OPERATOR.md` ≤120, `FILE_INDEX.md` ≤250
 - [ ] `harness/check_operator_round.py gates <round>` exits 0
-- [ ] `harness/check_operator_round.py audit-operator-layer` exits 0 (no role matrix contradictions, no stale pointers, no divergent stage names)
+- [ ] `harness/check_operator_round.py audit-operator-layer` exits 0 (stage IDs + pointers only — role matrix full consistency NOT enforced in v5.x; see REG §7)
 - [ ] No legacy doc was cited in this round's meetings to override a v5 operator doc
 - [ ] Lock `status` is `active` (ready for transition to `closed`); not `paused`, `escalated`, or `aborted`
 - [ ] If any Gate 1-4 had a remediation: its remediation meeting exists and was reviewed

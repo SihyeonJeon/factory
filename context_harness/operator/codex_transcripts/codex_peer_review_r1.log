@@ -1,0 +1,1496 @@
+Reading additional input from stdin...
+OpenAI Codex v0.121.0 (research preview)
+--------
+workdir: /Users/jeonsihyeon/factory
+model: gpt-5.4
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: none
+reasoning summaries: none
+session id: 019db43d-746e-73b3-b33c-5dda3770df91
+--------
+user
+You are the Codex Operator — an EQUAL co-operator alongside the Claude Code Operator for the Unfading iOS project. You are NOT a subordinate. You are NOT being delegated to. You are being consulted as a peer.
+
+Scope of this call: REVIEW ONLY. Do not write or modify any files. Do not run builds or tests. Read only the files you need.
+
+Task: Peer-review the v5 harness overhaul proposal.
+
+Primary document to read (read in full):
+  /Users/jeonsihyeon/factory/context_harness/operator/proposals/v5_overhaul_proposal.md
+
+Supporting context (read only what you need, do NOT bulk-scan):
+  /Users/jeonsihyeon/factory/context_harness/SESSION_RESUME.md        — current v4 state
+  /Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md — v4 rules being superseded
+  /Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md — how v5 must slot in
+  /Users/jeonsihyeon/factory/SKILLS.md                                  — S-1 through S-17
+  /Users/jeonsihyeon/factory/.claude/CLAUDE.md                          — persona to be shrunk
+
+Requirements on your response:
+1. DO NOT simply approve. Push back substantively. At least one concrete disagreement is mandatory — the peer model exists to suppress hallucination and self-overestimation, so if you agree everywhere you are violating the regime.
+2. Answer all 7 Open Questions at the bottom of the proposal with a reasoned position each.
+3. Flag anything ambiguous, impractical, or that over-concentrates load on Codex (you).
+4. Add concrete suggestions I may have missed, especially:
+   (a) linter enforcement mechanics — where does the lint config live, who enforces, how do we fail closed?
+   (b) contract immutability checking — what actually prevents spec.md from being edited mid-round?
+   (c) drift detection on the operator layer itself — OPERATOR.md / FILE_INDEX.md / STAGE_CONTRACT.md getting stale or self-contradictory
+   (d) how meetings close when we cannot converge — escalation to human? time box?
+   (e) parallel vs serial cross-validation — do we run tasks in parallel with each agent evaluating the other's output, or serial with one proposing and the other reviewing? Give a principled answer for which stages use which pattern.
+   (f) clear non-overlapping work zones — what exact files or directories does each agent own, and what is the protocol when work crosses zones?
+   (g) how the harness achieves full autonomy on the plan → design → code → feedback cross-process loop while still respecting human approval at the right moments (not too many, not too few).
+
+5. Return your review with these EXACT sections (markdown headers):
+   ## Agree
+   ## Disagree (mandatory ≥ 1)
+   ## Counter-proposals
+   ## Answers to Open Questions
+     ### Q1 Gemini purge vs tier-3
+     ### Q2 Meetings as markdown vs JSONL
+     ### Q3 Disagreement-must-be-recorded scope
+     ### Q4 Evaluation screenshot location
+     ### Q5 Codex load balance
+     ### Q6 First-round scope (all 8 screens vs sliced)
+     ### Q7 Sequence (v5 then deepsight, or parallel)
+   ## Missing Pieces (a-g above)
+   ## Recommendation (one of: merge-as-is / merge-with-changes / block; with 1-paragraph justification)
+
+If you still disagree after I counter-respond, say so. We converge by iteration, not by one side winning. This is one long meeting — subsequent turns will arrive via `codex exec resume --last`.
+
+Begin.
+codex
+I’ll review this as a peer review only: read the proposal in full, pull the minimum supporting context needed, and return findings in your required section shape. I won’t write files or run builds/tests.
+exec
+/bin/zsh -lc "sed -n '1,220p' /Users/jeonsihyeon/factory/context_harness/SESSION_RESUME.md" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+# Factory Session Resume — 2026-04-14
+
+**Single source of truth for resuming development.**
+
+---
+
+## 1. Current State
+
+| Item | Status |
+|---|---|
+| Date | 2026-04-14 |
+| Branch | `master` |
+| App name | **Unfading** |
+| Last green | Sprint 51 (140/140 — Unit 130 + UI 10) |
+| Tests | 130 unit + 10 XCUITest = 140 total |
+| Integration worktree | `/Users/jeonsihyeon/factory/.worktrees/_integration` |
+| Supabase | 7 tables, RLS enabled, MCP connected |
+| Architecture version | **v4** (role restructure + process quality) |
+| Runtime QA | XCUITest pipeline integrated — `harness/runtime_qa.py` |
+
+---
+
+## 2. Delivery Status
+
+### HF Round 1: 10/10 complete
+### HF Round 2: 12/12 complete (Sprint 11-15 + 3 remediations)
+### Round 3: 4/4 complete (Sprint 16-19)
+### HF Round 3: 4/4 + 2 remediation (Sprint 20-25)
+### HF Round 4: 4/4 + 1 remediation (Sprint 26-30)
+### HF Round 5: 5/5 (Sprint 31-35)
+### S-17 Remediation: 5/5 (Sprint 36-40)
+### HF Round 6: 3/3 (Sprint 46-48)
+### Autonomous Loop: 3/3 (Sprint 49-51)
+
+| Sprint | Content | Result |
+|--------|---------|--------|
+| 20 | HF3: animation, search bar, map controls, location permission | 77/77 PASS |
+| 21 | HF3: sheet full-screen, 메인/보관함 tabs | 77/77 PASS |
+| 22 | HF3: calendar dial picker, time wheel | 77/77 PASS |
+| 23 | HF3: marker→sheet, back button, cluster filter | 77/77 PASS |
+| 24 | HF3 remediation: coordinator, textOnPrimary, 44pt, race | 77/77 PASS |
+| 25 | Drift fix: .foregroundStyle(.white) → textOnPrimary/textOnOverlay (20건) | 77/77 PASS |
+| 26 | HF4: sheet clip/fullscreen, year comma, back chevron | 77/77 PASS |
+| 27 | HF4: archive event grouping (sectioned LazyVStack) | 77/77 PASS |
+| 28 | HF4: detail redesign (prev/next fix, weather, nav bar) | 77/77 PASS |
+| 29 | HF4: calendar planning + group swap | 77/77 PASS |
+| 30 | HF4 remediation: CalendarView group filter + reaction label | 77/77 PASS |
+| 31 | HF5: 컴포저 fullscreen 전환, 키보드 dismiss, 사진 섹션 최상단 이동 | 77/77 PASS |
+| 32 | HF5: 바텀시트 핸들 전용 드래그, 네이버맵 스타일 헤더 fade-in, 내부 스크롤→시트 크기 분리 | 77/77 PASS |
+| 33 | HF5: 장소 검색 제거(이벤트+추억만), 모임 swap→Settings 이동, 검색 오버레이 크기 조정 | 87/87 PASS |
+| 34 | HF5: 클러스터 마커 centroid 위치 수정 (CentroidClusterAnnotation 서브클래스) | 87/87 PASS |
+| 35 | HF5: 바이브 코딩 안티패턴 분석, SKILLS.md S-17 섹션 추가 (22개 체크리스트) | — |
+| 36 | S-17: 인라인 컬러 → UnfadingTheme 토큰 (8파일, 4토큰 추가) | 87/87 PASS |
+| 37 | S-17: try? → do-catch + os.Logger (3곳 변환) | 87/87 PASS |
+| 38 | S-17: [weak self] 누락 감사 (2파일 수정: PlaceSearchService, PhotoLoader) | 93/93 PASS |
+| 39 | S-17: scenePhase 라이프사이클 + draft 저장/복원 (6 신규 테스트) | 93/93 PASS |
+| 40 | S-17: AuthManager UserDefaults → Keychain 마이그레이션 | 93/93 PASS |
+| 41 | Dead code 정리 (64줄 제거) + EditButton 접근성 | 93/93 PASS |
+| 42 | 테스트 커버리지 확장 (38개 신규: Rewind, Groups, Calendar, Keychain, EmotionTag, GroupInvitation, DomainMemory) | 131/131 PASS |
+| 46 | HF6: Bottom sheet 인터랙션 5건 (진동 제거, overscroll 축소, 상단 드래그, 뒤로가기, 핸들 확대) | 121 unit GREEN |
+| 47 | HF6: 하단 탭 바 재설계 (5탭: 지도/캘린더/추억생성/되감기/설정, FAB→중앙, island→full bar) | 121 unit GREEN |
+| 48 | HF6: 사진 그리드 4열 + 버튼 구조 감사 7건 수정 | 121 unit GREEN |
+| 49 | Autonomous Cycle 1: 빈 상태 UX 강화 — DayMemoriesList/RewindFeedView CTA 추가, +4 테스트 | 135/135 PASS |
+| 50 | Autonomous Cycle 2: 햅틱 피드백 시스템 — sensoryFeedback 3종 (selection/impact/success), 4파일 | 135/135 PASS |
+| 51 | Autonomous Cycle 3: 마이크로 인터랙션 — UnfadingPressButtonStyle 47곳 전환, SyncErrorBanner 추가, +5 테스트, 18파일 | 140/140 PASS |
+
+---
+
+## 3. HF Round 5 Changes Summary
+
+| 항목 | 변경 내용 |
+|------|-----------|
+| 컴포저 | fullScreenCover 전환, 키보드 dismiss, 사진 섹션 최상단 이동 |
+| 바텀시트 | 핸들 전용 드래그, expandedHeaderBar fade-in, handleDragProgress |
+| 홈 화면 | 장소 검색 제거 (이벤트+추억만), 그룹 피커 제거 |
+| 설정 | "활성 모임" 섹션 추가 (모임 swap 이동) |
+| 클러스터 | CentroidClusterAnnotation 서브클래스로 centroid 위치 수정 |
+| SKILLS.md | S-17 바이브 코딩 안티패턴 방지 규율 (22개 체크리스트) |
+
+### 주요 수정 파일
+
+- `UnfadingHomeView.swift` — fullScreenCover, 그룹 피커 제거, 장소 검색 제거
+- `MemoryComposerSheet.swift` — 사진 섹션 최상단, 키보드 dismiss
+- `MainBottomSheet.swift` — 핸들 전용 드래그, expandedHeaderBar, handleDragProgress
+- `SettingsView.swift` — "활성 모임" 섹션 추가
+- `MemoryAnnotation.swift` — CentroidClusterAnnotation 추가
+- `MemoryClusterMapView.swift` — centroid 클러스터 델리게이트
+- `SKILLS.md` — S-17 바이브 코딩 안티패턴 방지 규율
+
+---
+
+## 3a. S-17 Remediation Changes Summary (Sprint 36-40)
+
+| 항목 | 변경 내용 |
+|------|-----------|
+| 테마 토큰 | UnfadingTheme에 4 토큰 추가, 8파일 인라인 컬러 제거 |
+| 에러 처리 | try? → do-catch + os.Logger (3곳) |
+| 메모리 안전 | [weak self] 누락 수정 (PlaceSearchService, PhotoLoader) |
+| 라이프사이클 | scenePhase 감시 + draft 저장/복원 시스템 |
+| 보안 | AuthManager UserDefaults → Keychain 마이그레이션 |
+
+### 주요 수정 파일
+
+- `UnfadingTheme.swift` — 4 토큰 추가
+- `MemoryGalleryView.swift`, `MemoryBriefView.swift`, `MemoryPinMarker.swift`, `MemoryClusterMapView.swift`, `DiaryCoverCustomizationView.swift`, `YearEndReportView.swift` — 인라인 컬러 수정
+- `MemoryComposerSheet.swift` — do-catch + draft 저장/복원
+- `GroupHubView.swift` — do-catch
+- `PlaceSearchService.swift`, `PhotoLoader.swift` — [weak self]
+- `KeychainHelper.swift` (신규) — Keychain 래퍼
+- `AuthManager.swift` — Keychain 마이그레이션
+- `ComposerDraftStorage.swift` (신규) — draft 저장 시스템
+
+---
+
+## 3b. HF Round 4 Changes Summary
+
+| 항목 | 변경 내용 |
+|------|-----------|
+| 시트 스크롤 | .clipped()로 내용 경계 밖 표시 방지 |
+| 시트 전체화면 | expanded 시 height=infinity, safeArea 무시, 핸들 숨김 |
+| 캘린더 년도 | Text(verbatim:)으로 반점 제거 |
+| 뒤로 버튼 | 핸들 극좌측 chevron.left 아이콘만 |
+| 보관함 | 이벤트별 섹션 그룹 (이벤트명+날짜+추억수 헤더) |
+| 추억 상세 | 이전/다음 동작 수정, 날씨 카드, n/total 네비, 요소 재구성 |
+| 캘린더 계획 | 미래 이벤트 보라색 점, 계획 추가 시트, DayMemoriesList 통합 |
+| 모임 스왑 | 상단 그룹 선택 버튼, 지도/보관함/캘린더 연동 필터링 |
+| DomainMemory | weather: String? 필드 추가 |
+| DomainEvent | isPlanned computed property 추가 |
+| GroupStore | selectedGroupID, selectGroup(id:) 추가 |
+
+---
+
+## 3c. HF Round 6 Changes Summary (Sprint 46-48)
+
+| 항목 | 변경 내용 |
+|------|-----------|
+| 바텀시트 | 진동 제거, overscroll 축소, 상단 드래그, 뒤로가기, 핸들 확대 |
+| 탭 바 | 5탭 구조 전면 재작성 (지도/캘린더/추억생성/되감기/설정), FAB→중앙 탭, island→full bar |
+| 사진 그리드 | 4열 레이아웃 |
+| 접근성 | 버튼 구조 감사 7건 수정 (44pt 터치 타겟, disabled 상태 강화) |
+
+### 주요 수정 파일
+
+- `MainBottomSheet.swift` — 진동 제거, overscroll, 상단 드래그, 뒤로가기, 핸들
+- `TabRouter.swift` — compose/rewind 탭 추가
+- `RootTabView.swift` — 5탭 구조 전면 재작성
+- `UnfadingHomeView.swift` — FAB 제거, 컴포저 위임
+- `MemoryGalleryView.swift` — 4열 그리드
+- `GroupHubView.swift` — EditButton 제거, 44pt 터치 타겟
+- `SettingsView.swift` — disabled 상태 강화
+- `MemoryBriefView.swift` — disabled ButtonStyle 개선
+
+---
+
+## 4. Architecture v4 Changes (from v3)
+
+- Agent role restructure: Claude Code = implementer + 2nd verifier, Codex = planner + 1st verifier
+- Process quality evaluation (Gate 4): remediation cycles, BLOCKER recurrence, brief accuracy, drift latency
+- Co-planning: Codex + Claude Code joint detailed design
+- All v3 infrastructure retained (3-layer memory, SKILLS.md, process-log, verify-before-use, drift detection)
+
+---
+
+## 5. Key Files (Topic Layer)
+
+| File | Purpose |
+|---|---|
+| `docs/design-docs/multi-agent-architecture.md` | v4 멀티에이전트 아키텍처 |
+| `docs/design-docs/ios-architecture.md` | iOS 앱 구조 |
+| `docs/references/coding-conventions.md` | 코딩 컨벤션 + 금지 영역 |
+| `docs/product-specs/hf-round2-acceptance.md` | HF2 수용 기준 |
+| `docs/exec-plans/sprint-history.md` | 전체 스프린트 이력 |
+| `docs/exec-plans/process-log.jsonl` | 에이전트 활동 로그 |
+| `SECURITY.md` | 보안 규칙 |
+| `SKILLS.md` | 검증된 패턴 (17항목, S-17 바이브 코딩 안티패턴 포함) |
+
+---
+
+## 6. Runtime QA Pipeline
+
+| Component | Status |
+|-----------|--------|
+| XCUITest target | `project.yml` UnfadingUITests added |
+| Test cases | 10 tests (launch, sheet, archive, calendar, plan, group swap, map, settings, tab tour, composer) |
+| Screenshot extraction | xcresulttool activities API + legacy export |
+| Harness integration | `master_router.py` RUNTIME_QA task type + `runtime_qa()` convenience |
+| Pipeline module | `harness/runtime_qa.py` RuntimeQAPipeline class |
+
+## 7. Process Audit Results (2026-04-14)
+
+| Check | Result | Detail |
+|-------|--------|--------|
+| S-1 xcodegen before xcodebuild | PASS | Consistent across all 30 sprints |
+| S-4 44pt touch targets | PASS | Fixed Sprint 24, no recurrence |
+| S-6 Dynamic Type | FIXED | `.system(size:16)` found in group swap icon → changed to `.subheadline` |
+| S-11 Three-evaluator | PARTIAL | Codex often empty → Claude fallback, reducing diversity |
+| S-12 Runtime screenshot | PASS | XCUITest pipeline now operational |
+| Inline colors | ADVISORY | `Color.black.opacity(0.45)` remains (1 instance) |
+| Missing a11y labels | ADVISORY | 7 files missing accessibilityLabel in Features/ |
+| Remediation cycles | PASS | ≤2 per round |
+| BLOCKER recurrence | PASS | 0 after SKILLS registration |
+| SKILLS usage | PASS | ~3% miss rate |
+
+## 7a. Autonomous Loop Summary (Sprint 49-51)
+
+| Metric | Value |
+|--------|-------|
+| Total sprints (31-51) | 21 |
+| Failures | 0 |
+| Test progression | 77 → 140 |
+| HF items processed | R5 12건 + R6 6건 |
+
+## 8. Next Steps
+
+인간 피드백 대기 또는 추가 자율 개선.
+
+**Advisory items (S-17 분석에서 발견) — 모두 해결됨:**
+1. ~~`try?` 5곳 에러 무시~~ → RESOLVED (Sprint 37, do-catch + os.Logger)
+2. ~~인라인 컬러 6+ 파일~~ → RESOLVED (Sprint 36, UnfadingTheme 토큰)
+3. ~~`[weak self]` 부재~~ → RESOLVED (Sprint 38, PlaceSearchService + PhotoLoader)
+
+exec
+/bin/zsh -lc "pwd && wc -l /Users/jeonsihyeon/factory/context_harness/operator/proposals/v5_overhaul_proposal.md && sed -n '1,260p' /Users/jeonsihyeon/factory/context_harness/operator/proposals/v5_overhaul_proposal.md" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+/Users/jeonsihyeon/factory
+     171 /Users/jeonsihyeon/factory/context_harness/operator/proposals/v5_overhaul_proposal.md
+# Harness v5 — Operator Peer Model (Proposal)
+
+**Author:** Claude Code Operator
+**Date:** 2026-04-19
+**Status:** DRAFT — awaiting Codex Operator peer review (see `meetings/2026-04-19_v5_kickoff.md`)
+**Trigger:** Deepsight 결과물(`docs/design-docs/travel_deepsight/`)로 8-screen Unfading 리디자인이 들어옴. 현재 v4 하네스는 교차 검증 규율과 컨텍스트 위생이 부족해 이 규모를 안전하게 처리하기 어려움.
+
+---
+
+## 1. Goals
+
+1. Claude Code + Codex를 **principal/secondary**에서 **동등한 공동 운영자(co-operator)** 로 승격. 가벼운 결정은 회의로, 무거운 결정은 인간에게.
+2. 모든 단계를 **교차(cross)**: 같은 단계 안에서 "생산자 = 검증자"가 되지 않도록 강제.
+3. **컨텍스트 위생** 강제: 운영자는 짧은 페르소나 + File Index 만 항상 읽음. 나머지는 필요할 때만.
+4. **규제 자체가 자기개선**: 라운드 종료 시 SKILLS/SECURITY 갱신이 머지 블록커.
+5. **결과물뿐 아니라 프로세스**도 평가 (Gate 5 추가).
+
+## 2. Persona & Context Layer
+
+| File | 읽는 주체 | 상한 | 역할 |
+|------|----------|-----:|------|
+| `.claude/CLAUDE.md` | Claude Code Operator | 80줄 | 페르소나 + `operator/` 포인터 |
+| `AGENTS.md` (repo root) | Codex Operator | 80줄 | 동일 구조 |
+| `context_harness/operator/OPERATOR.md` | 두 운영자 공용 | 120줄 | 공통 페르소나, 의사결정 원칙 |
+| `context_harness/operator/FILE_INDEX.md` | 두 운영자 공용 | 제한 없음 | 용도 → 파일 매핑 |
+
+**규율:** FILE_INDEX 경유 없이 bulk read 금지. 필요할 때 `ls context_harness/`부터 찍는 습관을 버린다. FILE_INDEX에 없는 파일을 열려면 process-log에 사유 기록.
+
+## 3. Stage Contract (교차 검증 매트릭스)
+
+각 단계는 **Performer + Cross-Validator** 두 명. 같은 에이전트가 두 역할 겸임 금지.
+
+| Stage | Performer | Cross-Validator | Artifact |
+|-------|-----------|----------------|----------|
+| Overall Planning | **Claude Code + Codex** (meeting) | Human | `operator/meetings/<round>_plan.md` |
+| Detailed Design | Codex | Claude Code | `operator/contracts/<round>/spec.md` |
+| Convention/Linter Lock | Claude Code | Codex | `operator/contracts/<round>/convention_version.txt` |
+| Coding 1st pass | Claude Code | Codex (code + architecture review) | Commit + `meetings/<round>_review1.md` |
+| Real-use evaluation | Codex | Claude Code | `context_harness/reports/<round>_eval.md` |
+| Coding 2nd pass | **Codex + Claude Code** (meeting) | Human | Commit + retro |
+| Round retro & regulation update | Both | Human | `operator/round_retro/<round>.md` + SKILLS/SECURITY diff |
+
+**Gemini CLI 정책:** 기본 사용 안 함. (a) 초대형 컨텍스트 윈도우가 결정적으로 필요하거나 (b) Claude/Codex가 명시적으로 "Gemini가 더 낫다"고 합의할 때만 사용. 일반 루프에서 제외.
+
+## 4. Regulation & Lock (멱등성/일관성)
+
+### Per-round artifacts
+
+```
+operator/contracts/<round_id>/
+├── spec.md                  ← 불변 입력 사양 (구현 중엔 수정 금지)
+├── file_whitelist.txt       ← 쓰기 허용 파일 목록
+├── convention_version.txt   ← 활성 coding-conventions.md SHA
+├── lint_config.txt          ← 활성 린터 규칙
+└── acceptance.md            ← 성공 기준
+operator/locks/round_<N>.lock  (JSON: started_at, agents, hashes)
+```
+
+### Idempotency rules
+
+- 단계 시작 시: lock 파일 검증 → spec/whitelist/convention 변경되었으면 **중단**, 먼저 meeting 열고 amendment 절차.
+- 단계 중단 후 재개: lock의 started_at/agents 일치 확인.
+- 같은 라운드 재실행이 이미 완료된 하위 단계를 깨지 않도록 mtime gate 유지 (feedback_idempotent_cache_guards).
+
+## 5. Meeting Protocol
+
+운영자 간 **회의 = 파일**. 대화가 아닌 **흔적 남는 협의**.
+
+파일 템플릿 `operator/meetings/<ISO>_<topic>.md`:
+
+```
+# Meeting — <topic>
+
+## Context  (3-5 bullets + 파일 포인터만; 인라인 복붙 금지)
+
+## Proposal (Performer)  (명확한 입장 하나)
+
+## Questions  (답변 가능한 구체 질문)
+
+## Counter / Review  (Cross-Validator의 반론·대안·보완)
+
+## Convergence  (반복 협의)
+
+## Decision  (최종 결정 + 이유)
+
+## Disagreement Recorded  (적어도 1건 — 없으면 할루시네이션 트립와이어)
+```
+
+**"적어도 한 번은 반론" 규칙**: 순수 사실 확인이 아닌 한, 교차 검증자가 반론 1건 이상을 기록해야 함. 없으면 회의 미완료. 이것이 자기 과대평가 방지의 핵심.
+
+## 6. Process Audit — Gate 5
+
+기존 Gate 1(빌드·테스트) / 2(3-evaluator) / 3(cross-agreement) / 4(process metrics)에 **Gate 5: Process Integrity** 추가. 라운드 종료 체크리스트:
+
+- [ ] process-log.jsonl에서 이번 라운드 모든 결정 경로 재구성 가능
+- [ ] 모든 commit이 라운드 lock에 매핑됨
+- [ ] 모든 meeting에 "Disagreement Recorded" 섹션 채워짐
+- [ ] SKILLS.md에 최소 1건 lesson 추가됨 (성공·실패 무관)
+- [ ] 보안/사고 있었다면 SECURITY.md 갱신됨
+- [ ] 새 파일 생겼다면 FILE_INDEX.md 갱신됨
+- [ ] OPERATOR.md / STAGE_CONTRACT / REGULATION에서 발견된 불일치 있으면 amendment 제안됨
+
+Gate 5 fail → 라운드 닫지 못함. 다음 라운드 시작 금지.
+
+## 7. Self-Improving Regulation
+
+라운드 종료 retro(`operator/round_retro/<round>.md`) 항목:
+
+1. 이번 라운드에서 놓쳤던 것 (Performer 관점 1줄 + Cross-Validator 관점 1줄)
+2. 반복되는 실수 → SKILLS 승격 후보
+3. 하네스 규제 중 깨진 것 / 무용했던 것 → REGULATION amendment
+4. 다음 라운드에 적용할 수정안 (있으면 별도 meeting 파일로 분리)
+
+amendment도 meeting protocol 따름. 통과 시 `operator/CHANGELOG.md`에 기록 + `convention_version` 증가.
+
+## 8. Context Discipline Rules
+
+- CLAUDE.md/AGENTS.md ≤ 80줄 / OPERATOR.md ≤ 120줄 / FILE_INDEX.md ≤ 250줄
+- Briefs ≤ 200줄 (기존)
+- Blackboard 최근 5건 (기존)
+- **읽기:** FILE_INDEX로 정확한 파일 지정. `ls <dir>` 탐색 금지.
+- **쓰기:** 토픽 파일 먼저 → 그 다음 index 포인터. index에 내용 덤프 금지.
+
+## 9. Migration Steps
+
+1. `context_harness/operator/` 스캐폴드 (OPERATOR, FILE_INDEX, STAGE_CONTRACT, MEETING_PROTOCOL, REGULATION, PROCESS_AUDIT_CHECKLIST)
+2. 루트 `AGENTS.md` 신설 (Codex Operator용)
+3. `.claude/CLAUDE.md` 축소 (80줄) — 나머지는 operator/로 이관
+4. 기존 `docs/design-docs/multi-agent-architecture.md` v4 문서 → v5로 업데이트 또는 포인터만 남기기
+5. 이 제안서를 첫 meeting 안건으로 상정 → Codex peer review → 수렴 → 승인
+6. 첫 라운드 계약 생성: deepsight 리디자인 처리 (`round_deepsight_r1`)
+7. Round retro 템플릿 생성
+
+## 10. Open Questions (for Codex peer review)
+
+1. Gemini CLI를 team_manifest에서 완전 제거할지, tier-3 비상용으로 유지할지?
+2. 회의를 markdown으로 할지 append-only JSONL로 할지? (나는 가독성 우선해 markdown 선호. 반론 환영)
+3. "Disagreement must be recorded" 규칙이 순수 사실 확인 회의에 과할지, 항상 적용할지?
+4. 평가 스크린샷 위치: `context_harness/reports/` 유지 vs `operator/` 하위 round-scoped로?
+5. Codex에 design + 1st verify + real-use evaluation 세 역할이 몰림. 용량/레이턴시 괜찮은지, 재배치 필요한지?
+6. 첫 라운드 작업 단위: 8-screen 리디자인을 한 번에 처리 vs 스크린 단위 슬라이싱? (design-revision-workflow.md Phase 3 대응)
+7. 지금 v5 전환과 deepsight 처리를 병행할지, v5 정착 1 라운드 먼저 하고 deepsight은 그 다음 라운드로 미룰지?
+
+---
+
+## Appendix A — File tree after migration
+
+```
+factory/
+├── AGENTS.md                                ← NEW (Codex persona)
+├── .claude/CLAUDE.md                        ← SHRINK to ≤80 lines
+├── SKILLS.md / SECURITY.md                   ← existing, now mandatory-append at round close
+├── context_harness/
+│   ├── SESSION_RESUME.md                    ← single source of truth (existing)
+│   ├── operator/                            ← NEW
+│   │   ├── OPERATOR.md
+│   │   ├── FILE_INDEX.md
+│   │   ├── STAGE_CONTRACT.md
+│   │   ├── MEETING_PROTOCOL.md
+│   │   ├── REGULATION.md
+│   │   ├── PROCESS_AUDIT_CHECKLIST.md
+│   │   ├── CHANGELOG.md
+│   │   ├── contracts/<round_id>/
+│   │   ├── locks/round_<N>.lock
+│   │   ├── meetings/<ISO>_<topic>.md
+│   │   ├── proposals/
+│   │   └── round_retro/<round_id>.md
+│   ├── handoffs/                             ← existing (sprint briefs)
+│   └── reports/                              ← existing (evaluation artifacts)
+└── docs/                                     ← existing
+```
+
+codex
+I’ve read the full proposal and the current v4 resume. Next I’m checking only the supporting docs that define the v4 role split, design workflow gates, skills pressure, and the persona file being shrunk so the review is anchored in the existing system rather than just the draft.
+exec
+/bin/zsh -lc 'wc -l /Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md /Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md /Users/jeonsihyeon/factory/SKILLS.md /Users/jeonsihyeon/factory/.claude/CLAUDE.md' in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+     227 /Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md
+     219 /Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md
+     150 /Users/jeonsihyeon/factory/SKILLS.md
+     102 /Users/jeonsihyeon/factory/.claude/CLAUDE.md
+     698 total
+
+exec
+/bin/zsh -lc 'rg -n "Claude|Codex|Gemini|Gate|Stage|Phase|screenshot|review|approval|human|S-1|S-17|process-log|drift|SESSION_RESUME|CLAUDE|SKILLS|SECURITY" /Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md /Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md /Users/jeonsihyeon/factory/SKILLS.md /Users/jeonsihyeon/factory/.claude/CLAUDE.md' in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:1:# Design Revision Workflow — Claude Design 중도 수정 → 개발 재개
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:3:**적용 대상:** 이미 구현이 진행된 상태에서 Claude Design(또는 외부 디자인 툴) 결과물로
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:4:UI/UX/비주얼 톤을 중도 수정한 뒤, 하네스(Claude + Codex + Claude Code) 위에서
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:12:- [multi-agent-architecture.md](multi-agent-architecture.md) §7 (Evaluation Gates)
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:16:- [../../SKILLS.md](../../SKILLS.md)
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:33:위 중 하나라도 **의도적으로** 변경해야 한다면 Phase 2에서 계약 문서를 먼저 갱신한 뒤
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:38:## Phase 0. Design Capture — 디자인 산출물 고정
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:40:목적: Claude Design에서 나온 결과물을 **재현 가능한 입력**으로 저장한다.
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:52:4. 이 폴더는 읽기 전용이다. 이후 Phase에서 이 폴더를 수정하지 않는다 —
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:60:## Phase 1. Gap Analysis — 현재 vs. 신규 차이 표
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:78:각 행마다 명시한다. 그 섹션이 다음 Phase의 수정 대상이다.
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:80:Codex에게 이 갭 분석을 1차 생성시키고, Claude Code가 코드베이스 실측치로 2차 검증한다.
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:85:## Phase 2. Contract Update — 계약 문서 선 갱신
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:90:갱신 대상(해당 Phase 1 표에서 영향 있다고 표시된 것만):
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:103:- **작성:** Codex (설계·계약 문서 편집 권한)
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:104:- **리뷰:** Claude Code (코드베이스 대조, 자가승인 금지)
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:109:## Phase 3. Sprint Slicing — 디스패치 단위로 쪼개기
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:122:브리프 필수 항목 (CLAUDE.md §2 준수):
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:125:- 신규 토큰 값 (색/폰트/반경) — Phase 2에서 확정된 값 그대로
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:127:- 깨지면 안 되는 Phase 0 규칙 복붙
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:130:브리프는 200줄을 넘기지 않는다 (CLAUDE.md §4).
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:134:## Phase 4. Dispatch & Implementation
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:136:순서는 CLAUDE.md §1의 역할 분배 그대로다.
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:138:1. **Claude Code**가 브리프에 따라 구현 (직접 편집 금지 — 본인도 codex CLI 경유)
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:143:- 토큰을 중간에 손으로 덮어쓰기 (Phase 2 계약 값만 사용)
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:149:## Phase 5. Evaluation — 디자인 리비전 전용 게이트
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:151:기본 4 게이트 (Gate 1 빌드/테스트, Gate 2 3평가자, Gate 3 교차합의, Gate 4 프로세스 품질)에
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:154:Gate 2 평가자(red_team, hig_guardian, visual_qa)가 추가로 확인할 것:
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:156:- **visual_qa**: Phase 0에 저장한 스크린샷과 현재 런타임 스크린샷을 **나란히 비교**한
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:164:(CLAUDE.md §3).
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:168:## Phase 6. Merge & Track
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:170:1. 스프린트 머지 판단은 **Claude Code의 2차 검증**이 한다(자가승인 불가).
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:173:3. `context_harness/SESSION_RESUME.md` 갱신:
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:174:   - 디자인 리비전 단계(Phase 0~6) 중 현재 위치
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:176:4. `docs/exec-plans/metrics.jsonl`에 토큰 사용량·BLOCKER 사이클 기록 (CLAUDE.md §9).
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:177:5. 재발 방지용 패턴이 발견되었다면 **즉시** `SKILLS.md`에 추가 (CLAUDE.md §7).
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:181:## Phase 7. Drift Detection — 3 스프린트 룰
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:183:CLAUDE.md §8의 드리프트 검증 주기는 리비전 중에도 유지한다.
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:189:- 라우팅 구조가 Phase 2에서 확정한 네비게이션 모델과 일치하는지
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:202: │    └── 아니오 → Phase 0 진입.
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:203: ├── Phase 1 갭 분석 결과, 변경 화면 > 3 개?
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:213:- 리비전이 끝날 때마다 "Phase N에서 놓쳤던 것" 한 줄을 맨 아래 **Lessons** 섹션에 쌓는다.
+/Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md:214:- 3 회 이상 반복된 교훈은 Phase 본문으로 승격한다.
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:5:**Reference:** Claude Code source leak analysis (2026-03-31)
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:14:Claude (Strategist)       → 전반적 계획 수립, 인간 승인 중재
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:15:Codex (Planner/Verifier)  → 세부 설계, 1차 검증 + 수정 지시
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:16:Claude Code (Implementer) → 코드 구현, 2차 검증 (교차 확인, 머지 판단)
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:20:- Claude + Codex: 공동 세부 계획 수립 (Codex 주도, Claude 검토)
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:26:1. Claude: 전반적 계획 수립 + 인간 승인 대기
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:28:2. Codex + Claude Code: 공동 세부 계획/설계
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:30:3. Claude Code: 코드 구현 (세부 사양 기반, 병렬 실행 가능)
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:32:4. Codex: 1차 검증 (코드 리뷰, 테스트, 아키텍처 드리프트, 수정 지시)
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:34:5. Claude Code: 2차 교차 검증 (다른 관점, 품질 게이트, 머지 판단)
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:36:6. Merge + 프로세스 기록 + SESSION_RESUME 갱신
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:39:**Rule: 작성자 ≠ 검증자.** Self-approval 절대 금지.
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:40:**Rule: 코드 작성 = Claude Code, 1차 검증 = Codex, 2차 검증 = Claude Code.**
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:45:## 2. Context Management — 3-Layer Memory (Claude Code Pattern)
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:48:- **CLAUDE.md** — 목차/포인터만. ~150자/줄. 실제 내용 없음.
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:50:- **SESSION_RESUME.md** — 현재 상태 스냅샷
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:57:- `SECURITY.md` — 보안 규칙
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:58:- `SKILLS.md` — 검증된 패턴 (모든 에이전트 공유)
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:65:### Write Discipline (Claude Code Pattern)
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:67:2. 그 다음 인덱스(CLAUDE.md)에 포인터 추가
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:73:## 3. Stable/Dynamic Prompt Boundary (Claude Code Pattern)
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:96:### 위치: `docs/exec-plans/process-log.jsonl`
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:108:- 실패 시: process-log.jsonl에서 해당 시점 앞뒤 기록 조회
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:114:## 5. Verify-Before-Use Pattern (Claude Code Pattern)
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:116:메모리/SKILLS에서 참조한 정보는 **반드시 현재 상태와 교차 검증**:
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:149:#### Gate 1: 자동 테스트
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:156:#### Gate 2: 3-Evaluator Cross-Review
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:159:| red_team_reviewer | opus | 보안, 회귀, 아키텍처 |
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:163:#### Gate 3: Cross-Agreement
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:177:| 리미디에이션 사이클 수 | process-log.jsonl에서 remediation 건수 | ≤2 per sprint |
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:178:| BLOCKER 재발률 | 동일 유형 BLOCKER 반복 여부 | 0 (SKILLS 등록 후) |
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:181:| SKILLS 활용률 | 관련 SKILL 참조 없이 진행한 디스패치 비율 | ≤5% |
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:184:프로세스 품질이 떨어지면 → 하네스 구조/브리프 템플릿/SKILLS 개선
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:215:## 10. SKILLS.md — Self-Improving Pattern Library
+/Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md:218:- 모든 에이전트는 작업 전 SKILLS.md 확인 필수
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:4:**Architecture:** Claude (strategy) + Codex (planning/verification) + Claude Code (implementation)
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:20:| Security rules | [SECURITY.md](../SECURITY.md) |
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:21:| Proven patterns | [SKILLS.md](../SKILLS.md) |
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:22:| Session state | [context_harness/SESSION_RESUME.md](../context_harness/SESSION_RESUME.md) |
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:33:Claude → 전반적 계획, 인간 승인 중재
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:34:Codex + Claude Code → 공동 세부 계획
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:35:Claude Code → 코드 구현, 2차 검증 (교차 확인, 머지 판단)
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:36:Codex → 세부 설계, 1차 검증 + 수정 지시
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:39:**작성자 ≠ 검증자.** Self-approval is never permitted.
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:52:1. **Gate 1:** `xcodebuild test` — zero failures
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:53:2. **Gate 2:** 3-evaluator review (red_team, hig_guardian, visual_qa)
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:54:3. **Gate 3:** Cross-evaluator agreement on blockers
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:55:4. **Gate 4:** 프로세스 품질 — remediation cycles, BLOCKER 재발, 드리프트 지연 추적
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:65:- No conversation history — use SESSION_RESUME.md
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:69:**Start:** Read `SESSION_RESUME.md` → state current test count → propose next round
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:70:**During:** After each dispatch verify tests → run evaluation → update SESSION_RESUME.md
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:71:**End:** Final SESSION_RESUME.md update → structured handoff
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:73:### 6. Quality Gates
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:81:### 7. SKILLS.md
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:83:Before starting any task, check [SKILLS.md](../SKILLS.md) for proven patterns. After discovering a new best practice, record it there immediately.
+/Users/jeonsihyeon/factory/.claude/CLAUDE.md:102:When implementation is ambiguous, ask the human. Do not guess.
+/Users/jeonsihyeon/factory/SKILLS.md:9:### S-1: xcodegen before xcodebuild (always)
+/Users/jeonsihyeon/factory/SKILLS.md:16:Delete derived data before evaluation screenshots to avoid reviewing stale UI.
+/Users/jeonsihyeon/factory/SKILLS.md:43:### S-8: Codex dispatch — absolute paths required
+/Users/jeonsihyeon/factory/SKILLS.md:50:Opus (red_team_reviewer) returns empty responses under Pro plan rate limits. Orchestrator has retry + fallback to alternative roles. Log the gap.
+/Users/jeonsihyeon/factory/SKILLS.md:52:### S-10: Brief file whitelist enforcement
+/Users/jeonsihyeon/factory/SKILLS.md:53:Codex respects "edit only listed files" — but verify by checking which files actually changed post-dispatch. If an unlisted file is needed, update the brief and re-dispatch.
+/Users/jeonsihyeon/factory/SKILLS.md:59:### S-11: Three-evaluator cross-check
+/Users/jeonsihyeon/factory/SKILLS.md:60:- red_team_reviewer (opus): code correctness, security, regressions
+/Users/jeonsihyeon/factory/SKILLS.md:62:- visual_qa (sonnet): screenshot layout, visual regression
+/Users/jeonsihyeon/factory/SKILLS.md:66:### S-12: Runtime screenshot for visual QA
+/Users/jeonsihyeon/factory/SKILLS.md:67:Build → install on simulator → launch → `xcrun simctl io booted screenshot`. Evaluation must use fresh screenshot, not cached.
+/Users/jeonsihyeon/factory/SKILLS.md:69:### S-13: Claude Code CLI permission modes
+/Users/jeonsihyeon/factory/SKILLS.md:78:### S-14: Codex review vs gitignored workspace
+/Users/jeonsihyeon/factory/SKILLS.md:79:`codex exec review --uncommitted`는 git-tracked 파일만 검사. `workspace/`가 `.gitignore`에 포함되면 변경사항을 감지하지 못함.
+/Users/jeonsihyeon/factory/SKILLS.md:80:**해결:** gitignored 디렉토리의 코드 리뷰는 `sprint_eval` 타입으로 파일 기반 프롬프트 사용. `review_code()`는 git-tracked 파일에만 사용.
+/Users/jeonsihyeon/factory/SKILLS.md:82:### S-16: XCUITest screenshot extraction from xcresult
+/Users/jeonsihyeon/factory/SKILLS.md:89:### S-15: Codex CLI `-C` flag position
+/Users/jeonsihyeon/factory/SKILLS.md:90:`codex exec review` 사용 시 `-C <dir>` 플래그를 `review` 앞에 배치해야 함.
+/Users/jeonsihyeon/factory/SKILLS.md:91:- 올바른 순서: `codex exec -C /path -m model --full-auto review`
+/Users/jeonsihyeon/factory/SKILLS.md:92:- 잘못된 순서: `codex exec review -m model -C /path` → "unexpected argument '-C'" 에러
+/Users/jeonsihyeon/factory/SKILLS.md:97:## S-17: 바이브 코딩 안티패턴 방지 규율
+/Users/jeonsihyeon/factory/SKILLS.md:120:- [ ] **백그라운드 전환 시 상태 저장** — `scenePhase` 변경 시 미저장 데이터 persist. 현재 `UnfadingHomeView`만 `scenePhase` 감시 중 — 다른 편집 화면(MemoryComposer 등)은 미대응.
+
+exec
+/bin/zsh -lc "sed -n '1,230p' /Users/jeonsihyeon/factory/docs/design-docs/multi-agent-architecture.md" in /Users/jeonsihyeon/factory
+exec
+/bin/zsh -lc "sed -n '1,230p' /Users/jeonsihyeon/factory/docs/design-docs/design-revision-workflow.md" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+# Multi-Agent Architecture — v4 (Role Restructure + Process Quality)
+
+**Date:** 2026-04-14
+**Status:** Active
+**Reference:** Claude Code source leak analysis (2026-03-31)
+
+---
+
+## 1. Agent Roles & Execution Flow
+
+### Role Assignment
+
+```
+Claude (Strategist)       → 전반적 계획 수립, 인간 승인 중재
+Codex (Planner/Verifier)  → 세부 설계, 1차 검증 + 수정 지시
+Claude Code (Implementer) → 코드 구현, 2차 검증 (교차 확인, 머지 판단)
+```
+
+### Co-Planning
+- Claude + Codex: 공동 세부 계획 수립 (Codex 주도, Claude 검토)
+- 모호한 구현 계획 → 인간에게 질문
+
+### Flow (Anti-Self-Overestimation)
+
+```
+1. Claude: 전반적 계획 수립 + 인간 승인 대기
+     ↓ (승인 후)
+2. Codex + Claude Code: 공동 세부 계획/설계
+     ↓
+3. Claude Code: 코드 구현 (세부 사양 기반, 병렬 실행 가능)
+     ↓
+4. Codex: 1차 검증 (코드 리뷰, 테스트, 아키텍처 드리프트, 수정 지시)
+     ↓ (문제 → 3번 반복)
+5. Claude Code: 2차 교차 검증 (다른 관점, 품질 게이트, 머지 판단)
+     ↓
+6. Merge + 프로세스 기록 + SESSION_RESUME 갱신
+```
+
+**Rule: 작성자 ≠ 검증자.** Self-approval 절대 금지.
+**Rule: 코드 작성 = Claude Code, 1차 검증 = Codex, 2차 검증 = Claude Code.**
+서로 다른 관점을 제시하여 더 나은 방향 결정.
+
+---
+
+## 2. Context Management — 3-Layer Memory (Claude Code Pattern)
+
+### Layer 1: 인덱스 (항상 로드)
+- **CLAUDE.md** — 목차/포인터만. ~150자/줄. 실제 내용 없음.
+- **MEMORY.md** — 사용자 메모리 인덱스 (auto-memory 시스템)
+- **SESSION_RESUME.md** — 현재 상태 스냅샷
+
+### Layer 2: 토픽 파일 (필요 시 조회)
+- `docs/design-docs/` — 아키텍처, 멀티에이전트 구조
+- `docs/product-specs/` — 수용 기준, HF 상태
+- `docs/references/` — Supabase 스키마, API 참조
+- `docs/exec-plans/` — 스프린트 이력, 메트릭스
+- `SECURITY.md` — 보안 규칙
+- `SKILLS.md` — 검증된 패턴 (모든 에이전트 공유)
+
+### Layer 3: 트랜스크립트 (grep-only, 직접 로드 금지)
+- `context_harness/handoffs/` — 스프린트 브리프 (완료 후 아카이브)
+- `context_harness/reports/` — 평가 리포트 (verdict만 인덱싱)
+- `context_harness/blackboard.md` — 최근 5건 append-only 로그
+
+### Write Discipline (Claude Code Pattern)
+1. 토픽 파일에 먼저 작성
+2. 그 다음 인덱스(CLAUDE.md)에 포인터 추가
+3. 인덱스에 직접 내용 절대 덤프 금지
+4. 코드베이스에서 직접 유도 가능한 정보는 저장하지 않음
+
+---
+
+## 3. Stable/Dynamic Prompt Boundary (Claude Code Pattern)
+
+### Stable Section (캐시 가능, 거의 변경 없음)
+- 에이전트 역할 정의
+- 품질 게이트 (44pt, Dynamic Type, VoiceOver, Korean, UnfadingTheme)
+- 도구 제약 (code changes → dispatch only)
+- 보안 규칙
+
+### Dynamic Section (매 턴 갱신)
+- 현재 brief 내용
+- 최근 blackboard 엔트리 (5건)
+- 평가 아티팩트 경로
+- git status 스냅샷
+
+**Cache-break 방지 규칙:**
+- Stable section 변경 시 반드시 `[CACHE-BREAK]` 주석 + 이유 기록
+- Dynamic section만 자유롭게 갱신 가능
+- 평가 리포트 전문은 dynamic section에 넣지 않음 (verdict + blocker만)
+
+---
+
+## 4. Append-Only Process Logging
+
+### 위치: `docs/exec-plans/process-log.jsonl`
+
+모든 에이전트 활동을 append-only로 기록:
+
+```jsonl
+{"ts":"2026-04-14T10:19:47Z","agent":"codex","role":"ios_logic_builder","task":"sprint13","action":"implement","files_changed":8,"tests":79,"result":"success"}
+{"ts":"2026-04-14T10:22:08Z","agent":"claude","role":"evaluator","task":"sprint11_eval","action":"evaluate","verdict":"PASS","blockers":0,"advisories":2}
+{"ts":"2026-04-14T11:04:00Z","agent":"claude","role":"evaluator","task":"sprint12-14_eval","action":"evaluate","verdict":"BLOCKED","blockers":["B-1","B-2"]}
+{"ts":"2026-04-14T11:30:00Z","agent":"codex","role":"ios_logic_builder","task":"remediation_B1_B2","action":"remediate","tests":79,"result":"success"}
+```
+
+### 회고 (Retrospective) 용도
+- 실패 시: process-log.jsonl에서 해당 시점 앞뒤 기록 조회
+- 어느 에이전트의 어느 단계에서 문제가 발생했는지 추적
+- 에이전트 간 결정 경로 재구성 가능
+
+---
+
+## 5. Verify-Before-Use Pattern (Claude Code Pattern)
+
+메모리/SKILLS에서 참조한 정보는 **반드시 현재 상태와 교차 검증**:
+
+1. 파일 경로 → 파일 존재 확인
+2. 함수/플래그 이름 → grep으로 존재 확인
+3. 아키텍처 패턴 → 현재 코드와 일치 확인
+4. 과거 평가 결과 → 재평가로 확인
+
+"메모리는 힌트, 진실이 아니다. 사용 전에 검증한다."
+
+---
+
+## 6. Subagent Execution Models
+
+### Fork (병렬 독립 작업)
+- 부모 컨텍스트를 byte-identical 복제
+- 5개 에이전트 포크 비용 ≈ 1개 비용 (캐시 공유)
+- 평가 3종 병렬 실행에 적합
+
+### Worktree (저장소 격리)
+- git worktree를 통한 완전 격리
+- 실험적/위험한 변경에 적합
+- 현재 `.worktrees/_integration` 사용 중
+
+### Sequential (순차 의존)
+- 이전 결과에 의존하는 작업
+- Sprint → Evaluation → Remediation 체인
+
+---
+
+## 7. Evaluation Architecture
+
+### 결과물 품질 (Output Quality)
+
+#### Gate 1: 자동 테스트
+```
+xcodegen generate && xcodebuild test
+```
+- 79+ 테스트 통과 필수
+- 실패 시 즉시 중단
+
+#### Gate 2: 3-Evaluator Cross-Review
+| Evaluator | Model | Focus |
+|-----------|-------|-------|
+| red_team_reviewer | opus | 보안, 회귀, 아키텍처 |
+| hig_guardian | sonnet | HIG, Dynamic Type, VoiceOver, 44pt |
+| visual_qa | sonnet | 스크린샷, 레이아웃, 시각적 회귀 |
+
+#### Gate 3: Cross-Agreement
+- 2+ evaluator가 동일 파일 지적 → 필수 수정
+- 1 evaluator만 지적 → 수정하되 불일치 기록
+
+#### False-Positive 방어
+- `extract_blockers()` regex 오탐 알려진 패턴
+- 항상 리포트 본문 읽기 — boolean 신뢰 금지
+
+### 프로세스 품질 (Process Quality)
+
+결과물뿐 아니라 **그 결과물이 나오기까지의 프로세스도 평가**:
+
+| 지표 | 측정 방법 | 기준 |
+|------|----------|------|
+| 리미디에이션 사이클 수 | process-log.jsonl에서 remediation 건수 | ≤2 per sprint |
+| BLOCKER 재발률 | 동일 유형 BLOCKER 반복 여부 | 0 (SKILLS 등록 후) |
+| 브리프 정확도 | 디스패치 실패율 (파일 누락, 모호한 사양) | ≤10% |
+| 검증 교차율 | 1차/2차 검증자 간 불일치 발견 비율 | 기록 (높을수록 교차 효과 ↑) |
+| SKILLS 활용률 | 관련 SKILL 참조 없이 진행한 디스패치 비율 | ≤5% |
+| 드리프트 발견 시점 | 드리프트 발생 후 발견까지 스프린트 수 | ≤3 |
+
+프로세스 품질이 떨어지면 → 하네스 구조/브리프 템플릿/SKILLS 개선
+
+---
+
+## 8. Code Drift Detection
+
+매 3 스프린트마다:
+1. `docs/design-docs/ios-architecture.md` 대비 현재 파일 구조 비교
+2. `grep -r "\.system(size:"` → 하드코딩된 폰트 감지
+3. `grep -rL "accessibilityLabel"` → a11y 누락 파일 감지
+4. inline 색상 사용 감지 (UnfadingTheme 외)
+5. 네이밍 컨벤션 드리프트 확인
+
+---
+
+## 9. Metrics Tracking
+
+### `docs/exec-plans/metrics.jsonl`
+
+```jsonl
+{"session":"2026-04-14","sprint":"11-15","dispatches":8,"remediations":4,"tests":79,"blockers_found":2,"blockers_fixed":2,"advisory_fixed":5}
+```
+
+Track per session:
+- 디스패치 수, 리미디에이션 수
+- BLOCKER 발견→수정 사이클 수
+- 테스트 수 진행
+- 에이전트별 성공/실패율
+
+---
+
+## 10. SKILLS.md — Self-Improving Pattern Library
+
+### 규칙
+- 모든 에이전트는 작업 전 SKILLS.md 확인 필수
+- 새 패턴 발견 시 즉시 기록 (검증 후)
+- 3회 이상 적용된 패턴은 "검증됨" 태그
+- 실패한 패턴도 기록 ("실패 사유" 포함)
+- 상충하는 패턴 발견 시 → 인간에게 질문
+
+### 자동 갱신 트리거
+- 리미디에이션 사이클 발생 시
+- 평가에서 새 BLOCKER 유형 발견 시
+- 인간 피드백에서 반복 패턴 감지 시
+
+ succeeded in 0ms:
+# Design Revision Workflow — Claude Design 중도 수정 → 개발 재개
+
+**적용 대상:** 이미 구현이 진행된 상태에서 Claude Design(또는 외부 디자인 툴) 결과물로
+UI/UX/비주얼 톤을 중도 수정한 뒤, 하네스(Claude + Codex + Claude Code) 위에서
+개발을 재개해야 할 때.
+
+이 문서는 "디자인 바뀌었으니 다시 만들자"를 **즉흥 구현으로 흘리지 않기 위한 체크리스트**다.
+디자인 리비전은 실질적으로 제품 계약 변경이기 때문에, 브리프/검증/테마/접근성 전 층을
+동시에 손봐야 드리프트가 누적되지 않는다.
+
+관련 문서:
+- [multi-agent-architecture.md](multi-agent-architecture.md) §7 (Evaluation Gates)
+- [ios-architecture.md](ios-architecture.md) (네이밍·테마·접근성 기준)
+- [../../context_harness/prd/ui_ux_screen_contract.md](../../context_harness/prd/ui_ux_screen_contract.md)
+- [../product-specs/hf-round2-acceptance.md](../product-specs/hf-round2-acceptance.md)
+- [../../SKILLS.md](../../SKILLS.md)
+
+---
+
+## 0. 전제 — 절대 깨지 않는 규칙
+
+디자인이 아무리 바뀌어도 아래 항목은 항상 유지한다. 이걸 깨면 "리비전"이 아니라
+"새 제품"이므로 PRD부터 다시 연다.
+
+- 맵-퍼스트 제품 방향, 바텀시트 브라우징, `Group → DateEvent → Memory → MemoryPost` 계층
+- couple / general_group 이중 모드 구조
+- 저장 전 inferred place 사용자 확인, 검색/현위치 보정 루트
+- 44pt 터치 타깃, Dynamic Type(시맨틱 폰트), VoiceOver 라벨
+- Korean UI 텍스트, UnfadingTheme 컬러(인라인 컬러 금지)
+- 작성자 ≠ 검증자 원칙, 하네스 디스패치를 통한 코드 수정(직접 편집 금지)
+- 현재 테스트 스위트 카운트 유지(현재 ≥ 79) — 디자인 리비전으로 테스트가 줄면 안 된다
+
+위 중 하나라도 **의도적으로** 변경해야 한다면 Phase 2에서 계약 문서를 먼저 갱신한 뒤
+진행한다. 구현이 앞서지 않는다.
+
+---
+
+## Phase 0. Design Capture — 디자인 산출물 고정
+
+목적: Claude Design에서 나온 결과물을 **재현 가능한 입력**으로 저장한다.
+
+1. `context_harness/design/<YYYYMMDD>-<slug>/` 폴더를 생성한다.
+2. 아래를 그 폴더에 저장한다:
+   - 스크린별 이미지/아트보드 export (화면 이름과 1:1 매칭되는 파일명)
+   - 컬러/폰트/스페이싱/반경 토큰 JSON 또는 md (숫자값 포함)
+   - 주요 인터랙션/제스처 동영상 또는 캡션 GIF (가능한 경우)
+   - 디자이너 메모 원문 (한국어 그대로 — 번역 금지)
+3. `context_harness/design/<..>/source.md`에 다음을 기록:
+   - 누가 언제 무엇을 바꾸려 했는지 (원본 대화 링크 또는 요약)
+   - 리비전의 **동기**(사용자 피드백 ID, HF 라운드, 인터널 리뷰 등)
+   - 교체 대상이 되는 기존 화면/섹션
+4. 이 폴더는 읽기 전용이다. 이후 Phase에서 이 폴더를 수정하지 않는다 —
+   변경이 필요하면 새 폴더(`<YYYYMMDD>-v2-<slug>`)를 판다.
+
+왜 폴더 분리인가: 디자인 리비전은 **몇 번이고 다시 발생**한다. 직전 리비전의 입력을
+덮어쓰면 "왜 저렇게 만들었지"를 나중에 복원할 수 없다.
+
+---
+
+## Phase 1. Gap Analysis — 현재 vs. 신규 차이 표
+
+목적: 신규 디자인과 **현재 코드/계약 문서의 차이**를 숫자로 만든다. 인상평이 아니라 표다.
+
+산출물: `context_harness/design/<..>/gap-analysis.md`
+
+포함 항목:
+
+| 카테고리 | 현재 | 신규 | 충격 반경 |
+|----------|------|------|-----------|
+| Screen inventory | 기존 화면 목록 | 신규 화면 목록 | 추가/삭제/유지 |
+| Navigation | 현재 라우팅 트리 | 신규 라우팅 | 탭/모달 구조 변경 여부 |
+| Component tokens | UnfadingTheme 값 | 신규 토큰 값 | 색/폰트/반경 diff |
+| Interaction | 제스처/애니메이션 | 신규 | 구현 난이도 |
+| Copy | 현재 한국어 문구 | 신규 문구 | 접근성 라벨 재작성 필요 여부 |
+| Accessibility | 현재 VoiceOver 스크립트 | 신규 | 라벨/순서 재정의 필요 |
+
+**`ui_ux_screen_contract.md`**와 **`ios-architecture.md`**의 어느 섹션이 영향받는지를
+각 행마다 명시한다. 그 섹션이 다음 Phase의 수정 대상이다.
+
+Codex에게 이 갭 분석을 1차 생성시키고, Claude Code가 코드베이스 실측치로 2차 검증한다.
+둘의 diff는 사람이 본다.
+
+---
+
+## Phase 2. Contract Update — 계약 문서 선 갱신
+
+목적: **코드를 건드리기 전에** 제품 계약과 레퍼런스 문서를 신규 디자인 기준으로 맞춘다.
+이 순서를 뒤집으면 항상 드리프트가 남는다.
+
+갱신 대상(해당 Phase 1 표에서 영향 있다고 표시된 것만):
+
+1. `context_harness/prd/ui_ux_screen_contract.md`
+   - Screen inventory, Global Navigation Model, 각 Screen 섹션
+   - "Agents may change" / "may not change" 목록 재정의
+2. `docs/design-docs/ios-architecture.md`
+   - 네이밍, 테마 토큰, 접근성 기준 업데이트
+3. `docs/references/coding-conventions.md`
+   - UnfadingTheme 색/폰트 토큰 추가/변경
+4. `docs/product-specs/hf-round2-acceptance.md` 또는 **새 round 파일**
+   - 이번 리비전이 HF 라운드로 다뤄질 만큼 크면 `hf-round3-acceptance.md` 신설
+
+작성자와 리뷰어를 분리한다:
+- **작성:** Codex (설계·계약 문서 편집 권한)
+- **리뷰:** Claude Code (코드베이스 대조, 자가승인 금지)
+- **최종 승인:** 인간 (사용자) — 계약 변경은 인간 승인 없이 머지하지 않는다
+
+---
+
+## Phase 3. Sprint Slicing — 디스패치 단위로 쪼개기
+
+목적: 디자인 리비전을 **1 스프린트 = 1 명확한 결과** 단위로 분해해 브리프화한다.
+
+원칙:
+- 한 스프린트당 영향 받는 화면은 최대 1~2개
+- 테마 토큰 변경은 **첫 스프린트로 독립**시킨다 (후속 화면 스프린트가 공유 입력으로 쓰기 위해)
+- 네비게이션 구조 변경이 있다면 그 다음 스프린트
+- 화면별 리디자인 스프린트는 그 뒤에 평행 배치
+- 마지막에 접근성/HIG 스위핑 스프린트 1회
+
+브리프 파일 경로: `context_harness/handoffs/sprint<N>_design_revision_<slug>.md`
+
+브리프 필수 항목 (CLAUDE.md §2 준수):
+- 변경 목표 1~3줄
+- 영향 화면 목록 + `context_harness/design/<..>/` 내 참조 이미지 경로
+- 신규 토큰 값 (색/폰트/반경) — Phase 2에서 확정된 값 그대로
+- **파일 화이트리스트** (수정 허용 파일 명시 — 이것 없이는 디스패치 금지)
+- 깨지면 안 되는 Phase 0 규칙 복붙
+- 성공 기준: 빌드 통과, 테스트 ≥ 79, 지정 화면 스크린샷 평가
+
+브리프는 200줄을 넘기지 않는다 (CLAUDE.md §4).
+
+---
+
+## Phase 4. Dispatch & Implementation
+
+순서는 CLAUDE.md §1의 역할 분배 그대로다.
+
+1. **Claude Code**가 브리프에 따라 구현 (직접 편집 금지 — 본인도 codex CLI 경유)
+2. **`xcodegen generate` → `xcodebuild test`** 통과 확인
+3. 실패하면 그 안에서 해결. 테스트 수가 줄면 바로 중단하고 원인 조사.
+
+금지 사항:
+- 토큰을 중간에 손으로 덮어쓰기 (Phase 2 계약 값만 사용)
+- 스프린트 범위 밖 파일 수정 (브리프 화이트리스트 밖은 손대지 않는다)
+- "겸사겸사" 리팩터 — 범위를 비우지 않으면 검증이 불가능해진다
+
+---
+
+## Phase 5. Evaluation — 디자인 리비전 전용 게이트
+
+기본 4 게이트 (Gate 1 빌드/테스트, Gate 2 3평가자, Gate 3 교차합의, Gate 4 프로세스 품질)에
+**리비전 전용 서브 체크**를 추가한다.
+
+Gate 2 평가자(red_team, hig_guardian, visual_qa)가 추가로 확인할 것:
+
+- **visual_qa**: Phase 0에 저장한 스크린샷과 현재 런타임 스크린샷을 **나란히 비교**한
+  reports 작성. 완벽한 픽셀 일치가 아닌 "의도 보존" 판정.
+- **hig_guardian**: 신규 토큰/레이아웃이 44pt·Dynamic Type·VoiceOver 규칙을
+  어기지 않는지. 어기면 BLOCKER.
+- **red_team**: 기존 테스트가 신규 디자인 가정을 검증하지 못한 채 "통과"하는
+  false-green이 있는지 (예: 예전 레이블로 하드코딩된 assert).
+
+리포트는 **텍스트로 직접** 읽는다 — `extract_blockers()` 결과만 신뢰하지 않는다
+(CLAUDE.md §3).
+
+---
+
+## Phase 6. Merge & Track
+
+1. 스프린트 머지 판단은 **Claude Code의 2차 검증**이 한다(자가승인 불가).
+2. `docs/exec-plans/sprint-history.md`에 이번 리비전 entry 추가:
+   - 리비전 ID, 동기, 포함 스프린트 번호, 최종 테스트 카운트
+3. `context_harness/SESSION_RESUME.md` 갱신:
+   - 디자인 리비전 단계(Phase 0~6) 중 현재 위치
+   - 다음 라운드로 넘어갈 준비가 되었는지
+4. `docs/exec-plans/metrics.jsonl`에 토큰 사용량·BLOCKER 사이클 기록 (CLAUDE.md §9).
+5. 재발 방지용 패턴이 발견되었다면 **즉시** `SKILLS.md`에 추가 (CLAUDE.md §7).
+
+---
+
+## Phase 7. Drift Detection — 3 스프린트 룰
+
+CLAUDE.md §8의 드리프트 검증 주기는 리비전 중에도 유지한다.
+
+3 스프린트마다 `ios-architecture.md` 기준 대비:
+- 네이밍(신규 토큰 명도 포함) 일치
+- UnfadingTheme 이외 인라인 컬러 유입 여부
+- 접근성 라벨 커버리지
+- 라우팅 구조가 Phase 2에서 확정한 네비게이션 모델과 일치하는지
+
+리비전 중엔 **특히** 인라인 컬러와 하드코딩 폰트 사이즈가 슬그머니 다시 들어오기 쉽다.
+이때 발견하면 별도 remediation 스프린트로 처리하고, 같은 커밋에 묻지 않는다.
+
+---
+
+## 빠른 결정 트리
+
+```
+신규 디자인 받음
+ ├── 전제(§0) 중 하나 이상을 깨는가?
+ │    ├── 예 → 제품 리브랜드. 새 PRD 라운드로 승격. 여기서 멈춤.
+ │    └── 아니오 → Phase 0 진입.
+ ├── Phase 1 갭 분석 결과, 변경 화면 > 3 개?
+ │    ├── 예 → HF 신규 라운드로 선언 (hf-roundN-acceptance.md).
+ │    └── 아니오 → 기존 라운드 안에서 리비전 스프린트 묶음으로 처리.
+ └── 스프린트 수행 → 평가 → 머지 → 드리프트 감사.
+```
+
+---
+
+## 이 문서의 유지보수
+
+- 리비전이 끝날 때마다 "Phase N에서 놓쳤던 것" 한 줄을 맨 아래 **Lessons** 섹션에 쌓는다.
+- 3 회 이상 반복된 교훈은 Phase 본문으로 승격한다.
+- 문서 자체 변경도 작성자≠검증자 규칙을 따른다.
+
+## Lessons
+
+<!-- 리비전 종료 시 한 줄씩 append. 날짜, 교훈, 다음부터 적용할 룰. -->
+
+exec
+/bin/zsh -lc "sed -n '1,130p' /Users/jeonsihyeon/factory/.claude/CLAUDE.md" in /Users/jeonsihyeon/factory
+exec
+/bin/zsh -lc "sed -n '1,155p' /Users/jeonsihyeon/factory/SKILLS.md" in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+# Unfading — Harness-Integrated Agentic Development
+
+**Project:** Unfading — iOS map diary for couples and groups
+**Architecture:** Claude (strategy) + Codex (planning/verification) + Claude Code (implementation)
+
+---
+
+## Quick Reference
+
+| What | Where |
+|------|-------|
+| Multi-agent architecture | [docs/design-docs/multi-agent-architecture.md](../docs/design-docs/multi-agent-architecture.md) |
+| iOS app architecture | [docs/design-docs/ios-architecture.md](../docs/design-docs/ios-architecture.md) |
+| Design revision workflow | [docs/design-docs/design-revision-workflow.md](../docs/design-docs/design-revision-workflow.md) |
+| HF Round 1 acceptance | [docs/product-specs/hf-round1-acceptance.md](../docs/product-specs/hf-round1-acceptance.md) |
+| HF Round 2 acceptance | [docs/product-specs/hf-round2-acceptance.md](../docs/product-specs/hf-round2-acceptance.md) |
+| Coding conventions | [docs/references/coding-conventions.md](../docs/references/coding-conventions.md) |
+| Supabase schema | [docs/references/supabase-schema.md](../docs/references/supabase-schema.md) |
+| Sprint history | [docs/exec-plans/sprint-history.md](../docs/exec-plans/sprint-history.md) |
+| Security rules | [SECURITY.md](../SECURITY.md) |
+| Proven patterns | [SKILLS.md](../SKILLS.md) |
+| Session state | [context_harness/SESSION_RESUME.md](../context_harness/SESSION_RESUME.md) |
+| Sprint briefs | [context_harness/handoffs/](../context_harness/handoffs/) |
+| Evaluation reports | [context_harness/reports/](../context_harness/reports/) |
+
+---
+
+## Execution Rules
+
+### 1. Agent Role Assignment
+
+```
+Claude → 전반적 계획, 인간 승인 중재
+Codex + Claude Code → 공동 세부 계획
+Claude Code → 코드 구현, 2차 검증 (교차 확인, 머지 판단)
+Codex → 세부 설계, 1차 검증 + 수정 지시
+```
+
+**작성자 ≠ 검증자.** Self-approval is never permitted.
+서로 다른 관점 → 더 나은 방향 결정. 모호한 구현 → 인간에게 질문.
+
+### 2. Code Changes
+
+- All code changes go through agent dispatch — no hand-editing Swift files
+- Every dispatch must specify a file whitelist in the brief
+- `xcodegen generate` before any `xcodebuild` command
+- All tests must pass (≥ current count, currently 79)
+
+### 3. Evaluation (non-negotiable)
+
+Every code change must pass:
+1. **Gate 1:** `xcodebuild test` — zero failures
+2. **Gate 2:** 3-evaluator review (red_team, hig_guardian, visual_qa)
+3. **Gate 3:** Cross-evaluator agreement on blockers
+4. **Gate 4:** 프로세스 품질 — remediation cycles, BLOCKER 재발, 드리프트 지연 추적
+
+Read report text, not boolean — `extract_blockers()` has known false positives.
+결과물과 **프로세스 모두** 평가 — 상세 기준은 [multi-agent-architecture.md](../docs/design-docs/multi-agent-architecture.md) §7.
+
+### 4. Context — High Signal Only
+
+- Briefs: actionable specs only, max 200 lines
+- Blackboard: last 5 entries, auto-truncate
+- Reports: verdict + blockers (full available on-demand)
+- No conversation history — use SESSION_RESUME.md
+
+### 5. Session Protocol
+
+**Start:** Read `SESSION_RESUME.md` → state current test count → propose next round
+**During:** After each dispatch verify tests → run evaluation → update SESSION_RESUME.md
+**End:** Final SESSION_RESUME.md update → structured handoff
+
+### 6. Quality Gates
+
+- 44pt touch targets on all interactive elements
+- Dynamic Type: semantic fonts only, no hardcoded sizes
+- VoiceOver: accessibility labels on all interactive elements
+- Korean UI text throughout
+- UnfadingTheme colors only (no inline colors)
+
+### 7. SKILLS.md
+
+Before starting any task, check [SKILLS.md](../SKILLS.md) for proven patterns. After discovering a new best practice, record it there immediately.
+
+### 8. Drift Detection
+
+Every 3 sprints, audit against [ios-architecture.md](../docs/design-docs/ios-architecture.md):
+- Naming conventions
+- Theme compliance
+- Accessibility coverage
+- Architecture alignment
+
+### 9. Metrics
+
+Track per session in `docs/exec-plans/metrics.jsonl`:
+- Token usage, latency, tool call depth
+- Test count progression
+- BLOCKER → fix cycle count
+
+### 10. Ambiguity
+
+When implementation is ambiguous, ask the human. Do not guess.
+
+ succeeded in 0ms:
+# Skills — Proven Patterns & Best Practices
+
+Shared knowledge base for all agents. When a technique produces measurably better results, record it here. All agents MUST check this file before starting work.
+
+---
+
+## iOS Development
+
+### S-1: xcodegen before xcodebuild (always)
+New `.swift` files won't compile without regenerating the project.
+```
+xcodegen generate && xcodebuild -project *.xcodeproj -scheme <scheme> ...
+```
+
+### S-2: Stale derived data causes old binary to launch
+Delete derived data before evaluation screenshots to avoid reviewing stale UI.
+```
+rm -rf .deriveddata/evaluation
+```
+
+### S-3: PHAsset photo loading pattern
+Use `PHImageManager.default().requestImage()` with `isNetworkAccessAllowed: true` inside `withCheckedContinuation`. Cache by local identifier.
+
+### S-4: 44pt minimum touch targets
+Every interactive element needs `.frame(minHeight: 44)` + `.contentShape(Rectangle())`. This is the most common HIG BLOCKER.
+
+### S-5: Location permission — on launch (HF3 revised)
+**Updated 2026-04-14:** HF3 피드백으로 앱 시작 시 위치 권한 요청 허용. `UnfadingApp.swift`의 `.task`에서 `locationPermissionStore.requestPermission()` 호출.
+주의사항:
+1. `mapView.showsUserLocation = true` — MKMapView가 자동 요청하므로 `.authorized` 체크 후 설정
+2. 권한 거부 시 graceful fallback — 지도 기능은 정상 동작, 현재 위치만 비활성화
+
+### S-6: Dynamic Type compliance
+Never use `.font(.system(size: N))`. Use semantic styles (`.footnote`, `.subheadline`) with `.design(.rounded)`. Use `@ScaledMetric` for icon sizes.
+
+---
+
+## Harness Operations
+
+### S-7: extract_blockers() false positives
+The regex matches "BLOCKER" in advisory text like "Why BLOCKER, not ADVISORY". Always read the report text — never trust `evaluation_passed` boolean alone.
+
+### S-8: Codex dispatch — absolute paths required
+```python
+cwd = Path('/Users/.../factory/.worktrees/_integration').resolve()
+```
+Relative paths break codex CLI.
+
+### S-9: Opus rate limiting — graceful fallback
+Opus (red_team_reviewer) returns empty responses under Pro plan rate limits. Orchestrator has retry + fallback to alternative roles. Log the gap.
+
+### S-10: Brief file whitelist enforcement
+Codex respects "edit only listed files" — but verify by checking which files actually changed post-dispatch. If an unlisted file is needed, update the brief and re-dispatch.
+
+---
+
+## Evaluation
+
+### S-11: Three-evaluator cross-check
+- red_team_reviewer (opus): code correctness, security, regressions
+- hig_guardian (sonnet): HIG, Dynamic Type, VoiceOver, touch targets
+- visual_qa (sonnet): screenshot layout, visual regression
+
+If 2+ flag the same file → mandatory fix. If 1 flags → fix but note disagreement.
+
+### S-12: Runtime screenshot for visual QA
+Build → install on simulator → launch → `xcrun simctl io booted screenshot`. Evaluation must use fresh screenshot, not cached.
+
+### S-13: Claude Code CLI permission modes
+Valid `--permission-mode` values: `acceptEdits`, `auto`, `bypassPermissions`, `default`, `dontAsk`, `plan`.
+- 자율 구현 (비대화형, 하네스 디스패치): use `bypassPermissions` — 모든 권한 우회, Write/Edit/Bash 가능
+- 대화형 구현: use `auto` — 편집은 자동, 위험 작업은 확인 요청
+- 편집만 (Bash 불가): use `acceptEdits`
+- Read-only evaluation: use `plan`
+- `auto-edit` is NOT valid — causes immediate failure.
+- `auto`/`acceptEdits`는 비대화형(subprocess) 실행 시 쓰기 권한 승인 불가 → `bypassPermissions` 필수.
+
+### S-14: Codex review vs gitignored workspace
+`codex exec review --uncommitted`는 git-tracked 파일만 검사. `workspace/`가 `.gitignore`에 포함되면 변경사항을 감지하지 못함.
+**해결:** gitignored 디렉토리의 코드 리뷰는 `sprint_eval` 타입으로 파일 기반 프롬프트 사용. `review_code()`는 git-tracked 파일에만 사용.
+
+### S-16: XCUITest screenshot extraction from xcresult
+xcresult 번들에서 스크린샷 추출 방법:
+1. `xcrun xcresulttool get test-results tests --path <bundle>` → 테스트 목록 (JSON)
+2. `xcrun xcresulttool get test-results activities --test-id <id> --path <bundle>` → 첨부 파일 목록 (`payloadId` 포함)
+3. `xcrun xcresulttool export object --legacy --path <bundle> --output-path <dest> --id <payloadId> --type file` → PNG 추출
+sqlite 방식(구 포맷)과 활동 기반 방식(신 포맷) 모두 `payloadId`로 export 가능.
+
+### S-15: Codex CLI `-C` flag position
+`codex exec review` 사용 시 `-C <dir>` 플래그를 `review` 앞에 배치해야 함.
+- 올바른 순서: `codex exec -C /path -m model --full-auto review`
+- 잘못된 순서: `codex exec review -m model -C /path` → "unexpected argument '-C'" 에러
+- 일반 `codex exec <prompt>` 에서는 `-C`가 prompt 뒤에 와도 됨.
+
+---
+
+## S-17: 바이브 코딩 안티패턴 방지 규율
+
+시니어 iOS 개발자가 자연스럽게 수행하지만, AI/바이브 코딩이 반복적으로 놓치는 항목.
+코드 작성 및 리뷰 시 아래 체크리스트를 반드시 확인한다.
+
+### 메모리 & 동시성
+
+- [ ] **클로저 내 `[weak self]` 사용** — 네트워크 콜백, Timer, NotificationCenter 옵저버 등 escaping 클로저에서 retain cycle 방지. 현재 프로젝트에서 `[weak self]` 사용은 2개 파일(CameraCaptureView, RewindReminderStore)에 한정됨.
+- [ ] **Task 취소 처리** — `Task {}`로 시작한 비동기 작업은 `.onDisappear` 또는 `deinit`에서 `.cancel()` 호출. 뷰 이탈 시 불필요한 네트워크/디스크 작업이 계속 실행됨.
+- [ ] **@MainActor 일관성** — Store/ViewModel은 클래스 레벨에 `@MainActor` 선언. 개별 메서드에만 붙이면 data race 위험. 현재 프로젝트는 적절히 적용됨 (16개 파일).
+
+### 에러 처리
+
+- [ ] **`try?` 무조건 무시 금지** — `try?`로 에러를 삼키면 사용자에게 실패 원인을 알려줄 수 없음. 현재 5곳에서 `try?`로 Supabase 업로드/가입 실패를 무시 중 (`MemoryComposerSheet.swift:626`, `GroupHubView.swift:345` 등). 최소한 로그 기록 또는 사용자 알림 필요.
+- [ ] **`try!` 사용 금지** — 런타임 크래시 유발. 항상 `do-catch` 또는 `try?` + 에러 핸들링 사용.
+
+### 인라인 컬러 & 테마
+
+- [ ] **`.white`, `.black` 직접 사용 금지** — `UnfadingTheme.textOnPrimary`, `UnfadingTheme.textOnOverlay` 등 테마 토큰 사용. 다크 모드 대응 불가. 현재 `DiaryCoverCustomizationView`, `MemoryPinMarker`, `YearEndReportView` 등 6개 이상 파일에서 `.white` 직접 사용 중.
+- [ ] **`.black.opacity(N)` 오버레이** — `UnfadingTheme`에 오버레이 전용 색상 토큰 추가 후 사용. `UnfadingHomeView.swift:828`에서 `Color.black.opacity(0.45)` 하드코딩 발견.
+
+### 앱 라이프사이클 & 엣지 케이스
+
+- [ ] **백그라운드 전환 시 상태 저장** — `scenePhase` 변경 시 미저장 데이터 persist. 현재 `UnfadingHomeView`만 `scenePhase` 감시 중 — 다른 편집 화면(MemoryComposer 등)은 미대응.
+- [ ] **네트워크 끊김 처리** — 오프라인 시 Supabase 호출 실패에 대한 재시도/큐잉 로직 필요. `try?`로 무시하면 데이터 유실.
+- [ ] **권한 거부 후 재요청 UX** — 카메라/위치/사진 권한 거부 후 설정 앱으로 안내하는 UI 필요. `CameraCaptureView`만 구현됨.
+
+### 보안
+
+- [ ] **민감 데이터는 Keychain에 저장** — `UserDefaults`에 토큰/비밀번호 저장 금지. 현재 `AuthManager`가 `UserDefaults.standard` 사용 — 인증 토큰 저장 시 Keychain 사용 필수 검토.
+- [ ] **API 키 하드코딩 금지** — `.xcconfig` 또는 환경변수에서 주입. 소스 코드에 평문 노출 방지.
+
+### 성능
+
+- [ ] **이미지 lazy loading** — 리스트/그리드에서 화면에 보이는 항목만 로딩. `LazyVStack`/`LazyVGrid` 사용 확인.
+- [ ] **불필요한 리렌더링 방지** — `@State`/`@Binding` 스코프 최소화. 큰 뷰를 작은 하위 뷰로 분리하여 body 재계산 범위 축소.
+- [ ] **`print()` 디버그 로그 제거** — 프로덕션 빌드에 `print()` 남기지 않음. 현재 프로젝트는 0건 (양호).
+
+### 접근성
+
+- [ ] **모든 인터랙티브 요소에 `accessibilityLabel`** — 아이콘 버튼, 이미지 버튼 등 텍스트 없는 요소에 필수. 현재 161건 적용 (양호하나, 신규 뷰 추가 시 누락 주의).
+- [ ] **`accessibilityHint`로 동작 설명** — "탭하면 메모리를 삭제합니다" 등 파괴적 동작에 힌트 추가.
+- [ ] **VoiceOver 순서 검증** — `.accessibilitySortPriority()`로 논리적 읽기 순서 보장.
+
+### 국제화
+
+- [ ] **하드코딩된 한국어 문자열 → `String(localized:)`** — 향후 다국어 지원 대비. 현재는 한국어 전용이지만 `Localizable.xcstrings` 기반으로 전환 준비.
+- [ ] **날짜/숫자 포맷은 `DateFormatter`/`NumberFormatter` 사용** — 로케일별 차이 대응.
+
+### 테스트
+
+- [ ] **Store/ViewModel에 의존성 주입** — 테스트 시 mock 교체 가능하도록 프로토콜 기반 DI. `init(userDefaults:)` 패턴 (AuthManager) 좋은 예시.
+- [ ] **에지 케이스 테스트** — 빈 배열, nil 값, 네트워크 타임아웃 등 행복 경로 외 시나리오 검증.
+- [ ] **UI 테스트로 접근성 검증** — `XCUIElement.isAccessibilityElement` 확인.
+
+codex
+## Agree
+
+The v5 direction is right: equal co-operators, explicit cross-validation, round contracts, and process integrity as a first-class gate all address real v4 weaknesses. v4 already had “author != verifier,” but it still centralized implementation/merge judgment in Claude Code and relied too much on convention. v5’s contract/lock layer is the correct next abstraction.
+
+I also agree with shrinking `.claude/CLAUDE.md` and adding a Codex-facing `AGENTS.md`. The current persona file is only 102 lines, but it mixes role assignment, gates, context protocol, skills, metrics, and ambiguity policy. Moving stable process into `context_harness/operator/` is cleaner.
+
+The design-revision workflow already expects Phase 0 capture, Phase 1 gap analysis, Phase 2 contract update, Phase 3 slicing, Phase 4 implementation, Phase 5 evaluation, Phase 6 merge/track, Phase 7 drift detection. v5 should not replace that workflow; it should become the operator governance layer that executes it.
+
+## Disagree (mandatory ≥ 1)
+
+I disagree with “SKILLS.md에 최소 1건 lesson 추가됨” as a hard Gate 5 blocker. Mandatory lessons create low-signal process debt. Some rounds should close with “no new durable skill; existing rules were sufficient.” The blocker should be: retro must explicitly classify whether a new SKILLS entry is warranted, and if a repeated or novel pattern was found, then SKILLS update is mandatory.
+
+I also disagree with the strict “FILE_INDEX 경유 없이 bulk read 금지” plus “`ls <dir>` 탐색 금지” rule as written. It is directionally good, but impractical and likely to fail under real debugging. Operators sometimes need `rg --files`, `rg`, `git diff --name-only`, or focused `ls` to verify current state. The rule should ban undirected bulk-loading and require logging when opening unindexed files, not ban directory inspection outright.
+
+A smaller but important contradiction: the proposal says `FILE_INDEX.md` has “제한 없음” in the table, then later says `FILE_INDEX.md ≤ 250줄`. Pick one. I prefer a 250-line index plus topic-specific sub-indexes if needed.
+
+## Counter-proposals
+
+Make `spec.md` immutable after lock creation. Amendments should not edit it in place. Use `spec.amendment.N.md` plus a `supersedes` field in the lock, or generate `spec.effective.md` from base spec + amendments. This preserves auditability.
+
+Replace mandatory disagreement with mandatory “challenge section.” For nontrivial decisions, it must include at least one concrete disagreement, risk, or alternative rejected. For pure factual meetings, it can say “No normative decision; verified facts only,” with evidence pointers. This keeps the anti-hallucination tripwire without forcing fake dissent.
+
+Split Gate 5 into two levels: `process-integrity-blockers` and `process-advisories`. Missing lock mapping, contract mutation, unreviewed meeting, or missing FILE_INDEX entry for new operator docs should block. Missing SKILLS update should block only when the retro identifies a new durable lesson.
+
+Codex load should be reduced. In the current matrix, Codex owns detailed design, first-pass verification, real-use evaluation, and co-owns second-pass coding decisions. That creates latency and makes Codex the bottleneck. Move real-use evaluation to a rotating role or split it: Codex writes eval protocol, Claude Code executes runtime capture, Codex reviews the report.
+
+## Answers to Open Questions
+
+### Q1 Gemini purge vs tier-3
+
+Keep Gemini as tier-3 emergency capacity, but remove it from the normal team manifest path. It should be documented as an escalation tool with explicit triggers: context window overflow, independent arbitration after Claude/Codex deadlock, or large artifact summarization where both operators agree it adds value. Do not let it participate in routine gates; that adds noise and another stale role contract.
+
+### Q2 Meetings as markdown vs JSONL
+
+Use markdown as the human-facing meeting artifact, backed by a small machine-readable front matter block. Pure JSONL is audit-friendly but poor for actual reasoning. Plain markdown is readable but weak for enforcement. Recommended shape:
+
+```md
+---
+round: round_deepsight_r1
+stage: detailed_design
+status: decided
+participants: [claude_code, codex]
+decision_id: ...
+contract_hash: ...
+---
+```
+
+Important decisions should also append one JSONL event to `process-log.jsonl`, but the meeting body should remain markdown.
+
+### Q3 Disagreement-must-be-recorded scope
+
+Apply it to normative or design-affecting decisions, not pure fact gathering. The stronger rule should be: every decision meeting must record at least one objection, risk, rejected alternative, or explicit uncertainty. If none exists, the meeting must state why the decision is factual/mechanical and cite evidence. Fake disagreement is worse than no disagreement.
+
+### Q4 Evaluation screenshot location
+
+Keep raw screenshots under `context_harness/reports/<round_id>/screenshots/` and put operator summaries under `context_harness/operator/rounds/<round_id>/` or `operator/contracts/<round_id>/evaluation_manifest.md`. Screenshots are evaluation artifacts, not operator doctrine. The operator layer should point to them and record hashes/paths.
+
+### Q5 Codex load balance
+
+Current proposal over-concentrates Codex. Codex should own detailed design and first-pass architecture/code review. Real-use evaluation should be split or rotated. For design-heavy rounds, Codex can define the eval rubric, but Claude Code should gather runtime evidence and run the screenshot pipeline, then Codex reviews conclusions. That keeps author/verifier separation and avoids making Codex the serialized choke point.
+
+### Q6 First-round scope (all 8 screens vs sliced)
+
+Slice it. The existing design-revision workflow says one sprint should affect at most 1-2 screens, with theme tokens first, navigation second, screen redesigns after, and accessibility/HIG sweep last. Eight screens at once will make visual QA, contract diffs, and blocker attribution too muddy. First round should be: capture/gap/contract, token sprint, nav sprint if needed, then screen clusters.
+
+### Q7 Sequence (v5 then deepsight, or parallel)
+
+Do a minimal v5 bootstrap first, then deepsight through v5. Do not fully perfect v5 before product work, and do not process deepsight under v4. The bootstrap should include OPERATOR, FILE_INDEX, STAGE_CONTRACT, MEETING_PROTOCOL, lock schema, and one dry-run meeting. Then start deepsight as the first real v5 round and let the retro harden the system.
+
+## Missing Pieces (a-g above)
+
+(a) Linter enforcement mechanics: define a canonical `operator/lint/` or `context_harness/operator/lint_config.yaml`, plus a script such as `harness/check_operator_round.py`. The round lock stores the lint config hash. Gate 5 fails closed if the config is missing, hash mismatches, or the checker cannot run. Enforcement owner should be the cross-validator for the stage, not the performer.
+
+(b) Contract immutability checking: lock hashes for `spec.md`, `file_whitelist.txt`, `convention_version.txt`, `lint_config.txt`, and `acceptance.md` are necessary but not sufficient. The protocol must say: after lock creation, base contract files are never edited. Changes require an amendment meeting and new amendment artifact. Any direct diff to base contract files during an active round is a hard stop.
+
+(c) Operator-layer drift detection: add an operator audit that checks OPERATOR, FILE_INDEX, STAGE_CONTRACT, MEETING_PROTOCOL, REGULATION, PROCESS_AUDIT_CHECKLIST, and SESSION_RESUME for contradictions. Examples: role matrix mismatch, stale file paths, line-limit violations, missing new files from FILE_INDEX, and stage names diverging across docs. This should run at Gate 5 and every operator amendment.
+
+(d) Non-convergent meetings: add a time box and escalation rule. Example: after two written counter-rounds or 24 hours without convergence, mark `status: escalated`, summarize both positions, list the reversible/default option, and ask the human for a decision. No silent compromise and no endless meeting.
+
+(e) Parallel vs serial cross-validation: use parallel for independent evidence gathering and evaluation, serial for contract-setting and approval. Phase 1 gap analysis can be parallel with each operator producing observations, then reconciliation serial. Phase 2 contract update should be serial: one drafts, the other reviews. Implementation can be parallel only for disjoint file whitelists/worktrees. Gate 2 evaluator reviews should be parallel. Merge/round closure should be serial.
+
+(f) Clear non-overlapping work zones: define default ownership, with crossing protocol. Codex owns design/spec drafts, acceptance criteria, eval rubrics, architecture review, and `AGENTS.md`. Claude Code owns implementation briefs, Swift code changes, runtime execution, and `.claude/CLAUDE.md`. Shared/operator docs require meeting approval. If a task crosses zones, create a meeting note, expand the whitelist, and assign performer/cross-validator before edits.
+
+(g) Full autonomy with human approval: autonomy should run inside approved contracts. Human approval is required for product contract changes, user-visible design direction, security/privacy policy changes, release/merge decisions when blockers are unresolved, and non-convergent operator disputes. Human approval should not be required for routine sprint slicing, implementation within a locked whitelist, test fixes inside scope, or process-log/report generation. That gives the loop room to run without letting agents redefine the product silently.
+
+## Recommendation
+
+merge-with-changes
+
+The proposal is a strong v5 foundation, but I would not merge it as-is because the enforcement layer is underspecified and a few rules will create process theater: mandatory SKILLS additions, forced disagreement for factual meetings, and overly strict read discipline. Add fail-closed lint/lock mechanics, immutable contract amendments, operator-doc drift checks, a deadlock escalation rule, and a clearer Codex load split. With those changes, v5 is ready to become the harness layer for the deepsight redesign.
+tokens used
+53,773
+## Agree
+
+The v5 direction is right: equal co-operators, explicit cross-validation, round contracts, and process integrity as a first-class gate all address real v4 weaknesses. v4 already had “author != verifier,” but it still centralized implementation/merge judgment in Claude Code and relied too much on convention. v5’s contract/lock layer is the correct next abstraction.
+
+I also agree with shrinking `.claude/CLAUDE.md` and adding a Codex-facing `AGENTS.md`. The current persona file is only 102 lines, but it mixes role assignment, gates, context protocol, skills, metrics, and ambiguity policy. Moving stable process into `context_harness/operator/` is cleaner.
+
+The design-revision workflow already expects Phase 0 capture, Phase 1 gap analysis, Phase 2 contract update, Phase 3 slicing, Phase 4 implementation, Phase 5 evaluation, Phase 6 merge/track, Phase 7 drift detection. v5 should not replace that workflow; it should become the operator governance layer that executes it.
+
+## Disagree (mandatory ≥ 1)
+
+I disagree with “SKILLS.md에 최소 1건 lesson 추가됨” as a hard Gate 5 blocker. Mandatory lessons create low-signal process debt. Some rounds should close with “no new durable skill; existing rules were sufficient.” The blocker should be: retro must explicitly classify whether a new SKILLS entry is warranted, and if a repeated or novel pattern was found, then SKILLS update is mandatory.
+
+I also disagree with the strict “FILE_INDEX 경유 없이 bulk read 금지” plus “`ls <dir>` 탐색 금지” rule as written. It is directionally good, but impractical and likely to fail under real debugging. Operators sometimes need `rg --files`, `rg`, `git diff --name-only`, or focused `ls` to verify current state. The rule should ban undirected bulk-loading and require logging when opening unindexed files, not ban directory inspection outright.
+
+A smaller but important contradiction: the proposal says `FILE_INDEX.md` has “제한 없음” in the table, then later says `FILE_INDEX.md ≤ 250줄`. Pick one. I prefer a 250-line index plus topic-specific sub-indexes if needed.
+
+## Counter-proposals
+
+Make `spec.md` immutable after lock creation. Amendments should not edit it in place. Use `spec.amendment.N.md` plus a `supersedes` field in the lock, or generate `spec.effective.md` from base spec + amendments. This preserves auditability.
+
+Replace mandatory disagreement with mandatory “challenge section.” For nontrivial decisions, it must include at least one concrete disagreement, risk, or alternative rejected. For pure factual meetings, it can say “No normative decision; verified facts only,” with evidence pointers. This keeps the anti-hallucination tripwire without forcing fake dissent.
+
+Split Gate 5 into two levels: `process-integrity-blockers` and `process-advisories`. Missing lock mapping, contract mutation, unreviewed meeting, or missing FILE_INDEX entry for new operator docs should block. Missing SKILLS update should block only when the retro identifies a new durable lesson.
+
+Codex load should be reduced. In the current matrix, Codex owns detailed design, first-pass verification, real-use evaluation, and co-owns second-pass coding decisions. That creates latency and makes Codex the bottleneck. Move real-use evaluation to a rotating role or split it: Codex writes eval protocol, Claude Code executes runtime capture, Codex reviews the report.
+
+## Answers to Open Questions
+
+### Q1 Gemini purge vs tier-3
+
+Keep Gemini as tier-3 emergency capacity, but remove it from the normal team manifest path. It should be documented as an escalation tool with explicit triggers: context window overflow, independent arbitration after Claude/Codex deadlock, or large artifact summarization where both operators agree it adds value. Do not let it participate in routine gates; that adds noise and another stale role contract.
+
+### Q2 Meetings as markdown vs JSONL
+
+Use markdown as the human-facing meeting artifact, backed by a small machine-readable front matter block. Pure JSONL is audit-friendly but poor for actual reasoning. Plain markdown is readable but weak for enforcement. Recommended shape:
+
+```md
+---
+round: round_deepsight_r1
+stage: detailed_design
+status: decided
+participants: [claude_code, codex]
+decision_id: ...
+contract_hash: ...
+---
+```
+
+Important decisions should also append one JSONL event to `process-log.jsonl`, but the meeting body should remain markdown.
+
+### Q3 Disagreement-must-be-recorded scope
+
+Apply it to normative or design-affecting decisions, not pure fact gathering. The stronger rule should be: every decision meeting must record at least one objection, risk, rejected alternative, or explicit uncertainty. If none exists, the meeting must state why the decision is factual/mechanical and cite evidence. Fake disagreement is worse than no disagreement.
+
+### Q4 Evaluation screenshot location
+
+Keep raw screenshots under `context_harness/reports/<round_id>/screenshots/` and put operator summaries under `context_harness/operator/rounds/<round_id>/` or `operator/contracts/<round_id>/evaluation_manifest.md`. Screenshots are evaluation artifacts, not operator doctrine. The operator layer should point to them and record hashes/paths.
+
+### Q5 Codex load balance
+
+Current proposal over-concentrates Codex. Codex should own detailed design and first-pass architecture/code review. Real-use evaluation should be split or rotated. For design-heavy rounds, Codex can define the eval rubric, but Claude Code should gather runtime evidence and run the screenshot pipeline, then Codex reviews conclusions. That keeps author/verifier separation and avoids making Codex the serialized choke point.
+
+### Q6 First-round scope (all 8 screens vs sliced)
+
+Slice it. The existing design-revision workflow says one sprint should affect at most 1-2 screens, with theme tokens first, navigation second, screen redesigns after, and accessibility/HIG sweep last. Eight screens at once will make visual QA, contract diffs, and blocker attribution too muddy. First round should be: capture/gap/contract, token sprint, nav sprint if needed, then screen clusters.
+
+### Q7 Sequence (v5 then deepsight, or parallel)
+
+Do a minimal v5 bootstrap first, then deepsight through v5. Do not fully perfect v5 before product work, and do not process deepsight under v4. The bootstrap should include OPERATOR, FILE_INDEX, STAGE_CONTRACT, MEETING_PROTOCOL, lock schema, and one dry-run meeting. Then start deepsight as the first real v5 round and let the retro harden the system.
+
+## Missing Pieces (a-g above)
+
+(a) Linter enforcement mechanics: define a canonical `operator/lint/` or `context_harness/operator/lint_config.yaml`, plus a script such as `harness/check_operator_round.py`. The round lock stores the lint config hash. Gate 5 fails closed if the config is missing, hash mismatches, or the checker cannot run. Enforcement owner should be the cross-validator for the stage, not the performer.
+
+(b) Contract immutability checking: lock hashes for `spec.md`, `file_whitelist.txt`, `convention_version.txt`, `lint_config.txt`, and `acceptance.md` are necessary but not sufficient. The protocol must say: after lock creation, base contract files are never edited. Changes require an amendment meeting and new amendment artifact. Any direct diff to base contract files during an active round is a hard stop.
+
+(c) Operator-layer drift detection: add an operator audit that checks OPERATOR, FILE_INDEX, STAGE_CONTRACT, MEETING_PROTOCOL, REGULATION, PROCESS_AUDIT_CHECKLIST, and SESSION_RESUME for contradictions. Examples: role matrix mismatch, stale file paths, line-limit violations, missing new files from FILE_INDEX, and stage names diverging across docs. This should run at Gate 5 and every operator amendment.
+
+(d) Non-convergent meetings: add a time box and escalation rule. Example: after two written counter-rounds or 24 hours without convergence, mark `status: escalated`, summarize both positions, list the reversible/default option, and ask the human for a decision. No silent compromise and no endless meeting.
+
+(e) Parallel vs serial cross-validation: use parallel for independent evidence gathering and evaluation, serial for contract-setting and approval. Phase 1 gap analysis can be parallel with each operator producing observations, then reconciliation serial. Phase 2 contract update should be serial: one drafts, the other reviews. Implementation can be parallel only for disjoint file whitelists/worktrees. Gate 2 evaluator reviews should be parallel. Merge/round closure should be serial.
+
+(f) Clear non-overlapping work zones: define default ownership, with crossing protocol. Codex owns design/spec drafts, acceptance criteria, eval rubrics, architecture review, and `AGENTS.md`. Claude Code owns implementation briefs, Swift code changes, runtime execution, and `.claude/CLAUDE.md`. Shared/operator docs require meeting approval. If a task crosses zones, create a meeting note, expand the whitelist, and assign performer/cross-validator before edits.
+
+(g) Full autonomy with human approval: autonomy should run inside approved contracts. Human approval is required for product contract changes, user-visible design direction, security/privacy policy changes, release/merge decisions when blockers are unresolved, and non-convergent operator disputes. Human approval should not be required for routine sprint slicing, implementation within a locked whitelist, test fixes inside scope, or process-log/report generation. That gives the loop room to run without letting agents redefine the product silently.
+
+## Recommendation
+
+merge-with-changes
+
+The proposal is a strong v5 foundation, but I would not merge it as-is because the enforcement layer is underspecified and a few rules will create process theater: mandatory SKILLS additions, forced disagreement for factual meetings, and overly strict read discipline. Add fail-closed lint/lock mechanics, immutable contract amendments, operator-doc drift checks, a deadlock escalation rule, and a clearer Codex load split. With those changes, v5 is ready to become the harness layer for the deepsight redesign.
