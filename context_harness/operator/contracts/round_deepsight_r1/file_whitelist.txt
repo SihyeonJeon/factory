@@ -1,0 +1,24 @@
+# round_deepsight_r1 — writable paths (base; amendments via file_whitelist.amendment.N.txt only)
+# Authored by Claude Code Operator at stage 3 (convention_lock).
+
+# Round deliverables (the 3 analysis docs)
+docs/design-docs/deepsight_tokens.md
+docs/design-docs/deepsight_gap_analysis.md
+docs/design-docs/deepsight_slicing_manifest.md
+
+# Round governance artifacts
+context_harness/operator/contracts/round_deepsight_r1/**
+context_harness/operator/locks/round_deepsight_r1.lock
+context_harness/operator/locks/round_deepsight_r1.events.jsonl
+context_harness/operator/meetings/2026-04-22_round1_deepsight_plan.md
+context_harness/operator/meetings/2026-04-22_round1_*.md
+context_harness/operator/codex_transcripts/codex_round1_plan.log
+context_harness/operator/codex_transcripts/codex_author_contract.log
+context_harness/operator/CHANGELOG.md
+
+# Round evidence + verdict
+context_harness/reports/round_deepsight_r1/**
+
+# Live state + log
+docs/exec-plans/process-log.jsonl
+context_harness/SESSION_RESUME.md

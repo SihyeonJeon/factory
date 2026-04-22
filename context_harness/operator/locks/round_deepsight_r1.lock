@@ -1,0 +1,29 @@
+{
+  "round_id": "round_deepsight_r1",
+  "schema_version": 2,
+  "started_at": "2026-04-22T11:30:30.434240+00:00",
+  "status": "closed",
+  "operators": {
+    "claude_code": {
+      "session": "this-session",
+      "role_default": "implementer"
+    },
+    "codex": {
+      "session": "",
+      "role_default": "designer_reviewer"
+    }
+  },
+  "base_commit": "791874f719d5edb009e29a379967600ad0f2a54f",
+  "hashes": {
+    "spec.md": "sha256:f779c33e75d504cd1aead0b00583de820da5b6d9bb6ca9a6c3a234a524e35bf3",
+    "file_whitelist.txt": "sha256:12e3fb3e6d53864e313c13f014caf0cf73c508535806c76845060152c9440be5",
+    "convention_version.txt": "sha256:ae1b4b50d9629aa309bf3e2c67d756504dac5a8b943da226ed03dab1c1d4dd84",
+    "lint_config.txt": "sha256:f3d820df87654ce4d7ab2748bf0ce25ca34924e147e0f196b6cdafd496dbfd46",
+    "acceptance.md": "sha256:737d0830c40998c56c84c1ea67a1661ee179ce141c5b6112e2f90baeb945b28a",
+    "eval_protocol.md": "sha256:fd0587ec4c2e8a06ad55868fc3228e16d2e128b48b5bc7b416488abd904f07e3"
+  },
+  "amendments": [],
+  "stages_completed": [],
+  "gate_evidence_sha256": "sha256:46945f059b9aebb567a8f2ae73bff16caaf1d3b4968ca55dc9f243c35adb9d89",
+  "closed_at": "2026-04-22T12:16:01.748151+00:00"
+}

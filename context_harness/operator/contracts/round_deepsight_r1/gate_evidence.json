@@ -1,0 +1,44 @@
+{
+  "round_id": "round_deepsight_r1",
+  "notes": "Contract-only round per overall_planning meeting 20260422-round1-deepsight-plan. No Swift/project/test changes. Gate 1 uses baseline_reuse semantics per planning meeting Q5 decision (Codex R6 agreement). Gate 2 reports = the 3 analysis deliverables since this round's 'output' is analysis, not runtime artifacts. Gate 3 + 4 use contract-only semantics.",
+  "gate1": {
+    "status": "pass",
+    "command": "baseline_reuse_no_code_round",
+    "exit_code": 0,
+    "test_count": 140,
+    "log": {
+      "path": "context_harness/SESSION_RESUME.md",
+      "sha256": "sha256:343e9d13b928e67cc973e3da7327962c1f6cb91206f94d22f98fab3f0220aaf7"
+    }
+  },
+  "gate2": {
+    "status": "pass",
+    "reports": [
+      {
+        "path": "docs/design-docs/deepsight_tokens.md",
+        "sha256": "sha256:638425b8c8aa5cbcf0826fc31980b31a8b5ebc0dd9ed6c669c03c6c7c9d9a59f"
+      },
+      {
+        "path": "docs/design-docs/deepsight_gap_analysis.md",
+        "sha256": "sha256:50ec2701eb394999a4f37a72fbc9c279b5232a696f3c10d83dfa56f8c2a83712"
+      },
+      {
+        "path": "docs/design-docs/deepsight_slicing_manifest.md",
+        "sha256": "sha256:16d02f0bc4b8b58a38d6db6d03f6266dd1fe5460daf1b1f6fadfc57b55fc7b18"
+      }
+    ]
+  },
+  "gate3": {
+    "status": "pass",
+    "cross_agreement_note": "Codex verdict PASS with 3 advisories; Claude Code evidence capture factual-only. No disagreement on deliverable completeness. Advisory on UnfadingTheme discrepancy (not blocker per verdict). No 2+ evaluator overlap on any file since this was a contract round with analysis-only outputs and no code."
+  },
+  "gate4": {
+    "status": "pass",
+    "metrics_source": {
+      "path": "docs/exec-plans/process-log.jsonl",
+      "sha256": "sha256:07dab53ebe7837ca9b6e1a53c2f6677ebf1afd1ffd5048c9d4954992faf673cc"
+    },
+    "remediation_cycles": 0,
+    "blocker_recurrence": 0
+  }
+}

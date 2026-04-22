@@ -1,0 +1,1480 @@
+OpenAI Codex v0.121.0 (research preview)
+--------
+workdir: /Users/jeonsihyeon/factory
+model: gpt-5.4
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR, /Users/jeonsihyeon/.codex/memories]
+reasoning effort: none
+reasoning summaries: none
+session id: 019db43d-746e-73b3-b33c-5dda3770df91
+--------
+user
+Codex — meeting decided (context_harness/operator/meetings/2026-04-22_round1_deepsight_plan.md). Now you author 3 contract files per STAGE_CONTRACT stages 2, 4, 5. Write them to disk. Sandbox: workspace-write.
+
+Round: `round_deepsight_r1`
+Round dir: `context_harness/operator/contracts/round_deepsight_r1/`
+
+Write these 3 files directly:
+
+1. **spec.md** (stage 2 detailed_design)
+   Scope: contract-only. 3 deliverables under docs/design-docs/:
+   - deepsight_tokens.md
+   - deepsight_gap_analysis.md
+   - deepsight_slicing_manifest.md
+
+   Include: input source inventory (hashes for travel_deepsight/ files), deliverable structure, explicit non-goals (no Swift changes, no project.yml edits, no test changes).
+
+2. **eval_protocol.md** (stage 4 eval_protocol)
+   Per your R6 Q4 outline — inputs, evidence capture checklist, evidence output path (context_harness/reports/round_deepsight_r1/evidence/contract_capture.md), verdict split (Codex writes verdict at .../verdict.md). Factual-only evidence language.
+
+3. **acceptance.md** (stage 5 acceptance)
+   Success criteria:
+   - All 3 deliverable docs present with required sections
+   - No Swift/project files changed
+   - Raw deepsight inputs unchanged (hash verified)
+   - Gap analysis maps to design-revision-workflow.md Phase 1 table
+   - Slicing manifest orders per Phase 3 (token → nav if needed → screens → a11y)
+   - Evidence report produced; verdict PASS/BLOCKER/ADVISORY
+
+DO NOT:
+- Write file_whitelist.txt, convention_version.txt, or lint_config.txt (Claude Code authors stage 3)
+- Modify any existing files outside the round dir
+- Write spec.amendment.* or any amendment files (not needed this round)
+
+After writing, respond with:
+- One-line confirmation each file wrote successfully
+- Any tension you noticed while drafting (e.g., eval_protocol needs to reference a file that doesn't exist yet)
+- Whether you think all 3 files together are consistent with the decided plan
+codex
+I’ll create only the three Codex-owned contract files in the round directory. First I’m checking the round directory and hashing the deepsight source files so the spec records stable inputs.
+exec
+/bin/zsh -lc 'rg --files docs/design-docs/travel_deepsight context_harness/operator/contracts/round_deepsight_r1 2>/dev/null | sort' in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+docs/design-docs/travel_deepsight/Unfading Prototype.html
+docs/design-docs/travel_deepsight/check.png
+docs/design-docs/travel_deepsight/debug.png
+
+exec
+/bin/zsh -lc 'ls -la context_harness/operator/contracts/round_deepsight_r1' in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+total 0
+drwxr-xr-x@ 2 jeonsihyeon  staff  64 Apr 22 20:23 .
+drwxr-xr-x@ 3 jeonsihyeon  staff  96 Apr 22 20:23 ..
+
+exec
+/bin/zsh -lc 'find docs/design-docs/travel_deepsight -type f -maxdepth 1 -print0 | sort -z | xargs -0 shasum -a 256' in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+df8fe6badd57d17805a36385c1d9f62efd4d964efca3aa7bdc8d9c2189cb471e  docs/design-docs/travel_deepsight/Unfading Prototype.html
+cb14f4bb14080f84d8c1b8ef4cce095505f778548ab998a6514038da7242e614  docs/design-docs/travel_deepsight/check.png
+0bfe72e4668458114180ea91d60ae019c99e46994ea7326ba7ae33c855947d92  docs/design-docs/travel_deepsight/debug.png
+
+codex
+The round directory is empty and the three deepsight source files hash cleanly. I’m adding `spec.md`, `eval_protocol.md`, and `acceptance.md` only, with no whitelist/convention/lint files and no amendments.
+apply patch
+patch: completed
+/Users/jeonsihyeon/factory/context_harness/operator/contracts/round_deepsight_r1/acceptance.md
+/Users/jeonsihyeon/factory/context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md
+/Users/jeonsihyeon/factory/context_harness/operator/contracts/round_deepsight_r1/spec.md
+diff --git a/context_harness/operator/contracts/round_deepsight_r1/acceptance.md b/context_harness/operator/contracts/round_deepsight_r1/acceptance.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..8be566cc2a65720914b775a504b66655d2b47298
+--- /dev/null
++++ b/context_harness/operator/contracts/round_deepsight_r1/acceptance.md
+@@ -0,0 +1,86 @@
++# round_deepsight_r1 Acceptance Criteria
++
++## Required Deliverables
++
++The round is ready for evaluation only when all three deliverable documents exist:
++
++- `docs/design-docs/deepsight_tokens.md`
++- `docs/design-docs/deepsight_gap_analysis.md`
++- `docs/design-docs/deepsight_slicing_manifest.md`
++
++## Document Criteria
++
++### Tokens
++
++`deepsight_tokens.md` must include:
++
++- Source inventory with hashes
++- Color token extraction or explicit unknowns
++- Typography token extraction or explicit unknowns
++- Spacing and radius observations or explicit unknowns
++- Component token observations or explicit unknowns
++- Open questions
++
++### Gap Analysis
++
++`deepsight_gap_analysis.md` must map to `docs/design-docs/design-revision-workflow.md` Phase 1 and include:
++
++- Screen inventory
++- Navigation
++- Component tokens
++- Interaction
++- Copy
++- Accessibility
++- Impacted contracts
++- Open questions
++
++### Slicing Manifest
++
++`deepsight_slicing_manifest.md` must order future implementation work according to Phase 3:
++
++1. Token and theme contract work
++2. Navigation work, if needed
++3. Screen clusters, with each implementation round limited to 1-2 screens where practical
++4. Accessibility and HIG sweep
++
++## Change Constraints
++
++The round must not change:
++
++- Swift files under `workspace/ios/`
++- `workspace/ios/project.yml`
++- `Package.swift`
++- Test files or test configuration
++- Raw input files under `docs/design-docs/travel_deepsight/`
++
++## Raw Input Integrity
++
++The SHA-256 hashes of the raw Deepsight inputs must match the source inventory in `spec.md`:
++
++- `docs/design-docs/travel_deepsight/Unfading Prototype.html`
++- `docs/design-docs/travel_deepsight/check.png`
++- `docs/design-docs/travel_deepsight/debug.png`
++
++Any raw input hash mismatch is a round blocker.
++
++## Evidence And Verdict
++
++Required evaluation artifacts:
++
++- Evidence report: `context_harness/reports/round_deepsight_r1/evidence/contract_capture.md`
++- Verdict report: `context_harness/reports/round_deepsight_r1/verdict.md`
++
++The evidence report must follow `eval_protocol.md` and remain factual-only. The verdict report must classify findings as `PASS`, `BLOCKER`, or `ADVISORY` with citations to evidence.
++
++## Close Criteria
++
++The round may close when:
++
++- All required deliverables exist
++- Required sections are present
++- No forbidden files changed
++- Raw input hashes match
++- Evidence report exists
++- Verdict report exists
++- Gate evidence for Gates 1-4 is recorded according to the active checker schema
++- Gate 5 process-integrity checks pass
+diff --git a/context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md b/context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..a97884fac49ad3cd347d0f1e71b76d0ae752c957
+--- /dev/null
++++ b/context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md
+@@ -0,0 +1,80 @@
++# round_deepsight_r1 Evaluation Protocol
++
++## Purpose
++
++This protocol evaluates a contract-only design analysis round. It verifies that the round produced reliable planning artifacts from the Deepsight input without changing product code.
++
++Evidence capture is factual only. The capture report must not use verdict language such as `PASS`, `BLOCKER`, `ADVISORY`, `acceptable`, or `regression`.
++
++## Inputs
++
++Read-only source inputs:
++
++- `docs/design-docs/travel_deepsight/Unfading Prototype.html`
++- `docs/design-docs/travel_deepsight/check.png`
++- `docs/design-docs/travel_deepsight/debug.png`
++
++Reference documents:
++
++- `docs/design-docs/design-revision-workflow.md`
++- `context_harness/prd/ui_ux_screen_contract.md`
++- `docs/design-docs/ios-architecture.md`
++- `docs/references/coding-conventions.md`
++
++Round deliverables:
++
++- `docs/design-docs/deepsight_tokens.md`
++- `docs/design-docs/deepsight_gap_analysis.md`
++- `docs/design-docs/deepsight_slicing_manifest.md`
++
++## Evidence Capture Checklist
++
++Claude Code captures factual evidence and writes it to:
++
++`context_harness/reports/round_deepsight_r1/evidence/contract_capture.md`
++
++The evidence report must include:
++
++- Source input file paths and SHA-256 hashes
++- Deliverable file paths and SHA-256 hashes
++- Confirmation that raw Deepsight inputs were not modified
++- Confirmation that no Swift files changed
++- Confirmation that `workspace/ios/project.yml`, `Package.swift`, and test files were not changed
++- Section inventory for each deliverable
++- Whether `deepsight_tokens.md` includes color, typography, spacing/radius, component token, and open-question sections
++- Whether `deepsight_gap_analysis.md` follows the Phase 1 categories from `design-revision-workflow.md`
++- Whether `deepsight_slicing_manifest.md` follows Phase 3 ordering: tokens, navigation if needed, screen clusters, accessibility/HIG sweep
++- Any missing source information that prevented deterministic extraction
++
++## Evidence Language Rules
++
++Permitted evidence wording:
++
++- "`<file>` exists"
++- "`<file>` has SHA-256 `<hash>`"
++- "`<section>` is present"
++- "`<section>` is absent"
++- "`git diff --name-only` shows `<path>`"
++- "Source file hash before and after capture is unchanged"
++
++Forbidden evidence wording:
++
++- `PASS`
++- `BLOCKER`
++- `ADVISORY`
++- `acceptable`
++- `regression`
++- "good enough"
++- any final interpretation of whether the round succeeded
++
++## Verdict Split
++
++Codex writes the interpretation and verdict separately at:
++
++`context_harness/reports/round_deepsight_r1/verdict.md`
++
++The verdict may use `PASS`, `BLOCKER`, and `ADVISORY`, but every finding must cite evidence from `contract_capture.md` or a hashed deliverable file.
++
++## Insufficient Evidence
++
++If the evidence capture cannot verify a required item, the capture report records the missing fact and the file or command that failed to provide it. Codex decides whether the missing evidence is a blocker in the verdict.
+diff --git a/context_harness/operator/contracts/round_deepsight_r1/spec.md b/context_harness/operator/contracts/round_deepsight_r1/spec.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..9cc7ba3b237852fd1c04c0ac226236af66f68ea0
+--- /dev/null
++++ b/context_harness/operator/contracts/round_deepsight_r1/spec.md
+@@ -0,0 +1,88 @@
++# round_deepsight_r1 Specification
++
++## Scope
++
++This is a contract-only design analysis round for the Deepsight travel redesign input.
++
++The round produces three planning artifacts under `docs/design-docs/`:
++
++- `docs/design-docs/deepsight_tokens.md`
++- `docs/design-docs/deepsight_gap_analysis.md`
++- `docs/design-docs/deepsight_slicing_manifest.md`
++
++These artifacts become the input contract for later implementation rounds. This round does not implement UI changes.
++
++## Input Source Inventory
++
++Raw Deepsight inputs are read-only for this round.
++
++| Source | SHA-256 |
++|---|---|
++| `docs/design-docs/travel_deepsight/Unfading Prototype.html` | `sha256:df8fe6badd57d17805a36385c1d9f62efd4d964efca3aa7bdc8d9c2189cb471e` |
++| `docs/design-docs/travel_deepsight/check.png` | `sha256:cb14f4bb14080f84d8c1b8ef4cce095505f778548ab998a6514038da7242e614` |
++| `docs/design-docs/travel_deepsight/debug.png` | `sha256:0bfe72e4668458114180ea91d60ae019c99e46994ea7326ba7ae33c855947d92` |
++
++## Deliverable Structure
++
++### `deepsight_tokens.md`
++
++Required sections:
++
++- `## Source Inventory` - source files and hashes used for extraction
++- `## Color Tokens` - discovered colors, semantic role candidates, and mapping notes
++- `## Typography Tokens` - font sizes, weights, line-height notes, and semantic role candidates
++- `## Spacing And Radius` - spacing scale, corner radii, and layout rhythm observations
++- `## Component Tokens` - repeated visual components, controls, cards, bars, or navigation elements
++- `## Open Questions` - token values that cannot be determined from the available inputs
++
++### `deepsight_gap_analysis.md`
++
++Required sections aligned to `docs/design-docs/design-revision-workflow.md` Phase 1:
++
++- `## Source Inventory`
++- `## Screen Inventory`
++- `## Navigation`
++- `## Component Tokens`
++- `## Interaction`
++- `## Copy`
++- `## Accessibility`
++- `## Impacted Contracts`
++- `## Open Questions`
++
++The gap analysis must compare current Unfading contracts/code expectations against the Deepsight input where enough information exists. Unknowns should be explicit, not guessed.
++
++### `deepsight_slicing_manifest.md`
++
++Required sections:
++
++- `## Source Inventory`
++- `## Slicing Principles`
++- `## Proposed Sequence`
++- `## Sprint Slices`
++- `## Dependencies`
++- `## Non-Goals`
++- `## Open Questions`
++
++The proposed sequence must follow the design revision workflow Phase 3 order:
++
++1. Token extraction and theme contract updates
++2. Navigation changes, if needed
++3. Screen clusters, limited to 1-2 screens per implementation round
++4. Accessibility and HIG sweep
++
++## Non-Goals
++
++This round must not:
++
++- Modify Swift source files under `workspace/ios/`
++- Modify `workspace/ios/project.yml`
++- Modify `Package.swift`
++- Modify test files or test configuration
++- Modify raw Deepsight input files under `docs/design-docs/travel_deepsight/`
++- Create implementation sprint code
++- Create `spec.amendment.*` or any amendment file
++- Decide final product approval for the redesign
++
++## Expected Follow-Up
++
++Later rounds may use these artifacts to create product contract updates, implementation briefs, Swift changes, runtime evidence, and visual evaluation. Those later rounds require their own contracts and locks.
+
+diff --git a/context_harness/operator/contracts/round_deepsight_r1/acceptance.md b/context_harness/operator/contracts/round_deepsight_r1/acceptance.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..8be566cc2a65720914b775a504b66655d2b47298
+--- /dev/null
++++ b/context_harness/operator/contracts/round_deepsight_r1/acceptance.md
+@@ -0,0 +1,86 @@
++# round_deepsight_r1 Acceptance Criteria
++
++## Required Deliverables
++
++The round is ready for evaluation only when all three deliverable documents exist:
++
++- `docs/design-docs/deepsight_tokens.md`
++- `docs/design-docs/deepsight_gap_analysis.md`
++- `docs/design-docs/deepsight_slicing_manifest.md`
++
++## Document Criteria
++
++### Tokens
++
++`deepsight_tokens.md` must include:
++
++- Source inventory with hashes
++- Color token extraction or explicit unknowns
++- Typography token extraction or explicit unknowns
++- Spacing and radius observations or explicit unknowns
++- Component token observations or explicit unknowns
++- Open questions
++
++### Gap Analysis
++
++`deepsight_gap_analysis.md` must map to `docs/design-docs/design-revision-workflow.md` Phase 1 and include:
++
++- Screen inventory
++- Navigation
++- Component tokens
++- Interaction
++- Copy
++- Accessibility
++- Impacted contracts
++- Open questions
++
++### Slicing Manifest
++
++`deepsight_slicing_manifest.md` must order future implementation work according to Phase 3:
++
++1. Token and theme contract work
++2. Navigation work, if needed
++3. Screen clusters, with each implementation round limited to 1-2 screens where practical
++4. Accessibility and HIG sweep
++
++## Change Constraints
++
++The round must not change:
++
++- Swift files under `workspace/ios/`
++- `workspace/ios/project.yml`
++- `Package.swift`
++- Test files or test configuration
++- Raw input files under `docs/design-docs/travel_deepsight/`
++
++## Raw Input Integrity
++
++The SHA-256 hashes of the raw Deepsight inputs must match the source inventory in `spec.md`:
++
++- `docs/design-docs/travel_deepsight/Unfading Prototype.html`
++- `docs/design-docs/travel_deepsight/check.png`
++- `docs/design-docs/travel_deepsight/debug.png`
++
++Any raw input hash mismatch is a round blocker.
++
++## Evidence And Verdict
++
++Required evaluation artifacts:
++
++- Evidence report: `context_harness/reports/round_deepsight_r1/evidence/contract_capture.md`
++- Verdict report: `context_harness/reports/round_deepsight_r1/verdict.md`
++
++The evidence report must follow `eval_protocol.md` and remain factual-only. The verdict report must classify findings as `PASS`, `BLOCKER`, or `ADVISORY` with citations to evidence.
++
++## Close Criteria
++
++The round may close when:
++
++- All required deliverables exist
++- Required sections are present
++- No forbidden files changed
++- Raw input hashes match
++- Evidence report exists
++- Verdict report exists
++- Gate evidence for Gates 1-4 is recorded according to the active checker schema
++- Gate 5 process-integrity checks pass
+diff --git a/context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md b/context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..a97884fac49ad3cd347d0f1e71b76d0ae752c957
+--- /dev/null
++++ b/context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md
+@@ -0,0 +1,80 @@
++# round_deepsight_r1 Evaluation Protocol
++
++## Purpose
++
++This protocol evaluates a contract-only design analysis round. It verifies that the round produced reliable planning artifacts from the Deepsight input without changing product code.
++
++Evidence capture is factual only. The capture report must not use verdict language such as `PASS`, `BLOCKER`, `ADVISORY`, `acceptable`, or `regression`.
++
++## Inputs
++
++Read-only source inputs:
++
++- `docs/design-docs/travel_deepsight/Unfading Prototype.html`
++- `docs/design-docs/travel_deepsight/check.png`
++- `docs/design-docs/travel_deepsight/debug.png`
++
++Reference documents:
++
++- `docs/design-docs/design-revision-workflow.md`
++- `context_harness/prd/ui_ux_screen_contract.md`
++- `docs/design-docs/ios-architecture.md`
++- `docs/references/coding-conventions.md`
++
++Round deliverables:
++
++- `docs/design-docs/deepsight_tokens.md`
++- `docs/design-docs/deepsight_gap_analysis.md`
++- `docs/design-docs/deepsight_slicing_manifest.md`
++
++## Evidence Capture Checklist
++
++Claude Code captures factual evidence and writes it to:
++
++`context_harness/reports/round_deepsight_r1/evidence/contract_capture.md`
++
++The evidence report must include:
++
++- Source input file paths and SHA-256 hashes
++- Deliverable file paths and SHA-256 hashes
++- Confirmation that raw Deepsight inputs were not modified
++- Confirmation that no Swift files changed
++- Confirmation that `workspace/ios/project.yml`, `Package.swift`, and test files were not changed
++- Section inventory for each deliverable
++- Whether `deepsight_tokens.md` includes color, typography, spacing/radius, component token, and open-question sections
++- Whether `deepsight_gap_analysis.md` follows the Phase 1 categories from `design-revision-workflow.md`
++- Whether `deepsight_slicing_manifest.md` follows Phase 3 ordering: tokens, navigation if needed, screen clusters, accessibility/HIG sweep
++- Any missing source information that prevented deterministic extraction
++
++## Evidence Language Rules
++
++Permitted evidence wording:
++
++- "`<file>` exists"
++- "`<file>` has SHA-256 `<hash>`"
++- "`<section>` is present"
++- "`<section>` is absent"
++- "`git diff --name-only` shows `<path>`"
++- "Source file hash before and after capture is unchanged"
++
++Forbidden evidence wording:
++
++- `PASS`
++- `BLOCKER`
++- `ADVISORY`
++- `acceptable`
++- `regression`
++- "good enough"
++- any final interpretation of whether the round succeeded
++
++## Verdict Split
++
++Codex writes the interpretation and verdict separately at:
++
++`context_harness/reports/round_deepsight_r1/verdict.md`
++
++The verdict may use `PASS`, `BLOCKER`, and `ADVISORY`, but every finding must cite evidence from `contract_capture.md` or a hashed deliverable file.
++
++## Insufficient Evidence
++
++If the evidence capture cannot verify a required item, the capture report records the missing fact and the file or command that failed to provide it. Codex decides whether the missing evidence is a blocker in the verdict.
+diff --git a/context_harness/operator/contracts/round_deepsight_r1/spec.md b/context_harness/operator/contracts/round_deepsight_r1/spec.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..9cc7ba3b237852fd1c04c0ac226236af66f68ea0
+--- /dev/null
++++ b/context_harness/operator/contracts/round_deepsight_r1/spec.md
+@@ -0,0 +1,88 @@
++# round_deepsight_r1 Specification
++
++## Scope
++
++This is a contract-only design analysis round for the Deepsight travel redesign input.
++
++The round produces three planning artifacts under `docs/design-docs/`:
++
++- `docs/design-docs/deepsight_tokens.md`
++- `docs/design-docs/deepsight_gap_analysis.md`
++- `docs/design-docs/deepsight_slicing_manifest.md`
++
++These artifacts become the input contract for later implementation rounds. This round does not implement UI changes.
++
++## Input Source Inventory
++
++Raw Deepsight inputs are read-only for this round.
++
++| Source | SHA-256 |
++|---|---|
++| `docs/design-docs/travel_deepsight/Unfading Prototype.html` | `sha256:df8fe6badd57d17805a36385c1d9f62efd4d964efca3aa7bdc8d9c2189cb471e` |
++| `docs/design-docs/travel_deepsight/check.png` | `sha256:cb14f4bb14080f84d8c1b8ef4cce095505f778548ab998a6514038da7242e614` |
++| `docs/design-docs/travel_deepsight/debug.png` | `sha256:0bfe72e4668458114180ea91d60ae019c99e46994ea7326ba7ae33c855947d92` |
++
++## Deliverable Structure
++
++### `deepsight_tokens.md`
++
++Required sections:
++
++- `## Source Inventory` - source files and hashes used for extraction
++- `## Color Tokens` - discovered colors, semantic role candidates, and mapping notes
++- `## Typography Tokens` - font sizes, weights, line-height notes, and semantic role candidates
++- `## Spacing And Radius` - spacing scale, corner radii, and layout rhythm observations
++- `## Component Tokens` - repeated visual components, controls, cards, bars, or navigation elements
++- `## Open Questions` - token values that cannot be determined from the available inputs
++
++### `deepsight_gap_analysis.md`
++
++Required sections aligned to `docs/design-docs/design-revision-workflow.md` Phase 1:
++
++- `## Source Inventory`
++- `## Screen Inventory`
++- `## Navigation`
++- `## Component Tokens`
++- `## Interaction`
++- `## Copy`
++- `## Accessibility`
++- `## Impacted Contracts`
++- `## Open Questions`
++
++The gap analysis must compare current Unfading contracts/code expectations against the Deepsight input where enough information exists. Unknowns should be explicit, not guessed.
++
++### `deepsight_slicing_manifest.md`
++
++Required sections:
++
++- `## Source Inventory`
++- `## Slicing Principles`
++- `## Proposed Sequence`
++- `## Sprint Slices`
++- `## Dependencies`
++- `## Non-Goals`
++- `## Open Questions`
++
++The proposed sequence must follow the design revision workflow Phase 3 order:
++
++1. Token extraction and theme contract updates
++2. Navigation changes, if needed
++3. Screen clusters, limited to 1-2 screens per implementation round
++4. Accessibility and HIG sweep
++
++## Non-Goals
++
++This round must not:
++
++- Modify Swift source files under `workspace/ios/`
++- Modify `workspace/ios/project.yml`
++- Modify `Package.swift`
++- Modify test files or test configuration
++- Modify raw Deepsight input files under `docs/design-docs/travel_deepsight/`
++- Create implementation sprint code
++- Create `spec.amendment.*` or any amendment file
++- Decide final product approval for the redesign
++
++## Expected Follow-Up
++
++Later rounds may use these artifacts to create product contract updates, implementation briefs, Swift changes, runtime evidence, and visual evaluation. Those later rounds require their own contracts and locks.
+
+exec
+/bin/zsh -lc 'wc -l context_harness/operator/contracts/round_deepsight_r1/spec.md context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md context_harness/operator/contracts/round_deepsight_r1/acceptance.md' in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+      88 context_harness/operator/contracts/round_deepsight_r1/spec.md
+      80 context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md
+      86 context_harness/operator/contracts/round_deepsight_r1/acceptance.md
+     254 total
+
+exec
+/bin/zsh -lc 'git diff -- context_harness/operator/contracts/round_deepsight_r1/spec.md context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md context_harness/operator/contracts/round_deepsight_r1/acceptance.md' in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+diff --git a/context_harness/operator/contracts/round_deepsight_r1/acceptance.md b/context_harness/operator/contracts/round_deepsight_r1/acceptance.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..8be566cc2a65720914b775a504b66655d2b47298
+--- /dev/null
++++ b/context_harness/operator/contracts/round_deepsight_r1/acceptance.md
+@@ -0,0 +1,86 @@
++# round_deepsight_r1 Acceptance Criteria
++
++## Required Deliverables
++
++The round is ready for evaluation only when all three deliverable documents exist:
++
++- `docs/design-docs/deepsight_tokens.md`
++- `docs/design-docs/deepsight_gap_analysis.md`
++- `docs/design-docs/deepsight_slicing_manifest.md`
++
++## Document Criteria
++
++### Tokens
++
++`deepsight_tokens.md` must include:
++
++- Source inventory with hashes
++- Color token extraction or explicit unknowns
++- Typography token extraction or explicit unknowns
++- Spacing and radius observations or explicit unknowns
++- Component token observations or explicit unknowns
++- Open questions
++
++### Gap Analysis
++
++`deepsight_gap_analysis.md` must map to `docs/design-docs/design-revision-workflow.md` Phase 1 and include:
++
++- Screen inventory
++- Navigation
++- Component tokens
++- Interaction
++- Copy
++- Accessibility
++- Impacted contracts
++- Open questions
++
++### Slicing Manifest
++
++`deepsight_slicing_manifest.md` must order future implementation work according to Phase 3:
++
++1. Token and theme contract work
++2. Navigation work, if needed
++3. Screen clusters, with each implementation round limited to 1-2 screens where practical
++4. Accessibility and HIG sweep
++
++## Change Constraints
++
++The round must not change:
++
++- Swift files under `workspace/ios/`
++- `workspace/ios/project.yml`
++- `Package.swift`
++- Test files or test configuration
++- Raw input files under `docs/design-docs/travel_deepsight/`
++
++## Raw Input Integrity
++
++The SHA-256 hashes of the raw Deepsight inputs must match the source inventory in `spec.md`:
++
++- `docs/design-docs/travel_deepsight/Unfading Prototype.html`
++- `docs/design-docs/travel_deepsight/check.png`
++- `docs/design-docs/travel_deepsight/debug.png`
++
++Any raw input hash mismatch is a round blocker.
++
++## Evidence And Verdict
++
++Required evaluation artifacts:
++
++- Evidence report: `context_harness/reports/round_deepsight_r1/evidence/contract_capture.md`
++- Verdict report: `context_harness/reports/round_deepsight_r1/verdict.md`
++
++The evidence report must follow `eval_protocol.md` and remain factual-only. The verdict report must classify findings as `PASS`, `BLOCKER`, or `ADVISORY` with citations to evidence.
++
++## Close Criteria
++
++The round may close when:
++
++- All required deliverables exist
++- Required sections are present
++- No forbidden files changed
++- Raw input hashes match
++- Evidence report exists
++- Verdict report exists
++- Gate evidence for Gates 1-4 is recorded according to the active checker schema
++- Gate 5 process-integrity checks pass
+diff --git a/context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md b/context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..a97884fac49ad3cd347d0f1e71b76d0ae752c957
+--- /dev/null
++++ b/context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md
+@@ -0,0 +1,80 @@
++# round_deepsight_r1 Evaluation Protocol
++
++## Purpose
++
++This protocol evaluates a contract-only design analysis round. It verifies that the round produced reliable planning artifacts from the Deepsight input without changing product code.
++
++Evidence capture is factual only. The capture report must not use verdict language such as `PASS`, `BLOCKER`, `ADVISORY`, `acceptable`, or `regression`.
++
++## Inputs
++
++Read-only source inputs:
++
++- `docs/design-docs/travel_deepsight/Unfading Prototype.html`
++- `docs/design-docs/travel_deepsight/check.png`
++- `docs/design-docs/travel_deepsight/debug.png`
++
++Reference documents:
++
++- `docs/design-docs/design-revision-workflow.md`
++- `context_harness/prd/ui_ux_screen_contract.md`
++- `docs/design-docs/ios-architecture.md`
++- `docs/references/coding-conventions.md`
++
++Round deliverables:
++
++- `docs/design-docs/deepsight_tokens.md`
++- `docs/design-docs/deepsight_gap_analysis.md`
++- `docs/design-docs/deepsight_slicing_manifest.md`
++
++## Evidence Capture Checklist
++
++Claude Code captures factual evidence and writes it to:
++
++`context_harness/reports/round_deepsight_r1/evidence/contract_capture.md`
++
++The evidence report must include:
++
++- Source input file paths and SHA-256 hashes
++- Deliverable file paths and SHA-256 hashes
++- Confirmation that raw Deepsight inputs were not modified
++- Confirmation that no Swift files changed
++- Confirmation that `workspace/ios/project.yml`, `Package.swift`, and test files were not changed
++- Section inventory for each deliverable
++- Whether `deepsight_tokens.md` includes color, typography, spacing/radius, component token, and open-question sections
++- Whether `deepsight_gap_analysis.md` follows the Phase 1 categories from `design-revision-workflow.md`
++- Whether `deepsight_slicing_manifest.md` follows Phase 3 ordering: tokens, navigation if needed, screen clusters, accessibility/HIG sweep
++- Any missing source information that prevented deterministic extraction
++
++## Evidence Language Rules
++
++Permitted evidence wording:
++
++- "`<file>` exists"
++- "`<file>` has SHA-256 `<hash>`"
++- "`<section>` is present"
++- "`<section>` is absent"
++- "`git diff --name-only` shows `<path>`"
++- "Source file hash before and after capture is unchanged"
++
++Forbidden evidence wording:
++
++- `PASS`
++- `BLOCKER`
++- `ADVISORY`
++- `acceptable`
++- `regression`
++- "good enough"
++- any final interpretation of whether the round succeeded
++
++## Verdict Split
++
++Codex writes the interpretation and verdict separately at:
++
++`context_harness/reports/round_deepsight_r1/verdict.md`
++
++The verdict may use `PASS`, `BLOCKER`, and `ADVISORY`, but every finding must cite evidence from `contract_capture.md` or a hashed deliverable file.
++
++## Insufficient Evidence
++
++If the evidence capture cannot verify a required item, the capture report records the missing fact and the file or command that failed to provide it. Codex decides whether the missing evidence is a blocker in the verdict.
+diff --git a/context_harness/operator/contracts/round_deepsight_r1/spec.md b/context_harness/operator/contracts/round_deepsight_r1/spec.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..9cc7ba3b237852fd1c04c0ac226236af66f68ea0
+--- /dev/null
++++ b/context_harness/operator/contracts/round_deepsight_r1/spec.md
+@@ -0,0 +1,88 @@
++# round_deepsight_r1 Specification
++
++## Scope
++
++This is a contract-only design analysis round for the Deepsight travel redesign input.
++
++The round produces three planning artifacts under `docs/design-docs/`:
++
++- `docs/design-docs/deepsight_tokens.md`
++- `docs/design-docs/deepsight_gap_analysis.md`
++- `docs/design-docs/deepsight_slicing_manifest.md`
++
++These artifacts become the input contract for later implementation rounds. This round does not implement UI changes.
++
++## Input Source Inventory
++
++Raw Deepsight inputs are read-only for this round.
++
++| Source | SHA-256 |
++|---|---|
++| `docs/design-docs/travel_deepsight/Unfading Prototype.html` | `sha256:df8fe6badd57d17805a36385c1d9f62efd4d964efca3aa7bdc8d9c2189cb471e` |
++| `docs/design-docs/travel_deepsight/check.png` | `sha256:cb14f4bb14080f84d8c1b8ef4cce095505f778548ab998a6514038da7242e614` |
++| `docs/design-docs/travel_deepsight/debug.png` | `sha256:0bfe72e4668458114180ea91d60ae019c99e46994ea7326ba7ae33c855947d92` |
++
++## Deliverable Structure
++
++### `deepsight_tokens.md`
++
++Required sections:
++
++- `## Source Inventory` - source files and hashes used for extraction
++- `## Color Tokens` - discovered colors, semantic role candidates, and mapping notes
++- `## Typography Tokens` - font sizes, weights, line-height notes, and semantic role candidates
++- `## Spacing And Radius` - spacing scale, corner radii, and layout rhythm observations
++- `## Component Tokens` - repeated visual components, controls, cards, bars, or navigation elements
++- `## Open Questions` - token values that cannot be determined from the available inputs
++
++### `deepsight_gap_analysis.md`
++
++Required sections aligned to `docs/design-docs/design-revision-workflow.md` Phase 1:
++
++- `## Source Inventory`
++- `## Screen Inventory`
++- `## Navigation`
++- `## Component Tokens`
++- `## Interaction`
++- `## Copy`
++- `## Accessibility`
++- `## Impacted Contracts`
++- `## Open Questions`
++
++The gap analysis must compare current Unfading contracts/code expectations against the Deepsight input where enough information exists. Unknowns should be explicit, not guessed.
++
++### `deepsight_slicing_manifest.md`
++
++Required sections:
++
++- `## Source Inventory`
++- `## Slicing Principles`
++- `## Proposed Sequence`
++- `## Sprint Slices`
++- `## Dependencies`
++- `## Non-Goals`
++- `## Open Questions`
++
++The proposed sequence must follow the design revision workflow Phase 3 order:
++
++1. Token extraction and theme contract updates
++2. Navigation changes, if needed
++3. Screen clusters, limited to 1-2 screens per implementation round
++4. Accessibility and HIG sweep
++
++## Non-Goals
++
++This round must not:
++
++- Modify Swift source files under `workspace/ios/`
++- Modify `workspace/ios/project.yml`
++- Modify `Package.swift`
++- Modify test files or test configuration
++- Modify raw Deepsight input files under `docs/design-docs/travel_deepsight/`
++- Create implementation sprint code
++- Create `spec.amendment.*` or any amendment file
++- Decide final product approval for the redesign
++
++## Expected Follow-Up
++
++Later rounds may use these artifacts to create product contract updates, implementation briefs, Swift changes, runtime evidence, and visual evaluation. Those later rounds require their own contracts and locks.
+
+exec
+/bin/zsh -lc 'git status --short context_harness/operator/contracts/round_deepsight_r1' in /Users/jeonsihyeon/factory
+ succeeded in 0ms:
+?? context_harness/operator/contracts/round_deepsight_r1/
+
+diff --git a/context_harness/operator/contracts/round_deepsight_r1/acceptance.md b/context_harness/operator/contracts/round_deepsight_r1/acceptance.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..8be566cc2a65720914b775a504b66655d2b47298
+--- /dev/null
++++ b/context_harness/operator/contracts/round_deepsight_r1/acceptance.md
+@@ -0,0 +1,86 @@
++# round_deepsight_r1 Acceptance Criteria
++
++## Required Deliverables
++
++The round is ready for evaluation only when all three deliverable documents exist:
++
++- `docs/design-docs/deepsight_tokens.md`
++- `docs/design-docs/deepsight_gap_analysis.md`
++- `docs/design-docs/deepsight_slicing_manifest.md`
++
++## Document Criteria
++
++### Tokens
++
++`deepsight_tokens.md` must include:
++
++- Source inventory with hashes
++- Color token extraction or explicit unknowns
++- Typography token extraction or explicit unknowns
++- Spacing and radius observations or explicit unknowns
++- Component token observations or explicit unknowns
++- Open questions
++
++### Gap Analysis
++
++`deepsight_gap_analysis.md` must map to `docs/design-docs/design-revision-workflow.md` Phase 1 and include:
++
++- Screen inventory
++- Navigation
++- Component tokens
++- Interaction
++- Copy
++- Accessibility
++- Impacted contracts
++- Open questions
++
++### Slicing Manifest
++
++`deepsight_slicing_manifest.md` must order future implementation work according to Phase 3:
++
++1. Token and theme contract work
++2. Navigation work, if needed
++3. Screen clusters, with each implementation round limited to 1-2 screens where practical
++4. Accessibility and HIG sweep
++
++## Change Constraints
++
++The round must not change:
++
++- Swift files under `workspace/ios/`
++- `workspace/ios/project.yml`
++- `Package.swift`
++- Test files or test configuration
++- Raw input files under `docs/design-docs/travel_deepsight/`
++
++## Raw Input Integrity
++
++The SHA-256 hashes of the raw Deepsight inputs must match the source inventory in `spec.md`:
++
++- `docs/design-docs/travel_deepsight/Unfading Prototype.html`
++- `docs/design-docs/travel_deepsight/check.png`
++- `docs/design-docs/travel_deepsight/debug.png`
++
++Any raw input hash mismatch is a round blocker.
++
++## Evidence And Verdict
++
++Required evaluation artifacts:
++
++- Evidence report: `context_harness/reports/round_deepsight_r1/evidence/contract_capture.md`
++- Verdict report: `context_harness/reports/round_deepsight_r1/verdict.md`
++
++The evidence report must follow `eval_protocol.md` and remain factual-only. The verdict report must classify findings as `PASS`, `BLOCKER`, or `ADVISORY` with citations to evidence.
++
++## Close Criteria
++
++The round may close when:
++
++- All required deliverables exist
++- Required sections are present
++- No forbidden files changed
++- Raw input hashes match
++- Evidence report exists
++- Verdict report exists
++- Gate evidence for Gates 1-4 is recorded according to the active checker schema
++- Gate 5 process-integrity checks pass
+diff --git a/context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md b/context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..a97884fac49ad3cd347d0f1e71b76d0ae752c957
+--- /dev/null
++++ b/context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md
+@@ -0,0 +1,80 @@
++# round_deepsight_r1 Evaluation Protocol
++
++## Purpose
++
++This protocol evaluates a contract-only design analysis round. It verifies that the round produced reliable planning artifacts from the Deepsight input without changing product code.
++
++Evidence capture is factual only. The capture report must not use verdict language such as `PASS`, `BLOCKER`, `ADVISORY`, `acceptable`, or `regression`.
++
++## Inputs
++
++Read-only source inputs:
++
++- `docs/design-docs/travel_deepsight/Unfading Prototype.html`
++- `docs/design-docs/travel_deepsight/check.png`
++- `docs/design-docs/travel_deepsight/debug.png`
++
++Reference documents:
++
++- `docs/design-docs/design-revision-workflow.md`
++- `context_harness/prd/ui_ux_screen_contract.md`
++- `docs/design-docs/ios-architecture.md`
++- `docs/references/coding-conventions.md`
++
++Round deliverables:
++
++- `docs/design-docs/deepsight_tokens.md`
++- `docs/design-docs/deepsight_gap_analysis.md`
++- `docs/design-docs/deepsight_slicing_manifest.md`
++
++## Evidence Capture Checklist
++
++Claude Code captures factual evidence and writes it to:
++
++`context_harness/reports/round_deepsight_r1/evidence/contract_capture.md`
++
++The evidence report must include:
++
++- Source input file paths and SHA-256 hashes
++- Deliverable file paths and SHA-256 hashes
++- Confirmation that raw Deepsight inputs were not modified
++- Confirmation that no Swift files changed
++- Confirmation that `workspace/ios/project.yml`, `Package.swift`, and test files were not changed
++- Section inventory for each deliverable
++- Whether `deepsight_tokens.md` includes color, typography, spacing/radius, component token, and open-question sections
++- Whether `deepsight_gap_analysis.md` follows the Phase 1 categories from `design-revision-workflow.md`
++- Whether `deepsight_slicing_manifest.md` follows Phase 3 ordering: tokens, navigation if needed, screen clusters, accessibility/HIG sweep
++- Any missing source information that prevented deterministic extraction
++
++## Evidence Language Rules
++
++Permitted evidence wording:
++
++- "`<file>` exists"
++- "`<file>` has SHA-256 `<hash>`"
++- "`<section>` is present"
++- "`<section>` is absent"
++- "`git diff --name-only` shows `<path>`"
++- "Source file hash before and after capture is unchanged"
++
++Forbidden evidence wording:
++
++- `PASS`
++- `BLOCKER`
++- `ADVISORY`
++- `acceptable`
++- `regression`
++- "good enough"
++- any final interpretation of whether the round succeeded
++
++## Verdict Split
++
++Codex writes the interpretation and verdict separately at:
++
++`context_harness/reports/round_deepsight_r1/verdict.md`
++
++The verdict may use `PASS`, `BLOCKER`, and `ADVISORY`, but every finding must cite evidence from `contract_capture.md` or a hashed deliverable file.
++
++## Insufficient Evidence
++
++If the evidence capture cannot verify a required item, the capture report records the missing fact and the file or command that failed to provide it. Codex decides whether the missing evidence is a blocker in the verdict.
+diff --git a/context_harness/operator/contracts/round_deepsight_r1/spec.md b/context_harness/operator/contracts/round_deepsight_r1/spec.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..9cc7ba3b237852fd1c04c0ac226236af66f68ea0
+--- /dev/null
++++ b/context_harness/operator/contracts/round_deepsight_r1/spec.md
+@@ -0,0 +1,88 @@
++# round_deepsight_r1 Specification
++
++## Scope
++
++This is a contract-only design analysis round for the Deepsight travel redesign input.
++
++The round produces three planning artifacts under `docs/design-docs/`:
++
++- `docs/design-docs/deepsight_tokens.md`
++- `docs/design-docs/deepsight_gap_analysis.md`
++- `docs/design-docs/deepsight_slicing_manifest.md`
++
++These artifacts become the input contract for later implementation rounds. This round does not implement UI changes.
++
++## Input Source Inventory
++
++Raw Deepsight inputs are read-only for this round.
++
++| Source | SHA-256 |
++|---|---|
++| `docs/design-docs/travel_deepsight/Unfading Prototype.html` | `sha256:df8fe6badd57d17805a36385c1d9f62efd4d964efca3aa7bdc8d9c2189cb471e` |
++| `docs/design-docs/travel_deepsight/check.png` | `sha256:cb14f4bb14080f84d8c1b8ef4cce095505f778548ab998a6514038da7242e614` |
++| `docs/design-docs/travel_deepsight/debug.png` | `sha256:0bfe72e4668458114180ea91d60ae019c99e46994ea7326ba7ae33c855947d92` |
++
++## Deliverable Structure
++
++### `deepsight_tokens.md`
++
++Required sections:
++
++- `## Source Inventory` - source files and hashes used for extraction
++- `## Color Tokens` - discovered colors, semantic role candidates, and mapping notes
++- `## Typography Tokens` - font sizes, weights, line-height notes, and semantic role candidates
++- `## Spacing And Radius` - spacing scale, corner radii, and layout rhythm observations
++- `## Component Tokens` - repeated visual components, controls, cards, bars, or navigation elements
++- `## Open Questions` - token values that cannot be determined from the available inputs
++
++### `deepsight_gap_analysis.md`
++
++Required sections aligned to `docs/design-docs/design-revision-workflow.md` Phase 1:
++
++- `## Source Inventory`
++- `## Screen Inventory`
++- `## Navigation`
++- `## Component Tokens`
++- `## Interaction`
++- `## Copy`
++- `## Accessibility`
++- `## Impacted Contracts`
++- `## Open Questions`
++
++The gap analysis must compare current Unfading contracts/code expectations against the Deepsight input where enough information exists. Unknowns should be explicit, not guessed.
++
++### `deepsight_slicing_manifest.md`
++
++Required sections:
++
++- `## Source Inventory`
++- `## Slicing Principles`
++- `## Proposed Sequence`
++- `## Sprint Slices`
++- `## Dependencies`
++- `## Non-Goals`
++- `## Open Questions`
++
++The proposed sequence must follow the design revision workflow Phase 3 order:
++
++1. Token extraction and theme contract updates
++2. Navigation changes, if needed
++3. Screen clusters, limited to 1-2 screens per implementation round
++4. Accessibility and HIG sweep
++
++## Non-Goals
++
++This round must not:
++
++- Modify Swift source files under `workspace/ios/`
++- Modify `workspace/ios/project.yml`
++- Modify `Package.swift`
++- Modify test files or test configuration
++- Modify raw Deepsight input files under `docs/design-docs/travel_deepsight/`
++- Create implementation sprint code
++- Create `spec.amendment.*` or any amendment file
++- Decide final product approval for the redesign
++
++## Expected Follow-Up
++
++Later rounds may use these artifacts to create product contract updates, implementation briefs, Swift changes, runtime evidence, and visual evaluation. Those later rounds require their own contracts and locks.
+
+codex
+Wrote `context_harness/operator/contracts/round_deepsight_r1/spec.md` successfully.
+
+Wrote `context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md` successfully.
+
+Wrote `context_harness/operator/contracts/round_deepsight_r1/acceptance.md` successfully.
+
+Tension noticed: `eval_protocol.md` and `acceptance.md` reference future evaluation artifacts that do not exist yet: `context_harness/reports/round_deepsight_r1/evidence/contract_capture.md`, `context_harness/reports/round_deepsight_r1/verdict.md`, and `gate_evidence.json`. That is expected for this stage, but the whitelist and later gate evidence need to account for them.
+
+All three files are consistent with the decided contract-only plan: they define analysis deliverables only, keep raw Deepsight inputs read-only, and explicitly exclude Swift/project/test changes.
+diff --git a/context_harness/operator/contracts/round_deepsight_r1/acceptance.md b/context_harness/operator/contracts/round_deepsight_r1/acceptance.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..8be566cc2a65720914b775a504b66655d2b47298
+--- /dev/null
++++ b/context_harness/operator/contracts/round_deepsight_r1/acceptance.md
+@@ -0,0 +1,86 @@
++# round_deepsight_r1 Acceptance Criteria
++
++## Required Deliverables
++
++The round is ready for evaluation only when all three deliverable documents exist:
++
++- `docs/design-docs/deepsight_tokens.md`
++- `docs/design-docs/deepsight_gap_analysis.md`
++- `docs/design-docs/deepsight_slicing_manifest.md`
++
++## Document Criteria
++
++### Tokens
++
++`deepsight_tokens.md` must include:
++
++- Source inventory with hashes
++- Color token extraction or explicit unknowns
++- Typography token extraction or explicit unknowns
++- Spacing and radius observations or explicit unknowns
++- Component token observations or explicit unknowns
++- Open questions
++
++### Gap Analysis
++
++`deepsight_gap_analysis.md` must map to `docs/design-docs/design-revision-workflow.md` Phase 1 and include:
++
++- Screen inventory
++- Navigation
++- Component tokens
++- Interaction
++- Copy
++- Accessibility
++- Impacted contracts
++- Open questions
++
++### Slicing Manifest
++
++`deepsight_slicing_manifest.md` must order future implementation work according to Phase 3:
++
++1. Token and theme contract work
++2. Navigation work, if needed
++3. Screen clusters, with each implementation round limited to 1-2 screens where practical
++4. Accessibility and HIG sweep
++
++## Change Constraints
++
++The round must not change:
++
++- Swift files under `workspace/ios/`
++- `workspace/ios/project.yml`
++- `Package.swift`
++- Test files or test configuration
++- Raw input files under `docs/design-docs/travel_deepsight/`
++
++## Raw Input Integrity
++
++The SHA-256 hashes of the raw Deepsight inputs must match the source inventory in `spec.md`:
++
++- `docs/design-docs/travel_deepsight/Unfading Prototype.html`
++- `docs/design-docs/travel_deepsight/check.png`
++- `docs/design-docs/travel_deepsight/debug.png`
++
++Any raw input hash mismatch is a round blocker.
++
++## Evidence And Verdict
++
++Required evaluation artifacts:
++
++- Evidence report: `context_harness/reports/round_deepsight_r1/evidence/contract_capture.md`
++- Verdict report: `context_harness/reports/round_deepsight_r1/verdict.md`
++
++The evidence report must follow `eval_protocol.md` and remain factual-only. The verdict report must classify findings as `PASS`, `BLOCKER`, or `ADVISORY` with citations to evidence.
++
++## Close Criteria
++
++The round may close when:
++
++- All required deliverables exist
++- Required sections are present
++- No forbidden files changed
++- Raw input hashes match
++- Evidence report exists
++- Verdict report exists
++- Gate evidence for Gates 1-4 is recorded according to the active checker schema
++- Gate 5 process-integrity checks pass
+diff --git a/context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md b/context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..a97884fac49ad3cd347d0f1e71b76d0ae752c957
+--- /dev/null
++++ b/context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md
+@@ -0,0 +1,80 @@
++# round_deepsight_r1 Evaluation Protocol
++
++## Purpose
++
++This protocol evaluates a contract-only design analysis round. It verifies that the round produced reliable planning artifacts from the Deepsight input without changing product code.
++
++Evidence capture is factual only. The capture report must not use verdict language such as `PASS`, `BLOCKER`, `ADVISORY`, `acceptable`, or `regression`.
++
++## Inputs
++
++Read-only source inputs:
++
++- `docs/design-docs/travel_deepsight/Unfading Prototype.html`
++- `docs/design-docs/travel_deepsight/check.png`
++- `docs/design-docs/travel_deepsight/debug.png`
++
++Reference documents:
++
++- `docs/design-docs/design-revision-workflow.md`
++- `context_harness/prd/ui_ux_screen_contract.md`
++- `docs/design-docs/ios-architecture.md`
++- `docs/references/coding-conventions.md`
++
++Round deliverables:
++
++- `docs/design-docs/deepsight_tokens.md`
++- `docs/design-docs/deepsight_gap_analysis.md`
++- `docs/design-docs/deepsight_slicing_manifest.md`
++
++## Evidence Capture Checklist
++
++Claude Code captures factual evidence and writes it to:
++
++`context_harness/reports/round_deepsight_r1/evidence/contract_capture.md`
++
++The evidence report must include:
++
++- Source input file paths and SHA-256 hashes
++- Deliverable file paths and SHA-256 hashes
++- Confirmation that raw Deepsight inputs were not modified
++- Confirmation that no Swift files changed
++- Confirmation that `workspace/ios/project.yml`, `Package.swift`, and test files were not changed
++- Section inventory for each deliverable
++- Whether `deepsight_tokens.md` includes color, typography, spacing/radius, component token, and open-question sections
++- Whether `deepsight_gap_analysis.md` follows the Phase 1 categories from `design-revision-workflow.md`
++- Whether `deepsight_slicing_manifest.md` follows Phase 3 ordering: tokens, navigation if needed, screen clusters, accessibility/HIG sweep
++- Any missing source information that prevented deterministic extraction
++
++## Evidence Language Rules
++
++Permitted evidence wording:
++
++- "`<file>` exists"
++- "`<file>` has SHA-256 `<hash>`"
++- "`<section>` is present"
++- "`<section>` is absent"
++- "`git diff --name-only` shows `<path>`"
++- "Source file hash before and after capture is unchanged"
++
++Forbidden evidence wording:
++
++- `PASS`
++- `BLOCKER`
++- `ADVISORY`
++- `acceptable`
++- `regression`
++- "good enough"
++- any final interpretation of whether the round succeeded
++
++## Verdict Split
++
++Codex writes the interpretation and verdict separately at:
++
++`context_harness/reports/round_deepsight_r1/verdict.md`
++
++The verdict may use `PASS`, `BLOCKER`, and `ADVISORY`, but every finding must cite evidence from `contract_capture.md` or a hashed deliverable file.
++
++## Insufficient Evidence
++
++If the evidence capture cannot verify a required item, the capture report records the missing fact and the file or command that failed to provide it. Codex decides whether the missing evidence is a blocker in the verdict.
+diff --git a/context_harness/operator/contracts/round_deepsight_r1/spec.md b/context_harness/operator/contracts/round_deepsight_r1/spec.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..9cc7ba3b237852fd1c04c0ac226236af66f68ea0
+--- /dev/null
++++ b/context_harness/operator/contracts/round_deepsight_r1/spec.md
+@@ -0,0 +1,88 @@
++# round_deepsight_r1 Specification
++
++## Scope
++
++This is a contract-only design analysis round for the Deepsight travel redesign input.
++
++The round produces three planning artifacts under `docs/design-docs/`:
++
++- `docs/design-docs/deepsight_tokens.md`
++- `docs/design-docs/deepsight_gap_analysis.md`
++- `docs/design-docs/deepsight_slicing_manifest.md`
++
++These artifacts become the input contract for later implementation rounds. This round does not implement UI changes.
++
++## Input Source Inventory
++
++Raw Deepsight inputs are read-only for this round.
++
++| Source | SHA-256 |
++|---|---|
++| `docs/design-docs/travel_deepsight/Unfading Prototype.html` | `sha256:df8fe6badd57d17805a36385c1d9f62efd4d964efca3aa7bdc8d9c2189cb471e` |
++| `docs/design-docs/travel_deepsight/check.png` | `sha256:cb14f4bb14080f84d8c1b8ef4cce095505f778548ab998a6514038da7242e614` |
++| `docs/design-docs/travel_deepsight/debug.png` | `sha256:0bfe72e4668458114180ea91d60ae019c99e46994ea7326ba7ae33c855947d92` |
++
++## Deliverable Structure
++
++### `deepsight_tokens.md`
++
++Required sections:
++
++- `## Source Inventory` - source files and hashes used for extraction
++- `## Color Tokens` - discovered colors, semantic role candidates, and mapping notes
++- `## Typography Tokens` - font sizes, weights, line-height notes, and semantic role candidates
++- `## Spacing And Radius` - spacing scale, corner radii, and layout rhythm observations
++- `## Component Tokens` - repeated visual components, controls, cards, bars, or navigation elements
++- `## Open Questions` - token values that cannot be determined from the available inputs
++
++### `deepsight_gap_analysis.md`
++
++Required sections aligned to `docs/design-docs/design-revision-workflow.md` Phase 1:
++
++- `## Source Inventory`
++- `## Screen Inventory`
++- `## Navigation`
++- `## Component Tokens`
++- `## Interaction`
++- `## Copy`
++- `## Accessibility`
++- `## Impacted Contracts`
++- `## Open Questions`
++
++The gap analysis must compare current Unfading contracts/code expectations against the Deepsight input where enough information exists. Unknowns should be explicit, not guessed.
++
++### `deepsight_slicing_manifest.md`
++
++Required sections:
++
++- `## Source Inventory`
++- `## Slicing Principles`
++- `## Proposed Sequence`
++- `## Sprint Slices`
++- `## Dependencies`
++- `## Non-Goals`
++- `## Open Questions`
++
++The proposed sequence must follow the design revision workflow Phase 3 order:
++
++1. Token extraction and theme contract updates
++2. Navigation changes, if needed
++3. Screen clusters, limited to 1-2 screens per implementation round
++4. Accessibility and HIG sweep
++
++## Non-Goals
++
++This round must not:
++
++- Modify Swift source files under `workspace/ios/`
++- Modify `workspace/ios/project.yml`
++- Modify `Package.swift`
++- Modify test files or test configuration
++- Modify raw Deepsight input files under `docs/design-docs/travel_deepsight/`
++- Create implementation sprint code
++- Create `spec.amendment.*` or any amendment file
++- Decide final product approval for the redesign
++
++## Expected Follow-Up
++
++Later rounds may use these artifacts to create product contract updates, implementation briefs, Swift changes, runtime evidence, and visual evaluation. Those later rounds require their own contracts and locks.
+
+tokens used
+511,044
+Wrote `context_harness/operator/contracts/round_deepsight_r1/spec.md` successfully.
+
+Wrote `context_harness/operator/contracts/round_deepsight_r1/eval_protocol.md` successfully.
+
+Wrote `context_harness/operator/contracts/round_deepsight_r1/acceptance.md` successfully.
+
+Tension noticed: `eval_protocol.md` and `acceptance.md` reference future evaluation artifacts that do not exist yet: `context_harness/reports/round_deepsight_r1/evidence/contract_capture.md`, `context_harness/reports/round_deepsight_r1/verdict.md`, and `gate_evidence.json`. That is expected for this stage, but the whitelist and later gate evidence need to account for them.
+
+All three files are consistent with the decided contract-only plan: they define analysis deliverables only, keep raw Deepsight inputs read-only, and explicitly exclude Swift/project/test changes.

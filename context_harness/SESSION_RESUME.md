@@ -37,6 +37,15 @@
 
 **Next round:** Deepsight redesign processing (8-screen prototype at `docs/design-docs/travel_deepsight/`). Sliced per `design-revision-workflow.md` Phase 3.
 
+**Round 1 (deepsight_r1) — CLOSED 2026-04-22T12:16Z:**
+- Scope: contract-only (no Swift). Deliverables: `docs/design-docs/deepsight_tokens.md`, `deepsight_gap_analysis.md`, `deepsight_slicing_manifest.md`.
+- Meeting: `operator/meetings/2026-04-22_round1_deepsight_plan.md` (decided)
+- Contract: `operator/contracts/round_deepsight_r1/` (6 base + 1 gate_evidence.json)
+- Lock: `status: closed`, `base_commit: 791874f`, `gate_evidence_sha256: sha256:46945f05...` (events: created → closed)
+- Verdict: `reports/round_deepsight_r1/verdict.md` — PASS with 3 advisories
+- Key advisory: `UnfadingTheme.swift` missing in workspace despite doc references → must resolve in token sprint round
+- **Codex blocker triage from real use:** #1 (no amend cmd) confirmed REAL ×2; #4 (post-close evidence tampering not detected) confirmed REAL via empirical test. Both P0 for v5.4. Others (#2, #3, #5, #6, #7, #10) not exercised this round.
+
 ---
 
 ## 1. Current State
