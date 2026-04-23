@@ -1,0 +1,15 @@
+Policies after R15 (captured 2026-04-23T10:33Z via pg_policies):
+
+public.events                4 policies (SELECT/INSERT/UPDATE/DELETE)    group-member scoped
+public.group_invitations     2 policies (SELECT/INSERT)                   group-member scoped
+public.group_members         3 policies                                  roster SELECT broadened to all co-members (R15 migration)
+                                                                         INSERT self only; DELETE self only
+public.groups                4 policies                                  SELECT all authenticated; INSERT/UPDATE/DELETE owner-only
+public.memories              4 policies (SELECT/INSERT/UPDATE/DELETE)    group-member scoped; author-only for UPDATE/DELETE
+public.memory_reactions      3 policies                                  group-member scoped
+public.profiles              3 policies                                  SELECT all authenticated; INSERT/UPDATE self-only
+public.subscriptions         1 policy (SELECT self)                      NEW R15 — writes via service-role only
+storage.objects              4 policies (bucket_id='memories')           NEW R15 — group-member scoped by path prefix; UPDATE/DELETE owner-only
+
+Storage buckets:
+  memories  public=false  file_size_limit=25MB  mime=image/jpeg|png|heic|heif|webp  (locked down from prior public=true)

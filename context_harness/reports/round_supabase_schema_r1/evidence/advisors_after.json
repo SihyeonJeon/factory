@@ -1,0 +1,17 @@
+{
+  "captured_at": "2026-04-23T10:36:00Z",
+  "tool": "mcp__supabase__get_advisors",
+  "type": "security",
+  "remaining": [
+    {
+      "name": "auth_leaked_password_protection",
+      "level": "WARN",
+      "detail": "HaveIBeenPwned leaked-password check disabled. Dashboard-only toggle; cannot be set via MCP migration. Deferred to R17 Auth round closeout.",
+      "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection"
+    }
+  ],
+  "resolved_this_round": [
+    "function_search_path_mutable / public.bump_memory_reaction_count"
+  ],
+  "note": "R15 is 0-blocker except the dashboard-gated password policy toggle."
+}

@@ -1,0 +1,15 @@
+# Supabase migration names (no on-disk Swift files touched this round)
+supabase_migration:add_groups_cover_color_hex
+supabase_migration:create_subscriptions_table
+supabase_migration:lock_memories_bucket
+supabase_migration:memories_storage_rls
+supabase_migration:group_helper_rpcs
+supabase_migration:memory_reaction_count_trigger
+supabase_migration:group_members_select_any_same_group
+supabase_migration:fix_bump_memory_reaction_count_search_path
+context_harness/operator/contracts/round_supabase_schema_r1/spec.md
+context_harness/operator/contracts/round_supabase_schema_r1/file_whitelist.txt
+context_harness/reports/round_supabase_schema_r1/evidence/migrations_dump.sql
+context_harness/reports/round_supabase_schema_r1/evidence/advisors_after.json
+context_harness/reports/round_supabase_schema_r1/evidence/policies_dump.txt
+context_harness/operator/meetings/2026-04-23_round15_schema_plan.md
