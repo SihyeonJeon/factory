@@ -21,6 +21,11 @@ struct GroupHubPresentationState: Equatable {
     }
 }
 
+private struct GroupHubSharePayload: Identifiable {
+    let id = UUID()
+    let items: [Any]
+}
+
 enum GroupHubFormatting {
     static func roleLabel(mode: String, isOwner: Bool, isCurrentUser: Bool) -> String {
         let base: String
@@ -42,6 +47,7 @@ enum GroupHubFormatting {
 struct GroupHubView: View {
     @EnvironmentObject private var authStore: AuthStore
     @EnvironmentObject private var groupStore: GroupStore
+    @EnvironmentObject private var memoryStore: MemoryStore
     @EnvironmentObject private var userPreferences: UserPreferences
     @State private var toast: String?
     @State private var isRotatingInvite = false
@@ -57,6 +63,11 @@ struct GroupHubView: View {
     @State private var editedNickname = ""
     @State private var isSavingGroupName = false
     @State private var isSavingNickname = false
+    @State private var isExportingPhotos = false
+    @State private var exportProgress = 0.0
+    @State private var sharePayload: GroupHubSharePayload?
+    private let dataExporter = DataExporter()
+    private let photoUploader = PhotoUploader()
 
     var body: some View {
         ZStack {
@@ -109,8 +120,13 @@ struct GroupHubView: View {
                     toast = UnfadingLocalized.GroupHub.switchGroupCTA
                 }
             )
+
+            exportProgressOverlay
         }
         .accessibilityIdentifier("group-hub")
+        .sheet(item: $sharePayload) { payload in
+            ShareSheet(activityItems: payload.items)
+        }
     }
 
     private var overviewSection: some View {
@@ -349,12 +365,21 @@ struct GroupHubView: View {
                 )
 
                 Button {
-                    toast = UnfadingLocalized.GroupHub.exportPlaceholder
+                    Task { await exportJSON() }
                 } label: {
-                    Label(UnfadingLocalized.GroupHub.exportAllCTA, systemImage: "square.and.arrow.up")
+                    Label(UnfadingLocalized.GroupHub.exportJSONCTA, systemImage: "doc.text")
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
                 .buttonStyle(.bordered)
+
+                Button {
+                    Task { await exportPhotos() }
+                } label: {
+                    Label(UnfadingLocalized.GroupHub.exportPhotosCTA, systemImage: "photo.on.rectangle.angled")
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .buttonStyle(.bordered)
+                .disabled(isExportingPhotos)
             }
         }
     }
@@ -423,6 +448,37 @@ struct GroupHubView: View {
                 .font(UnfadingTheme.Font.captionSemibold())
                 .foregroundStyle(UnfadingTheme.Color.primary)
                 .frame(minHeight: 44, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private var exportProgressOverlay: some View {
+        if isExportingPhotos {
+            ZStack {
+                UnfadingTheme.Color.textPrimary.opacity(0.14)
+                    .ignoresSafeArea()
+
+                VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
+                    Text(UnfadingLocalized.GroupHub.exportPhotosProgressTitle)
+                        .font(UnfadingTheme.Font.subheadlineSemibold())
+                        .foregroundStyle(UnfadingTheme.Color.textPrimary)
+
+                    ProgressView(value: exportProgress)
+                        .tint(UnfadingTheme.Color.primary)
+
+                    Text(UnfadingLocalized.GroupHub.exportPhotosProgressValue(Int((exportProgress * 100).rounded())))
+                        .font(UnfadingTheme.Font.footnote())
+                        .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                }
+                .padding(UnfadingTheme.Spacing.lg)
+                .frame(maxWidth: 320, alignment: .leading)
+                .background(
+                    UnfadingTheme.Color.surface,
+                    in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous)
+                )
+                .shadow(style: UnfadingTheme.Shadow.overlay)
+            }
+            .transition(.opacity)
         }
     }
 
@@ -612,6 +668,39 @@ struct GroupHubView: View {
         }
         isRotatingInvite = false
     }
+
+    private func exportJSON() async {
+        do {
+            let url = try await dataExporter.exportJSON(memories: memoryStore.memories)
+            sharePayload = GroupHubSharePayload(items: [url])
+            toast = UnfadingLocalized.GroupHub.exportJSONReady
+        } catch {
+            toast = error.localizedDescription
+        }
+    }
+
+    private func exportPhotos() async {
+        isExportingPhotos = true
+        exportProgress = 0
+
+        do {
+            let url = try await dataExporter.exportPhotos(
+                memories: memoryStore.memories,
+                uploader: photoUploader,
+                progress: { progressValue in
+                    Task { @MainActor in
+                        exportProgress = progressValue
+                    }
+                }
+            )
+            sharePayload = GroupHubSharePayload(items: [url])
+            toast = UnfadingLocalized.GroupHub.exportPhotosReady
+        } catch {
+            toast = error.localizedDescription
+        }
+
+        isExportingPhotos = false
+    }
 }
 
 private struct GroupHubMemberRowModel: Identifiable {
@@ -679,5 +768,7 @@ private struct GroupHubCard<Content: View>: View {
                 )
             )
             .environmentObject(AuthStore(preview: .signedIn(userId: ownerId, email: "preview@example.com")))
+            .environmentObject(MemoryStore(memories: MemoryStore.uiTestStubMemories()))
+            .environmentObject(UserPreferences())
     }
 }

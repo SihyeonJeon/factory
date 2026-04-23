@@ -472,8 +472,14 @@ enum UnfadingLocalized {
         static let dataSection = "데이터"
         static let iCloudStatusLabel = "iCloud 동기화"
         static let iCloudStatusReady = "준비됨"
-        static let exportAllCTA = "전체 내보내기"
-        static let exportPlaceholder = "R49에서 JSON과 사진 ZIP 내보내기를 완성합니다."
+        static let exportJSONCTA = "내보내기 (JSON)"
+        static let exportPhotosCTA = "사진 zip 내보내기"
+        static let exportJSONReady = "JSON 내보내기 파일을 준비했어요."
+        static let exportPhotosReady = "사진 내보내기 폴더를 준비했어요."
+        static let exportPhotosProgressTitle = "사진 내보내기 준비 중"
+        static let photoExportSignedURLFailed = "사진 링크를 준비하지 못했어요."
+        static let photoExportDownloadFailed = "사진을 다운로드하지 못했어요."
+        static let photoExportWriteFailed = "사진 내보내기 파일을 만들지 못했어요."
         static let dangerSection = "그룹 관리"
         static let leaveGroupCTA = "그룹 떠나기"
         static let deleteGroupCTA = "그룹 삭제"
@@ -494,6 +500,10 @@ enum UnfadingLocalized {
 
         static func inviteLink(code: String) -> String {
             "https://unfading.app/join/\(code)"
+        }
+
+        static func exportPhotosProgressValue(_ percent: Int) -> String {
+            "\(percent)% 완료"
         }
     }
 
