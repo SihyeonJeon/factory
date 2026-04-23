@@ -59,7 +59,7 @@ struct MemoryComposerSheet: View {
                         Text(UnfadingLocalized.Composer.savePrimary)
                     }
                     .buttonStyle(.unfadingPrimary)
-                    .disabled(state.isSaveEnabled == false)
+                    .disabled(state.isSaveEnabled == false || state.isUploading)
                 }
             }
             .sheet(isPresented: $showingDeniedRecovery) {
@@ -91,6 +91,10 @@ struct MemoryComposerSheet: View {
             VStack(spacing: UnfadingTheme.Spacing.md) {
                 UnfadingPhotoGrid(selection: $state.selectedPhotos)
 
+                if state.isUploading {
+                    uploadProgressView
+                }
+
                 if state.selectedPhotos.isEmpty {
                     UnfadingEmptyState(
                         systemImage: "photo.on.rectangle",
@@ -99,6 +103,20 @@ struct MemoryComposerSheet: View {
                     )
                 }
             }
+        }
+    }
+
+    private var uploadProgressView: some View {
+        let percent = Int((state.uploadProgress * 100).rounded())
+
+        return VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
+            Text("사진 업로드 중... \(percent)%")
+                .font(UnfadingTheme.Font.footnoteSemibold())
+                .foregroundStyle(UnfadingTheme.Color.textSecondary)
+            ProgressView(value: state.uploadProgress)
+                .progressViewStyle(.linear)
+                .accessibilityLabel("사진 업로드 중")
+                .accessibilityValue("\(percent)%")
         }
     }
 

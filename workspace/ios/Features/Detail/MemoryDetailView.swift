@@ -51,22 +51,31 @@ struct MemoryDetailView: View {
     private var photoCarousel: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: UnfadingTheme.Spacing.md) {
-                ForEach(photoSymbols, id: \.self) { symbol in
-                    RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [UnfadingTheme.Color.primarySoft, UnfadingTheme.Color.primary],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                if photoStoragePaths.isEmpty == false {
+                    ForEach(photoStoragePaths, id: \.self) { path in
+                        RemoteImageView(storagePath: path)
                         .frame(width: 220, height: 165)
-                        .overlay {
-                            Image(systemName: symbol)
-                                .font(.largeTitle.weight(.semibold))
-                                .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
-                        }
+                        .clipShape(RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous))
                         .accessibilityHidden(true)
+                    }
+                } else {
+                    ForEach(photoSymbols, id: \.self) { symbol in
+                        RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [UnfadingTheme.Color.primarySoft, UnfadingTheme.Color.primary],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 220, height: 165)
+                            .overlay {
+                                Image(systemName: symbol)
+                                    .font(.largeTitle.weight(.semibold))
+                                    .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
+                            }
+                            .accessibilityHidden(true)
+                    }
                 }
             }
         }
@@ -158,6 +167,10 @@ struct MemoryDetailView: View {
     private var photoSymbols: [String] {
         let symbols = detail?.photoPlaceholders ?? []
         return symbols.isEmpty ? ["photo"] : symbols
+    }
+
+    private var photoStoragePaths: [String] {
+        detail?.photoStoragePaths ?? []
     }
 
     private var costText: String? {

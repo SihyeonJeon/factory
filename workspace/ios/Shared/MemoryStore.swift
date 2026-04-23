@@ -275,7 +275,7 @@ struct PreviewMemoryRepository: MemoryRepository {
 
     func createMemory(_ insert: DBMemoryInsert) async throws -> DBMemory {
         DBMemory(
-            id: UUID(),
+            id: insert.id,
             userId: insert.userId,
             groupId: insert.groupId,
             title: insert.title,

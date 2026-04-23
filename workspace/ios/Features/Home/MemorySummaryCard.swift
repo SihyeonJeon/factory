@@ -6,11 +6,19 @@ struct MemorySummaryCard: View {
     /// When a pin is selected on the map, the card shows that pin's title and
     /// short label. When nil, it shows the default sample "오늘의 리와인드" copy.
     var selectedPin: SampleMemoryPin? = nil
+    var photoStoragePath: String? = nil
     var onDetailTap: (() -> Void)? = nil
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: dynamicTypeSize.isAccessibilitySize) {
             VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.lg - 2) {
+                if let path = resolvedPhotoStoragePath {
+                    RemoteImageView(storagePath: path)
+                        .frame(height: 148)
+                        .clipShape(RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous))
+                        .accessibilityHidden(true)
+                }
+
                 header
 
                 Text(selectedPinBody)
@@ -115,6 +123,10 @@ struct MemorySummaryCard: View {
             return UnfadingLocalized.Summary.selectedBodyTemplate(short: short)
         }
         return UnfadingLocalized.Summary.sampleBody
+    }
+
+    private var resolvedPhotoStoragePath: String? {
+        photoStoragePath ?? selectedPin?.detail()?.photoStoragePaths.first
     }
 }
 

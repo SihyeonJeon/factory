@@ -38,6 +38,7 @@ final class DBMemoryTests: XCTestCase {
 
     func test_dbMemoryInsertEncodesSnakeCaseJSON() throws {
         let insert = DBMemoryInsert(
+            id: UUID(uuidString: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")!,
             userId: UUID(uuidString: "00000000-0000-0000-0000-000000000017")!,
             groupId: UUID(uuidString: "11111111-1111-4111-8111-111111111117")!,
             title: "한강 산책",
@@ -58,6 +59,7 @@ final class DBMemoryTests: XCTestCase {
         let object = try JSONSerialization.jsonObject(with: encoded) as? [String: Any]
 
         XCTAssertEqual((object?["user_id"] as? String)?.uppercased(), "00000000-0000-0000-0000-000000000017".uppercased())
+        XCTAssertEqual((object?["id"] as? String)?.uppercased(), "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa".uppercased())
         XCTAssertEqual((object?["group_id"] as? String)?.uppercased(), "11111111-1111-4111-8111-111111111117".uppercased())
         XCTAssertEqual(object?["place_title"] as? String, "여의도 한강공원")
         XCTAssertEqual(object?["location_lat"] as? Double, 37.5283)

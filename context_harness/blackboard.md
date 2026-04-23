@@ -1279,3 +1279,4 @@ xcodegen 성공. Sprint 26 완료입니다.
 **ADVISORY 9개** (우선도 순):
 
 | # | 파일 | 위치 |
+# 2026-04-23 round_photos_r1: Opened requested iOS source/test files plus project.yml and SampleModels to wire PhotoUploader, DBMemoryInsert id, signed URL rendering, and tests; task explicitly required code changes outside FILE_INDEX exact pointers.

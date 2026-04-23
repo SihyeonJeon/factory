@@ -83,6 +83,7 @@ struct DBMemory: Codable, Hashable, Identifiable {
 }
 
 struct DBMemoryInsert: Encodable {
+    let id: UUID
     let userId: UUID
     let groupId: UUID
     let title: String
@@ -99,7 +100,7 @@ struct DBMemoryInsert: Encodable {
     let emotions: [String]
 
     enum CodingKeys: String, CodingKey {
-        case title, note, date, address, categories, emotions
+        case id, title, note, date, address, categories, emotions
         case userId = "user_id"
         case groupId = "group_id"
         case placeTitle = "place_title"

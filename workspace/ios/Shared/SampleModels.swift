@@ -40,6 +40,7 @@ struct SampleMemoryContribution: Identifiable, Hashable {
 struct SampleMemoryDetail: Identifiable {
     let id: UUID
     let pinID: UUID
+    let photoStoragePaths: [String]
     let photoPlaceholders: [String]
     let noteBody: String
     let moodTagIDs: [String]
@@ -50,6 +51,7 @@ struct SampleMemoryDetail: Identifiable {
         .init(
             id: UUID(uuidString: "aaaaaaa1-aaaa-4aaa-8aaa-aaaaaaaaaaa1")!,
             pinID: SampleMemoryPin.samples[0].id,
+            photoStoragePaths: [],
             photoPlaceholders: ["fork.knife", "wineglass", "camera.fill", "heart.fill", "sparkles", "person.3.fill"],
             noteBody: "상수 루프톱에서 저녁을 먹고 공연 이야기를 오래 나눴어요. 밤바람과 사진들이 아직 선명하게 남아 있어요.",
             moodTagIDs: ["joy", "grateful", "nostalgic"],
@@ -62,6 +64,7 @@ struct SampleMemoryDetail: Identifiable {
         .init(
             id: UUID(uuidString: "bbbbbbb2-bbbb-4bbb-8bbb-bbbbbbbbbbb2")!,
             pinID: SampleMemoryPin.samples[1].id,
+            photoStoragePaths: [],
             photoPlaceholders: ["bicycle", "sunset.fill", "figure.outdoor.cycle", "water.waves", "camera.fill", "map.fill"],
             noteBody: "한강을 따라 달리다가 노을이 가장 진한 곳에서 멈췄어요. 천천히 돌아오던 길까지 좋은 추억이 됐어요.",
             moodTagIDs: ["calm", "grateful"],
@@ -74,6 +77,7 @@ struct SampleMemoryDetail: Identifiable {
         .init(
             id: UUID(uuidString: "ccccccc3-cccc-4ccc-8ccc-ccccccccccc3")!,
             pinID: SampleMemoryPin.samples[2].id,
+            photoStoragePaths: [],
             photoPlaceholders: ["sunrise.fill", "leaf.fill", "figure.walk", "camera.fill", "sparkles", "mappin"],
             noteBody: "아침 공기가 차가웠지만 함께 걷다 보니 금방 따뜻해졌어요. 하루를 시작하기 좋은 산책이었어요.",
             moodTagIDs: ["calm", "nostalgic"],

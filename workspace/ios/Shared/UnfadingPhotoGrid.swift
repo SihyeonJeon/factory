@@ -4,16 +4,22 @@ import SwiftUI
 // vibe-limit-checked: 2 reusable asset, 4 weak async capture, 6 do-catch no try?, 8 accessibility/Dynamic Type
 struct UnfadingPhotoGrid: View {
     @Binding private var selection: [PhotosPickerItem]
+    private let storagePaths: [String]
     private let maxSelection: Int
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    init(selection: Binding<[PhotosPickerItem]>, maxSelection: Int = 12) {
+    init(selection: Binding<[PhotosPickerItem]>, storagePaths: [String] = [], maxSelection: Int = 12) {
         _selection = selection
+        self.storagePaths = storagePaths
         self.maxSelection = maxSelection
     }
 
     var body: some View {
         LazyVGrid(columns: columns, spacing: UnfadingTheme.Spacing.sm) {
+            ForEach(storagePaths, id: \.self) { path in
+                RemotePhotoCell(storagePath: path)
+            }
+
             ForEach(Array(selection.enumerated()), id: \.offset) { index, item in
                 PhotoCell(item: item) {
                     removePhoto(at: index)
@@ -63,6 +69,17 @@ struct UnfadingPhotoGrid: View {
     private func removePhoto(at index: Int) {
         guard selection.indices.contains(index) else { return }
         selection.remove(at: index)
+    }
+}
+
+private struct RemotePhotoCell: View {
+    let storagePath: String
+
+    var body: some View {
+        RemoteImageView(storagePath: storagePath)
+            .aspectRatio(1, contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous))
+            .accessibilityHidden(true)
     }
 }
 

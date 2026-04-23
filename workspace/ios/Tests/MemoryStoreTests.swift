@@ -75,6 +75,7 @@ final class MemoryStoreTests: XCTestCase {
         groupId: UUID = UUID(uuidString: "11111111-1111-4111-8111-111111111117")!
     ) -> DBMemoryInsert {
         DBMemoryInsert(
+            id: UUID(),
             userId: userId,
             groupId: groupId,
             title: "상수 루프톱 저녁",
@@ -143,7 +144,7 @@ private actor InMemoryMemoryRepository: MemoryRepository {
     func createMemory(_ insert: DBMemoryInsert) async throws -> DBMemory {
         if shouldFail { throw URLError(.notConnectedToInternet) }
         let memory = DBMemory(
-            id: UUID(),
+            id: insert.id,
             userId: insert.userId,
             groupId: insert.groupId,
             title: insert.title,
