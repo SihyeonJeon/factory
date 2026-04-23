@@ -411,6 +411,7 @@ final class MemoryStore: ObservableObject {
 #if DEBUG
 struct PreviewMemoryRepository: MemoryRepository {
     func fetchMemories(groupId: UUID) async throws -> [DBMemory] { [] }
+    func searchMemories(groupId: UUID, query: String) async throws -> [DBMemory] { [] }
 
     func createMemory(_ insert: DBMemoryInsert) async throws -> DBMemory {
         DBMemory(

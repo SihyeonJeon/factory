@@ -223,6 +223,24 @@ private actor InMemoryMemoryRepository: MemoryRepository {
             .sorted { $0.date > $1.date }
     }
 
+    func searchMemories(groupId: UUID, query: String) async throws -> [DBMemory] {
+        if shouldFail { throw URLError(.notConnectedToInternet) }
+
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard trimmed.isEmpty == false else { return [] }
+
+        return memories
+            .filter { $0.groupId == groupId }
+            .filter { memory in
+                memory.placeTitle.lowercased().contains(trimmed)
+                    || memory.note.lowercased().contains(trimmed)
+                    || memory.title.lowercased().contains(trimmed)
+                    || memory.categories.contains(where: { $0.lowercased() == trimmed })
+                    || memory.emotions.contains(where: { $0.lowercased() == trimmed })
+            }
+            .sorted { $0.date > $1.date }
+    }
+
     func createMemory(_ insert: DBMemoryInsert) async throws -> DBMemory {
         if shouldFail { throw URLError(.notConnectedToInternet) }
         let memory = DBMemory(

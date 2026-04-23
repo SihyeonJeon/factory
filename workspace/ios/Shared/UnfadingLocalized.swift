@@ -215,6 +215,20 @@ enum UnfadingLocalized {
         }
     }
 
+    // MARK: Search
+
+    enum Search {
+        static let title = "추억 검색"
+        static let placeholder = "장소, 메모, 태그로 검색"
+        static let clearQuery = "검색어 지우기"
+        static let recentTitle = "최근 검색어"
+        static let clearRecent = "모두 지우기"
+        static let emptyRecent = "최근 검색어가 아직 없어요."
+        static let emptyResults = "검색 결과가 없어요."
+        static let noGroup = "검색할 그룹을 먼저 선택해주세요."
+        static let searchFailed = "검색 중 문제가 발생했어요. 잠시 후 다시 시도해주세요."
+    }
+
     // MARK: Common
 
     enum Common {

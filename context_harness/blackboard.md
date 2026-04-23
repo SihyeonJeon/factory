@@ -1300,3 +1300,5 @@ xcodegen 성공. Sprint 26 완료입니다.
 2026-04-23T16:08:32Z | Opened unindexed files for R43 Apple Sign In implementation: active round lock/contracts, SupabaseService, tests, localized strings, and iOS auth references.
 2026-04-24 Codex | Opened unindexed round lookup via rg for active R44 lock/contract discovery before implementation.
 2026-04-24 Codex | Opened unindexed AuthStore path lookup via rg after expected path mismatch during R44 implementation.
+2026-04-24 02:08:17 +0900 | Opened targeted iOS files outside FILE_INDEX for R48 search implementation: MemoryRowCard, localization, tests, project.yml, related stores/view patterns.
+2026-04-24 02:12:32 +0900 | Opened local derived-data/package artifacts outside FILE_INDEX to verify Supabase/Postgrest API signatures after xcodebuild was blocked by network/simulator limits.

@@ -26,6 +26,7 @@ struct MemoryMapHomeView: View {
     @State private var activeCategoryId = CategoryStore.allCategoryId
     @State private var activeSheetTab: SheetTab = .curation
     @State private var showingRewind = false
+    @State private var showingSearch = false
     @State private var detailMemory: DBMemory?
     @State private var measuredSheetHeight: CGFloat = 0
     @State private var cameraPosition: MapCameraPosition = .region(
@@ -136,6 +137,11 @@ struct MemoryMapHomeView: View {
                 RewindFeedView {
                     showingRewind = false
                     sheetSnap = .default_
+                }
+            }
+            .sheet(isPresented: $showingSearch) {
+                SearchView(groupId: groupStore.activeGroupId) { memory in
+                    detailMemory = memory
                 }
             }
             .navigationDestination(item: $detailMemory) { memory in
@@ -255,7 +261,7 @@ struct MemoryMapHomeView: View {
             .accessibilityIdentifier("home-top-chrome-group-button")
 
             Button {
-                // Search stub — full implementation in a future round.
+                showingSearch = true
             } label: {
                 Image(systemName: "magnifyingglass")
                     .imageScale(.medium)
@@ -266,6 +272,7 @@ struct MemoryMapHomeView: View {
             .buttonStyle(.plain)
             .accessibilityLabel(UnfadingLocalized.Home.searchLabel)
             .accessibilityHint(UnfadingLocalized.Home.searchHint)
+            .accessibilityIdentifier("home-top-chrome-search-button")
         }
         .padding(.horizontal, UnfadingTheme.Spacing.md)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

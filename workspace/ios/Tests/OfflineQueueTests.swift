@@ -77,6 +77,7 @@ private actor QueueMemoryRepository: MemoryRepository {
     private var createdIds: [UUID] = []
 
     func fetchMemories(groupId: UUID) async throws -> [DBMemory] { [] }
+    func searchMemories(groupId: UUID, query: String) async throws -> [DBMemory] { [] }
 
     func createMemory(_ insert: DBMemoryInsert) async throws -> DBMemory {
         createdIds.append(insert.id)
