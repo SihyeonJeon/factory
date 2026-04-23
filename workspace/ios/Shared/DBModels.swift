@@ -137,6 +137,27 @@ struct DBMemory: Codable, Hashable, Identifiable {
     }
 }
 
+struct DBEvent: Codable, Hashable, Identifiable {
+    let id: UUID
+    let groupId: UUID
+    let title: String
+    let startDate: Date
+    let endDate: Date?
+    let isMultiDay: Bool
+    let createdAt: Date?
+    let reminderAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id, title
+        case groupId = "group_id"
+        case startDate = "start_date"
+        case endDate = "end_date"
+        case isMultiDay = "is_multi_day"
+        case createdAt = "created_at"
+        case reminderAt = "reminder_at"
+    }
+}
+
 struct DBMemoryInsert: Encodable {
     let id: UUID
     let userId: UUID

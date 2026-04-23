@@ -18,6 +18,7 @@ struct MemoryMapHomeView: View {
     @State private var didPresentEvidenceComposer = false
     @State private var showingGroupHub = false
     @State private var detailPin: SampleMemoryPin?
+    @State private var measuredSheetHeight: CGFloat = 0
     @State private var cameraPosition: MapCameraPosition = .region(
         MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
@@ -32,43 +33,49 @@ struct MemoryMapHomeView: View {
     var body: some View {
         NavigationStack {
             GeometryReader { proxy in
-                let sheetHeight = proxy.size.height * CGFloat(selection.sheetSnap.fraction)
-
                 ZStack(alignment: .bottom) {
                     mapLayer
                         .ignoresSafeArea(edges: .top)
-                        .overlay(alignment: .top) {
-                            topChrome
-                                .padding(.horizontal, UnfadingTheme.Spacing.lg)
-                                .padding(.top, UnfadingTheme.Spacing.sm)
-                        }
-                        .overlay(alignment: .topTrailing) {
-                            filterRow
-                                .padding(.top, 64)
-                                .padding(.horizontal, UnfadingTheme.Spacing.md)
-                        }
 
-                    UnfadingBottomSheet(snap: $selection.sheetSnap) {
+                    topChrome
+                        .padding(.horizontal, MemoryMapHomeLayout.horizontalInset)
+                        .padding(.top, MemoryMapHomeLayout.topChromeTop)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        .zIndex(2)
+
+                    filterRow
+                        .padding(.horizontal, MemoryMapHomeLayout.horizontalInset)
+                        .padding(.top, MemoryMapHomeLayout.filterChipTop)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        .zIndex(2)
+
+                    UnfadingBottomSheet(snap: $selection.sheetSnap, measuredHeight: $measuredSheetHeight) {
                         MemorySummaryCard(
                             selectedPin: selection.selectedPin(from: SampleMemoryPin.samples),
                             onDetailTap: openDetail
                         )
                     }
                     .ignoresSafeArea(.container, edges: .bottom)
-                    .zIndex(1)
+                    .zIndex(4)
+
+                    mapControls
+                        .padding(.trailing, MemoryMapHomeLayout.mapControlsRight)
+                        .padding(.bottom, measuredSheetHeight + MemoryMapHomeLayout.mapControlsBottomGap)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                        .zIndex(3)
 
                     fab
-                        .padding(.trailing, UnfadingTheme.Spacing.lg)
-                        .padding(.bottom, sheetHeight + UnfadingTheme.Spacing.lg)
+                        .padding(.trailing, MemoryMapHomeLayout.fabRight)
+                        .padding(.bottom, measuredSheetHeight + MemoryMapHomeLayout.fabBottomGap)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
                         .opacity(selection.sheetSnap == .expanded ? 0 : 1)
                         .allowsHitTesting(selection.sheetSnap != .expanded)
-                        .animation(reduceMotion ? nil : .interactiveSpring(response: 0.3, dampingFraction: 0.85), value: selection.sheetSnap)
-                        .zIndex(2)
+                        .animation(reduceMotion ? .easeInOut(duration: 0.25) : .interpolatingSpring(stiffness: 260, damping: 32), value: measuredSheetHeight)
+                        .zIndex(5)
                 }
+                .frame(width: proxy.size.width, height: proxy.size.height)
             }
-            .navigationTitle(UnfadingLocalized.Home.navTitle)
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showingComposer) {
                 MemoryComposerSheet(
                     initialLocationPermissionState: .denied,
@@ -156,10 +163,9 @@ struct MemoryMapHomeView: View {
                 .shadow(color: UnfadingTheme.Color.shadow, radius: 6, x: 0, y: 2)
             }
             .buttonStyle(.plain)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityLabel(UnfadingLocalized.Home.groupChipPlaceholder)
             .accessibilityHint(UnfadingLocalized.Home.groupChipHint)
-
-            Spacer()
 
             Button {
                 // Search stub — full implementation in a future round.
@@ -200,16 +206,47 @@ struct MemoryMapHomeView: View {
         Button {
             showingComposer = true
         } label: {
-            HStack(spacing: UnfadingTheme.Spacing.xs) {
-                Image(systemName: "plus")
-                    .imageScale(.medium)
-                Text(UnfadingLocalized.Home.addMemoryFab)
-                    .font(UnfadingTheme.Font.footnoteSemibold())
-            }
+            Image(systemName: "plus")
+                .font(.title2.weight(.bold))
+                .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
+                .frame(width: 56, height: 56)
+                .background(UnfadingTheme.Color.primary.gradient, in: Circle())
+                .shadow(color: UnfadingTheme.Color.primary.opacity(0.35), radius: 10, x: 0, y: 6)
         }
-        .buttonStyle(.unfadingPrimary)
+        .buttonStyle(.plain)
         .accessibilityLabel(UnfadingLocalized.Accessibility.addMemoryLabel)
         .accessibilityHint(UnfadingLocalized.Accessibility.addMemoryHint)
+    }
+
+    private var mapControls: some View {
+        VStack(spacing: UnfadingTheme.Spacing.sm) {
+            mapControlButton(systemName: "location.fill", accessibilityLabel: "Current location") {
+                _ = locationPermissionStore.handleCurrentLocationTap()
+            }
+
+            mapControlButton(systemName: "location.north.line.fill", accessibilityLabel: "Reset map orientation") {
+                cameraPosition = .region(
+                    MKCoordinateRegion(
+                        center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
+                        span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)
+                    )
+                )
+            }
+        }
+        .animation(reduceMotion ? .easeInOut(duration: 0.25) : .interpolatingSpring(stiffness: 260, damping: 32), value: measuredSheetHeight)
+    }
+
+    private func mapControlButton(systemName: String, accessibilityLabel: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .imageScale(.medium)
+                .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                .frame(width: 44, height: 44)
+                .background(UnfadingTheme.Color.sheet, in: Circle())
+                .shadow(color: UnfadingTheme.Color.shadow, radius: 8, x: 0, y: 2)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel)
     }
 
     // MARK: Helpers
@@ -238,6 +275,16 @@ struct MemoryMapHomeView: View {
     private func openDetail() {
         detailPin = selection.selectedPin(from: SampleMemoryPin.samples) ?? SampleMemoryPin.samples.first
     }
+}
+
+enum MemoryMapHomeLayout {
+    static let horizontalInset: CGFloat = 14
+    static let topChromeTop: CGFloat = 54
+    static let filterChipTop: CGFloat = 108
+    static let fabRight: CGFloat = 18
+    static let fabBottomGap: CGFloat = 18
+    static let mapControlsRight: CGFloat = 14
+    static let mapControlsBottomGap: CGFloat = 88
 }
 
 #Preview {

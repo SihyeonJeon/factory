@@ -84,6 +84,24 @@ final class UnfadingUITests: XCTestCase {
         }
     }
 
+    func testMapBottomSheetSnapGestures() {
+        app.launch()
+        tapTab("지도")
+
+        let sheet = app.otherElements["unfading-bottom-sheet"].firstMatch
+        XCTAssertTrue(sheet.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForSheet(sheet, value: "default"))
+
+        sheet.swipeUp()
+        XCTAssertTrue(waitForSheet(sheet, value: "expanded"))
+
+        sheet.swipeDown()
+        XCTAssertTrue(waitForSheet(sheet, value: "default"))
+
+        sheet.swipeDown()
+        XCTAssertTrue(waitForSheet(sheet, value: "collapsed"))
+    }
+
     func testGroupOnboardingShownWhenNoGroup() {
         let noGroupApp = XCUIApplication()
         noGroupApp.launchArguments = ["-UI_TEST_AUTH_STUB", "-UI_TEST_SKIP_ONBOARDING"]
@@ -97,6 +115,12 @@ final class UnfadingUITests: XCTestCase {
         let tab = app.tabBars.buttons[label]
         XCTAssertTrue(tab.waitForExistence(timeout: 5))
         tab.tap()
+    }
+
+    private func waitForSheet(_ sheet: XCUIElement, value: String) -> Bool {
+        let predicate = NSPredicate(format: "value == %@", value)
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: sheet)
+        return XCTWaiter.wait(for: [expectation], timeout: 3) == .completed
     }
 
     private func attachScreenshot(name: String) {

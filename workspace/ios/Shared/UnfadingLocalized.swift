@@ -283,7 +283,27 @@ enum UnfadingLocalized {
             let formatter = DateFormatter()
             formatter.locale = Locale(identifier: "ko_KR")
             formatter.dateFormat = "yyyy년 M월"
+            formatter.timeZone = TimeZone(identifier: "Asia/Seoul") ?? .autoupdatingCurrent
             return formatter.string(from: date)
+        }
+
+        // R26 F9/F2-cal — 월 지출 + 계획 배지 + 새 계획 시트
+        static let monthlyExpense = "이 달 지출"
+        static let planBadge = "계획"
+        static let memoryBadge = "추억"
+        static let addPlanCTA = "계획 추가"
+        static let planSheetTitle = "새 계획"
+        static let planTitlePlaceholder = "제목"
+        static let multiDayToggle = "여행 (여러 날)"
+        static let reminderToggle = "알람 받기"
+        static let reminderTimeLabel = "알람 시각"
+        static let savedPlan = "계획이 저장되었어요."
+        static let reminderPermissionDenied = "알람 권한이 꺼져 있어 알람은 울리지 않아요."
+        static let plansForDate = "이 날의 계획"
+        static let futureDayHint = "이 날짜는 미래라 추억 대신 계획을 추가할 수 있어요."
+
+        static func expenseCurrencyFormat(_ won: Int64) -> String {
+            "₩\(won.formatted(.number.grouping(.automatic)))"
         }
     }
 
@@ -439,6 +459,22 @@ enum UnfadingLocalized {
         static let nearbyOptions = "근처 장소"
         static let searchPlaces = "장소 검색"
         static let choosePlaceTitle = "장소 선택"
+
+        // R26 feedback — place picker + photo seed (F3/F5/F6/F7)
+        static let notThisPlaceCta = "이 위치가 아닌가요?"
+        static let placePickerTitle = "장소 선택"
+        static let pickerMapTab = "지도에서"
+        static let pickerSearchTab = "검색"
+        static let pickerCurrentTab = "현재 위치"
+        static let pickerMapHint = "지도를 길게 눌러 장소를 선택하세요."
+        static let pickerMapConfirm = "이 위치 선택"
+        static let pickerNoResults = "결과가 없어요."
+        static let pickerLocating = "현재 위치 찾는 중..."
+        static let pickerUseThis = "선택"
+        static let photoSeedBanner = "사진으로 시간과 장소를 자동으로 채웠어요."
+        static let photoSeedBannerLocationOnly = "사진으로 장소를 자동으로 채웠어요."
+        static let photoSeedBannerTimeOnly = "사진으로 시간을 자동으로 채웠어요."
+        static let locationDeniedShortTab = "위치 권한이 꺼져 있어요."
     }
 
     // MARK: Detail

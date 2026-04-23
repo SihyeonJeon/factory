@@ -1,0 +1,14 @@
+workspace/ios/App/MemoryMapApp.swift
+workspace/ios/Features/Composer/NearbyPlaceService.swift
+workspace/ios/Features/Composer/PhotoMetadataExtractor.swift
+workspace/ios/Features/Composer/PlacePickerSheet.swift
+workspace/ios/Features/Home/MemoryComposerState.swift
+workspace/ios/Features/Home/MemoryComposerSheet.swift
+workspace/ios/Shared/UnfadingLocalized.swift
+workspace/ios/Tests/NearbyPlaceServiceTests.swift
+workspace/ios/Tests/PhotoMetadataExtractorTests.swift
+workspace/ios/Tests/MemoryComposerLocationSeedTests.swift
+context_harness/operator/contracts/round_composer_location_r1/spec.md
+context_harness/operator/contracts/round_composer_location_r1/file_whitelist.txt
+context_harness/operator/meetings/2026-04-23_round_composer_location_plan.md
+context_harness/reports/round_composer_location_r1/evidence/notes.md

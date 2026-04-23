@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// Persistent, draggable 3-snap bottom sheet container for map-like surfaces
-/// where the sheet is part of the chrome (not a modal). Snap fractions come
-/// from `UnfadingTheme.Sheet` (0.22 / 0.52 / 0.88) per deepsight spec.
+/// where the sheet is part of the chrome (not a modal). Snap fractions mirror
+/// `docs/design-docs/Unfading Prototype.html` sheet.jsx.
 ///
 /// Usage:
 ///   ```swift
@@ -20,65 +20,157 @@ public enum BottomSheetSnap: CaseIterable, Hashable {
     /// Snap-point fraction of the container height.
     public var fraction: Double {
         switch self {
-        case .collapsed: return UnfadingTheme.Sheet.collapsed
-        case .default_: return UnfadingTheme.Sheet.default
-        case .expanded: return UnfadingTheme.Sheet.expanded
+        case .collapsed: return 0.085
+        case .default_: return 0.52
+        case .expanded: return 1.0
         }
     }
 
     /// Ordering used by drag-release snapping logic.
     public static let ordered: [BottomSheetSnap] = [.collapsed, .default_, .expanded]
 
+    public var topCornerRadius: CGFloat {
+        self == .expanded ? 0 : UnfadingTheme.Radius.sheet
+    }
+
+    public var shadowRadius: CGFloat {
+        self == .expanded ? 0 : 16
+    }
+
     /// Returns the snap whose fraction is closest to `fraction`.
     public static func nearest(to fraction: Double) -> BottomSheetSnap {
         Self.ordered.min(by: { abs($0.fraction - fraction) < abs($1.fraction - fraction) }) ?? .default_
+    }
+
+    public func next() -> BottomSheetSnap {
+        switch self {
+        case .collapsed: return .default_
+        case .default_: return .expanded
+        case .expanded: return .collapsed
+        }
+    }
+
+    var accessibilityValue: String {
+        switch self {
+        case .collapsed: return "collapsed"
+        case .default_: return "default"
+        case .expanded: return "expanded"
+        }
+    }
+}
+
+enum BottomSheetDragResolution {
+    static let velocityProjectionSeconds: CGFloat = 0.08
+
+    static func clampedHeight(_ height: CGFloat, in fullHeight: CGFloat) -> CGFloat {
+        min(max(height, fullHeight * CGFloat(BottomSheetSnap.collapsed.fraction)), fullHeight)
+    }
+
+    static func projectedFraction(
+        currentSnap: BottomSheetSnap,
+        translationHeight: CGFloat,
+        velocityHeight: CGFloat,
+        fullHeight: CGFloat
+    ) -> Double {
+        guard fullHeight > 0 else { return currentSnap.fraction }
+        let currentHeight = fullHeight * CGFloat(currentSnap.fraction)
+        let projectedHeight = currentHeight - translationHeight - (velocityHeight * velocityProjectionSeconds)
+        return Double(clampedHeight(projectedHeight, in: fullHeight) / fullHeight)
+    }
+
+    static func resolvedSnap(
+        currentSnap: BottomSheetSnap,
+        translationHeight: CGFloat,
+        velocityHeight: CGFloat,
+        fullHeight: CGFloat
+    ) -> BottomSheetSnap {
+        let projected = projectedFraction(
+            currentSnap: currentSnap,
+            translationHeight: translationHeight,
+            velocityHeight: velocityHeight,
+            fullHeight: fullHeight
+        )
+        let nearest = BottomSheetSnap.nearest(to: projected)
+        return nearest.limitedToAdjacentSnap(from: currentSnap)
+    }
+}
+
+private extension BottomSheetSnap {
+    func limitedToAdjacentSnap(from current: BottomSheetSnap) -> BottomSheetSnap {
+        guard
+            let currentIndex = Self.ordered.firstIndex(of: current),
+            let targetIndex = Self.ordered.firstIndex(of: self)
+        else { return self }
+
+        let limitedIndex = min(max(targetIndex, currentIndex - 1), currentIndex + 1)
+        return Self.ordered[limitedIndex]
     }
 }
 
 struct UnfadingBottomSheet<Content: View>: View {
     @Binding var snap: BottomSheetSnap
+    var measuredHeight: Binding<CGFloat> = .constant(0)
     @ViewBuilder let content: () -> Content
-    @State private var dragOffset: CGFloat = 0
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @GestureState private var translation: CGFloat = 0
+    @State private var interactiveHeight: CGFloat?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         GeometryReader { proxy in
             let fullHeight = proxy.size.height
-            let targetHeight = fullHeight * snap.fraction - dragOffset
-            let sheetHeight = max(80, min(fullHeight * BottomSheetSnap.expanded.fraction, targetHeight))
+            let currentSnapHeight = fullHeight * CGFloat(snap.fraction)
+            let liveHeight = interactiveHeight ?? BottomSheetDragResolution.clampedHeight(currentSnapHeight - translation, in: fullHeight)
 
             VStack(spacing: 0) {
-                handle
+                if snap != .expanded {
+                    handle
+                }
                 content()
                     .frame(maxHeight: .infinity, alignment: .top)
                     .clipped()
             }
             .frame(maxWidth: .infinity)
-            .frame(height: sheetHeight)
+            .frame(height: liveHeight)
             .background(
                 UnfadingTheme.Color.sheet,
                 in: UnevenRoundedRectangle(
-                    topLeadingRadius: UnfadingTheme.Radius.sheet,
-                    topTrailingRadius: UnfadingTheme.Radius.sheet
+                    topLeadingRadius: snap.topCornerRadius,
+                    topTrailingRadius: snap.topCornerRadius
                 )
             )
-            .shadow(color: UnfadingTheme.Color.shadow, radius: 16, x: 0, y: -4)
+            .shadow(
+                color: snap == .expanded ? .clear : UnfadingTheme.Color.shadow,
+                radius: snap.shadowRadius,
+                x: 0,
+                y: snap == .expanded ? 0 : -4
+            )
             .contentShape(Rectangle())
             .gesture(dragGesture(fullHeight: fullHeight))
             .frame(maxHeight: .infinity, alignment: .bottom)
-            .animation(reduceMotion ? nil : .interactiveSpring(response: 0.3, dampingFraction: 0.85), value: snap)
+            .accessibilityIdentifier("unfading-bottom-sheet")
+            .accessibilityValue(snap.accessibilityValue)
+            .onAppear { measuredHeight.wrappedValue = liveHeight }
+            .onChange(of: liveHeight) { _, newValue in
+                measuredHeight.wrappedValue = newValue
+            }
         }
     }
 
     private var handle: some View {
-        Capsule()
-            .fill(UnfadingTheme.Color.textTertiary.opacity(0.55))
-            .frame(width: 40, height: 4)
-            .padding(.top, 10)
-            .padding(.bottom, UnfadingTheme.Spacing.sm)
+        Button {
+            snapTo(snap.next(), velocityHeight: 0)
+        } label: {
+            Capsule()
+                .fill(UnfadingTheme.Color.primary.opacity(0.4))
+                .frame(width: 42, height: 5)
+                .padding(.top, snap == .collapsed ? 8 : 10)
+                .padding(.bottom, snap == .collapsed ? 6 : 8)
+        }
+            .buttonStyle(.plain)
             .frame(maxWidth: .infinity)
-            .contentShape(Rectangle().inset(by: -16))
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+            .accessibilityIdentifier("unfading-bottom-sheet-handle")
             .accessibilityElement()
             .accessibilityLabel(UnfadingLocalized.Accessibility.bottomSheetHandleLabel)
             .accessibilityHint(UnfadingLocalized.Accessibility.bottomSheetHandleHint)
@@ -86,14 +178,37 @@ struct UnfadingBottomSheet<Content: View>: View {
 
     private func dragGesture(fullHeight: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 4)
+            .updating($translation) { value, state, _ in
+                state = value.translation.height
+            }
             .onChanged { value in
-                dragOffset = value.translation.height
+                let currentSnapHeight = fullHeight * CGFloat(snap.fraction)
+                interactiveHeight = BottomSheetDragResolution.clampedHeight(currentSnapHeight - value.translation.height, in: fullHeight)
             }
             .onEnded { value in
-                let endFraction = (fullHeight * snap.fraction - value.translation.height) / fullHeight
-                let clamped = min(max(endFraction, UnfadingTheme.Sheet.collapsed * 0.9), UnfadingTheme.Sheet.expanded * 1.05)
-                snap = BottomSheetSnap.nearest(to: clamped)
-                dragOffset = 0
+                let velocityHeight = value.predictedEndTranslation.height - value.translation.height
+                let target = BottomSheetDragResolution.resolvedSnap(
+                    currentSnap: snap,
+                    translationHeight: value.translation.height,
+                    velocityHeight: velocityHeight,
+                    fullHeight: fullHeight
+                )
+                snapTo(target, velocityHeight: velocityHeight)
             }
+    }
+
+    private func snapTo(_ target: BottomSheetSnap, velocityHeight: CGFloat) {
+        let animation: Animation = reduceMotion
+            ? .easeInOut(duration: 0.25)
+            : .interpolatingSpring(
+                stiffness: 260,
+                damping: 32,
+                initialVelocity: Double(velocityHeight) / 1000
+            )
+
+        withAnimation(animation) {
+            snap = target
+            interactiveHeight = nil
+        }
     }
 }

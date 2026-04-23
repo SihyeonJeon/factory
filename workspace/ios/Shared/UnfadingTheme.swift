@@ -105,6 +105,7 @@ enum UnfadingTheme {
         static func title3Bold() -> SwiftUI.Font { .title3.weight(.bold) }
         static func subheadline() -> SwiftUI.Font { .subheadline }
         static func subheadlineSemibold() -> SwiftUI.Font { .subheadline.weight(.semibold) }
+        static func footnote() -> SwiftUI.Font { .footnote }
         static func footnoteSemibold() -> SwiftUI.Font { .footnote.weight(.semibold) }
         static func captionSemibold() -> SwiftUI.Font { .caption.weight(.semibold) }
         static func caption2Semibold() -> SwiftUI.Font { .caption2.weight(.semibold) }

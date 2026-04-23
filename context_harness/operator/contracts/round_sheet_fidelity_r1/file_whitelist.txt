@@ -1,0 +1,12 @@
+workspace/ios/Shared/UnfadingBottomSheet.swift
+workspace/ios/Shared/UnfadingFilterChip.swift
+workspace/ios/Features/Home/MemoryMapHomeView.swift
+workspace/ios/Features/Home/MemoryPinMarker.swift
+workspace/ios/App/RootTabView.swift
+workspace/ios/Tests/UnfadingBottomSheetTests.swift
+workspace/ios/Tests/MemoryMapHomeViewTests.swift
+workspace/ios/UITests/UnfadingUITests.swift
+context_harness/operator/contracts/round_sheet_fidelity_r1/spec.md
+context_harness/operator/contracts/round_sheet_fidelity_r1/file_whitelist.txt
+context_harness/operator/meetings/2026-04-23_round_sheet_fidelity_plan.md
+context_harness/reports/round_sheet_fidelity_r1/evidence/notes.md

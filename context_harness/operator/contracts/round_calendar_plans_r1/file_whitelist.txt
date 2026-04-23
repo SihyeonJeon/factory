@@ -1,0 +1,13 @@
+workspace/ios/Shared/KSTDateFormatter.swift
+workspace/ios/Shared/EventRepository.swift
+workspace/ios/Shared/DBModels.swift
+workspace/ios/Features/Calendar/MemoryCalendarStore.swift
+workspace/ios/Features/Calendar/MonthlyExpenseHeader.swift
+workspace/ios/Features/Calendar/EventPlanSheet.swift
+workspace/ios/Features/Calendar/CalendarView.swift
+workspace/ios/Shared/UnfadingLocalized.swift
+workspace/ios/Tests/KSTDateFormatterTests.swift
+context_harness/operator/contracts/round_calendar_plans_r1/spec.md
+context_harness/operator/contracts/round_calendar_plans_r1/file_whitelist.txt
+context_harness/operator/meetings/2026-04-23_round_calendar_plans_plan.md
+context_harness/reports/round_calendar_plans_r1/evidence/notes.md

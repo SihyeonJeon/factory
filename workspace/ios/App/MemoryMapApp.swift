@@ -7,8 +7,10 @@ struct MemoryMapApp: App {
     @StateObject private var groupStore: GroupStore
     @StateObject private var memoryStore: MemoryStore
     @StateObject private var subscriptionStore: SubscriptionStore
+    @StateObject private var locationPermission: LocationPermissionStore
     @State private var memoryRealtimeTask: Task<Void, Never>?
     @State private var bootstrappedPreferencesUserId: UUID?
+    @State private var didRequestLocationOnLaunch = false
 
     private let evidenceMode: MemoryComposerEvidenceMode = {
         guard
@@ -31,6 +33,7 @@ struct MemoryMapApp: App {
         _groupStore = StateObject(wrappedValue: Self.makeGroupStore())
         _memoryStore = StateObject(wrappedValue: MemoryStore())
         _subscriptionStore = StateObject(wrappedValue: SubscriptionStore())
+        _locationPermission = StateObject(wrappedValue: LocationPermissionStore())
     }
 
     private static var shouldSkipOnboardingForUITests: Bool {
@@ -91,8 +94,25 @@ struct MemoryMapApp: App {
                 }
             }
             .environmentObject(subscriptionStore)
+            .environmentObject(locationPermission)
             .task {
                 await subscriptionStore.loadProducts()
+            }
+            .task {
+                guard !didRequestLocationOnLaunch else { return }
+                didRequestLocationOnLaunch = true
+                // UITest 환경에서는 시스템 권한 alert 가 button 테스트를 가리므로 skip.
+                if ProcessInfo.processInfo.environment["UNFADING_UI_TEST"] == "1"
+                    || ProcessInfo.processInfo.arguments.contains("-UI_TEST_AUTH_STUB")
+                    || ProcessInfo.processInfo.arguments.contains("-UI_TEST_SKIP_ONBOARDING") {
+                    return
+                }
+                // F4: 앱 첫 실행 즉시 위치 권한 prompt. notDetermined 일 때만 요청.
+                if locationPermission.permissionState == .notDetermined {
+                    _ = locationPermission.handleCurrentLocationTap()
+                } else {
+                    locationPermission.refresh()
+                }
             }
             .onReceive(authStore.$state) { state in
                 guard case let .signedIn(userId, _) = state else {

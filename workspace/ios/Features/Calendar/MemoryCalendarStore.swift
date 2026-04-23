@@ -5,10 +5,13 @@ import Foundation
 final class MemoryCalendarStore: ObservableObject {
     @Published private(set) var displayedMonth: Date
     @Published private(set) var selectedDate: Date?
+    @Published private(set) var plannedEvents: [DBEvent] = []
+    @Published private(set) var monthlyExpense: Int64 = 0
     private(set) var memoryDates: Set<DateComponents>
 
     private let today: Date
     private var calendar: Calendar
+    private let eventRepo: EventRepository?
 
     struct CalendarCell: Hashable {
         let date: Date
@@ -16,15 +19,17 @@ final class MemoryCalendarStore: ObservableObject {
         let isToday: Bool
     }
 
-    init(today: Date = Date()) {
+    init(today: Date = Date(), eventRepo: EventRepository? = SupabaseEventRepository()) {
         var calendar = Calendar.current
         calendar.locale = Locale(identifier: "ko_KR")
+        calendar.timeZone = KSTDateFormatter.timeZone
         let displayedMonth = calendar.startOfMonth(for: today)
         self.calendar = calendar
         self.today = today
         self.displayedMonth = displayedMonth
         self.selectedDate = nil
         self.memoryDates = Self.seedMemoryDates(for: displayedMonth, calendar: calendar)
+        self.eventRepo = eventRepo
     }
 
     func nextMonth() {
@@ -84,6 +89,49 @@ final class MemoryCalendarStore: ObservableObject {
                     isToday: calendar.isDate(date, inSameDayAs: today)
                 )
             }
+        }
+    }
+
+    // MARK: F9/F2-cal — Supabase 기반 월 지출 + 계획 이벤트 로드 (KST)
+    func loadMonth(for groupId: UUID) async {
+        let comps = calendar.dateComponents([.year, .month], from: displayedMonth)
+        let year = comps.year ?? 1970
+        let month = comps.month ?? 1
+        let startUTC = KSTDateFormatter.startOfMonthKST(year: year, month: month)
+        let endUTC = KSTDateFormatter.endOfMonthKST(year: year, month: month)
+        guard let repo = eventRepo else { return }
+        async let events = (try? await repo.plannedEvents(groupId: groupId, startUTC: startUTC, endUTC: endUTC)) ?? []
+        async let expense = (try? await repo.monthlyExpenseKST(groupId: groupId, year: year, month: month)) ?? 0
+        let (e, x) = await (events, expense)
+        self.plannedEvents = e
+        self.monthlyExpense = x
+    }
+
+    /// 주어진 날짜가 KST 기준 미래인지 (오늘 자정 이후).
+    func isFutureDate(_ date: Date) -> Bool {
+        KSTDateFormatter.isFuture(date)
+    }
+
+    /// 주어진 날짜에 계획(이벤트) 존재 여부 — start ≤ date ≤ end 포함.
+    func hasPlan(on date: Date) -> Bool {
+        let day = KSTDateFormatter.truncateToDayKST(date)
+        return plannedEvents.contains { event in
+            let start = KSTDateFormatter.truncateToDayKST(event.startDate)
+            let end = KSTDateFormatter.truncateToDayKST(event.endDate ?? event.startDate)
+            return day >= start && day <= end
+        }
+    }
+
+    enum DayKind: Equatable { case none, memory, plan, both }
+
+    func dayKind(_ date: Date) -> DayKind {
+        let m = hasMemory(on: calendar.dateComponents([.year, .month, .day], from: date))
+        let p = hasPlan(on: date)
+        switch (m, p) {
+        case (true, true):   return .both
+        case (true, false):  return .memory
+        case (false, true):  return .plan
+        default:             return .none
         }
     }
 
