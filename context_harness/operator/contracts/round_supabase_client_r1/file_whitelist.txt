@@ -1,0 +1,8 @@
+workspace/ios/project.yml
+workspace/ios/App/Info.plist
+workspace/ios/Shared/SupabaseService.swift
+workspace/ios/Tests/SupabaseServiceTests.swift
+context_harness/operator/contracts/round_supabase_client_r1/spec.md
+context_harness/operator/contracts/round_supabase_client_r1/file_whitelist.txt
+context_harness/reports/round_supabase_client_r1/evidence/xcresult_summary.json
+context_harness/operator/meetings/2026-04-23_round16_supabase_client_plan.md

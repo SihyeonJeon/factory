@@ -7,6 +7,10 @@ settings:
   base:
     PRODUCT_BUNDLE_IDENTIFIER: com.jeonsihyeon.memorymap
     DEVELOPMENT_TEAM: ""
+packages:
+  Supabase:
+    url: https://github.com/supabase/supabase-swift
+    from: "2.30.0"
 targets:
   MemoryMap:
     type: application
@@ -27,6 +31,8 @@ targets:
         NSPhotoLibraryAddUsageDescription: "Save shared memory photos to your library."
         NSPhotoLibraryUsageDescription: "Attach photos to group memories."
         UNUserNotificationCenterUsageDescription: "Send rewind reminders and group updates."
+        SupabaseURL: "https://umkbjxycdgfhgwcnfbmo.supabase.co"
+        SupabasePublishableKey: "sb_publishable_eA_S-ojxFJwFV53VN6k4Nw_KfcGTZm3"
     settings:
       base:
         INFOPLIST_KEY_CFBundleDisplayName: MemoryMap
@@ -37,6 +43,8 @@ targets:
         SUPPORTS_MACCATALYST: NO
     dependencies:
       - sdk: MapKit.framework
+      - package: Supabase
+        product: Supabase
   MemoryMapTests:
     type: bundle.unit-test
     platform: iOS
@@ -45,6 +53,8 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_SupabaseURL: "https://umkbjxycdgfhgwcnfbmo.supabase.co"
+        INFOPLIST_KEY_SupabasePublishableKey: "sb_publishable_eA_S-ojxFJwFV53VN6k4Nw_KfcGTZm3"
     dependencies:
       - target: MemoryMap
   UnfadingUITests:
