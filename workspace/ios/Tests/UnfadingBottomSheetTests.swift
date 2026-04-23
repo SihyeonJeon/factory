@@ -5,8 +5,8 @@ import XCTest
 final class UnfadingBottomSheetTests: XCTestCase {
 
     func test_snap_fractions_match_deepsight() {
-        XCTAssertEqual(BottomSheetSnap.collapsed.fraction, 0.085, accuracy: 0.0001)
-        XCTAssertEqual(BottomSheetSnap.default_.fraction, 0.52, accuracy: 0.0001)
+        XCTAssertEqual(BottomSheetSnap.collapsed.fraction, 0.08, accuracy: 0.0001)
+        XCTAssertEqual(BottomSheetSnap.default_.fraction, 0.50, accuracy: 0.0001)
         XCTAssertEqual(BottomSheetSnap.expanded.fraction, 1.0, accuracy: 0.0001)
     }
 
@@ -27,7 +27,7 @@ final class UnfadingBottomSheetTests: XCTestCase {
         XCTAssertEqual(BottomSheetSnap.nearest(to: 0.25), .collapsed)
         XCTAssertEqual(BottomSheetSnap.nearest(to: 0.40), .default_)
         XCTAssertEqual(BottomSheetSnap.nearest(to: 0.60), .default_)
-        // midpoint(default_=0.52, expanded=1.0) = 0.76; 0.80 is comfortably nearer to expanded
+        // midpoint(default_=0.50, expanded=1.0) = 0.75; 0.80 is comfortably nearer to expanded
         XCTAssertEqual(BottomSheetSnap.nearest(to: 0.80), .expanded)
         XCTAssertEqual(BottomSheetSnap.nearest(to: 1.20), .expanded)
     }

@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Persistent, draggable 3-snap bottom sheet container for map-like surfaces
 /// where the sheet is part of the chrome (not a modal). Snap fractions mirror
-/// `docs/design-docs/Unfading Prototype.html` sheet.jsx.
+/// the current Unfading design handoff.
 ///
 /// Usage:
 ///   ```swift
@@ -20,9 +20,9 @@ public enum BottomSheetSnap: CaseIterable, Hashable {
     /// Snap-point fraction of the container height.
     public var fraction: Double {
         switch self {
-        case .collapsed: return 0.085
-        case .default_: return 0.52
-        case .expanded: return 1.0
+        case .collapsed: return UnfadingTheme.Sheet.collapsed
+        case .default_: return UnfadingTheme.Sheet.default
+        case .expanded: return UnfadingTheme.Sheet.expanded
         }
     }
 

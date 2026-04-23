@@ -30,6 +30,14 @@
 	<string>sb_publishable_eA_S-ojxFJwFV53VN6k4Nw_KfcGTZm3</string>
 	<key>SupabaseURL</key>
 	<string>https://umkbjxycdgfhgwcnfbmo.supabase.co</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Fonts/GowunDodum-Regular.ttf</string>
+		<string>Fonts/Nunito-Regular.ttf</string>
+		<string>Fonts/Nunito-SemiBold.ttf</string>
+		<string>Fonts/Nunito-Bold.ttf</string>
+		<string>Fonts/Nunito-Black.ttf</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

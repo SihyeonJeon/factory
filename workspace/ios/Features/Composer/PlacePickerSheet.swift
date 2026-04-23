@@ -96,7 +96,7 @@ struct PlacePickerSheet: View {
                     }
                     .accessibilityIdentifier("place-picker-map")
                 Image(systemName: "mappin")
-                    .font(.system(size: 36, weight: .semibold))
+                    .font(UnfadingTheme.Font.sectionTitle(36))
                     .foregroundStyle(UnfadingTheme.Color.primary)
                     .accessibilityHidden(true)
                     .offset(y: -14)
@@ -217,7 +217,7 @@ struct PlacePickerSheet: View {
             } else if let place = currentLocation {
                 VStack(spacing: UnfadingTheme.Spacing.sm) {
                     Image(systemName: "location.fill")
-                        .font(.system(size: 28))
+                        .font(UnfadingTheme.Font.sectionTitle(28))
                         .foregroundStyle(UnfadingTheme.Color.primary)
                     Text(place.name)
                         .font(UnfadingTheme.Font.subheadlineSemibold())

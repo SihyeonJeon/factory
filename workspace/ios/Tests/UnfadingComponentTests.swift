@@ -40,7 +40,7 @@ final class UnfadingComponentTests: XCTestCase {
 
     func test_unfading_card_background_uses_theme_defaults() {
         // Defaults should come from UnfadingTheme, not magic values
-        XCTAssertEqual(UnfadingTheme.Radius.card, 20)
+        XCTAssertEqual(UnfadingTheme.Radius.card, 18)
         // No direct way to inspect the modifier's stored properties without breaking
         // encapsulation — this test exists to fail compilation if UnfadingTheme.Color.card
         // or UnfadingTheme.Radius.card is ever renamed without updating the modifier.
