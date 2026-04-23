@@ -13,6 +13,7 @@ final class AuthStore: ObservableObject {
 
     private var authTask: Task<Void, Never>?
     private let mode: Mode
+    private let appleSignInCoordinator: AppleSignInCoordinating?
 
     var currentUserId: UUID? {
         guard case let .signedIn(userId, _) = state else { return nil }
@@ -26,15 +27,17 @@ final class AuthStore: ObservableObject {
 
     init() {
         self.mode = .live
+        self.appleSignInCoordinator = AppleSignInCoordinator()
         authTask = Task { [weak self] in
             await self?.start()
         }
     }
 
     #if DEBUG
-    init(preview state: AuthState) {
+    init(preview state: AuthState, appleSignInCoordinator: AppleSignInCoordinating? = nil) {
         self.mode = .preview
         self.state = state
+        self.appleSignInCoordinator = appleSignInCoordinator
     }
     #endif
 
@@ -50,6 +53,11 @@ final class AuthStore: ObservableObject {
     func signIn(email: String, password: String) async throws {
         guard mode == .live else { return }
         try await SupabaseService.shared.client.auth.signIn(email: email, password: password)
+    }
+
+    func signInWithApple() async throws {
+        guard let appleSignInCoordinator else { return }
+        try await appleSignInCoordinator.signIn()
     }
 
     func signOut() async throws {

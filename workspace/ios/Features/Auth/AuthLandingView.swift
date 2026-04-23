@@ -1,3 +1,4 @@
+import AuthenticationServices
 import SwiftUI
 
 struct AuthLandingView: View {
@@ -34,6 +35,7 @@ struct AuthLandingView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xl) {
                         header
+                        appleSignInSection
                         modePicker
                         form
                     }
@@ -62,18 +64,62 @@ struct AuthLandingView: View {
     }
 
     private var modePicker: some View {
-        Picker(UnfadingLocalized.Auth.modePickerLabel, selection: $mode) {
-            ForEach(Mode.allCases) { mode in
-                Text(mode.title).tag(mode)
+        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
+            divider
+
+            Picker(UnfadingLocalized.Auth.modePickerLabel, selection: $mode) {
+                ForEach(Mode.allCases) { mode in
+                    Text(mode.title).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .frame(minHeight: 44)
+            .accessibilityIdentifier("auth-mode-picker")
+            .accessibilityLabel(UnfadingLocalized.Auth.modePickerLabel)
+            .onChange(of: mode) { _, _ in
+                errorMessage = nil
             }
         }
-        .pickerStyle(.segmented)
-        .frame(minHeight: 44)
-        .accessibilityIdentifier("auth-mode-picker")
-        .accessibilityLabel(UnfadingLocalized.Auth.modePickerLabel)
-        .onChange(of: mode) { _, _ in
-            errorMessage = nil
+    }
+
+    private var appleSignInSection: some View {
+        VStack(spacing: UnfadingTheme.Spacing.md) {
+            ZStack {
+                SignInWithAppleButton(.signIn, onRequest: { _ in }, onCompletion: { _ in })
+                    .signInWithAppleButtonStyle(.black)
+                    .frame(maxWidth: .infinity, minHeight: 50, maxHeight: 50)
+                    .clipShape(RoundedRectangle(cornerRadius: UnfadingTheme.Radius.compact, style: .continuous))
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+
+                Button(action: submitAppleSignIn) {
+                    Color.clear
+                        .frame(maxWidth: .infinity, minHeight: 50, maxHeight: 50)
+                }
+                .disabled(isLoading)
+                .contentShape(RoundedRectangle(cornerRadius: UnfadingTheme.Radius.compact, style: .continuous))
+                .accessibilityIdentifier("auth-apple-sign-in-button")
+                .accessibilityLabel(UnfadingLocalized.Auth.appleSignIn)
+                .accessibilityHint(UnfadingLocalized.Auth.appleSignInHint)
+            }
         }
+    }
+
+    private var divider: some View {
+        HStack(spacing: UnfadingTheme.Spacing.md) {
+            Rectangle()
+                .fill(UnfadingTheme.Color.primarySoft)
+                .frame(height: 1)
+
+            Text(UnfadingLocalized.Auth.orDivider)
+                .font(UnfadingTheme.Font.captionSemibold())
+                .foregroundStyle(UnfadingTheme.Color.textSecondary)
+
+            Rectangle()
+                .fill(UnfadingTheme.Color.primarySoft)
+                .frame(height: 1)
+        }
+        .accessibilityElement(children: .combine)
     }
 
     private var form: some View {
@@ -162,6 +208,20 @@ struct AuthLandingView: View {
         }
     }
 
+    private func submitAppleSignIn() {
+        errorMessage = nil
+        isLoading = true
+
+        Task {
+            do {
+                try await authStore.signInWithApple()
+            } catch {
+                errorMessage = Self.localizedError(for: error)
+            }
+            isLoading = false
+        }
+    }
+
     fileprivate static func isValidEmail(_ email: String) -> Bool {
         let pattern = #"^[^@\s]+@[^@\s]+\.[^@\s]+$"#
         return email.range(of: pattern, options: .regularExpression) != nil
@@ -169,6 +229,9 @@ struct AuthLandingView: View {
 
     private static func localizedError(for error: Error) -> String {
         let message = String(describing: error).lowercased()
+        if message.contains("apple") || message.contains("authorization") || message.contains("identity token") {
+            return UnfadingLocalized.Auth.appleSignInFailed
+        }
         if message.contains("invalid") || message.contains("credential") || message.contains("password") {
             return UnfadingLocalized.Auth.invalidCredentials
         }

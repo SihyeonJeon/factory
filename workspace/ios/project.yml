@@ -59,8 +59,10 @@ targets:
         TARGETED_DEVICE_FAMILY: "1,2"
         SUPPORTS_MACCATALYST: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_ENTITLEMENTS: App/MemoryMap.entitlements
     dependencies:
       - sdk: MapKit.framework
+      - sdk: AuthenticationServices.framework
       - package: Supabase
         product: Supabase
   MemoryMapTests:

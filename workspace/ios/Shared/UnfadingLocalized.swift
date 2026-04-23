@@ -221,6 +221,8 @@ enum UnfadingLocalized {
     enum Auth {
         static let signInTab = "로그인"
         static let signUpTab = "회원가입"
+        static let appleSignIn = "Apple로 계속하기"
+        static let orDivider = "또는"
         static let emailPlaceholder = "이메일"
         static let passwordPlaceholder = "비밀번호"
         static let signInPrimary = "로그인"
@@ -231,12 +233,14 @@ enum UnfadingLocalized {
         static let welcomeTitle = "Unfading"
         static let welcomeSubtitle = "함께한 장소, 함께 남기는 추억"
         static let invalidCredentials = "이메일 또는 비밀번호가 올바르지 않습니다."
+        static let appleSignInFailed = "Apple 로그인에 실패했습니다. 다시 시도해주세요."
         static let networkError = "네트워크 오류. 잠시 후 다시 시도해주세요."
         static let passwordTooShort = "비밀번호는 8자 이상이어야 합니다."
         static let signOutConfirm = "로그아웃 하시겠습니까?"
         static let signOut = "로그아웃"
         static let guest = "게스트"
         static let modePickerLabel = "인증 방식"
+        static let appleSignInHint = "Apple 계정으로 계속합니다."
         static let primaryHint = "입력한 이메일과 비밀번호로 계속합니다."
         static let forgotPasswordHint = "이메일로 비밀번호 재설정 링크를 보냅니다."
     }

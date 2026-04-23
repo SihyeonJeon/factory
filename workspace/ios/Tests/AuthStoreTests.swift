@@ -3,6 +3,14 @@ import XCTest
 
 @MainActor
 final class AuthStoreTests: XCTestCase {
+    private final class MockAppleSignInCoordinator: AppleSignInCoordinating {
+        private(set) var signInCallCount = 0
+
+        func signIn() async throws {
+            signInCallCount += 1
+        }
+    }
+
     func testAuthStateEquatableConformance() {
         let userId = UUID()
 
@@ -30,6 +38,16 @@ final class AuthStoreTests: XCTestCase {
 
         try await store.signOut()
 
+        XCTAssertEqual(store.state, .signedOut)
+    }
+
+    func testPreviewSignInWithAppleInvokesCoordinatorFlow() async throws {
+        let coordinator = MockAppleSignInCoordinator()
+        let store = AuthStore(preview: .signedOut, appleSignInCoordinator: coordinator)
+
+        try await store.signInWithApple()
+
+        XCTAssertEqual(coordinator.signInCallCount, 1)
         XCTAssertEqual(store.state, .signedOut)
     }
 }
