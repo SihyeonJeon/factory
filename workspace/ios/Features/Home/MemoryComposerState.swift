@@ -43,6 +43,8 @@ final class MemoryComposerState: ObservableObject {
     private let photoUploader: any PhotoUploading
     private let placeResolver: PlaceResolving
     private let eventRepository: EventRepository
+    private var stagedUploadedPhotoPaths: [String]
+    private var cleanupTask: Task<Void, Never>?
 
     enum PhotoSeedApplied: Equatable {
         case none
@@ -87,6 +89,8 @@ final class MemoryComposerState: ObservableObject {
         self.isUploading = false
         self.photoSeedApplied = .none
         self.nearbyPlaces = []
+        self.stagedUploadedPhotoPaths = []
+        self.cleanupTask = nil
         self.photoUploader = photoUploader
         self.placeResolver = placeResolver
         self.eventRepository = eventRepository
@@ -266,6 +270,18 @@ final class MemoryComposerState: ObservableObject {
     }
 
     func reset() {
+        let pendingCleanupPaths = stagedUploadedPhotoPaths
+        stagedUploadedPhotoPaths = []
+        cleanupTask?.cancel()
+        if pendingCleanupPaths.isEmpty == false {
+            let uploader = photoUploader
+            cleanupTask = Task {
+                await uploader.delete(paths: pendingCleanupPaths)
+            }
+        } else {
+            cleanupTask = nil
+        }
+
         note = ""
         selectedPhotos = []
         selectedPlace = UnfadingLocalized.Composer.samplePlace
@@ -320,6 +336,7 @@ final class MemoryComposerState: ObservableObject {
             }
 
             let photoPaths = uploadedPhotos.map(\.storagePath)
+            stagedUploadedPhotoPaths = photoPaths
             let coord = selectedCoordinate
             let insert = DBMemoryInsert(
                 id: memoryId,
@@ -342,11 +359,14 @@ final class MemoryComposerState: ObservableObject {
                 cost: cost
             )
             _ = try await memoryStore.createMemory(insert)
+            stagedUploadedPhotoPaths = []
             reset()
         } catch {
             isUploading = false
             uploadProgress = 0
-            await photoUploader.delete(paths: uploadedPhotos.map(\.storagePath))
+            let cleanupPaths = stagedUploadedPhotoPaths.isEmpty ? uploadedPhotos.map(\.storagePath) : stagedUploadedPhotoPaths
+            stagedUploadedPhotoPaths = []
+            await photoUploader.delete(paths: cleanupPaths)
             throw error
         }
     }

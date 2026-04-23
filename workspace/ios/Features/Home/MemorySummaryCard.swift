@@ -7,6 +7,7 @@ struct MemorySummaryCard: View {
     /// short label. When nil, it shows the default sample "오늘의 리와인드" copy.
     var selectedPin: SampleMemoryPin? = nil
     var photoStoragePath: String? = nil
+    var photoStoragePaths: [String]? = nil
     var mode: GroupMode = .couple
     var usesInternalScroll = true
     var onDetailTap: (() -> Void)? = nil
@@ -31,11 +32,18 @@ struct MemorySummaryCard: View {
 
     private var contentStack: some View {
         VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.lg - 2) {
-            if let path = resolvedPhotoStoragePath {
-                RemoteImageView(storagePath: path)
-                    .frame(height: 148)
-                    .clipShape(RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous))
-                    .accessibilityHidden(true)
+            if let path = resolvedPhotoStoragePaths.first {
+                ZStack(alignment: .topTrailing) {
+                    RemoteImageView(storagePath: path)
+                        .frame(height: 148)
+                        .clipShape(RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous))
+                        .accessibilityHidden(true)
+
+                    if resolvedPhotoStoragePaths.count > 1 {
+                        PhotoCountPill(extraCount: resolvedPhotoStoragePaths.count - 1)
+                            .padding(UnfadingTheme.Spacing.sm)
+                    }
+                }
             }
 
             header
@@ -142,8 +150,17 @@ struct MemorySummaryCard: View {
         return UnfadingLocalized.Summary.sampleBody
     }
 
-    private var resolvedPhotoStoragePath: String? {
-        photoStoragePath ?? selectedPin?.detail()?.photoStoragePaths.first
+    private var resolvedPhotoStoragePaths: [String] {
+        let explicitPaths = (photoStoragePaths ?? []).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        if explicitPaths.isEmpty == false {
+            return explicitPaths
+        }
+
+        if let photoStoragePath, photoStoragePath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
+            return [photoStoragePath]
+        }
+
+        return (selectedPin?.detail()?.photoStoragePaths ?? []).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
     }
 
     private var shouldShowRewindHint: Bool {
@@ -156,6 +173,23 @@ struct MemorySummaryCard: View {
         let day = Calendar.current.component(.day, from: Date())
         let range = Calendar.current.range(of: .day, in: .month, for: Date())
         return day == range?.upperBound.advanced(by: -1)
+    }
+}
+
+struct PhotoCountPill: View {
+    let extraCount: Int
+
+    var body: some View {
+        Text("+\(extraCount)")
+            .font(UnfadingTheme.Font.captionSemibold())
+            .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
+            .padding(.horizontal, UnfadingTheme.Spacing.sm)
+            .frame(minWidth: 44, minHeight: 44)
+            .background(
+                UnfadingTheme.Color.textPrimary.opacity(0.58),
+                in: Capsule()
+            )
+            .accessibilityLabel("추가 사진 \(extraCount)장")
     }
 }
 

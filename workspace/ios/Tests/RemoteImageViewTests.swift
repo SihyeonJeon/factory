@@ -5,6 +5,15 @@ import XCTest
 
 @MainActor
 final class RemoteImageViewTests: XCTestCase {
+    private var cache: RemoteImageSignedURLCache!
+    private var now: Date!
+
+    override func setUp() {
+        super.setUp()
+        now = Date(timeIntervalSince1970: 1_900_000_000)
+        cache = RemoteImageSignedURLCache(now: { [unowned self] in now })
+    }
+
     func test_emptyPath_renderSmoke() {
         let view = RemoteImageView(storagePath: nil, uploader: EmptyPathUploader())
         XCTAssertNotNil(view.body)
@@ -13,6 +22,23 @@ final class RemoteImageViewTests: XCTestCase {
     func test_emptyStringPath_renderSmoke() {
         let view = RemoteImageView(storagePath: "", uploader: EmptyPathUploader())
         XCTAssertNotNil(view.body)
+    }
+
+    func test_signedURLCache_returnsHitWhenExpiryOutsideRefreshWindow() {
+        let url = URL(string: "https://example.com/a.jpg")!
+
+        cache.store(url: url, for: "group/memory/a.jpg", expiresIn: 601)
+
+        XCTAssertEqual(cache.url(for: "group/memory/a.jpg"), url)
+    }
+
+    func test_signedURLCache_returnsMissInsideRefreshWindow() {
+        let url = URL(string: "https://example.com/b.jpg")!
+        cache.store(url: url, for: "group/memory/b.jpg", expiresIn: 301)
+
+        now = now.addingTimeInterval(2)
+
+        XCTAssertNil(cache.url(for: "group/memory/b.jpg"))
     }
 }
 

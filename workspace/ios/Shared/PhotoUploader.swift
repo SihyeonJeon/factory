@@ -43,12 +43,24 @@ protocol PhotoUploading: Sendable {
     func delete(paths: [String]) async
 }
 
+protocol PhotoUploaderClient: Sendable {
+    func upload(path: String, data: Data) async throws
+    func createSignedURL(path: String, expiresIn: Int) async throws -> URL?
+    func remove(paths: [String]) async throws
+}
+
 actor PhotoUploader: PhotoUploading {
-    private var storage: SupabaseStorageClient { SupabaseService.shared.storage }
     private let bucket = "memories"
     private let maxEdge: CGFloat = 2048
     private let jpegQuality: CGFloat = 0.82
     private let maxBytes = 25 * 1024 * 1024
+    private let maxRetryCount = 3
+    private let baseRetryDelayNanoseconds: UInt64 = 300_000_000
+    private let client: PhotoUploaderClient
+
+    init(client: PhotoUploaderClient = SupabasePhotoUploaderClient()) {
+        self.client = client
+    }
 
     static func storagePath(groupId: UUID, memoryId: UUID, filename: String) -> String {
         "\(groupId.uuidString.lowercased())/\(memoryId.uuidString.lowercased())/\(filename)"
@@ -72,19 +84,7 @@ actor PhotoUploader: PhotoUploading {
             let filename = "\(UUID().uuidString).jpg"
             let path = Self.storagePath(groupId: groupId, memoryId: memoryId, filename: filename)
 
-            do {
-                _ = try await storage.from(bucket).upload(
-                    path,
-                    data: imageData,
-                    options: FileOptions(
-                        cacheControl: "3600",
-                        contentType: "image/jpeg",
-                        upsert: false
-                    )
-                )
-            } catch {
-                throw PhotoUploadError.uploadFailed(error.localizedDescription)
-            }
+            try await uploadImageData(imageData, path: path)
 
             let signedURL = try? await signedURL(storagePath: path)
             uploaded.append(
@@ -103,12 +103,31 @@ actor PhotoUploader: PhotoUploading {
     }
 
     func signedURL(storagePath: String, expiresIn: Int = 60 * 60 * 24 * 7) async throws -> URL? {
-        try await storage.from(bucket).createSignedURL(path: storagePath, expiresIn: expiresIn)
+        try await client.createSignedURL(path: storagePath, expiresIn: expiresIn)
     }
 
     func delete(paths: [String]) async {
         guard paths.isEmpty == false else { return }
-        _ = try? await storage.from(bucket).remove(paths: paths)
+        _ = try? await client.remove(paths: paths)
+    }
+
+    func uploadImageData(_ data: Data, path: String) async throws {
+        var lastError: Error?
+
+        for attempt in 0...maxRetryCount {
+            do {
+                try await client.upload(path: path, data: data)
+                return
+            } catch {
+                lastError = error
+                guard attempt < maxRetryCount else { break }
+
+                let multiplier = UInt64(1 << attempt)
+                try? await Task.sleep(nanoseconds: baseRetryDelayNanoseconds * multiplier)
+            }
+        }
+
+        throw PhotoUploadError.uploadFailed(lastError?.localizedDescription ?? "알 수 없는 오류")
     }
 
     private func loadJPEG(from asset: PHAsset) async throws -> Data {
@@ -146,5 +165,30 @@ actor PhotoUploader: PhotoUploading {
                 continuation.resume(returning: jpeg)
             }
         }
+    }
+}
+
+private struct SupabasePhotoUploaderClient: PhotoUploaderClient {
+    private var storage: SupabaseStorageClient { SupabaseService.shared.storage }
+    private let bucket = "memories"
+
+    func upload(path: String, data: Data) async throws {
+        _ = try await storage.from(bucket).upload(
+            path,
+            data: data,
+            options: FileOptions(
+                cacheControl: "3600",
+                contentType: "image/jpeg",
+                upsert: false
+            )
+        )
+    }
+
+    func createSignedURL(path: String, expiresIn: Int) async throws -> URL? {
+        try await storage.from(bucket).createSignedURL(path: path, expiresIn: expiresIn)
+    }
+
+    func remove(paths: [String]) async throws {
+        _ = try await storage.from(bucket).remove(paths: paths)
     }
 }

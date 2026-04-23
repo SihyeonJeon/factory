@@ -22,9 +22,12 @@ struct EventMemoryMiniGallery: View {
     }
 
     private func thumbnail(memory: DBMemory, index: Int) -> some View {
-        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
-            ZStack {
-                if let path = (memory.photoURLs + [memory.photoURL].compactMap { $0 }).first {
+        let photoPaths = (memory.photoURLs + [memory.photoURL].compactMap { $0 })
+            .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+
+        return VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
+            ZStack(alignment: .topTrailing) {
+                if let path = photoPaths.first {
                     RemoteImageView(storagePath: path)
                         .accessibilityHidden(true)
                 } else {
@@ -33,6 +36,11 @@ struct EventMemoryMiniGallery: View {
                         .imageScale(.large)
                         .foregroundStyle(UnfadingTheme.Color.primary)
                         .accessibilityHidden(true)
+                }
+
+                if photoPaths.count > 1 {
+                    PhotoCountPill(extraCount: photoPaths.count - 1)
+                        .padding(UnfadingTheme.Spacing.xs)
                 }
             }
             .aspectRatio(1, contentMode: .fit)

@@ -11,6 +11,7 @@ struct MemoryDetailView: View {
     let mode: GroupMode
 
     @State private var currentIndex: Int
+    @State private var photoPageIndex: Int = 0
     @State private var extraLine: String = ""
     @State private var didSubmitExtraLine = false
 
@@ -92,31 +93,44 @@ struct MemoryDetailView: View {
 
     private var carousel: some View {
         VStack(spacing: UnfadingTheme.Spacing.md) {
-            TabView(selection: $currentIndex) {
-                ForEach(Array(scopedMemories.enumerated()), id: \.element.id) { index, item in
-                    heroPhoto(for: item)
-                        .tag(index)
+            if currentMemory.detailPhotoPaths.count > 1 {
+                TabView(selection: $photoPageIndex) {
+                    ForEach(Array(currentMemory.detailPhotoPaths.enumerated()), id: \.offset) { index, path in
+                        heroPhoto(photoPath: path, memory: currentMemory)
+                            .tag(index)
+                    }
                 }
-            }
-            .tabViewStyle(.page(indexDisplayMode: .automatic))
-            .frame(height: min(UIScreen.main.bounds.width * 4 / 3, 520))
-            .clipShape(RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous))
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .frame(height: min(UIScreen.main.bounds.width * 4 / 3, 520))
+                .clipShape(RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous))
 
-            HStack(spacing: UnfadingTheme.Spacing.sm) {
-                carouselButton(title: UnfadingLocalized.Detail.previousButton, systemImage: "chevron.left", delta: -1)
-                Text(UnfadingLocalized.Detail.eventPosition(currentIndex + 1, scopedMemories.count))
-                    .font(UnfadingTheme.Font.metaNum())
-                    .foregroundStyle(UnfadingTheme.Color.textSecondary)
-                    .frame(maxWidth: .infinity, minHeight: 44)
-                    .background(
-                        UnfadingTheme.Color.card,
-                        in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.button, style: .continuous)
-                    )
-                carouselButton(title: UnfadingLocalized.Detail.nextButton, systemImage: "chevron.right", delta: 1)
+                pageIndicator
+            } else {
+                heroPhoto(photoPath: currentMemory.detailPhotoPaths.first, memory: currentMemory)
+                    .frame(height: min(UIScreen.main.bounds.width * 4 / 3, 520))
+                    .clipShape(RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous))
             }
+        }
+        .onChange(of: currentMemory.id) { _, _ in
+            photoPageIndex = 0
         }
         .padding(.top, UnfadingTheme.Spacing.sm)
         .accessibilityIdentifier("memory-detail-carousel")
+    }
+
+    private var pageIndicator: some View {
+        HStack(spacing: UnfadingTheme.Spacing.xs) {
+            ForEach(Array(currentMemory.detailPhotoPaths.indices), id: \.self) { index in
+                Capsule()
+                    .fill(index == photoPageIndex ? UnfadingTheme.Color.primary : UnfadingTheme.Color.divider)
+                    .frame(width: index == photoPageIndex ? 24 : 8, height: 8)
+                    .animation(.easeInOut(duration: 0.18), value: photoPageIndex)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(minHeight: 44)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("사진 \(photoPageIndex + 1) / \(currentMemory.detailPhotoPaths.count)")
     }
 
     private var metaStrip: some View {
@@ -256,10 +270,10 @@ struct MemoryDetailView: View {
         }
     }
 
-    private func heroPhoto(for memory: DBMemory) -> some View {
+    private func heroPhoto(photoPath: String?, memory: DBMemory) -> some View {
         ZStack(alignment: .bottomLeading) {
-            if let path = memory.detailPhotoPaths.first {
-                RemoteImageView(storagePath: path)
+            if let photoPath {
+                RemoteImageView(storagePath: photoPath)
                     .accessibilityHidden(true)
             } else {
                 Rectangle()
@@ -288,23 +302,6 @@ struct MemoryDetailView: View {
             }
             .padding(UnfadingTheme.Spacing.lg)
         }
-    }
-
-    private func carouselButton(title: String, systemImage: String, delta: Int) -> some View {
-        Button {
-            move(delta: delta)
-        } label: {
-            Label(title, systemImage: systemImage)
-                .labelStyle(.iconOnly)
-                .frame(width: 44, height: 44)
-        }
-        .disabled(!canMove(delta: delta))
-        .foregroundStyle(canMove(delta: delta) ? UnfadingTheme.Color.textPrimary : UnfadingTheme.Color.textTertiary)
-        .background(
-            UnfadingTheme.Color.card,
-            in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.button, style: .continuous)
-        )
-        .accessibilityLabel(title)
     }
 
     private func metaItem(systemImage: String, text: String) -> some View {
@@ -388,15 +385,6 @@ struct MemoryDetailView: View {
 
     private var weatherText: String { "맑음" }
     private var weatherDetailText: String { "맑음 · 바람 약함 · 산책하기 좋은 날" }
-
-    private func canMove(delta: Int) -> Bool {
-        scopedMemories.indices.contains(currentIndex + delta)
-    }
-
-    private func move(delta: Int) {
-        guard canMove(delta: delta) else { return }
-        currentIndex += delta
-    }
 
     private func submitExtraLine() {
         let trimmed = extraLine.trimmingCharacters(in: .whitespacesAndNewlines)
