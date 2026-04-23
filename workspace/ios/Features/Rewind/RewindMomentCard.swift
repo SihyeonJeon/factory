@@ -4,6 +4,7 @@ import SwiftUI
 struct RewindMomentCard: View {
     let data: RewindData
     let story: RewindStoryKind
+    var mode: GroupMode = .couple
 
     var body: some View {
         ZStack {
@@ -49,7 +50,7 @@ struct RewindMomentCard: View {
                 .frame(minHeight: 44)
                 .background(UnfadingTheme.Color.textOnPrimary.opacity(0.22), in: Capsule())
 
-            Text(data.headline)
+            Text(UnfadingLocalized.Rewind.coverHeadline(for: mode))
                 .font(UnfadingTheme.Font.pageTitle(40))
                 .lineSpacing(4)
                 .fixedSize(horizontal: false, vertical: true)
@@ -66,7 +67,7 @@ struct RewindMomentCard: View {
 
     private var topPlaces: some View {
         VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xl) {
-            storyTitle(UnfadingLocalized.Rewind.topPlacesTitle, subtitle: UnfadingLocalized.Rewind.topPlacesSubtitle)
+            storyTitle(UnfadingLocalized.Rewind.topPlacesTitle, subtitle: UnfadingLocalized.Rewind.topPlacesSubtitle(for: mode))
 
             VStack(spacing: UnfadingTheme.Spacing.md) {
                 ForEach(Array(data.topPlaces.enumerated()), id: \.element.id) { index, place in
@@ -154,7 +155,7 @@ struct RewindMomentCard: View {
 
     private var timeTogether: some View {
         VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xl) {
-            storyTitle(UnfadingLocalized.Rewind.timeTogetherTitle, subtitle: UnfadingLocalized.Rewind.timeTogetherSubtitle)
+            storyTitle(UnfadingLocalized.Rewind.timeTogetherTitle(for: mode), subtitle: UnfadingLocalized.Rewind.timeTogetherSubtitle)
 
             VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
                 Text("\(data.totalHoursTogether)")
@@ -165,7 +166,7 @@ struct RewindMomentCard: View {
                     .font(UnfadingTheme.Font.pageTitle(28))
             }
 
-            Label(UnfadingLocalized.Rewind.timeTogetherBody, systemImage: "person.2.fill")
+            Label(UnfadingLocalized.Rewind.timeTogetherBody(for: mode), systemImage: "person.2.fill")
                 .font(UnfadingTheme.Font.body(16))
                 .padding(UnfadingTheme.Spacing.md)
                 .frame(maxWidth: .infinity, minHeight: 58, alignment: .leading)

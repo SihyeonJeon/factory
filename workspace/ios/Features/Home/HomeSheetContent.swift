@@ -69,6 +69,7 @@ struct SheetTabs: View {
 struct HomeSheetContent: View {
     @EnvironmentObject private var memoryStore: MemoryStore
     @Binding var selectedTab: SheetTab
+    let mode: GroupMode
     let onRewindTap: () -> Void
 
     private var aggregator: MemoryAggregator {
@@ -81,7 +82,7 @@ struct HomeSheetContent: View {
 
             switch selectedTab {
             case .curation:
-                SheetCuratedContent(aggregator: aggregator, onRewindTap: onRewindTap)
+                SheetCuratedContent(aggregator: aggregator, mode: mode, onRewindTap: onRewindTap)
             case .archive:
                 SheetArchiveContent(aggregator: aggregator)
             }
@@ -95,6 +96,7 @@ struct HomeSheetContent: View {
 
 struct SheetCuratedContent: View {
     let aggregator: MemoryAggregator
+    let mode: GroupMode
     let onRewindTap: () -> Void
 
     var body: some View {
@@ -107,7 +109,7 @@ struct SheetCuratedContent: View {
 
             PlaceBundleRow(bundles: aggregator.placeBundles)
 
-            RewindHintCard(onTap: onRewindTap)
+            RewindHintCard(mode: mode, onTap: onRewindTap)
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("home-sheet-curation")
@@ -146,7 +148,11 @@ struct WeeklyCoverEventCard: View {
                 }
                 .padding(UnfadingTheme.Spacing.lg)
             }
-            .accessibilityLabel("\(event.title), \(event.place), 사진 \(event.photoCount)장")
+            .accessibilityLabel(UnfadingLocalized.Home.eventAccessibilityLabel(
+                title: event.title,
+                place: event.place,
+                photoCount: event.photoCount
+            ))
         }
     }
 }
@@ -352,7 +358,11 @@ struct ArchiveEventSection: View {
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(event.title), \(event.place), 사진 \(event.photoCount)장")
+        .accessibilityLabel(UnfadingLocalized.Home.eventAccessibilityLabel(
+            title: event.title,
+            place: event.place,
+            photoCount: event.photoCount
+        ))
     }
 }
 
@@ -557,6 +567,9 @@ private struct DateBadge: View {
         }
         .frame(width: 44, height: 44)
         .background(UnfadingTheme.Color.surface, in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.compact, style: .continuous))
-        .accessibilityLabel("\(Calendar.current.component(.month, from: date))월 \(Calendar.current.component(.day, from: date))일")
+        .accessibilityLabel(UnfadingLocalized.Home.dateAccessibilityLabel(
+            month: Calendar.current.component(.month, from: date),
+            day: Calendar.current.component(.day, from: date)
+        ))
     }
 }

@@ -1,14 +1,15 @@
 import SwiftUI
 
 struct ComposeFAB: View {
+    @ScaledMetric(relativeTo: .title3) private var buttonSize: CGFloat = 56
     let onTap: () -> Void
 
     var body: some View {
         Button(action: onTap) {
             Image(systemName: "plus")
-                .font(.system(size: 22, weight: .bold))
+                .font(.title3.weight(.bold))
                 .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
-                .frame(width: 56, height: 56)
+                .frame(width: buttonSize, height: buttonSize)
                 .background(
                     LinearGradient(
                         colors: [UnfadingTheme.Color.primary, UnfadingTheme.Color.primaryHover],

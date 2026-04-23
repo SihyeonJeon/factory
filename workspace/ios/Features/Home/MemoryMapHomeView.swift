@@ -117,6 +117,7 @@ struct MemoryMapHomeView: View {
                         } else {
                             HomeSheetContent(
                                 selectedTab: $activeSheetTab,
+                                mode: groupStore.mode,
                                 onRewindTap: showRewindFromCuration
                             )
                         }
@@ -319,11 +320,11 @@ struct MemoryMapHomeView: View {
 
     private var mapControls: some View {
         VStack(spacing: MemoryMapHomeLayout.mapControlsSpacing) {
-            mapControlButton(systemName: "location.fill", accessibilityLabel: "Current location") {
+            mapControlButton(systemName: "location.fill", accessibilityLabel: UnfadingLocalized.Accessibility.showCurrentLocationLabel) {
                 _ = locationPermissionStore.handleCurrentLocationTap()
             }
 
-            mapControlButton(systemName: "location.north.line.fill", accessibilityLabel: "Reset map orientation") {
+            mapControlButton(systemName: "location.north.line.fill", accessibilityLabel: UnfadingLocalized.Accessibility.resetMapOrientationLabel) {
                 cameraPosition = .region(
                     MKCoordinateRegion(
                         center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
@@ -367,11 +368,11 @@ struct MemoryMapHomeView: View {
     }
 
     private var groupSubtitle: String {
-        let days = daysTogether
-        if groupStore.mode == .couple {
-            return "함께한 지 \(days)일"
-        }
-        return "\(max(memberCount, 1))명 · 함께한 지 \(days)일"
+        UnfadingLocalized.Home.groupSubtitle(
+            mode: groupStore.mode,
+            memberCount: memberCount,
+            days: daysTogether
+        )
     }
 
     private var memberCount: Int {

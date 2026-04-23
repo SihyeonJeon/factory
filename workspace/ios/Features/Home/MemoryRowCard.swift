@@ -103,7 +103,11 @@ struct MemoryRowCard: View {
         }
         .shadow(style: UnfadingTheme.Shadow.card)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(item.place), \(item.time), \(item.note)")
+        .accessibilityLabel(UnfadingLocalized.Home.memoryRowAccessibilityLabel(
+            place: item.place,
+            time: item.time,
+            note: item.note
+        ))
     }
 
     private var thumbnail: some View {

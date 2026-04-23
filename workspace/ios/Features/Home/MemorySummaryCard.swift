@@ -7,6 +7,7 @@ struct MemorySummaryCard: View {
     /// short label. When nil, it shows the default sample "오늘의 리와인드" copy.
     var selectedPin: SampleMemoryPin? = nil
     var photoStoragePath: String? = nil
+    var mode: GroupMode = .couple
     var usesInternalScroll = true
     var onDetailTap: (() -> Void)? = nil
     var onRewindTap: (() -> Void)? = nil
@@ -47,7 +48,7 @@ struct MemorySummaryCard: View {
             tagSection
 
             if shouldShowRewindHint, let onRewindTap {
-                RewindHintCard(onTap: onRewindTap)
+                RewindHintCard(mode: mode, onTap: onRewindTap)
             }
 
             if let onDetailTap {
@@ -159,6 +160,7 @@ struct MemorySummaryCard: View {
 }
 
 struct RewindHintCard: View {
+    let mode: GroupMode
     let onTap: () -> Void
 
     var body: some View {
@@ -172,11 +174,11 @@ struct RewindHintCard: View {
                         .background(UnfadingTheme.Color.accentSoft, in: Circle())
 
                     VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
-                        Text(UnfadingLocalized.Home.rewindHintTitle)
+                        Text(title)
                             .font(UnfadingTheme.Font.sectionTitle())
                             .foregroundStyle(UnfadingTheme.Color.textPrimary)
                             .fixedSize(horizontal: false, vertical: true)
-                        Text(UnfadingLocalized.Home.rewindHintBody)
+                        Text(hintBody)
                             .font(UnfadingTheme.Font.footnote())
                             .foregroundStyle(UnfadingTheme.Color.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -203,9 +205,17 @@ struct RewindHintCard: View {
             .unfadingCardBackground(fill: UnfadingTheme.Color.sheet)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(UnfadingLocalized.Home.rewindHintTitle)
-        .accessibilityHint(UnfadingLocalized.Home.rewindHintBody)
+        .accessibilityLabel(title)
+        .accessibilityHint(hintBody)
         .accessibilityIdentifier("home-rewind-hint")
+    }
+
+    private var title: String {
+        UnfadingLocalized.Home.rewindHintTitle(for: mode)
+    }
+
+    private var hintBody: String {
+        UnfadingLocalized.Home.rewindHintBody(for: mode)
     }
 }
 

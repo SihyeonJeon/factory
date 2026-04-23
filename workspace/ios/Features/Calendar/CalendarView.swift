@@ -156,8 +156,8 @@ struct CalendarView: View {
         } else {
             UnfadingEmptyState(
                 systemImage: "calendar.badge.clock",
-                title: UnfadingLocalized.Calendar.emptyDayTitle,
-                body: UnfadingLocalized.Calendar.emptyDayBody
+                title: UnfadingLocalized.Calendar.emptyDayTitle(for: groupStore.mode),
+                body: UnfadingLocalized.Calendar.emptyDayBody(for: groupStore.mode)
             )
         }
     }

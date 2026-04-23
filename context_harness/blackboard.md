@@ -3,6 +3,7 @@
 # Blackboard Compact
 
 ## Recent entries
+- **[2026-04-24 R39]** Codex opened user-requested unindexed a11y/design handoff and iOS files for accessibility/Dynamic Type/Korean copy sweep; scope limited to R39 surfaces and artifacts.
 - **[2026-04-23 R34]** Codex opened round-mandated unindexed design handoff/prototype and Rewind iOS files for `round_rewind_stories_r1`; scope limited to spec-listed implementation and artifacts.
 - **[2026-04-23 R32]** Codex opened round-mandated unindexed iOS/design files for Memory Detail Sprint 28 implementation; scope limited to spec-listed files and R32 artifacts.
 - **[2026-04-10 23:29:03]** `code_review` via `ios_architect:claude-opus-4-6`

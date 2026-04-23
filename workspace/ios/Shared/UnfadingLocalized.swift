@@ -58,6 +58,12 @@ enum UnfadingLocalized {
         static let searchPlaceHint = "장소 검색 화면을 엽니다."
         static let onboardingSkipHint = "온보딩을 마치고 앱으로 이동합니다."
         static let onboardingStartHint = "온보딩을 완료하고 앱을 시작합니다."
+        static let resetMapOrientationLabel = "지도 방향 초기화"
+        static let sheetBackLabel = "이전"
+        static let clearSelectionLabel = "선택 해제"
+        static let clearSelectionHint = "지도 선택을 지우고 큐레이션 시트로 돌아갑니다."
+        static let photoUploadInProgressLabel = "사진 업로드 중"
+        static let addMemoryAtPlaceLabel = "이 장소에 추억 추가"
 
         static func mapPinLabel(title: String) -> String {
             "추억 핀, \(title)"
@@ -108,7 +114,13 @@ enum UnfadingLocalized {
             openSettingsHint,
             searchPlaceHint,
             onboardingSkipHint,
-            onboardingStartHint
+            onboardingStartHint,
+            resetMapOrientationLabel,
+            sheetBackLabel,
+            clearSelectionLabel,
+            clearSelectionHint,
+            photoUploadInProgressLabel,
+            addMemoryAtPlaceLabel
         ]
     }
 
@@ -139,6 +151,62 @@ enum UnfadingLocalized {
         static let rewindHintTitle = "이번 달 리와인드"
         static let rewindHintBody = "함께 남긴 장소와 사진을 모아 한 번에 돌아봐요."
         static let rewindHintCta = "리와인드 보기"
+
+        static func rewindHintTitle(for mode: GroupMode) -> String {
+            switch mode {
+            case .couple: return "이번 달 우리의 리와인드"
+            case .general: return "이번 달 크루 리와인드"
+            }
+        }
+
+        static func rewindHintBody(for mode: GroupMode) -> String {
+            switch mode {
+            case .couple:
+                return "둘이 남긴 장소와 사진을 모아 한 번에 돌아봐요."
+            case .general:
+                return "크루가 남긴 장소와 사진을 모아 한 번에 돌아봐요."
+            }
+        }
+
+        static func groupSubtitle(mode: GroupMode, memberCount: Int, days: Int) -> String {
+            switch mode {
+            case .couple:
+                return "함께한 지 \(days)일"
+            case .general:
+                return "\(max(memberCount, 1))명 · \(days)일"
+            }
+        }
+
+        static func memoryTitle(for mode: GroupMode) -> String {
+            switch mode {
+            case .couple: return "우리의 추억"
+            case .general: return "크루 기록"
+            }
+        }
+
+        static func collapsedMemoryTitle(for mode: GroupMode, count: Int) -> String {
+            "\(memoryTitle(for: mode)) \(count) · 위로 스와이프"
+        }
+
+        static func clusterMarkerLabel(place: String, count: Int) -> String {
+            "\(place), 추억 \(count)개"
+        }
+
+        static func eventAccessibilityLabel(title: String, place: String, photoCount: Int) -> String {
+            "\(title), \(place), 사진 \(photoCount)장"
+        }
+
+        static func memoryRowAccessibilityLabel(place: String, time: String, note: String) -> String {
+            "\(place), \(time), \(note)"
+        }
+
+        static func dateAccessibilityLabel(month: Int, day: Int) -> String {
+            "\(month)월 \(day)일"
+        }
+
+        static func progressPercent(_ percent: Int) -> String {
+            "\(percent)%"
+        }
     }
 
     // MARK: Common
@@ -224,6 +292,40 @@ enum UnfadingLocalized {
         static let hoursTogetherUnit = "시간"
         static let timeTogetherBody = "함께 머문 시간이 한 장의 리와인드가 되었어요."
 
+        static func coverHeadline(for mode: GroupMode) -> String {
+            switch mode {
+            case .couple:
+                return "이번 달,\n함께 지나온 곳들"
+            case .general:
+                return "이번 달,\n크루가 모인 곳들"
+            }
+        }
+
+        static func topPlacesSubtitle(for mode: GroupMode) -> String {
+            switch mode {
+            case .couple:
+                return "이번 달에 둘이 가장 자주 다시 찾은 장소예요."
+            case .general:
+                return "이번 달에 크루가 가장 자주 다시 찾은 장소예요."
+            }
+        }
+
+        static func timeTogetherTitle(for mode: GroupMode) -> String {
+            switch mode {
+            case .couple: return "함께 보낸 시간"
+            case .general: return "크루가 함께한 시간"
+            }
+        }
+
+        static func timeTogetherBody(for mode: GroupMode) -> String {
+            switch mode {
+            case .couple:
+                return "함께 머문 시간이 한 장의 리와인드가 되었어요."
+            case .general:
+                return "크루가 머문 시간이 한 장의 리와인드가 되었어요."
+            }
+        }
+
         static func visitCount(_ count: Int) -> String {
             "\(count)번 방문"
         }
@@ -300,6 +402,15 @@ enum UnfadingLocalized {
 
         static func memberCountFormat(_ count: Int) -> String {
             "멤버 \(count)명"
+        }
+
+        static func memberCountFormat(_ count: Int, mode: GroupMode) -> String {
+            switch mode {
+            case .couple:
+                return "둘만의 기록"
+            case .general:
+                return "멤버 \(count)명"
+            }
         }
 
         static func pickerMembersFormat(_ count: Int) -> String {
@@ -383,6 +494,10 @@ enum UnfadingLocalized {
         static let defaultExperience = "경험"
         static let addCategory = "카테고리 추가"
         static let close = "카테고리 편집 닫기"
+
+        static func deleteCategoryLabel(_ name: String) -> String {
+            "\(name) 삭제"
+        }
     }
 
     // MARK: Calendar (stub in R3; full impl in R8)
@@ -396,6 +511,24 @@ enum UnfadingLocalized {
         static let nextMonthHint = "다음 달"
         static let emptyDayTitle = "이 날의 추억이 없어요"
         static let emptyDayBody = "지도에서 새 추억을 기록해 이 자리를 채워보세요."
+
+        static func emptyDayTitle(for mode: GroupMode) -> String {
+            switch mode {
+            case .couple:
+                return "이 날의 우리의 추억이 없어요"
+            case .general:
+                return "이 날의 크루 기록이 없어요"
+            }
+        }
+
+        static func emptyDayBody(for mode: GroupMode) -> String {
+            switch mode {
+            case .couple:
+                return "지도에서 둘만의 새 추억을 기록해 이 자리를 채워보세요."
+            case .general:
+                return "지도에서 크루의 새 기록을 남겨 이 자리를 채워보세요."
+            }
+        }
 
         static func memoryCountFormat(_ count: Int) -> String {
             "\(count)개의 추억"

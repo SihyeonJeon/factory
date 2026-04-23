@@ -116,7 +116,7 @@ struct CategoryEditorOverlay: View {
                             .frame(width: 34, height: 34)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("\(category.name) 삭제")
+                    .accessibilityLabel(UnfadingLocalized.Categories.deleteCategoryLabel(category.name))
                 }
                 .frame(minHeight: 44)
                 .padding(.horizontal, UnfadingTheme.Spacing.sm)

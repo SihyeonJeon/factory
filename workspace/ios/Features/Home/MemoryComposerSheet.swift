@@ -262,8 +262,8 @@ struct MemoryComposerSheet: View {
                 .foregroundStyle(UnfadingTheme.Color.textSecondary)
             ProgressView(value: state.uploadProgress)
                 .progressViewStyle(.linear)
-                .accessibilityLabel("사진 업로드 중")
-                .accessibilityValue("\(percent)%")
+                .accessibilityLabel(UnfadingLocalized.Accessibility.photoUploadInProgressLabel)
+                .accessibilityValue(UnfadingLocalized.Home.progressPercent(percent))
         }
     }
 

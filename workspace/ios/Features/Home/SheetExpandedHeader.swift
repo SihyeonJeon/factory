@@ -24,7 +24,7 @@ struct SheetExpandedHeader: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("이전")
+                .accessibilityLabel(UnfadingLocalized.Accessibility.sheetBackLabel)
                 .accessibilityIdentifier("sheet-expanded-back")
 
                 groupPill
@@ -86,7 +86,7 @@ struct SheetExpandedHeader: View {
         .padding(.horizontal, UnfadingTheme.Spacing.sm)
         .frame(maxWidth: .infinity, minHeight: 36)
         .background(UnfadingTheme.Color.chipBg, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .accessibilityLabel("검색")
+        .accessibilityLabel(UnfadingLocalized.Home.searchLabel)
     }
 
     private func memberColor(_ index: Int) -> Color {

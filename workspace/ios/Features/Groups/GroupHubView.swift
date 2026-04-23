@@ -150,7 +150,7 @@ struct GroupHubView: View {
                 )
                 infoRow(
                     title: UnfadingLocalized.Groups.membersLabel,
-                    value: UnfadingLocalized.Groups.memberCountFormat(groupStore.members.count),
+                    value: UnfadingLocalized.Groups.memberCountFormat(groupStore.members.count, mode: groupStore.mode),
                     systemImage: "person.3"
                 )
 

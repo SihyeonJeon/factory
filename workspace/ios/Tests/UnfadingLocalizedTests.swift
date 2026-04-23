@@ -64,6 +64,27 @@ final class UnfadingLocalizedTests: XCTestCase {
         XCTAssertEqual(sangsu.subtitle, "서울 마포구")
     }
 
+    func test_mode_aware_copy_keeps_couple_and_group_labels_distinct() {
+        XCTAssertEqual(UnfadingLocalized.Home.memoryTitle(for: .couple), "우리의 추억")
+        XCTAssertEqual(UnfadingLocalized.Home.memoryTitle(for: .general), "크루 기록")
+        XCTAssertEqual(UnfadingLocalized.Home.collapsedMemoryTitle(for: .couple, count: 23), "우리의 추억 23 · 위로 스와이프")
+        XCTAssertEqual(UnfadingLocalized.Home.collapsedMemoryTitle(for: .general, count: 23), "크루 기록 23 · 위로 스와이프")
+        XCTAssertEqual(UnfadingLocalized.Home.groupSubtitle(mode: .couple, memberCount: 2, days: 99), "함께한 지 99일")
+        XCTAssertEqual(UnfadingLocalized.Home.groupSubtitle(mode: .general, memberCount: 5, days: 99), "5명 · 99일")
+    }
+
+    func test_mode_aware_surface_copy_covers_home_calendar_rewind_and_group_hub() {
+        XCTAssertTrue(UnfadingLocalized.Home.rewindHintTitle(for: .couple).contains("우리"))
+        XCTAssertTrue(UnfadingLocalized.Home.rewindHintTitle(for: .general).contains("크루"))
+        XCTAssertTrue(UnfadingLocalized.Calendar.emptyDayTitle(for: .couple).contains("우리"))
+        XCTAssertTrue(UnfadingLocalized.Calendar.emptyDayTitle(for: .general).contains("크루"))
+        XCTAssertTrue(UnfadingLocalized.Rewind.coverHeadline(for: .general).contains("크루"))
+        XCTAssertEqual(UnfadingLocalized.Rewind.timeTogetherTitle(for: .couple), "함께 보낸 시간")
+        XCTAssertEqual(UnfadingLocalized.Rewind.timeTogetherTitle(for: .general), "크루가 함께한 시간")
+        XCTAssertEqual(UnfadingLocalized.Groups.memberCountFormat(2, mode: .couple), "둘만의 기록")
+        XCTAssertEqual(UnfadingLocalized.Groups.memberCountFormat(5, mode: .general), "멤버 5명")
+    }
+
     // MARK: Helper
 
     private func containsHangul(_ text: String) -> Bool {

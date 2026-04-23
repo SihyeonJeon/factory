@@ -89,7 +89,10 @@ struct ClusterMarker: View {
         .animation(.easeInOut(duration: 0.22), value: isSelected)
         .animation(.easeInOut(duration: 0.22), value: isDimmed)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(MemoryMapPinStyle.shortLabel(for: cluster.representativeMemory)), 추억 \(cluster.count)개")
+        .accessibilityLabel(UnfadingLocalized.Home.clusterMarkerLabel(
+            place: MemoryMapPinStyle.shortLabel(for: cluster.representativeMemory),
+            count: cluster.count
+        ))
     }
 }
 

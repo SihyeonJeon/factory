@@ -3,6 +3,7 @@ import SwiftUI
 // vibe-limit-checked: 7 full-screen stories, 8 Korean labels/44pt controls, 12 reduce-motion auto-advance guard
 struct RewindFeedView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @EnvironmentObject private var groupStore: GroupStore
     @State private var selectedIndex = 0
 
     private let data: RewindData
@@ -22,7 +23,7 @@ struct RewindFeedView: View {
         ZStack(alignment: .top) {
             TabView(selection: $selectedIndex) {
                 ForEach(Array(stories.enumerated()), id: \.element.id) { index, story in
-                    RewindMomentCard(data: data, story: story)
+                    RewindMomentCard(data: data, story: story, mode: groupStore.mode)
                         .tag(index)
                         .overlay {
                             storyTapZones
@@ -130,4 +131,5 @@ private extension DateInterval {
 
 #Preview {
     RewindFeedView()
+        .environmentObject(GroupStore.preview())
 }

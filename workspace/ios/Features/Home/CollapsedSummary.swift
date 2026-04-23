@@ -15,11 +15,6 @@ struct CollapsedSummary: View {
     }
 
     private var copy: String {
-        switch mode {
-        case .couple:
-            return "우리의 추억 \(count) · 위로 스와이프"
-        case .general:
-            return "크루 기록 \(count) · 위로 스와이프"
-        }
+        UnfadingLocalized.Home.collapsedMemoryTitle(for: mode, count: count)
     }
 }

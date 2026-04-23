@@ -33,8 +33,8 @@ struct SheetFilteredHeader: View {
                         .background(UnfadingTheme.Color.surface, in: Circle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("선택 해제")
-                .accessibilityHint("지도 선택을 지우고 큐레이션 시트로 돌아갑니다")
+                .accessibilityLabel(UnfadingLocalized.Accessibility.clearSelectionLabel)
+                .accessibilityHint(UnfadingLocalized.Accessibility.clearSelectionHint)
             }
 
             Text(Self.eventFormatter.string(from: eventDate))
@@ -158,7 +158,7 @@ struct SheetFilteredContent: View {
                     }
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("이 장소에 추억 추가")
+            .accessibilityLabel(UnfadingLocalized.Accessibility.addMemoryAtPlaceLabel)
         }
     }
 

@@ -201,3 +201,75 @@ Applied fixes:
 - No code change required.
 Remaining advisories:
 - Member names can be added to the stack label when design decides whether initials are sufficient.
+
+---
+
+## R39 Update: Accessibility / Dynamic Type / Mode-Aware Korean Copy
+
+Round context: R39 accessibility and Korean copy refresh after R26-R38 surfaces.
+Audit date: 2026-04-24 KST.
+
+### Audit commands
+
+- `rg -n '\.accessibility(Label|Hint|Identifier|Value)' workspace/ios/App workspace/ios/Features workspace/ios/Shared`
+  - Audited 211 accessibility label, hint, identifier, and value call sites across App, Features, and Shared.
+- `rg -n '\.accessibility(Label|Hint|Value)\("' workspace/ios/App workspace/ios/Features workspace/ios/Shared`
+  - Result after fixes: 0 direct string-literal label/hint/value call sites.
+- `rg -n 'font\(\.system\(size:' workspace/ios/App workspace/ios/Features workspace/ios/Shared`
+  - Result after fixes: 0 direct fixed-size system font call sites.
+- `rg -n '@ScaledMetric' workspace/ios/App workspace/ios/Features workspace/ios/Shared`
+  - Result after fixes: `ComposeFAB` uses `@ScaledMetric(relativeTo: .title3)` for the FAB touch frame at accessibility sizes.
+
+### Newly Audited R26-R38 Sections
+
+- Home shell: `MemoryMapHomeView`, `HomeSheetContent`, `CollapsedSummary`, `SheetExpandedHeader`, `SheetFilteredHeader`, `ComposeFAB`, `ClusterMarker`, `MemoryRowCard`.
+- Calendar: `CalendarView`, monthly expense header, future plan card, RSVP summary, add-plan/send-reminder actions.
+- Rewind stories: `RewindFeedView`, `RewindMomentCard`, generated story cards.
+- Group surfaces: `GroupHubView`, `GroupPickerOverlay`, `GroupOnboardingView`.
+- Composer and overlays: `MemoryComposerSheet`, `PlacePickerSheet`, `CategoryEditorOverlay`, participant/source chips.
+- Shared controls: bottom sheet, month grid, empty state, filter chip, avatar stack, photo grid, toast.
+
+### Applied Fixes
+
+- Added mode-aware Korean copy helpers in `UnfadingLocalized`:
+  - `Home.memoryTitle(for:)`
+  - `Home.collapsedMemoryTitle(for:count:)`
+  - `Home.groupSubtitle(mode:memberCount:days:)`
+  - `Home.rewindHintTitle(for:)`
+  - `Home.rewindHintBody(for:)`
+  - `Calendar.emptyDayTitle(for:)`
+  - `Calendar.emptyDayBody(for:)`
+  - `Rewind.coverHeadline(for:)`
+  - `Rewind.topPlacesSubtitle(for:)`
+  - `Rewind.timeTogetherTitle(for:)`
+  - `Rewind.timeTogetherBody(for:)`
+  - `Groups.memberCountFormat(_:mode:)`
+- Replaced direct couple/group copy branches in:
+  - `CollapsedSummary`: "우리의 추억" vs "크루 기록".
+  - `MemoryMapHomeView`: group subtitle uses "함께한 지 N일" for couple and "{멤버수}명 · N일" for general group.
+  - `MemorySummaryCard` / `HomeSheetContent`: home curation rewind title/body are mode-aware.
+  - `CalendarView`: empty state title/body are mode-aware.
+  - `RewindFeedView` / `RewindMomentCard`: cover, top-place subtitle, and time-together copy are mode-aware.
+  - `GroupHubView`: member count line is mode-aware.
+- Moved remaining direct accessibility string interpolation into `UnfadingLocalized` helper functions:
+  - cluster marker labels
+  - event card labels
+  - memory row labels
+  - date labels
+  - category delete labels
+  - photo upload progress label/value
+  - filtered-sheet clear/add-place labels
+- Replaced `ComposeFAB` fixed `.font(.system(size: 22, weight: .bold))` with semantic `.title3.weight(.bold)` plus a scaled 56pt touch frame.
+
+### Remaining Advisories
+
+- R39 used code grep for `accessibilityXXXLarge` risk, as requested. Visual simulator validation is still required for final layout sign-off because card density, bottom-sheet snap height, and full-screen Rewind stories can only be fully judged from runtime screenshots.
+- `UnfadingTheme.Font` still wraps custom font sizes by design from R26. No direct `.font(.system(size:))` call sites remain, but a future typography pass should consider `Font.custom(_:size:relativeTo:)` if the custom font stack needs stronger Dynamic Type guarantees.
+
+### Verification
+
+- `xcodegen generate`: passed, project regenerated.
+- `xcodebuild test -project MemoryMap.xcodeproj -scheme MemoryMap -destination 'platform=iOS Simulator,name=iPhone 16' -derivedDataPath .deriveddata/r39`: blocked by the current sandbox before tests could run.
+  - First attempt: SwiftPM could not clone packages because network access to GitHub is blocked.
+  - Follow-up: copied cached `SourcePackages` from `.deriveddata/r38` into `.deriveddata/r39`.
+  - Subsequent attempts: blocked by sandbox access to CoreSimulatorService and home-directory SwiftPM/Clang caches (`/Users/jeonsihyeon/.cache`, `/Users/jeonsihyeon/Library/Caches`).
