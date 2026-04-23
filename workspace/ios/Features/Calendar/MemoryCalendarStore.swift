@@ -7,10 +7,11 @@ final class MemoryCalendarStore: ObservableObject {
     @Published private(set) var selectedDate: Date?
     @Published private(set) var plannedEvents: [DBEvent] = []
     @Published private(set) var monthlyExpense: Int64 = 0
-    private(set) var memoryDates: Set<DateComponents>
+    @Published private(set) var memoryDates: Set<DateComponents>
 
     private let today: Date
     private var calendar: Calendar
+    private var memories: [DBMemory]
     private let eventRepo: EventRepository?
 
     struct CalendarCell: Hashable {
@@ -28,7 +29,8 @@ final class MemoryCalendarStore: ObservableObject {
         self.today = today
         self.displayedMonth = displayedMonth
         self.selectedDate = nil
-        self.memoryDates = Self.seedMemoryDates(for: displayedMonth, calendar: calendar)
+        self.memories = []
+        self.memoryDates = []
         self.eventRepo = eventRepo
         applyUITestStubIfNeeded()
     }
@@ -36,14 +38,14 @@ final class MemoryCalendarStore: ObservableObject {
     func nextMonth() {
         displayedMonth = calendar.date(byAdding: .month, value: 1, to: displayedMonth) ?? displayedMonth
         selectedDate = nil
-        memoryDates = Self.seedMemoryDates(for: displayedMonth, calendar: calendar)
+        refreshMemoryDates()
         applyUITestStubIfNeeded()
     }
 
     func previousMonth() {
         displayedMonth = calendar.date(byAdding: .month, value: -1, to: displayedMonth) ?? displayedMonth
         selectedDate = nil
-        memoryDates = Self.seedMemoryDates(for: displayedMonth, calendar: calendar)
+        refreshMemoryDates()
         applyUITestStubIfNeeded()
     }
 
@@ -54,8 +56,13 @@ final class MemoryCalendarStore: ObservableObject {
         components.day = 1
         displayedMonth = calendar.date(from: components) ?? displayedMonth
         selectedDate = nil
-        memoryDates = Self.seedMemoryDates(for: displayedMonth, calendar: calendar)
+        refreshMemoryDates()
         applyUITestStubIfNeeded()
+    }
+
+    func bind(memories: [DBMemory]) {
+        self.memories = memories
+        refreshMemoryDates()
     }
 
     func select(_ date: Date?) {
@@ -67,16 +74,27 @@ final class MemoryCalendarStore: ObservableObject {
         return memoryDates.contains(key)
     }
 
-    func memoriesForSelectedDate() -> [SampleMemoryPin] {
+    func memoriesForSelectedDate() -> [DBMemory] {
         guard let selectedDate else { return [] }
         let selectedComponents = calendar.dateComponents([.year, .month, .day], from: selectedDate)
-        let matchingIndexes = SampleMemoryPin.samples.indices.filter { index in
-            let syntheticComponents = syntheticDateComponents(for: SampleMemoryPin.samples[index], in: displayedMonth)
-            return syntheticComponents.year == selectedComponents.year
-                && syntheticComponents.month == selectedComponents.month
-                && syntheticComponents.day == selectedComponents.day
+        return memories
+            .filter { memory in
+                let components = calendar.dateComponents([.year, .month, .day], from: memory.date)
+                return components.year == selectedComponents.year
+                    && components.month == selectedComponents.month
+                    && components.day == selectedComponents.day
+            }
+            .sorted { $0.date > $1.date }
+    }
+
+    func relatedMemories(for memory: DBMemory) -> [DBMemory] {
+        let scoped: [DBMemory]
+        if let eventId = memory.eventId {
+            scoped = memories.filter { $0.eventId == eventId }
+        } else {
+            scoped = memories.filter { calendar.isDate($0.date, inSameDayAs: memory.date) }
         }
-        return matchingIndexes.map { SampleMemoryPin.samples[$0] }
+        return scoped.isEmpty ? [memory] : scoped.sorted { $0.date > $1.date }
     }
 
     func monthTitle() -> String {
@@ -153,29 +171,21 @@ final class MemoryCalendarStore: ObservableObject {
         }
     }
 
-    private static func seedMemoryDates(for month: Date, calendar: Calendar) -> Set<DateComponents> {
-        Set(SampleMemoryPin.samples.map { pin in
-            var components = calendar.dateComponents([.year, .month], from: month)
-            components.day = syntheticDay(for: pin)
+    private func refreshMemoryDates() {
+        memoryDates = Set(memories.map { memory in
+            let components = calendar.dateComponents([.year, .month, .day], from: memory.date)
             return DateComponents(year: components.year, month: components.month, day: components.day)
         })
     }
 
-    private func syntheticDateComponents(for pin: SampleMemoryPin, in month: Date) -> DateComponents {
-        var components = calendar.dateComponents([.year, .month], from: month)
-        components.day = Self.syntheticDay(for: pin)
-        return DateComponents(year: components.year, month: components.month, day: components.day)
-    }
-
-    private static func syntheticDay(for pin: SampleMemoryPin) -> Int {
-        let hash = abs(pin.id.uuidString.reduce(0) { partial, scalar in
-            partial &+ Int(scalar.unicodeScalars.first?.value ?? 0)
-        })
-        return (hash % 28) + 1
-    }
-
     private func applyUITestStubIfNeeded() {
         guard ProcessInfo.processInfo.environment["UNFADING_UI_TEST"] == "1" else { return }
+        #if DEBUG
+        if memories.isEmpty {
+            memories = MemoryStore.uiTestStubMemories()
+            refreshMemoryDates()
+        }
+        #endif
         let todayStart = KSTDateFormatter.truncateToDayKST(today)
         guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: todayStart) else { return }
         guard calendar.isDate(tomorrow, equalTo: displayedMonth, toGranularity: .month) else {

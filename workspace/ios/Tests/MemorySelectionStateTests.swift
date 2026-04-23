@@ -52,7 +52,7 @@ final class MemorySelectionStateTests: XCTestCase {
 
     func test_selectCluster_sets_scene_and_resolves_cluster() {
         let state = MemorySelectionState()
-        let clusters = SampleMemoryPin.samples.clusteredByCoordinateRadius()
+        let clusters = MemoryStore.uiTestStubMemories().clusteredByCoordinateRadius()
         let cluster = clusters.first!
         state.select(cluster: cluster)
         XCTAssertEqual(state.scene, .mapSelected)
@@ -74,16 +74,17 @@ final class MemorySelectionStateTests: XCTestCase {
         XCTAssertEqual(state.activeFilter, .food)
     }
 
-    func test_selectedPin_resolves_id_to_sample() {
+    func test_selectedMemory_resolves_id_to_memory() {
         let state = MemorySelectionState()
-        let pin = SampleMemoryPin.samples[1]
-        state.select(pinID: pin.id)
-        XCTAssertEqual(state.selectedPin(from: SampleMemoryPin.samples)?.id, pin.id)
+        let memories = MemoryStore.uiTestStubMemories()
+        let memory = memories[1]
+        state.select(pinID: memory.id)
+        XCTAssertEqual(state.selectedMemory(from: memories)?.id, memory.id)
     }
 
-    func test_selectedPin_returns_nil_when_no_selection() {
+    func test_selectedMemory_returns_nil_when_no_selection() {
         let state = MemorySelectionState()
-        XCTAssertNil(state.selectedPin(from: SampleMemoryPin.samples))
+        XCTAssertNil(state.selectedMemory(from: MemoryStore.uiTestStubMemories()))
     }
 
     func test_filter_has_five_cases_matching_deepsight_plan() {

@@ -1293,3 +1293,5 @@ xcodegen 성공. Sprint 26 완료입니다.
 - 2026-04-23 Codex R33: opened user-mandated Calendar iOS files, project/test helpers, and noted missing round_calendar_dial_r1 lock; reason: implement active R33 Calendar dial/plan/notification contract.
 - 2026-04-23 Codex R35: opened user-mandated Group Hub design/source/test files plus GroupStore/GroupPicker/DBModels to implement Settings navigation, GroupHub sections, tests, and round artifacts.
 - 2026-04-23 Codex R36: opened user-mandated design handoff, Home sheet Swift files, SampleModels, localization/theme, tests, and project.yml; reason: implement sheet curated content and archive tab with no matching R36 lock file found.
+- 2026-04-24 R38 Codex: opened user-specified iOS source/test files not individually indexed to connect MemoryStore real data for calendar/map/home sheet.
+- 2026-04-24 R38 Codex: opened Features/Rewind/RewindData.swift after SampleMemoryPin runtime reference search; reason: remove production SampleMemoryPin dependency from rewind sample fallback.

@@ -10,6 +10,7 @@ struct CalendarView: View {
         UUID(uuidString: "55555555-5555-4555-8555-555555555557")!: .maybe
     ])
     @EnvironmentObject private var groupStore: GroupStore
+    @EnvironmentObject private var memoryStore: MemoryStore
     @State private var planSheetDate: Date?
     @State private var isShowingMonthPicker = false
     @State private var toastMessage: String?
@@ -63,9 +64,16 @@ struct CalendarView: View {
             }
             .navigationTitle(UnfadingLocalized.Calendar.navTitle)
             .task(id: groupStore.activeGroupId) {
+                store.bind(memories: memoryStore.memories)
                 if let gid = groupStore.activeGroupId {
                     await store.loadMonth(for: gid)
                 }
+            }
+            .onAppear {
+                store.bind(memories: memoryStore.memories)
+            }
+            .onChange(of: memoryStore.memories) { _, memories in
+                store.bind(memories: memories)
             }
             .task(id: store.displayedMonth) {
                 if let gid = groupStore.activeGroupId {
@@ -205,7 +213,7 @@ struct CalendarView: View {
         .unfadingCardBackground(fill: UnfadingTheme.Color.sheet, radius: UnfadingTheme.Radius.button, shadow: false)
     }
 
-    private func eventListCard(plans: [DBEvent], memories: [SampleMemoryPin]) -> some View {
+    private func eventListCard(plans: [DBEvent], memories: [DBMemory]) -> some View {
         VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
             Text(UnfadingLocalized.Calendar.eventsSectionTitle)
                 .font(UnfadingTheme.Font.subheadlineSemibold())
@@ -223,13 +231,24 @@ struct CalendarView: View {
                     subtitle: KSTDateFormatter.dateTime.string(from: event.startDate)
                 )
             }
-            ForEach(memories) { pin in
-                calendarEventRow(
-                    systemImage: pin.symbol,
-                    tint: UnfadingTheme.Color.primary,
-                    title: UnfadingLocalized.Detail.title(for: pin),
-                    subtitle: UnfadingLocalized.Detail.place(for: pin)
-                )
+            ForEach(memories) { memory in
+                NavigationLink {
+                    MemoryDetailView(
+                        memory: memory,
+                        eventMemories: store.relatedMemories(for: memory),
+                        participants: groupStore.memberProfiles,
+                        mode: groupStore.mode
+                    )
+                } label: {
+                    calendarEventRow(
+                        systemImage: MemoryMapPinStyle.symbol(for: memory),
+                        tint: MemoryMapPinStyle.color(for: memory),
+                        title: memory.title,
+                        subtitle: memory.placeTitle
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("calendar-memory-row-\(memory.id.uuidString)")
             }
         }
         .padding(UnfadingTheme.Spacing.md)
@@ -406,4 +425,5 @@ private struct MonthPickerSheet: View {
 #Preview {
     CalendarView()
         .environmentObject(GroupStore.preview())
+        .environmentObject(MemoryStore(memories: MemoryStore.uiTestStubMemories()))
 }

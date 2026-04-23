@@ -63,7 +63,7 @@ final class MemorySelectionState: ObservableObject {
     /// Select the representative pin for a clustered annotation. The selected
     /// cluster is later resolved from the current rendered cluster set.
     func select(cluster: MemoryPinCluster) {
-        select(pinID: cluster.representativePin.id)
+        select(pinID: cluster.representativeMemory.id)
     }
 
     /// Clear any active pin selection and restore the default sheet snap.
@@ -80,18 +80,18 @@ final class MemorySelectionState: ObservableObject {
         activeFilter = activeFilter == filter ? .all : filter
     }
 
-    /// Resolve the currently-selected pin from a sample set. Returns `nil`
+    /// Resolve the currently-selected memory from a rendered set. Returns `nil`
     /// when nothing is selected or when the ID is not in the set (treated as
     /// a no-op rather than an error per honest-agent defensive semantics).
-    func selectedPin(from pins: [SampleMemoryPin]) -> SampleMemoryPin? {
+    func selectedMemory(from memories: [DBMemory]) -> DBMemory? {
         guard let id = selectedPinID else { return nil }
-        return pins.first(where: { $0.id == id })
+        return memories.first(where: { $0.id == id })
     }
 
     func selectedCluster(from clusters: [MemoryPinCluster]) -> MemoryPinCluster? {
         guard let id = selectedPinID else { return nil }
         return clusters.first { cluster in
-            cluster.pins.contains { $0.id == id }
+            cluster.memories.contains { $0.id == id }
         }
     }
 }

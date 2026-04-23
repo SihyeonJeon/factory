@@ -67,8 +67,13 @@ struct SheetTabs: View {
 }
 
 struct HomeSheetContent: View {
+    @EnvironmentObject private var memoryStore: MemoryStore
     @Binding var selectedTab: SheetTab
     let onRewindTap: () -> Void
+
+    private var aggregator: MemoryAggregator {
+        MemoryAggregator(memories: memoryStore.memories)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.lg) {
@@ -76,9 +81,9 @@ struct HomeSheetContent: View {
 
             switch selectedTab {
             case .curation:
-                SheetCuratedContent(onRewindTap: onRewindTap)
+                SheetCuratedContent(aggregator: aggregator, onRewindTap: onRewindTap)
             case .archive:
-                SheetArchiveContent()
+                SheetArchiveContent(aggregator: aggregator)
             }
         }
         .padding(.horizontal, UnfadingTheme.Spacing.lg)
@@ -89,15 +94,18 @@ struct HomeSheetContent: View {
 }
 
 struct SheetCuratedContent: View {
+    let aggregator: MemoryAggregator
     let onRewindTap: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xl) {
-            WeeklyCoverEventCard(event: SampleSheetData.weeklyEvent)
+            if let weeklyEvent = aggregator.weeklyEvent {
+                WeeklyCoverEventCard(event: weeklyEvent)
+            }
 
-            EventStrip(events: SampleSheetData.monthlyEvents)
+            EventStrip(events: aggregator.monthlyEvents)
 
-            PlaceBundleRow(bundles: SampleSheetData.placeBundles)
+            PlaceBundleRow(bundles: aggregator.placeBundles)
 
             RewindHintCard(onTap: onRewindTap)
         }
@@ -116,7 +124,7 @@ struct WeeklyCoverEventCard: View {
                 .foregroundStyle(UnfadingTheme.Color.textPrimary)
 
             ZStack(alignment: .bottomLeading) {
-                EventArtwork(symbols: event.photoSymbols, color: event.tint)
+                EventArtwork(symbols: event.photoSymbols, photoURLs: event.photoURLs, color: event.tint)
                     .frame(height: 172)
                     .clipShape(RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous))
 
@@ -154,8 +162,12 @@ struct EventStrip: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: UnfadingTheme.Spacing.sm) {
-                    ForEach(events) { event in
-                        EventStripPill(event: event)
+                    if events.isEmpty {
+                        EmptyMemorySectionCard(title: "아직 이달의 추억이 없어요")
+                    } else {
+                        ForEach(events) { event in
+                            EventStripPill(event: event)
+                        }
                     }
                 }
                 .padding(.vertical, 2)
@@ -208,32 +220,36 @@ struct PlaceBundleRow: View {
                 .foregroundStyle(UnfadingTheme.Color.textPrimary)
 
             VStack(spacing: UnfadingTheme.Spacing.sm) {
-                ForEach(bundles) { bundle in
-                    HStack(spacing: UnfadingTheme.Spacing.md) {
-                        ThreeUpThumbnail(symbols: bundle.photoSymbols, color: bundle.tint)
-                            .frame(width: 96, height: 72)
+                if bundles.isEmpty {
+                    EmptyMemorySectionCard(title: "장소별 묶음이 여기에 쌓여요")
+                } else {
+                    ForEach(bundles) { bundle in
+                        HStack(spacing: UnfadingTheme.Spacing.md) {
+                            ThreeUpThumbnail(symbols: bundle.photoSymbols, photoURLs: bundle.photoURLs, color: bundle.tint)
+                                .frame(width: 96, height: 72)
 
-                        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
-                            Text(bundle.place)
-                                .font(UnfadingTheme.Font.sectionTitle(14.5))
-                                .foregroundStyle(UnfadingTheme.Color.textPrimary)
-                                .lineLimit(1)
-                            Text("\(bundle.visitCount)번 방문 · \(bundle.photoCount)장")
-                                .font(UnfadingTheme.Font.footnote())
-                                .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
+                                Text(bundle.place)
+                                    .font(UnfadingTheme.Font.sectionTitle(14.5))
+                                    .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                                    .lineLimit(1)
+                                Text("\(bundle.visitCount)번 방문 · \(bundle.photoCount)장")
+                                    .font(UnfadingTheme.Font.footnote())
+                                    .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                            }
+
+                            Spacer(minLength: UnfadingTheme.Spacing.sm)
                         }
-
-                        Spacer(minLength: UnfadingTheme.Spacing.sm)
-                    }
-                    .padding(UnfadingTheme.Spacing.sm)
-                    .frame(minHeight: 88)
-                    .background(
-                        UnfadingTheme.Color.card,
-                        in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous)
-                    )
-                    .overlay {
-                        RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous)
-                            .stroke(UnfadingTheme.Color.divider, lineWidth: 0.5)
+                        .padding(UnfadingTheme.Spacing.sm)
+                        .frame(minHeight: 88)
+                        .background(
+                            UnfadingTheme.Color.card,
+                            in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous)
+                        )
+                        .overlay {
+                            RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous)
+                                .stroke(UnfadingTheme.Color.divider, lineWidth: 0.5)
+                        }
                     }
                 }
             }
@@ -243,10 +259,11 @@ struct PlaceBundleRow: View {
 }
 
 struct SheetArchiveContent: View {
+    let aggregator: MemoryAggregator
     @State private var sortOrder: ArchiveSortOrder = .latest
 
     private var events: [SheetMemoryEvent] {
-        SampleSheetData.archiveEvents.sortedEvents(order: sortOrder)
+        aggregator.archiveEvents.sortedEvents(order: sortOrder)
     }
 
     var body: some View {
@@ -254,8 +271,12 @@ struct SheetArchiveContent: View {
             archiveHeader
 
             LazyVStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xl) {
-                ForEach(events) { event in
-                    ArchiveEventSection(event: event)
+                if events.isEmpty {
+                    EmptyMemorySectionCard(title: "아직 보관된 추억이 없어요")
+                } else {
+                    ForEach(events) { event in
+                        ArchiveEventSection(event: event)
+                    }
                 }
             }
         }
@@ -265,7 +286,7 @@ struct SheetArchiveContent: View {
 
     private var archiveHeader: some View {
         VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.sm) {
-            Text("모든 추억 · \(SampleSheetData.archiveEvents.count)개 이벤트 · \(SampleSheetData.totalArchivePhotoCount)장")
+            Text("모든 추억 · \(aggregator.archiveEvents.count)개 이벤트 · \(aggregator.totalArchivePhotoCount)장")
                 .font(UnfadingTheme.Font.sectionTitle(14.5))
                 .foregroundStyle(UnfadingTheme.Color.textPrimary)
 
@@ -318,8 +339,13 @@ struct ArchiveEventSection: View {
             }
 
             LazyVGrid(columns: columns, spacing: 3) {
-                ForEach(Array(event.photoSymbols.enumerated()), id: \.offset) { index, symbol in
-                    ArchivePhotoTile(symbol: symbol, color: event.tint, count: index == 0 && event.photoCount > 1 ? event.photoCount : nil)
+                ForEach(0..<max(event.photoSymbols.count, event.photoURLs.count), id: \.self) { index in
+                    ArchivePhotoTile(
+                        symbol: event.photoSymbols[safe: index] ?? "photo",
+                        photoURL: event.photoURLs[safe: index],
+                        color: event.tint,
+                        count: index == 0 && event.photoCount > 1 ? event.photoCount : nil
+                    )
                         .aspectRatio(1, contentMode: .fit)
                 }
             }
@@ -337,6 +363,7 @@ struct SheetMemoryEvent: Identifiable, Hashable {
     let date: Date
     let photoCount: Int
     let photoSymbols: [String]
+    let photoURLs: [String]
     let tintIndex: Int
 
     var tint: Color {
@@ -350,82 +377,11 @@ struct PlaceBundle: Identifiable, Hashable {
     let visitCount: Int
     let photoCount: Int
     let photoSymbols: [String]
+    let photoURLs: [String]
     let tintIndex: Int
 
     var tint: Color {
         UnfadingTheme.Color.memberPalette[tintIndex % UnfadingTheme.Color.memberPalette.count]
-    }
-}
-
-enum SampleSheetData {
-    static let weeklyEvent = archiveEvents[0]
-
-    static let monthlyEvents: [SheetMemoryEvent] = Array(archiveEvents.prefix(4))
-
-    static let archiveEvents: [SheetMemoryEvent] = [
-        .init(
-            id: UUID(uuidString: "a1000001-1111-4111-8111-111111111111")!,
-            title: "상수 루프톱 저녁",
-            place: "상수 루프톱",
-            date: makeDate(year: 2026, month: 4, day: 21),
-            photoCount: 6,
-            photoSymbols: ["fork.knife", "wineglass", "camera.fill", "heart.fill", "sparkles", "person.3.fill"],
-            tintIndex: 0
-        ),
-        .init(
-            id: UUID(uuidString: "a1000002-2222-4222-8222-222222222222")!,
-            title: "한강 노을 라이딩",
-            place: "여의도 한강공원",
-            date: makeDate(year: 2026, month: 4, day: 18),
-            photoCount: 5,
-            photoSymbols: ["bicycle", "sunset.fill", "figure.outdoor.cycle", "water.waves", "camera.fill"],
-            tintIndex: 3
-        ),
-        .init(
-            id: UUID(uuidString: "a1000003-3333-4333-8333-333333333333")!,
-            title: "아침 산책",
-            place: "서울 도심 산책로",
-            date: makeDate(year: 2026, month: 4, day: 9),
-            photoCount: 4,
-            photoSymbols: ["sunrise.fill", "leaf.fill", "figure.walk", "mappin"],
-            tintIndex: 1
-        ),
-        .init(
-            id: UUID(uuidString: "a1000004-4444-4444-8444-444444444444")!,
-            title: "늦은 카페 회의",
-            place: "연남 작은 카페",
-            date: makeDate(year: 2026, month: 3, day: 28),
-            photoCount: 3,
-            photoSymbols: ["cup.and.saucer.fill", "book.closed.fill", "camera.fill"],
-            tintIndex: 7
-        )
-    ]
-
-    static let placeBundles: [PlaceBundle] = [
-        .init(
-            id: UUID(uuidString: "b1000001-1111-4111-8111-111111111111")!,
-            place: "상수 루프톱",
-            visitCount: 4,
-            photoCount: 18,
-            photoSymbols: ["fork.knife", "wineglass", "sparkles"],
-            tintIndex: 0
-        ),
-        .init(
-            id: UUID(uuidString: "b1000002-2222-4222-8222-222222222222")!,
-            place: "여의도 한강공원",
-            visitCount: 3,
-            photoCount: 14,
-            photoSymbols: ["bicycle", "sunset.fill", "water.waves"],
-            tintIndex: 3
-        )
-    ]
-
-    static var totalArchivePhotoCount: Int {
-        archiveEvents.reduce(0) { $0 + $1.photoCount }
-    }
-
-    private static func makeDate(year: Int, month: Int, day: Int) -> Date {
-        Calendar(identifier: .gregorian).date(from: DateComponents(year: year, month: month, day: day)) ?? Date()
     }
 }
 
@@ -442,27 +398,32 @@ extension Array where Element == SheetMemoryEvent {
 
 private struct EventArtwork: View {
     let symbols: [String]
+    let photoURLs: [String]
     let color: Color
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [color.opacity(0.82), UnfadingTheme.Color.secondary.opacity(0.58), UnfadingTheme.Color.primary.opacity(0.42)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            if let path = photoURLs.first {
+                RemoteImageView(storagePath: path)
+            } else {
+                LinearGradient(
+                    colors: [color.opacity(0.82), UnfadingTheme.Color.secondary.opacity(0.58), UnfadingTheme.Color.primary.opacity(0.42)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
 
-            HStack(spacing: UnfadingTheme.Spacing.lg) {
-                ForEach(Array(symbols.prefix(3).enumerated()), id: \.offset) { _, symbol in
-                    Image(systemName: symbol)
-                        .font(.title)
-                        .foregroundStyle(UnfadingTheme.Color.textOnPrimary.opacity(0.86))
-                        .frame(width: 58, height: 58)
-                        .background(UnfadingTheme.Color.textOnPrimary.opacity(0.14), in: Circle())
+                HStack(spacing: UnfadingTheme.Spacing.lg) {
+                    ForEach(Array(symbols.prefix(3).enumerated()), id: \.offset) { _, symbol in
+                        Image(systemName: symbol)
+                            .font(.title)
+                            .foregroundStyle(UnfadingTheme.Color.textOnPrimary.opacity(0.86))
+                            .frame(width: 58, height: 58)
+                            .background(UnfadingTheme.Color.textOnPrimary.opacity(0.14), in: Circle())
+                    }
                 }
             }
-            .accessibilityHidden(true)
         }
+        .accessibilityHidden(true)
         .overlay(alignment: .topTrailing) {
             Image(systemName: "photo.on.rectangle.angled")
                 .imageScale(.medium)
@@ -474,12 +435,18 @@ private struct EventArtwork: View {
 
 private struct ThreeUpThumbnail: View {
     let symbols: [String]
+    let photoURLs: [String]
     let color: Color
 
     var body: some View {
         HStack(spacing: 3) {
-            ForEach(Array(symbols.prefix(3).enumerated()), id: \.offset) { _, symbol in
-                ArchivePhotoTile(symbol: symbol, color: color, count: nil)
+            ForEach(0..<max(symbols.count, photoURLs.count), id: \.self) { index in
+                ArchivePhotoTile(
+                    symbol: symbols[safe: index] ?? "photo",
+                    photoURL: photoURLs[safe: index],
+                    color: color,
+                    count: nil
+                )
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: UnfadingTheme.Radius.compact, style: .continuous))
@@ -489,18 +456,23 @@ private struct ThreeUpThumbnail: View {
 
 private struct ArchivePhotoTile: View {
     let symbol: String
+    let photoURL: String?
     let color: Color
     let count: Int?
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            color.opacity(0.24)
+            if let photoURL {
+                RemoteImageView(storagePath: photoURL)
+            } else {
+                color.opacity(0.24)
 
-            diagonalStripeOverlay
+                diagonalStripeOverlay
 
-            Image(systemName: symbol)
-                .imageScale(.large)
-                .foregroundStyle(color)
+                Image(systemName: symbol)
+                    .imageScale(.large)
+                    .foregroundStyle(color)
+            }
 
             if let count {
                 Text("\(count)")
@@ -529,6 +501,28 @@ private struct ArchivePhotoTile: View {
             .offset(x: -width * 0.45, y: -width * 0.3)
         }
         .allowsHitTesting(false)
+    }
+}
+
+private struct EmptyMemorySectionCard: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(UnfadingTheme.Font.footnote())
+            .foregroundStyle(UnfadingTheme.Color.textSecondary)
+            .padding(UnfadingTheme.Spacing.md)
+            .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
+            .background(
+                UnfadingTheme.Color.card,
+                in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous)
+            )
+    }
+}
+
+private extension Array {
+    subscript(safe index: Int) -> Element? {
+        indices.contains(index) ? self[index] : nil
     }
 }
 

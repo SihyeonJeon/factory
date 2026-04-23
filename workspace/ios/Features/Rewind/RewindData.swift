@@ -93,32 +93,31 @@ struct RewindData: Equatable {
     private static func sampleRecords(in period: DateInterval) -> [RewindMemoryRecord] {
         let calendar = Calendar.current
         let start = period.start
-        let pins = SampleMemoryPin.samples
 
         return [
-            record(pin: pins[0], detailIndex: 0, date: calendar.date(byAdding: .day, value: 1, to: start) ?? start, photos: 6, minutes: 190),
-            record(pin: pins[0], detailIndex: 0, date: calendar.date(byAdding: .day, value: 8, to: start) ?? start, photos: 3, minutes: 120),
-            record(pin: pins[0], detailIndex: 0, date: calendar.date(byAdding: .day, value: 18, to: start) ?? start, photos: 2, minutes: 95),
-            record(pin: pins[1], detailIndex: 1, date: calendar.date(byAdding: .day, value: 3, to: start) ?? start, photos: 4, minutes: 150),
-            record(pin: pins[1], detailIndex: 1, date: calendar.date(byAdding: .day, value: 16, to: start) ?? start, photos: 8, minutes: 180),
-            record(pin: pins[2], detailIndex: 2, date: calendar.date(byAdding: .day, value: 11, to: start) ?? start, photos: 5, minutes: 105)
+            record(place: "상수 루프톱", symbol: "fork.knife", emotions: ["joy", "grateful", "nostalgic"], date: calendar.date(byAdding: .day, value: 1, to: start) ?? start, photos: 6, minutes: 190),
+            record(place: "상수 루프톱", symbol: "fork.knife", emotions: ["joy", "grateful", "nostalgic"], date: calendar.date(byAdding: .day, value: 8, to: start) ?? start, photos: 3, minutes: 120),
+            record(place: "상수 루프톱", symbol: "fork.knife", emotions: ["joy", "grateful", "nostalgic"], date: calendar.date(byAdding: .day, value: 18, to: start) ?? start, photos: 2, minutes: 95),
+            record(place: "여의도 한강공원", symbol: "bicycle", emotions: ["calm", "grateful"], date: calendar.date(byAdding: .day, value: 3, to: start) ?? start, photos: 4, minutes: 150),
+            record(place: "여의도 한강공원", symbol: "bicycle", emotions: ["calm", "grateful"], date: calendar.date(byAdding: .day, value: 16, to: start) ?? start, photos: 8, minutes: 180),
+            record(place: "서울 도심 산책로", symbol: "sunrise.fill", emotions: ["calm", "nostalgic"], date: calendar.date(byAdding: .day, value: 11, to: start) ?? start, photos: 5, minutes: 105)
         ]
     }
 
     private static func record(
-        pin: SampleMemoryPin,
-        detailIndex: Int,
+        place: String,
+        symbol: String,
+        emotions: [String],
         date: Date,
         photos: Int,
         minutes: Int
     ) -> RewindMemoryRecord {
-        let detail = SampleMemoryDetail.samples[detailIndex]
         return RewindMemoryRecord(
-            placeTitle: pin.title,
+            placeTitle: place,
             date: date,
             photoCount: photos,
-            symbolName: detail.photoPlaceholders.first ?? pin.symbol,
-            emotionIDs: detail.moodTagIDs,
+            symbolName: symbol,
+            emotionIDs: emotions,
             durationMinutes: minutes
         )
     }

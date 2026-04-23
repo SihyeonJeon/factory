@@ -2,45 +2,45 @@ import CoreLocation
 import SwiftUI
 
 struct MemoryPinCluster: Identifiable, Hashable {
-    let pins: [SampleMemoryPin]
+    let memories: [DBMemory]
 
     var id: UUID {
-        representativePin.id
+        representativeMemory.id
     }
 
-    var representativePin: SampleMemoryPin {
-        pins.first ?? SampleMemoryPin.samples[0]
+    var representativeMemory: DBMemory {
+        memories.first ?? MemoryMapPinStyle.emptyMemory
     }
 
     var coordinate: CLLocationCoordinate2D {
-        representativePin.coordinate
+        representativeMemory.coordinate
     }
 
     var count: Int {
-        pins.count
+        memories.count
     }
 
-    func contains(pinID: UUID?) -> Bool {
-        guard let pinID else { return false }
-        return pins.contains { $0.id == pinID }
+    func contains(memoryID: UUID?) -> Bool {
+        guard let memoryID else { return false }
+        return memories.contains { $0.id == memoryID }
     }
 }
 
-extension Array where Element == SampleMemoryPin {
-    /// Lightweight sample-data clustering for equal/near-equal coordinates.
+extension Array where Element == DBMemory {
+    /// Lightweight clustering for equal/near-equal coordinates.
     /// Real map zoom-aware clustering is deferred to a later MapKit algorithm.
     func clusteredByCoordinateRadius(_ radius: CLLocationDegrees = 0.0008) -> [MemoryPinCluster] {
         var clusters: [MemoryPinCluster] = []
 
-        for pin in self {
+        for memory in self {
             if let index = clusters.firstIndex(where: { cluster in
-                cluster.coordinate.distance(to: pin.coordinate) <= radius
+                cluster.coordinate.distance(to: memory.coordinate) <= radius
             }) {
-                var mergedPins = clusters[index].pins
-                mergedPins.append(pin)
-                clusters[index] = MemoryPinCluster(pins: mergedPins)
+                var mergedMemories = clusters[index].memories
+                mergedMemories.append(memory)
+                clusters[index] = MemoryPinCluster(memories: mergedMemories)
             } else {
-                clusters.append(MemoryPinCluster(pins: [pin]))
+                clusters.append(MemoryPinCluster(memories: [memory]))
             }
         }
 
@@ -57,7 +57,7 @@ struct ClusterMarker: View {
         VStack(spacing: UnfadingTheme.Spacing.xs) {
             ZStack {
                 Circle()
-                    .fill(cluster.representativePin.color.gradient)
+                    .fill(MemoryMapPinStyle.color(for: cluster.representativeMemory).gradient)
                     .frame(width: 50, height: 50)
 
                 Text("\(cluster.count)")
@@ -76,7 +76,7 @@ struct ClusterMarker: View {
             }
             .shadow(color: UnfadingTheme.Color.pinShadow, radius: 8, y: 4)
 
-            Text(cluster.representativePin.shortLabel)
+            Text(MemoryMapPinStyle.shortLabel(for: cluster.representativeMemory))
                 .font(UnfadingTheme.Font.caption2Semibold())
                 .foregroundStyle(UnfadingTheme.Color.textPrimary)
                 .padding(.horizontal, UnfadingTheme.Spacing.sm)
@@ -89,7 +89,13 @@ struct ClusterMarker: View {
         .animation(.easeInOut(duration: 0.22), value: isSelected)
         .animation(.easeInOut(duration: 0.22), value: isDimmed)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(cluster.representativePin.shortLabel), 추억 \(cluster.count)개")
+        .accessibilityLabel("\(MemoryMapPinStyle.shortLabel(for: cluster.representativeMemory)), 추억 \(cluster.count)개")
+    }
+}
+
+extension DBMemory {
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: locationLat, longitude: locationLng)
     }
 }
 

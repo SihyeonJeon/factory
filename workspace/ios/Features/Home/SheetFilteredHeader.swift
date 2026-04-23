@@ -51,11 +51,11 @@ struct SheetFilteredHeader: View {
 
     private var pinBadge: some View {
         ZStack(alignment: .topTrailing) {
-            Image(systemName: cluster.representativePin.symbol)
+            Image(systemName: MemoryMapPinStyle.symbol(for: cluster.representativeMemory))
                 .imageScale(.medium)
                 .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
                 .frame(width: 44, height: 44)
-                .background(cluster.representativePin.color, in: Circle())
+                .background(MemoryMapPinStyle.color(for: cluster.representativeMemory), in: Circle())
 
             if cluster.count > 1 {
                 Text("\(cluster.count)")
@@ -71,9 +71,9 @@ struct SheetFilteredHeader: View {
 
     private var placeTitle: String {
         if cluster.count > 1 {
-            return "\(cluster.representativePin.shortLabel) 장소 묶음"
+            return "\(MemoryMapPinStyle.shortLabel(for: cluster.representativeMemory)) 장소 묶음"
         }
-        return UnfadingLocalized.Detail.place(for: cluster.representativePin)
+        return cluster.representativeMemory.placeTitle
     }
 
     private static let eventFormatter: DateFormatter = {
@@ -97,7 +97,7 @@ struct SheetFilteredContent: View {
     let onClear: () -> Void
 
     private var items: [MemoryRowCardModel] {
-        MemoryRowCardModel.sampleItems(for: cluster.pins)
+        MemoryRowCardModel.realItems(for: cluster.memories)
     }
 
     var body: some View {
@@ -163,20 +163,6 @@ struct SheetFilteredContent: View {
     }
 
     private var eventDate: Date {
-        let pin = cluster.representativePin
-        switch pin.id {
-        case SampleMemoryPin.samples[0].id:
-            return Self.makeDate(year: 2026, month: 4, day: 21)
-        case SampleMemoryPin.samples[1].id:
-            return Self.makeDate(year: 2026, month: 4, day: 18)
-        case SampleMemoryPin.samples[2].id:
-            return Self.makeDate(year: 2026, month: 4, day: 9)
-        default:
-            return Date()
-        }
-    }
-
-    private static func makeDate(year: Int, month: Int, day: Int) -> Date {
-        Calendar(identifier: .gregorian).date(from: DateComponents(year: year, month: month, day: day)) ?? Date()
+        cluster.representativeMemory.date
     }
 }

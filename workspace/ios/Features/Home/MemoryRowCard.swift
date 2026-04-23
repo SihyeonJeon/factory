@@ -8,6 +8,7 @@ struct MemoryRowCardModel: Identifiable {
     let note: String
     let moodTags: [String]
     let photoSymbols: [String]
+    let photoPath: String?
     let tint: Color
     let postCount: Int
     let likeCount: Int
@@ -23,9 +24,28 @@ struct MemoryRowCardModel: Identifiable {
                 note: detail.noteBody,
                 moodTags: detail.moodTagIDs.map { UnfadingLocalized.Detail.moodTitle(id: $0) },
                 photoSymbols: detail.photoPlaceholders,
+                photoPath: nil,
                 tint: pin.color,
                 postCount: max(detail.contributions.count, 1),
                 likeCount: detail.moodTagIDs.count + detail.contributions.count
+            )
+        }
+    }
+
+    static func realItems(for memories: [DBMemory]) -> [MemoryRowCardModel] {
+        memories.sorted { $0.date > $1.date }.map { memory in
+            MemoryRowCardModel(
+                id: memory.id,
+                title: memory.title,
+                place: memory.placeTitle,
+                time: KSTDateFormatter.shortTime.string(from: memory.date),
+                note: memory.note,
+                moodTags: memory.emotions.map { UnfadingLocalized.Detail.moodTitle(id: $0) },
+                photoSymbols: [MemoryMapPinStyle.symbol(for: memory), "camera.fill"],
+                photoPath: memory.homePhotoPaths.first,
+                tint: MemoryMapPinStyle.color(for: memory),
+                postCount: max(memory.participantUserIds.count, 1),
+                likeCount: memory.reactionCount
             )
         }
     }
@@ -88,13 +108,17 @@ struct MemoryRowCard: View {
 
     private var thumbnail: some View {
         ZStack {
-            item.tint.opacity(0.22)
+            if let path = item.photoPath {
+                RemoteImageView(storagePath: path)
+            } else {
+                item.tint.opacity(0.22)
 
-            HStack(spacing: 5) {
-                ForEach(Array(item.photoSymbols.prefix(2).enumerated()), id: \.offset) { _, symbol in
-                    Image(systemName: symbol)
-                        .imageScale(.medium)
-                        .foregroundStyle(item.tint)
+                HStack(spacing: 5) {
+                    ForEach(Array(item.photoSymbols.prefix(2).enumerated()), id: \.offset) { _, symbol in
+                        Image(systemName: symbol)
+                            .imageScale(.medium)
+                            .foregroundStyle(item.tint)
+                    }
                 }
             }
         }
@@ -117,5 +141,13 @@ struct MemoryRowCard: View {
             }
         }
         .accessibilityHidden(true)
+    }
+}
+
+extension DBMemory {
+    var homePhotoPaths: [String] {
+        (photoURLs + [photoURL].compactMap { $0 })
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
     }
 }

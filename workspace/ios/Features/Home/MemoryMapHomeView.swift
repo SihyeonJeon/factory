@@ -24,7 +24,7 @@ struct MemoryMapHomeView: View {
     @State private var activeCategoryId = CategoryStore.allCategoryId
     @State private var activeSheetTab: SheetTab = .curation
     @State private var showingRewind = false
-    @State private var detailPin: SampleMemoryPin?
+    @State private var detailMemory: DBMemory?
     @State private var measuredSheetHeight: CGFloat = 0
     @State private var cameraPosition: MapCameraPosition = .region(
         MKCoordinateRegion(
@@ -109,7 +109,7 @@ struct MemoryMapHomeView: View {
                             )
                         }
                     ) {
-                        if let selectedCluster = selection.selectedCluster(from: samplePinClusters) {
+                        if let selectedCluster = selection.selectedCluster(from: memoryPinClusters) {
                             SheetFilteredContent(cluster: selectedCluster) {
                                 selection.clearSelection()
                                 sheetSnap = selection.sheetSnap
@@ -133,8 +133,13 @@ struct MemoryMapHomeView: View {
                     sheetSnap = .default_
                 }
             }
-            .navigationDestination(item: $detailPin) { pin in
-                MemoryDetailView(pin: pin)
+            .navigationDestination(item: $detailMemory) { memory in
+                MemoryDetailView(
+                    memory: memory,
+                    eventMemories: relatedMemories(for: memory),
+                    participants: groupStore.memberProfiles,
+                    mode: groupStore.mode
+                )
             }
             .confirmationDialog(
                 locationPermissionStore.recoveryPrompt?.title ?? "",
@@ -176,8 +181,8 @@ struct MemoryMapHomeView: View {
 
     private var mapLayer: some View {
         Map(position: $cameraPosition, selection: .constant(nil as UUID?)) {
-            ForEach(samplePinClusters) { cluster in
-                Annotation(cluster.representativePin.title, coordinate: cluster.coordinate) {
+            ForEach(memoryPinClusters) { cluster in
+                Annotation(cluster.representativeMemory.title, coordinate: cluster.coordinate) {
                     Button {
                         selection.select(cluster: cluster)
                         sheetSnap = selection.sheetSnap
@@ -185,21 +190,21 @@ struct MemoryMapHomeView: View {
                         if cluster.count > 1 {
                             ClusterMarker(
                                 cluster: cluster,
-                                isSelected: cluster.contains(pinID: selection.selectedPinID),
-                                isDimmed: selection.selectedPinID != nil && !cluster.contains(pinID: selection.selectedPinID)
+                                isSelected: cluster.contains(memoryID: selection.selectedPinID),
+                                isDimmed: selection.selectedPinID != nil && !cluster.contains(memoryID: selection.selectedPinID)
                             )
                         } else {
                             MemoryPinMarker(
-                                pin: cluster.representativePin,
-                                isSelected: cluster.contains(pinID: selection.selectedPinID),
-                                isDimmed: selection.selectedPinID != nil && !cluster.contains(pinID: selection.selectedPinID)
+                                memory: cluster.representativeMemory,
+                                isSelected: cluster.contains(memoryID: selection.selectedPinID),
+                                isDimmed: selection.selectedPinID != nil && !cluster.contains(memoryID: selection.selectedPinID)
                             )
                         }
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(UnfadingLocalized.Accessibility.mapPinLabel(title: cluster.representativePin.title))
+                    .accessibilityLabel(UnfadingLocalized.Accessibility.mapPinLabel(title: cluster.representativeMemory.title))
                     .accessibilityHint(UnfadingLocalized.Accessibility.mapPinHint)
-                    .accessibilityIdentifier("memory-pin-\(cluster.representativePin.id.uuidString)")
+                    .accessibilityIdentifier("memory-pin-\(cluster.representativeMemory.id.uuidString)")
                 }
             }
         }
@@ -392,8 +397,8 @@ struct MemoryMapHomeView: View {
         }
     }
 
-    private var samplePinClusters: [MemoryPinCluster] {
-        SampleMemoryPin.samples.clusteredByCoordinateRadius()
+    private var memoryPinClusters: [MemoryPinCluster] {
+        memoryStore.memories.clusteredByCoordinateRadius()
     }
 
     private func mapControlButton(systemName: String, accessibilityLabel: String, action: @escaping () -> Void) -> some View {
@@ -437,7 +442,17 @@ struct MemoryMapHomeView: View {
 
     // vibe-limit-checked: 8 a11y detail handoff remains labeled, 1 parent owns navigation, 12 navigation state transition testable
     private func openDetail() {
-        detailPin = selection.selectedPin(from: SampleMemoryPin.samples) ?? SampleMemoryPin.samples.first
+        detailMemory = selection.selectedMemory(from: memoryStore.memories) ?? memoryStore.memories.first
+    }
+
+    private func relatedMemories(for memory: DBMemory) -> [DBMemory] {
+        let scoped: [DBMemory]
+        if let eventId = memory.eventId {
+            scoped = memoryStore.memories.filter { $0.eventId == eventId }
+        } else {
+            scoped = memoryStore.memories.filter { Calendar.current.isDate($0.date, inSameDayAs: memory.date) }
+        }
+        return scoped.isEmpty ? [memory] : scoped.sorted { $0.date > $1.date }
     }
 
     private func showRewindFromCuration() {
