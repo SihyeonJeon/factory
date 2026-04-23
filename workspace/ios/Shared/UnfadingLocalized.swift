@@ -458,9 +458,10 @@ enum UnfadingLocalized {
         static let placeSection = "장소"
         static let moodSection = "감정"
         static let moodLabel = "감정"
+        static let emotionSection = "감정 태그"
 
         // Memory fields
-        static let noteLabel = "메모"
+        static let noteLabel = "한 줄 기록"
         static let noteField = "짧은 메모를 남겨보세요"
         static let eventLabel = "이벤트"
         static let timeLabel = "시간"
@@ -512,6 +513,39 @@ enum UnfadingLocalized {
         static let photoSeedBannerLocationOnly = "사진으로 장소를 자동으로 채웠어요."
         static let photoSeedBannerTimeOnly = "사진으로 시간을 자동으로 채웠어요."
         static let locationDeniedShortTab = "위치 권한이 꺼져 있어요."
+
+        // R31 Composer rebuild
+        static let confirmLabel = "확인 필요"
+        static let confirmThisPlace = "이 장소 맞아요"
+        static let changePlace = "장소 변경"
+        static let useCurrent = "현재 위치로"
+        static let eventFieldTitle = "이벤트"
+        static let eventBindToSameDay = "같은 날 이벤트에 묶임"
+        static let eventCreateNew = "새 이벤트 만들기"
+        static let eventTripToggle = "여행 (여러 날)"
+        static let eventStartDate = "시작"
+        static let eventEndDate = "종료"
+        static let participantsFieldTitle = "이 추억의 참여자"
+        static let participantsAll = "전원 포함"
+        static let participantsCountFormat = "%d/%d명"
+        static let emotionJoy = "행복"
+        static let emotionCalm = "여유로움"
+        static let emotionThrill = "설레임"
+        static let emotionWarm = "따뜻함"
+        static let emotionFun = "즐거움"
+        static let emotionSpecial = "특별함"
+        static let emotionMoving = "뭉클함"
+        static let costLabel = "지출 (선택)"
+        static let costPlaceholder = "₩ 금액 입력"
+        static let sourceAlbum = "앨범"
+        static let sourceCamera = "카메라"
+        static let sourceFile = "파일"
+        static let metadataSparkleNotice = "사진 메타데이터에서 가져온 정보"
+        static let metadataSparkleHint = "저장 전에 장소와 시간을 확인해 주세요."
+
+        static func formattedParticipantsCount(_ selected: Int, _ total: Int) -> String {
+            String(format: participantsCountFormat, selected, total)
+        }
     }
 
     // MARK: Detail
@@ -569,6 +603,13 @@ enum UnfadingLocalized {
         case "calm": return "차분함"
         case "grateful": return "감사"
         case "nostalgic": return "그리움"
+        case "설레임": return Composer.emotionThrill
+        case "따뜻함": return Composer.emotionWarm
+        case "행복": return Composer.emotionJoy
+        case "여유로움": return Composer.emotionCalm
+        case "즐거움": return Composer.emotionFun
+        case "특별함": return Composer.emotionSpecial
+        case "뭉클함": return Composer.emotionMoving
         default: return fallback
         }
     }

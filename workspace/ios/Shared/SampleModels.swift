@@ -254,9 +254,12 @@ struct MemoryDraftTag: Identifiable, Hashable {
     let systemImage: String
 
     static let samples: [MemoryDraftTag] = [
-        .init(id: "joy", title: "기쁨", systemImage: "sun.max"),
-        .init(id: "calm", title: "차분함", systemImage: "moon.stars"),
-        .init(id: "grateful", title: "감사", systemImage: "heart"),
-        .init(id: "nostalgic", title: "그리움", systemImage: "sparkles")
+        .init(id: "설레임", title: "설레임", systemImage: "sparkles"),
+        .init(id: "따뜻함", title: "따뜻함", systemImage: "heart"),
+        .init(id: "행복", title: "행복", systemImage: "sun.max"),
+        .init(id: "여유로움", title: "여유로움", systemImage: "leaf"),
+        .init(id: "즐거움", title: "즐거움", systemImage: "music.note"),
+        .init(id: "특별함", title: "특별함", systemImage: "star"),
+        .init(id: "뭉클함", title: "뭉클함", systemImage: "moon.stars")
     ]
 }

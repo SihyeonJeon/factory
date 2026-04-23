@@ -41,6 +41,7 @@ final class DBMemoryTests: XCTestCase {
             id: UUID(uuidString: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")!,
             userId: UUID(uuidString: "00000000-0000-0000-0000-000000000017")!,
             groupId: UUID(uuidString: "11111111-1111-4111-8111-111111111117")!,
+            eventId: UUID(uuidString: "22222222-2222-4222-8222-222222222222")!,
             title: "한강 산책",
             note: "노을을 보며 천천히 걸었던 시간",
             placeTitle: "여의도 한강공원",
@@ -52,7 +53,9 @@ final class DBMemoryTests: XCTestCase {
             photoURL: nil,
             photoURLs: [],
             categories: ["walk"],
-            emotions: ["calm"]
+            emotions: ["calm"],
+            participantUserIds: [UUID(uuidString: "33333333-3333-4333-8333-333333333333")!],
+            cost: 12000
         )
 
         let encoded = try encoder.encode(insert)
@@ -65,6 +68,9 @@ final class DBMemoryTests: XCTestCase {
         XCTAssertEqual(object?["location_lat"] as? Double, 37.5283)
         XCTAssertEqual(object?["location_lng"] as? Double, 126.9326)
         XCTAssertNotNil(object?["photo_urls"])
+        XCTAssertEqual((object?["event_id"] as? String)?.uppercased(), "22222222-2222-4222-8222-222222222222".uppercased())
+        XCTAssertEqual(object?["cost"] as? Int, 12000)
+        XCTAssertNotNil(object?["participant_user_ids"])
     }
 
     private var decoder: JSONDecoder {

@@ -110,7 +110,23 @@ final class UnfadingUITests: XCTestCase {
         tapTab("map")
         openComposerFromHomeFAB()
 
-        XCTAssertTrue(app.navigationBars[UnfadingUITestText.composerTitle].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts[UnfadingUITestText.composerTitle].waitForExistence(timeout: 5))
+    }
+
+    func testComposerSaveDisabledUntilConfirmed() {
+        app.launch()
+        tapTab("map")
+        openComposerFromHomeFAB()
+
+        let save = app.buttons["composer-save-button"].firstMatch
+        XCTAssertTrue(save.waitForExistence(timeout: 5))
+        XCTAssertFalse(save.isEnabled)
+
+        let confirm = app.buttons["이 장소 맞아요"].firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.tap()
+
+        XCTAssertTrue(save.isEnabled)
     }
 
     func testGroupPickerOpensFromTopChrome() {

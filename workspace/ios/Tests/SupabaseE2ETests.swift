@@ -48,6 +48,7 @@ final class SupabaseE2ETests: XCTestCase {
                 id: UUID(),
                 userId: user.id,
                 groupId: group.id,
+                eventId: nil,
                 title: "E2E title",
                 note: "note",
                 placeTitle: "placeTitle",
@@ -59,7 +60,9 @@ final class SupabaseE2ETests: XCTestCase {
                 photoURL: nil,
                 photoURLs: [],
                 categories: [],
-                emotions: []
+                emotions: [],
+                participantUserIds: [],
+                cost: nil
             )
 
             let created = try await memRepo.createMemory(insert)

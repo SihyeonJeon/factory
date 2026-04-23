@@ -78,6 +78,7 @@ final class MemoryStoreTests: XCTestCase {
             id: UUID(),
             userId: userId,
             groupId: groupId,
+            eventId: nil,
             title: "상수 루프톱 저녁",
             note: "친구들과 공연 이야기를 나눈 밤",
             placeTitle: "상수 루프톱",
@@ -89,7 +90,9 @@ final class MemoryStoreTests: XCTestCase {
             photoURL: nil,
             photoURLs: [],
             categories: ["food"],
-            emotions: ["joy"]
+            emotions: ["joy"],
+            participantUserIds: [],
+            cost: nil
         )
     }
 

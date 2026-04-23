@@ -12,18 +12,19 @@ final class MemoryComposerStateTests: XCTestCase {
         XCTAssertTrue(state.note.isEmpty)
         XCTAssertTrue(state.selectedPhotos.isEmpty)
         XCTAssertFalse(state.isSaveEnabled)
+        XCTAssertEqual(state.placeState, .needsConfirm)
     }
 
-    func test_set_note_enables_save() {
+    func test_set_note_keeps_save_disabled_until_place_confirmed() {
         let state = MemoryComposerState()
         state.setNote("내용")
-        XCTAssertTrue(state.isSaveEnabled)
+        XCTAssertFalse(state.isSaveEnabled)
     }
 
-    func test_add_photo_enables_save() {
+    func test_add_photo_keeps_save_disabled_until_place_confirmed() {
         let state = MemoryComposerState()
         state.selectedPhotos = [mockItem()]
-        XCTAssertTrue(state.isSaveEnabled)
+        XCTAssertFalse(state.isSaveEnabled)
     }
 
     func test_toggle_mood_adds_then_removes() {
@@ -49,6 +50,40 @@ final class MemoryComposerStateTests: XCTestCase {
         XCTAssertTrue(state.selectedMoods.isEmpty)
         XCTAssertEqual(state.selectedPlace, UnfadingLocalized.Composer.samplePlace)
         XCTAssertFalse(state.isSaveEnabled)
+    }
+
+    func test_confirm_place_enables_save_without_optional_fields() {
+        let state = MemoryComposerState()
+        state.confirmPlace()
+        XCTAssertEqual(state.placeState, .confirmed)
+        XCTAssertTrue(state.canSave)
+        XCTAssertTrue(state.selectedMoods.isEmpty)
+        XCTAssertNil(state.cost)
+    }
+
+    func test_needs_confirm_disables_save() {
+        let state = MemoryComposerState(placeState: .needsConfirm)
+        XCTAssertFalse(state.canSave)
+    }
+
+    func test_emotions_empty_save_ok_when_place_confirmed() {
+        let state = MemoryComposerState(placeState: .confirmed)
+        XCTAssertTrue(state.selectedMoods.isEmpty)
+        XCTAssertTrue(state.canSave)
+    }
+
+    func test_couple_mode_clears_participants() {
+        let state = MemoryComposerState()
+        state.defaultParticipantSelection(mode: .couple, memberUserIds: [UUID()])
+        XCTAssertTrue(state.participantUserIds.isEmpty)
+    }
+
+    func test_general_mode_defaults_participants_to_all_members() {
+        let first = UUID()
+        let second = UUID()
+        let state = MemoryComposerState()
+        state.defaultParticipantSelection(mode: .general, memberUserIds: [first, second])
+        XCTAssertEqual(state.participantUserIds, Set([first, second]))
     }
 
     private func mockItem() -> PhotosPickerItem {

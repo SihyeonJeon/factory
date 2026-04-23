@@ -278,6 +278,7 @@ struct PreviewMemoryRepository: MemoryRepository {
             id: insert.id,
             userId: insert.userId,
             groupId: insert.groupId,
+            eventId: insert.eventId,
             title: insert.title,
             note: insert.note,
             placeTitle: insert.placeTitle,
@@ -290,6 +291,8 @@ struct PreviewMemoryRepository: MemoryRepository {
             photoURLs: insert.photoURLs,
             categories: insert.categories,
             emotions: insert.emotions,
+            participantUserIds: insert.participantUserIds,
+            cost: insert.cost,
             reactionCount: 0,
             createdAt: Date()
         )

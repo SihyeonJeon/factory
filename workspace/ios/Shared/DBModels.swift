@@ -107,6 +107,7 @@ struct DBMemory: Codable, Hashable, Identifiable {
     let id: UUID
     let userId: UUID
     let groupId: UUID
+    let eventId: UUID?
     let title: String
     let note: String
     let placeTitle: String
@@ -119,21 +120,94 @@ struct DBMemory: Codable, Hashable, Identifiable {
     let photoURLs: [String]
     let categories: [String]
     let emotions: [String]
+    let participantUserIds: [UUID]
+    let cost: Int?
     let reactionCount: Int
     let createdAt: Date?
 
     enum CodingKeys: String, CodingKey {
         case id, title, note, date, address, categories, emotions
+        case cost
         case userId = "user_id"
         case groupId = "group_id"
+        case eventId = "event_id"
         case placeTitle = "place_title"
         case locationLat = "location_lat"
         case locationLng = "location_lng"
         case capturedAt = "captured_at"
         case photoURL = "photo_url"
         case photoURLs = "photo_urls"
+        case participantUserIds = "participant_user_ids"
         case reactionCount = "reaction_count"
         case createdAt = "created_at"
+    }
+
+    init(
+        id: UUID,
+        userId: UUID,
+        groupId: UUID,
+        eventId: UUID? = nil,
+        title: String,
+        note: String,
+        placeTitle: String,
+        address: String?,
+        locationLat: Double,
+        locationLng: Double,
+        date: Date,
+        capturedAt: Date?,
+        photoURL: String?,
+        photoURLs: [String],
+        categories: [String],
+        emotions: [String],
+        participantUserIds: [UUID] = [],
+        cost: Int? = nil,
+        reactionCount: Int,
+        createdAt: Date?
+    ) {
+        self.id = id
+        self.userId = userId
+        self.groupId = groupId
+        self.eventId = eventId
+        self.title = title
+        self.note = note
+        self.placeTitle = placeTitle
+        self.address = address
+        self.locationLat = locationLat
+        self.locationLng = locationLng
+        self.date = date
+        self.capturedAt = capturedAt
+        self.photoURL = photoURL
+        self.photoURLs = photoURLs
+        self.categories = categories
+        self.emotions = emotions
+        self.participantUserIds = participantUserIds
+        self.cost = cost
+        self.reactionCount = reactionCount
+        self.createdAt = createdAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        userId = try container.decode(UUID.self, forKey: .userId)
+        groupId = try container.decode(UUID.self, forKey: .groupId)
+        eventId = try container.decodeIfPresent(UUID.self, forKey: .eventId)
+        title = try container.decode(String.self, forKey: .title)
+        note = try container.decode(String.self, forKey: .note)
+        placeTitle = try container.decode(String.self, forKey: .placeTitle)
+        address = try container.decodeIfPresent(String.self, forKey: .address)
+        locationLat = try container.decode(Double.self, forKey: .locationLat)
+        locationLng = try container.decode(Double.self, forKey: .locationLng)
+        date = try container.decode(Date.self, forKey: .date)
+        capturedAt = try container.decodeIfPresent(Date.self, forKey: .capturedAt)
+        photoURL = try container.decodeIfPresent(String.self, forKey: .photoURL)
+        photoURLs = try container.decodeIfPresent([String].self, forKey: .photoURLs) ?? []
+        categories = try container.decodeIfPresent([String].self, forKey: .categories) ?? []
+        emotions = try container.decodeIfPresent([String].self, forKey: .emotions) ?? []
+        participantUserIds = try container.decodeIfPresent([UUID].self, forKey: .participantUserIds) ?? []
+        cost = try container.decodeIfPresent(Int.self, forKey: .cost)
+        reactionCount = try container.decodeIfPresent(Int.self, forKey: .reactionCount) ?? 0
+        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt)
     }
 }
 
@@ -162,6 +236,7 @@ struct DBMemoryInsert: Encodable {
     let id: UUID
     let userId: UUID
     let groupId: UUID
+    let eventId: UUID?
     let title: String
     let note: String
     let placeTitle: String
@@ -174,16 +249,21 @@ struct DBMemoryInsert: Encodable {
     let photoURLs: [String]
     let categories: [String]
     let emotions: [String]
+    let participantUserIds: [UUID]
+    let cost: Int?
 
     enum CodingKeys: String, CodingKey {
         case id, title, note, date, address, categories, emotions
+        case cost
         case userId = "user_id"
         case groupId = "group_id"
+        case eventId = "event_id"
         case placeTitle = "place_title"
         case locationLat = "location_lat"
         case locationLng = "location_lng"
         case capturedAt = "captured_at"
         case photoURL = "photo_url"
         case photoURLs = "photo_urls"
+        case participantUserIds = "participant_user_ids"
     }
 }

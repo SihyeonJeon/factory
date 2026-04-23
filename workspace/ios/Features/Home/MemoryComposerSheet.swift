@@ -1,3 +1,4 @@
+import PhotosUI
 import SwiftUI
 import UIKit
 
@@ -16,8 +17,10 @@ struct MemoryComposerSheet: View {
     @State private var showingDeniedRecovery = false
     @State private var showingPlaceSearch = false
     @State private var showingPlacePicker = false
+    @State private var showingEventSheet = false
     @State private var didApplyEvidenceMode = false
     @State private var saveErrorMessage: String?
+    @State private var costText = ""
 
     init(
         initialLocationPermissionState: LocationPermissionState = .denied,
@@ -32,37 +35,26 @@ struct MemoryComposerSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xl) {
-                    photoSection
-                    placeSection
-                    timeSection
-                    noteSection
-                    moodSection
+            VStack(spacing: 0) {
+                header
+                ScrollView {
+                    VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md2) {
+                        photoSection
+                        placeSection
+                        timeSection
+                        eventSection
+                        participantSection
+                        noteSection
+                        moodSection
+                        costSection
+                    }
+                    .padding(.horizontal, UnfadingTheme.Spacing.md)
+                    .padding(.top, UnfadingTheme.Spacing.xs)
+                    .padding(.bottom, UnfadingTheme.Spacing.xl2)
                 }
-                .padding(.horizontal, UnfadingTheme.Spacing.xl)
-                .padding(.vertical, UnfadingTheme.Spacing.lg)
             }
             .background(UnfadingTheme.Color.sheet)
-            .navigationTitle(UnfadingLocalized.Composer.navTitle)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(UnfadingLocalized.Common.cancel) {
-                        dismiss()
-                    }
-                }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button {
-                        save()
-                    } label: {
-                        Text(UnfadingLocalized.Composer.savePrimary)
-                    }
-                    .buttonStyle(.unfadingPrimary)
-                    .disabled(state.isSaveEnabled == false || state.isUploading)
-                }
-            }
+            .navigationBarHidden(true)
             .sheet(isPresented: $showingDeniedRecovery) {
                 LocationPermissionRecoverySheet(
                     selectedPlace: $state.selectedPlace,
@@ -85,37 +77,180 @@ struct MemoryComposerSheet: View {
                 .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.large])
                 .presentationDragIndicator(.visible)
             }
+            .sheet(isPresented: $showingEventSheet) {
+                EventFieldSheet(
+                    binding: $state.eventBinding,
+                    groupId: groupStore.activeGroupId,
+                    selectedTime: state.selectedTime
+                )
+                .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.medium, .large])
+                .presentationDragIndicator(.visible)
+            }
             .onChange(of: state.selectedPhotos) { _, _ in
                 Task { await state.applyFirstPhotoSeedIfAvailable() }
+            }
+            .onChange(of: costText) { _, newValue in
+                let digits = newValue.filter(\.isNumber)
+                if digits != newValue {
+                    costText = digits
+                }
+                state.cost = Int(digits)
             }
             .alert("저장하지 못했어요", isPresented: saveErrorIsPresented) {
                 Button(UnfadingLocalized.Common.confirm, role: .cancel) {}
             } message: {
                 Text(saveErrorMessage ?? "잠시 후 다시 시도해 주세요.")
             }
-            .onAppear(perform: applyEvidenceModeIfNeeded)
+            .onAppear {
+                applyEvidenceModeIfNeeded()
+                applyParticipantDefaultsIfNeeded()
+            }
         }
     }
 
-    // vibe-limit-checked: 8 Dynamic Type/a11y labels, 2 reusable UnfadingPhotoGrid
-    private var photoSection: some View {
-        SectionContainer(title: UnfadingLocalized.Composer.photoSection) {
-            VStack(spacing: UnfadingTheme.Spacing.md) {
-                UnfadingPhotoGrid(selection: $state.selectedPhotos)
+    private var header: some View {
+        HStack {
+            Button(UnfadingLocalized.Common.cancel) {
+                dismiss()
+            }
+            .font(UnfadingTheme.Font.body(15))
+            .foregroundStyle(UnfadingTheme.Color.textSecondary)
+            .frame(minHeight: 44)
 
-                if state.isUploading {
-                    uploadProgressView
-                }
+            Spacer()
 
-                if state.selectedPhotos.isEmpty {
-                    UnfadingEmptyState(
-                        systemImage: "photo.on.rectangle",
-                        title: UnfadingLocalized.Composer.photoSection,
-                        body: UnfadingLocalized.EmptyState.composerPhotoHint
+            Text(UnfadingLocalized.Composer.navTitle)
+                .font(UnfadingTheme.Font.sectionTitle(16))
+                .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                .accessibilityAddTraits(.isHeader)
+
+            Spacer()
+
+            Button {
+                save()
+            } label: {
+                Text(UnfadingLocalized.Composer.savePrimary)
+                    .font(UnfadingTheme.Font.captionSemibold())
+                    .frame(minWidth: 56, minHeight: 44)
+                    .padding(.horizontal, UnfadingTheme.Spacing.xs)
+                    .background(
+                        state.canSave ? UnfadingTheme.Color.primary : UnfadingTheme.Color.chipBg,
+                        in: Capsule()
                     )
-                }
+                    .foregroundStyle(state.canSave ? UnfadingTheme.Color.textOnPrimary : UnfadingTheme.Color.textTertiary)
+            }
+            .buttonStyle(.plain)
+            .disabled(state.canSave == false)
+            .accessibilityIdentifier("composer-save-button")
+        }
+        .padding(.horizontal, UnfadingTheme.Spacing.md)
+        .padding(.top, UnfadingTheme.Spacing.xl2)
+        .padding(.bottom, UnfadingTheme.Spacing.xs)
+    }
+
+    // vibe-limit-checked: 8 Dynamic Type/a11y labels, 2 3-column composer grid
+    private var photoSection: some View {
+        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.sm) {
+            composerPhotoGrid
+
+            HStack(spacing: UnfadingTheme.Spacing.xs2) {
+                SourceChip(title: UnfadingLocalized.Composer.sourceAlbum, systemImage: "photo.on.rectangle") {}
+                SourceChip(title: UnfadingLocalized.Composer.sourceCamera, systemImage: "camera") {}
+                SourceChip(title: UnfadingLocalized.Composer.sourceFile, systemImage: "folder") {}
+            }
+
+            if state.showPhotoSeedNotice {
+                metadataNotice
+            }
+
+            if state.isUploading {
+                uploadProgressView
             }
         }
+    }
+
+    private var composerPhotoGrid: some View {
+        GeometryReader { proxy in
+            let gap = UnfadingTheme.Spacing.xs2
+            let tile = (proxy.size.width - gap * 2) / 3
+            HStack(alignment: .top, spacing: gap) {
+                PhotosPicker(selection: $state.selectedPhotos, maxSelectionCount: 12, matching: .images) {
+                    photoTile(index: 0, isLarge: true)
+                }
+                .accessibilityLabel(UnfadingLocalized.PhotoGrid.addPhoto)
+
+                VStack(spacing: gap) {
+                    photoTile(index: 1, isLarge: false)
+                    photoTile(index: 2, isLarge: false)
+                }
+
+                VStack(spacing: gap) {
+                    photoTile(index: 3, isLarge: false)
+                    PhotosPicker(selection: $state.selectedPhotos, maxSelectionCount: 12, matching: .images) {
+                        emptyPhotoTile(label: "추가")
+                    }
+                    .accessibilityLabel(UnfadingLocalized.PhotoGrid.addPhoto)
+                }
+            }
+            .frame(height: tile * 2 + gap)
+        }
+        .frame(height: 232)
+    }
+
+    @ViewBuilder
+    private func photoTile(index: Int, isLarge: Bool) -> some View {
+        if state.selectedPhotos.indices.contains(index) {
+            RoundedRectangle(cornerRadius: isLarge ? UnfadingTheme.Radius.card : UnfadingTheme.Radius.segment, style: .continuous)
+                .fill(UnfadingTheme.Color.accentSoft)
+                .overlay {
+                    VStack(spacing: UnfadingTheme.Spacing.xs) {
+                        Image(systemName: "photo")
+                            .font(UnfadingTheme.Font.sectionTitle(18))
+                        Text("PHOTO \(index + 1)")
+                            .font(UnfadingTheme.Font.metaNum(10, weight: .bold))
+                    }
+                    .foregroundStyle(UnfadingTheme.Color.primary)
+                }
+                .aspectRatio(1, contentMode: .fit)
+        } else {
+            emptyPhotoTile(label: index == 0 ? "PHOTO" : "—")
+        }
+    }
+
+    private func emptyPhotoTile(label: String) -> some View {
+        RoundedRectangle(cornerRadius: UnfadingTheme.Radius.segment, style: .continuous)
+            .stroke(UnfadingTheme.Color.primary.opacity(0.66), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
+            .background(UnfadingTheme.Color.card, in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.segment, style: .continuous))
+            .aspectRatio(1, contentMode: .fit)
+            .overlay {
+                VStack(spacing: UnfadingTheme.Spacing.xxs) {
+                    Image(systemName: "plus")
+                        .font(UnfadingTheme.Font.sectionTitle(18))
+                    Text(label)
+                        .font(UnfadingTheme.Font.caption2Semibold())
+                }
+                .foregroundStyle(UnfadingTheme.Color.primary)
+            }
+    }
+
+    private var metadataNotice: some View {
+        HStack(alignment: .top, spacing: UnfadingTheme.Spacing.sm) {
+            Image(systemName: "sparkles")
+                .font(UnfadingTheme.Font.body(16))
+                .foregroundStyle(UnfadingTheme.Color.primary)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xxs) {
+                Text(UnfadingLocalized.Composer.metadataSparkleNotice)
+                    .font(UnfadingTheme.Font.captionSemibold())
+                    .foregroundStyle(UnfadingTheme.Color.primary)
+                Text(UnfadingLocalized.Composer.metadataSparkleHint)
+                    .font(UnfadingTheme.Font.metaNum(11.5, weight: .regular))
+                    .foregroundStyle(UnfadingTheme.Color.textSecondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(UnfadingTheme.Spacing.sm)
+        .background(UnfadingTheme.Color.accentSoft, in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.segment, style: .continuous))
     }
 
     private var uploadProgressView: some View {
@@ -134,16 +269,13 @@ struct MemoryComposerSheet: View {
 
     // vibe-limit-checked: 8 44pt edit/current-location targets, 6 no silent failure in location path
     private var placeSection: some View {
-        SectionContainer(title: UnfadingLocalized.Composer.placeSection) {
-            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
-                if state.photoSeedApplied != .none {
-                    photoSeedBanner
-                }
-
-                HStack(alignment: .top, spacing: UnfadingTheme.Spacing.md) {
+        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
+            FieldRow(UnfadingLocalized.Composer.placeSection, placeState: state.placeState, action: { showingPlacePicker = true }) {
+                HStack(alignment: .top, spacing: UnfadingTheme.Spacing.sm) {
                     Image(systemName: "mappin.and.ellipse")
-                        .foregroundStyle(UnfadingTheme.Color.primary)
-                        .frame(width: 28, height: 28)
+                        .font(UnfadingTheme.Font.body(16))
+                        .foregroundStyle(state.placeState == .confirmed ? UnfadingTheme.Color.primary : UnfadingTheme.Color.textTertiary)
+                        .frame(width: 24, height: 24)
                         .accessibilityHidden(true)
 
                     VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
@@ -155,29 +287,26 @@ struct MemoryComposerSheet: View {
                                 .font(UnfadingTheme.Font.footnote())
                                 .foregroundStyle(UnfadingTheme.Color.textSecondary)
                         }
-                        Text(UnfadingLocalized.Composer.placeConfirmPrompt)
-                            .font(UnfadingTheme.Font.subheadline())
-                            .foregroundStyle(UnfadingTheme.Color.textSecondary)
                     }
 
                     Spacer(minLength: 0)
                 }
-                .accessibilityElement(children: .contain)
+            }
 
-                // F7: "이 위치가 아닌가요?" 단일 엔트리 (지도/검색/현재 위치 3-tab sheet)
-                Button {
+            HStack(spacing: UnfadingTheme.Spacing.xs2) {
+                MiniButton(UnfadingLocalized.Composer.confirmThisPlace, isPrimary: true) {
+                    state.confirmPlace()
+                }
+                MiniButton(UnfadingLocalized.Composer.changePlace) {
                     showingPlacePicker = true
-                } label: {
-                    Text(UnfadingLocalized.Composer.notThisPlaceCta)
-                        .frame(maxWidth: .infinity, minHeight: 44)
                 }
-                .buttonStyle(.bordered)
-                .accessibilityIdentifier("composer-not-this-place")
+                MiniButton(UnfadingLocalized.Composer.useCurrent) {
+                    Task { await state.confirmCurrentLocation() }
+                }
+            }
 
-                // F5: 근처 장소 chips (좌표 기반)
-                if !state.nearbyPlaces.isEmpty {
-                    nearbyChips
-                }
+            if !state.nearbyPlaces.isEmpty {
+                nearbyChips
             }
         }
     }
@@ -238,41 +367,36 @@ struct MemoryComposerSheet: View {
 
     // vibe-limit-checked: 8 DatePicker uses native wheel + Korean locale, no hardcoded font sizes
     private var timeSection: some View {
-        SectionContainer(title: UnfadingLocalized.Composer.timeLabel) {
-            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
+        FieldRow(UnfadingLocalized.Composer.timeLabel) {
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
                 HStack {
-                    VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
-                        Text(selectedTimeText)
-                            .font(UnfadingTheme.Font.subheadlineSemibold())
-                            .foregroundStyle(UnfadingTheme.Color.textPrimary)
-                        Text(UnfadingLocalized.Composer.timeInferredPrompt)
-                            .font(UnfadingTheme.Font.subheadline())
-                            .foregroundStyle(UnfadingTheme.Color.textSecondary)
-                    }
-                    Spacer()
-                    Text(UnfadingLocalized.Composer.timeEditAction)
-                        .font(UnfadingTheme.Font.footnoteSemibold())
-                        .foregroundStyle(UnfadingTheme.Color.primary)
+                    Image(systemName: "clock")
+                        .font(UnfadingTheme.Font.body(16))
+                        .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                    Text(selectedTimeText)
+                        .font(UnfadingTheme.Font.subheadlineSemibold())
+                        .foregroundStyle(UnfadingTheme.Color.textPrimary)
                 }
-
-                DatePicker(
-                    UnfadingLocalized.Composer.timeLabel,
-                    selection: $state.selectedTime,
-                    displayedComponents: [.date, .hourAndMinute]
-                )
-                .datePickerStyle(.wheel)
-                .labelsHidden()
-                .environment(\.locale, Locale(identifier: "ko_KR"))
+                WheelPicker(hour: $state.hour, minute: $state.minute)
+                    .onChange(of: state.hour) { _, _ in
+                        state.setHourMinute(hour: state.hour, minute: state.minute)
+                    }
+                    .onChange(of: state.minute) { _, _ in
+                        state.setHourMinute(hour: state.hour, minute: state.minute)
+                    }
             }
-            .accessibilityElement(children: .combine)
         }
     }
 
     // vibe-limit-checked: 8 Dynamic Type TextField with vertical growth and Korean placeholder
     private var noteSection: some View {
-        SectionContainer(title: UnfadingLocalized.Composer.noteLabel) {
+        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs2) {
+            Text(UnfadingLocalized.Composer.noteLabel)
+                .font(UnfadingTheme.Font.captionSemibold())
+                .foregroundStyle(UnfadingTheme.Color.textSecondary)
             TextField(UnfadingLocalized.Composer.noteField, text: $state.note, axis: .vertical)
                 .lineLimit(3...8)
+                .frame(minHeight: 80, alignment: .topLeading)
                 .padding(UnfadingTheme.Spacing.md)
                 .background(
                     UnfadingTheme.Color.card,
@@ -283,20 +407,102 @@ struct MemoryComposerSheet: View {
 
     // vibe-limit-checked: 8 chip a11y inherited from UnfadingFilterChip, 2 reused component, 12 state transition tested by MemoryComposerStateTests
     private var moodSection: some View {
-        SectionContainer(title: UnfadingLocalized.Composer.moodLabel) {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: UnfadingTheme.Spacing.sm) {
-                    ForEach(MemoryDraftTag.samples) { tag in
-                        UnfadingFilterChip(
-                            title: UnfadingLocalized.draftTag(id: tag.id, fallback: tag.title),
-                            systemImage: tag.systemImage,
-                            isSelected: state.selectedMoods.contains(tag)
+        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
+            Text(UnfadingLocalized.Composer.emotionSection)
+                .font(UnfadingTheme.Font.captionSemibold())
+                .foregroundStyle(UnfadingTheme.Color.textSecondary)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: UnfadingTheme.Spacing.xs)], alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
+                ForEach(MemoryDraftTag.samples) { tag in
+                    UnfadingFilterChip(
+                        title: UnfadingLocalized.draftTag(id: tag.id, fallback: tag.title),
+                        systemImage: tag.systemImage,
+                        isSelected: state.selectedMoods.contains(tag)
+                    ) {
+                        state.toggleMood(tag)
+                    }
+                }
+            }
+        }
+    }
+
+    private var eventSection: some View {
+        FieldRow(UnfadingLocalized.Composer.eventFieldTitle, action: { showingEventSheet = true }) {
+            HStack(alignment: .top, spacing: UnfadingTheme.Spacing.sm) {
+                Image(systemName: "calendar")
+                    .font(UnfadingTheme.Font.body(16))
+                    .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
+                    Text(eventTitle)
+                        .font(UnfadingTheme.Font.subheadlineSemibold())
+                        .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                    Text("\(UnfadingLocalized.Composer.eventBindToSameDay) · \(UnfadingLocalized.Composer.eventCreateNew)")
+                        .font(UnfadingTheme.Font.metaNum(11, weight: .regular))
+                        .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                }
+                Spacer(minLength: 0)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var participantSection: some View {
+        if groupStore.mode == .general {
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
+                HStack {
+                    Text(UnfadingLocalized.Composer.participantsFieldTitle)
+                        .font(UnfadingTheme.Font.captionSemibold())
+                        .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                    Spacer()
+                    Text(UnfadingLocalized.Composer.formattedParticipantsCount(state.participantUserIds.count, groupStore.members.count))
+                        .font(UnfadingTheme.Font.metaNum(11, weight: .bold))
+                        .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                }
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 118), spacing: UnfadingTheme.Spacing.xs)], alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
+                    ForEach(Array(groupStore.members.enumerated()), id: \.element.id) { index, member in
+                        let color = UnfadingTheme.Color.memberPalette[index % UnfadingTheme.Color.memberPalette.count]
+                        ParticipantChip(
+                            member: member,
+                            color: color,
+                            isSelected: state.participantUserIds.contains(member.profiles.id)
                         ) {
-                            state.toggleMood(tag)
+                            state.toggleParticipant(member.profiles.id)
                         }
                     }
                 }
             }
+        }
+    }
+
+    private var costSection: some View {
+        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs2) {
+            Text(UnfadingLocalized.Composer.costLabel)
+                .font(UnfadingTheme.Font.captionSemibold())
+                .foregroundStyle(UnfadingTheme.Color.textSecondary)
+            HStack(spacing: UnfadingTheme.Spacing.sm) {
+                Image(systemName: "wonsign")
+                    .font(UnfadingTheme.Font.body(18))
+                    .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                TextField(UnfadingLocalized.Composer.costPlaceholder, text: $costText)
+                    .keyboardType(.numberPad)
+                    .font(UnfadingTheme.Font.body())
+                    .foregroundStyle(UnfadingTheme.Color.textPrimary)
+            }
+            .frame(minHeight: 44)
+            .padding(UnfadingTheme.Spacing.sm)
+            .background(UnfadingTheme.Color.card, in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous))
+            .shadow(style: UnfadingTheme.Shadow.card)
+        }
+    }
+
+    private var eventTitle: String {
+        switch state.eventBinding {
+        case let .bindExisting(event):
+            return event.title
+        case let .createNew(title, _, _):
+            let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? UnfadingLocalized.Composer.eventCreateNew : trimmed
+        case .none:
+            return "\(UnfadingLocalized.Composer.eventBindToSameDay) · \(UnfadingLocalized.Composer.eventCreateNew)"
         }
     }
 
@@ -321,10 +527,18 @@ struct MemoryComposerSheet: View {
             break
         case .deniedRecovery:
             showingDeniedRecovery = true
-        case .manualPlacePicker:
-            state.setPlace(UnfadingLocalized.Composer.placeholderChoose)
-            showingPlaceSearch = true
+            case .manualPlacePicker:
+                state.setPlace(UnfadingLocalized.Composer.placeholderChoose)
+                showingPlaceSearch = true
         }
+    }
+
+    private func applyParticipantDefaultsIfNeeded() {
+        guard state.participantUserIds.isEmpty else { return }
+        state.defaultParticipantSelection(
+            mode: groupStore.mode,
+            memberUserIds: groupStore.members.map(\.profiles.id)
+        )
     }
 
     private func handleCurrentLocationTap() {
@@ -413,7 +627,7 @@ private struct LocationPermissionRecoverySheet: View {
 
                 VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.sm) {
                     Label(UnfadingLocalized.Composer.currentPlace, systemImage: "mappin.and.ellipse")
-                        .font(.headline)
+                        .font(UnfadingTheme.Font.subheadlineSemibold())
                         .foregroundStyle(UnfadingTheme.Color.textPrimary)
                     Text(selectedPlace)
                         .foregroundStyle(UnfadingTheme.Color.textSecondary)
