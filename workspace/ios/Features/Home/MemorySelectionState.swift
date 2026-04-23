@@ -7,6 +7,10 @@ import SwiftUI
 /// (pin taps, chip taps, sheet drag ends).
 @MainActor
 final class MemorySelectionState: ObservableObject {
+    enum Scene: String, Hashable {
+        case mapDefault
+        case mapSelected
+    }
 
     /// Filter categories shown in the map filter chip row. `all` is the default
     /// non-filtered state.
@@ -40,6 +44,7 @@ final class MemorySelectionState: ObservableObject {
     }
 
     @Published private(set) var selectedPinID: UUID?
+    @Published private(set) var scene: Scene = .mapDefault
     @Published private(set) var activeFilter: Filter = .all
     @Published var sheetSnap: BottomSheetSnap = .default_
 
@@ -51,12 +56,20 @@ final class MemorySelectionState: ObservableObject {
             return
         }
         selectedPinID = pinID
+        scene = .mapSelected
         sheetSnap = .default_
+    }
+
+    /// Select the representative pin for a clustered annotation. The selected
+    /// cluster is later resolved from the current rendered cluster set.
+    func select(cluster: MemoryPinCluster) {
+        select(pinID: cluster.representativePin.id)
     }
 
     /// Clear any active pin selection and restore the default sheet snap.
     func clearSelection() {
         selectedPinID = nil
+        scene = .mapDefault
         sheetSnap = .default_
     }
 
@@ -73,5 +86,12 @@ final class MemorySelectionState: ObservableObject {
     func selectedPin(from pins: [SampleMemoryPin]) -> SampleMemoryPin? {
         guard let id = selectedPinID else { return nil }
         return pins.first(where: { $0.id == id })
+    }
+
+    func selectedCluster(from clusters: [MemoryPinCluster]) -> MemoryPinCluster? {
+        guard let id = selectedPinID else { return nil }
+        return clusters.first { cluster in
+            cluster.pins.contains { $0.id == id }
+        }
     }
 }

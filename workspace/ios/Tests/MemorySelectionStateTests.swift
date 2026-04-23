@@ -7,6 +7,7 @@ final class MemorySelectionStateTests: XCTestCase {
     func test_initial_state_has_no_selection_default_filter_default_snap() {
         let state = MemorySelectionState()
         XCTAssertNil(state.selectedPinID)
+        XCTAssertEqual(state.scene, .mapDefault)
         XCTAssertEqual(state.activeFilter, .all)
         XCTAssertEqual(state.sheetSnap, .default_)
     }
@@ -16,6 +17,7 @@ final class MemorySelectionStateTests: XCTestCase {
         let pin = SampleMemoryPin.samples.first!
         state.select(pinID: pin.id)
         XCTAssertEqual(state.selectedPinID, pin.id)
+        XCTAssertEqual(state.scene, .mapSelected)
         XCTAssertEqual(state.sheetSnap, .default_)
     }
 
@@ -25,6 +27,7 @@ final class MemorySelectionStateTests: XCTestCase {
         state.select(pinID: pin.id)
         state.select(pinID: pin.id)
         XCTAssertNil(state.selectedPinID)
+        XCTAssertEqual(state.scene, .mapDefault)
         XCTAssertEqual(state.sheetSnap, .default_)
     }
 
@@ -43,7 +46,17 @@ final class MemorySelectionStateTests: XCTestCase {
         state.select(pinID: SampleMemoryPin.samples.first!.id)
         state.clearSelection()
         XCTAssertNil(state.selectedPinID)
+        XCTAssertEqual(state.scene, .mapDefault)
         XCTAssertEqual(state.sheetSnap, .default_)
+    }
+
+    func test_selectCluster_sets_scene_and_resolves_cluster() {
+        let state = MemorySelectionState()
+        let clusters = SampleMemoryPin.samples.clusteredByCoordinateRadius()
+        let cluster = clusters.first!
+        state.select(cluster: cluster)
+        XCTAssertEqual(state.scene, .mapSelected)
+        XCTAssertEqual(state.selectedCluster(from: clusters)?.id, cluster.id)
     }
 
     func test_toggleFilter_activates_then_reverts_to_all() {

@@ -109,13 +109,11 @@ struct MemoryMapHomeView: View {
                             )
                         }
                     ) {
-                        if let selectedPin = selection.selectedPin(from: SampleMemoryPin.samples) {
-                            MemorySummaryCard(
-                                selectedPin: selectedPin,
-                                usesInternalScroll: false,
-                                onDetailTap: openDetail,
-                                onRewindTap: showRewindFromCuration
-                            )
+                        if let selectedCluster = selection.selectedCluster(from: samplePinClusters) {
+                            SheetFilteredContent(cluster: selectedCluster) {
+                                selection.clearSelection()
+                                sheetSnap = selection.sheetSnap
+                            }
                         } else {
                             HomeSheetContent(
                                 selectedTab: $activeSheetTab,
@@ -178,21 +176,30 @@ struct MemoryMapHomeView: View {
 
     private var mapLayer: some View {
         Map(position: $cameraPosition, selection: .constant(nil as UUID?)) {
-            ForEach(SampleMemoryPin.samples) { pin in
-                Annotation(pin.title, coordinate: pin.coordinate) {
+            ForEach(samplePinClusters) { cluster in
+                Annotation(cluster.representativePin.title, coordinate: cluster.coordinate) {
                     Button {
-                        selection.select(pinID: pin.id)
+                        selection.select(cluster: cluster)
                         sheetSnap = selection.sheetSnap
                     } label: {
-                        MemoryPinMarker(
-                            pin: pin,
-                            isSelected: selection.selectedPinID == pin.id,
-                            isDimmed: selection.selectedPinID != nil && selection.selectedPinID != pin.id
-                        )
+                        if cluster.count > 1 {
+                            ClusterMarker(
+                                cluster: cluster,
+                                isSelected: cluster.contains(pinID: selection.selectedPinID),
+                                isDimmed: selection.selectedPinID != nil && !cluster.contains(pinID: selection.selectedPinID)
+                            )
+                        } else {
+                            MemoryPinMarker(
+                                pin: cluster.representativePin,
+                                isSelected: cluster.contains(pinID: selection.selectedPinID),
+                                isDimmed: selection.selectedPinID != nil && !cluster.contains(pinID: selection.selectedPinID)
+                            )
+                        }
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(UnfadingLocalized.Accessibility.mapPinLabel(title: pin.title))
+                    .accessibilityLabel(UnfadingLocalized.Accessibility.mapPinLabel(title: cluster.representativePin.title))
                     .accessibilityHint(UnfadingLocalized.Accessibility.mapPinHint)
+                    .accessibilityIdentifier("memory-pin-\(cluster.representativePin.id.uuidString)")
                 }
             }
         }
@@ -383,6 +390,10 @@ struct MemoryMapHomeView: View {
             let name = profile.displayName?.trimmingCharacters(in: .whitespacesAndNewlines)
             return String((name?.first ?? "?"))
         }
+    }
+
+    private var samplePinClusters: [MemoryPinCluster] {
+        SampleMemoryPin.samples.clusteredByCoordinateRadius()
     }
 
     private func mapControlButton(systemName: String, accessibilityLabel: String, action: @escaping () -> Void) -> some View {

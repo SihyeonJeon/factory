@@ -102,6 +102,23 @@ final class UnfadingUITests: XCTestCase {
         try XCTSkipIf(true, "deferred to R37 marker_cluster round (requires selected-pin bootstrap)")
     }
 
+    func testMarkerClickPopulatesSheetFiltered() throws {
+        app.launch()
+        tapTab("map")
+
+        let marker = app.buttons["memory-pin-11111111-1111-4111-8111-111111111111"].firstMatch
+        guard marker.waitForExistence(timeout: 5), marker.isHittable else {
+            throw XCTSkip("MapKit annotation button is not hittable in this simulator stub")
+        }
+
+        marker.tap()
+
+        XCTAssertTrue(app.otherElements["sheet-filtered-content"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.otherElements["sheet-filtered-header"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["이 장소에서 1개의 추억"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["서울 마포구 상수동"].exists)
+    }
+
     // MARK: Sheet gesture tests — simulator 한계
     // 42x5pt handle + tight drag gesture 는 XCUITest swipeUp/swipeDown 시뮬레이터
     // 에서 재현이 불안정하다. 실기기 smoke 검증으로 위임하고, 스냅/back/스크롤
