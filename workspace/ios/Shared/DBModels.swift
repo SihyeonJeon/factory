@@ -124,6 +124,7 @@ struct DBMemory: Codable, Hashable, Identifiable {
     let cost: Int?
     let reactionCount: Int
     let createdAt: Date?
+    let isDraft: Bool
 
     enum CodingKeys: String, CodingKey {
         case id, title, note, date, address, categories, emotions
@@ -140,6 +141,7 @@ struct DBMemory: Codable, Hashable, Identifiable {
         case participantUserIds = "participant_user_ids"
         case reactionCount = "reaction_count"
         case createdAt = "created_at"
+        case isDraft = "is_draft"
     }
 
     init(
@@ -162,7 +164,8 @@ struct DBMemory: Codable, Hashable, Identifiable {
         participantUserIds: [UUID] = [],
         cost: Int? = nil,
         reactionCount: Int,
-        createdAt: Date?
+        createdAt: Date?,
+        isDraft: Bool = false
     ) {
         self.id = id
         self.userId = userId
@@ -184,6 +187,7 @@ struct DBMemory: Codable, Hashable, Identifiable {
         self.cost = cost
         self.reactionCount = reactionCount
         self.createdAt = createdAt
+        self.isDraft = isDraft
     }
 
     init(from decoder: Decoder) throws {
@@ -208,10 +212,11 @@ struct DBMemory: Codable, Hashable, Identifiable {
         cost = try container.decodeIfPresent(Int.self, forKey: .cost)
         reactionCount = try container.decodeIfPresent(Int.self, forKey: .reactionCount) ?? 0
         createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt)
+        isDraft = try container.decodeIfPresent(Bool.self, forKey: .isDraft) ?? false
     }
 }
 
-struct DBEvent: Codable, Hashable, Identifiable {
+struct DBEvent: Codable, Hashable, Identifiable, Sendable {
     let id: UUID
     let groupId: UUID
     let title: String
@@ -232,7 +237,7 @@ struct DBEvent: Codable, Hashable, Identifiable {
     }
 }
 
-struct DBMemoryInsert: Encodable {
+struct DBMemoryInsert: Codable, Hashable, Sendable {
     let id: UUID
     let userId: UUID
     let groupId: UUID

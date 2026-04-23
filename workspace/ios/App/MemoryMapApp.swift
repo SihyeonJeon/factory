@@ -5,6 +5,7 @@ struct MemoryMapApp: App {
     @StateObject private var prefs: UserPreferences
     @StateObject private var authStore: AuthStore
     @StateObject private var groupStore: GroupStore
+    @StateObject private var offlineQueue: OfflineQueue
     @StateObject private var memoryStore: MemoryStore
     @StateObject private var subscriptionStore: SubscriptionStore
     @StateObject private var locationPermission: LocationPermissionStore
@@ -24,6 +25,7 @@ struct MemoryMapApp: App {
     }()
 
     init() {
+        let offlineQueue = OfflineQueue()
         if ProcessInfo.processInfo.arguments.contains("-UI_TEST_RESET_DEFAULTS"),
            let bundleId = Bundle.main.bundleIdentifier {
             UserDefaults.standard.removePersistentDomain(forName: bundleId)
@@ -31,7 +33,8 @@ struct MemoryMapApp: App {
         _prefs = StateObject(wrappedValue: UserPreferences(forceHasSeenOnboarding: Self.shouldSkipOnboardingForUITests))
         _authStore = StateObject(wrappedValue: AuthStore())
         _groupStore = StateObject(wrappedValue: Self.makeGroupStore())
-        _memoryStore = StateObject(wrappedValue: MemoryStore())
+        _offlineQueue = StateObject(wrappedValue: offlineQueue)
+        _memoryStore = StateObject(wrappedValue: MemoryStore(offlineQueue: offlineQueue))
         _subscriptionStore = StateObject(wrappedValue: SubscriptionStore())
         _locationPermission = StateObject(wrappedValue: LocationPermissionStore())
     }
@@ -95,6 +98,7 @@ struct MemoryMapApp: App {
                                 .environmentObject(authStore)
                                 .environmentObject(prefs)
                                 .environmentObject(groupStore)
+                                .environmentObject(offlineQueue)
                                 .environmentObject(memoryStore)
                         }
                     } else {
@@ -109,6 +113,9 @@ struct MemoryMapApp: App {
             }
             .environmentObject(subscriptionStore)
             .environmentObject(locationPermission)
+            .task {
+                offlineQueue.startMonitoring()
+            }
             .task {
                 await subscriptionStore.loadProducts()
             }

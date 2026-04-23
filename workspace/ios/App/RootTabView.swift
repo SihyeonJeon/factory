@@ -22,5 +22,6 @@ struct RootTabView: View {
         .environmentObject(AuthStore(preview: .signedIn(userId: UUID(), email: "preview@example.com")))
         .environmentObject(UserPreferences())
         .environmentObject(GroupStore.preview())
+        .environmentObject(OfflineQueue())
         .environmentObject(MemoryStore(memories: MemoryStore.uiTestStubMemories()))
 }

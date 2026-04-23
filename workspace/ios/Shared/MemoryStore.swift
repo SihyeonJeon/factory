@@ -16,31 +16,47 @@ final class MemoryStore: ObservableObject {
     @Published private(set) var pendingIncomingMemoryId: UUID?
 
     private let repo: MemoryRepository
+    private let offlineQueue: OfflineQueue
     private let offlineCacheURL: URL?
     private let pendingIncomingClearDelayNanoseconds: UInt64
     private let logger = Logger(subsystem: "com.jeonsihyeon.memorymap", category: "MemoryStore")
     private var currentUserId: UUID?
     private var pendingIncomingClearTask: Task<Void, Never>?
+    private var offlineFlushObserver: NSObjectProtocol?
 
     init(
         repo: MemoryRepository = SupabaseMemoryRepository(),
+        offlineQueue: OfflineQueue? = nil,
         offlineCacheURL: URL? = nil,
         currentUserId: UUID? = nil,
         pendingIncomingClearDelay: TimeInterval = 3
     ) {
         self.repo = repo
+        self.offlineQueue = offlineQueue ?? OfflineQueue()
         self.offlineCacheURL = offlineCacheURL
         self.currentUserId = currentUserId
         self.pendingIncomingClearDelayNanoseconds = UInt64(max(pendingIncomingClearDelay, 0) * 1_000_000_000)
+        self.offlineFlushObserver = NotificationCenter.default.addObserver(
+            forName: .offlineQueueDidFlushMemory,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let memory = notification.object as? DBMemory else { return }
+            Task { @MainActor [weak self] in
+                self?.upsert(memory)
+            }
+        }
     }
 
     #if DEBUG
     init(memories: [DBMemory]) {
         self.repo = PreviewMemoryRepository()
+        self.offlineQueue = OfflineQueue()
         self.offlineCacheURL = nil
         self.pendingIncomingClearDelayNanoseconds = 3_000_000_000
         self.memories = memories
         self.state = .loaded
+        self.offlineFlushObserver = nil
     }
 
     func applyUITestStub(groupId: UUID) {
@@ -155,25 +171,42 @@ final class MemoryStore: ObservableObject {
         state = .loading
         do {
             let fetched = try await repo.fetchMemories(groupId: groupId)
-            memories = fetched
+            memories = mergedWithPendingDrafts(fetched, groupId: groupId)
             try writeOfflineCache(fetched, groupId: groupId)
             state = .loaded
         } catch {
             logger.error("메모리 로드 실패: \(error.localizedDescription, privacy: .public)")
             if let cached = try? readOfflineCache(groupId: groupId) {
-                memories = cached
+                memories = mergedWithPendingDrafts(cached, groupId: groupId)
                 state = .loaded
             } else {
-                state = .error(error.localizedDescription)
+                let drafts = offlineQueue.pendingMemoryDrafts(for: groupId)
+                if drafts.isEmpty == false {
+                    memories = drafts
+                    state = .loaded
+                } else {
+                    state = .error(error.localizedDescription)
+                }
             }
         }
     }
 
     @discardableResult
     func createMemory(_ insert: DBMemoryInsert) async throws -> DBMemory {
-        let created = try await repo.createMemory(insert)
-        upsert(created)
-        return created
+        do {
+            let created = try await repo.createMemory(insert)
+            upsert(created)
+            return created
+        } catch {
+            guard isRecoverableNetworkError(error) else {
+                throw error
+            }
+
+            let draft = Self.makeDraftMemory(from: insert)
+            offlineQueue.enqueue(.createMemory(insert))
+            upsert(draft)
+            return draft
+        }
     }
 
     @discardableResult
@@ -280,6 +313,18 @@ final class MemoryStore: ObservableObject {
         memories.sort { $0.date > $1.date }
     }
 
+    private func mergedWithPendingDrafts(_ base: [DBMemory], groupId: UUID) -> [DBMemory] {
+        var merged = base
+        for draft in offlineQueue.pendingMemoryDrafts(for: groupId) {
+            if let index = merged.firstIndex(where: { $0.id == draft.id }) {
+                merged[index] = draft
+            } else {
+                merged.append(draft)
+            }
+        }
+        return merged.sorted { $0.date > $1.date }
+    }
+
     private func announcePendingIncomingMemory(id: UUID) {
         pendingIncomingClearTask?.cancel()
         pendingIncomingMemoryId = id
@@ -334,6 +379,32 @@ final class MemoryStore: ObservableObject {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return decoder
+    }
+
+    private static func makeDraftMemory(from insert: DBMemoryInsert) -> DBMemory {
+        DBMemory(
+            id: insert.id,
+            userId: insert.userId,
+            groupId: insert.groupId,
+            eventId: insert.eventId,
+            title: insert.title,
+            note: insert.note,
+            placeTitle: insert.placeTitle,
+            address: insert.address,
+            locationLat: insert.locationLat,
+            locationLng: insert.locationLng,
+            date: insert.date,
+            capturedAt: insert.capturedAt,
+            photoURL: insert.photoURL,
+            photoURLs: insert.photoURLs,
+            categories: insert.categories,
+            emotions: insert.emotions,
+            participantUserIds: insert.participantUserIds,
+            cost: insert.cost,
+            reactionCount: 0,
+            createdAt: insert.capturedAt ?? insert.date,
+            isDraft: true
+        )
     }
 }
 

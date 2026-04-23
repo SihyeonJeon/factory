@@ -5,7 +5,7 @@ import XCTest
 final class MemoryStoreTests: XCTestCase {
     func test_create_addsToMemoriesList() async throws {
         let repo = InMemoryMemoryRepository()
-        let store = MemoryStore(repo: repo, offlineCacheURL: tempURL())
+        let store = MemoryStore(repo: repo, offlineQueue: makeOfflineQueue(), offlineCacheURL: tempURL())
 
         let created = try await store.createMemory(Self.insert())
 
@@ -16,7 +16,7 @@ final class MemoryStoreTests: XCTestCase {
     func test_update_mutatesRow() async throws {
         let initial = Self.memory(title: "이전 제목", note: "이전 노트", emotions: ["calm"])
         let repo = InMemoryMemoryRepository(memories: [initial])
-        let store = MemoryStore(repo: repo, offlineCacheURL: tempURL())
+        let store = MemoryStore(repo: repo, offlineQueue: makeOfflineQueue(), offlineCacheURL: tempURL())
         await store.loadMemories(for: initial.groupId)
 
         let updated = try await store.updateMemory(id: initial.id, title: "새 제목", note: "새 노트", emotions: ["joy"])
@@ -29,7 +29,7 @@ final class MemoryStoreTests: XCTestCase {
     func test_delete_removesRow() async throws {
         let initial = Self.memory()
         let repo = InMemoryMemoryRepository(memories: [initial])
-        let store = MemoryStore(repo: repo, offlineCacheURL: tempURL())
+        let store = MemoryStore(repo: repo, offlineQueue: makeOfflineQueue(), offlineCacheURL: tempURL())
         await store.loadMemories(for: initial.groupId)
 
         try await store.deleteMemory(id: initial.id)
@@ -40,7 +40,7 @@ final class MemoryStoreTests: XCTestCase {
     func test_loadMemories_emptyState() async {
         let groupId = UUID()
         let repo = InMemoryMemoryRepository(memories: [])
-        let store = MemoryStore(repo: repo, offlineCacheURL: tempURL())
+        let store = MemoryStore(repo: repo, offlineQueue: makeOfflineQueue(), offlineCacheURL: tempURL())
 
         await store.loadMemories(for: groupId)
 
@@ -53,11 +53,11 @@ final class MemoryStoreTests: XCTestCase {
         let cached = Self.memory(groupId: groupId, title: "캐시된 추억")
         let cacheURL = tempURL()
         let repo = InMemoryMemoryRepository(memories: [cached])
-        let writer = MemoryStore(repo: repo, offlineCacheURL: cacheURL)
+        let writer = MemoryStore(repo: repo, offlineQueue: makeOfflineQueue(), offlineCacheURL: cacheURL)
         await writer.loadMemories(for: groupId)
         await repo.setShouldFail(true)
 
-        let reader = MemoryStore(repo: repo, offlineCacheURL: cacheURL)
+        let reader = MemoryStore(repo: repo, offlineQueue: makeOfflineQueue(), offlineCacheURL: cacheURL)
         await reader.loadMemories(for: groupId)
 
         XCTAssertEqual(reader.memories, [cached])
@@ -76,6 +76,7 @@ final class MemoryStoreTests: XCTestCase {
         )
         let store = MemoryStore(
             repo: InMemoryMemoryRepository(),
+            offlineQueue: makeOfflineQueue(),
             offlineCacheURL: tempURL(),
             currentUserId: currentUserId,
             pendingIncomingClearDelay: 0.05
@@ -95,6 +96,7 @@ final class MemoryStoreTests: XCTestCase {
         let currentUserId = UUID(uuidString: "00000000-0000-0000-0000-000000000017")!
         let store = MemoryStore(
             repo: InMemoryMemoryRepository(),
+            offlineQueue: makeOfflineQueue(),
             offlineCacheURL: tempURL(),
             currentUserId: currentUserId,
             pendingIncomingClearDelay: 0.05
@@ -107,10 +109,34 @@ final class MemoryStoreTests: XCTestCase {
         XCTAssertNil(store.pendingIncomingMemoryId)
     }
 
+    func test_createMemory_offline_enqueuesDraftAndReturnsDraftMemory() async throws {
+        let repo = InMemoryMemoryRepository()
+        await repo.setShouldFail(true)
+        let queue = makeOfflineQueue()
+        let store = MemoryStore(repo: repo, offlineQueue: queue, offlineCacheURL: tempURL())
+
+        let created = try await store.createMemory(Self.insert())
+
+        XCTAssertEqual(created.id, store.memories.first?.id)
+        XCTAssertEqual(store.memories.first?.isDraft, true)
+        XCTAssertEqual(queue.pendingCount, 1)
+    }
+
     private func tempURL() -> URL {
         FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathExtension("json")
+    }
+
+    private func makeOfflineQueue() -> OfflineQueue {
+        let suiteName = "MemoryStoreTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        return OfflineQueue(
+            userDefaults: defaults,
+            memoryRepository: InMemoryMemoryRepository(),
+            eventRepository: StubQueueEventRepository()
+        )
     }
 
     private static func insert(
@@ -167,6 +193,15 @@ final class MemoryStoreTests: XCTestCase {
             createdAt: Date(timeIntervalSince1970: 1_776_000_000)
         )
     }
+}
+
+private struct StubQueueEventRepository: EventRepository {
+    func plannedEvents(groupId: UUID, startUTC: Date, endUTC: Date) async throws -> [DBEvent] { [] }
+    func monthlyExpenseKST(groupId: UUID, year: Int, month: Int) async throws -> Int64 { 0 }
+    func createEvent(groupId: UUID, title: String, startDate: Date, endDate: Date?, reminderAt: Date?) async throws -> DBEvent {
+        DBEvent(id: UUID(), groupId: groupId, title: title, startDate: startDate, endDate: endDate, isMultiDay: endDate != nil, createdAt: nil, reminderAt: reminderAt)
+    }
+    func findEventAt(groupId: UUID, timestamp: Date) async throws -> DBEvent? { nil }
 }
 
 private actor InMemoryMemoryRepository: MemoryRepository {

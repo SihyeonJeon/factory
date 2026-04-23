@@ -42,6 +42,7 @@ enum ShellTab: String, CaseIterable {
 
 struct UnfadingTabShell: View {
     @EnvironmentObject private var memoryStore: MemoryStore
+    @EnvironmentObject private var offlineQueue: OfflineQueue
 
     private let evidenceMode: MemoryComposerEvidenceMode
 
@@ -96,20 +97,26 @@ struct UnfadingTabShell: View {
                     .zIndex(120)
             }
             .overlay(alignment: .bottom) {
-                if let pendingMemoryId = memoryStore.pendingIncomingMemoryId {
-                    Button {
-                        openIncomingMemory(id: pendingMemoryId)
-                    } label: {
-                        UnfadingToast(message: UnfadingLocalized.Home.incomingMemoryToast)
+                VStack(spacing: UnfadingTheme.Spacing.xs) {
+                    if offlineQueue.pendingCount > 0 {
+                        offlineQueueBanner
                     }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal, UnfadingTheme.Spacing.lg)
-                    .padding(.bottom, UnfadingTabBar.height + UnfadingTheme.Spacing.sm)
-                    .accessibilityLabel(UnfadingLocalized.Home.incomingMemoryToast)
-                    .accessibilityHint(UnfadingLocalized.Accessibility.mapTabHint)
-                    .accessibilityIdentifier("incoming-memory-toast")
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+
+                    if let pendingMemoryId = memoryStore.pendingIncomingMemoryId {
+                        Button {
+                            openIncomingMemory(id: pendingMemoryId)
+                        } label: {
+                            UnfadingToast(message: UnfadingLocalized.Home.incomingMemoryToast)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(UnfadingLocalized.Home.incomingMemoryToast)
+                        .accessibilityHint(UnfadingLocalized.Accessibility.mapTabHint)
+                        .accessibilityIdentifier("incoming-memory-toast")
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
                 }
+                .padding(.horizontal, UnfadingTheme.Spacing.lg)
+                .padding(.bottom, UnfadingTabBar.height + UnfadingTheme.Spacing.sm)
             }
             .overlay {
                 GroupPickerOverlay(
@@ -197,6 +204,24 @@ struct UnfadingTabShell: View {
         pendingAutoselectMemoryId = id
         memoryStore.clearPendingIncomingMemory()
     }
+
+    private var offlineQueueBanner: some View {
+        Text(UnfadingLocalized.Home.offlineQueueBanner(offlineQueue.pendingCount))
+            .font(UnfadingTheme.Font.captionSemibold())
+            .foregroundStyle(UnfadingTheme.Color.textPrimary)
+            .padding(.horizontal, UnfadingTheme.Spacing.md)
+            .padding(.vertical, UnfadingTheme.Spacing.sm)
+            .background(
+                UnfadingTheme.Color.sheet.opacity(0.96),
+                in: Capsule()
+            )
+            .overlay {
+                Capsule()
+                    .stroke(UnfadingTheme.Color.divider, lineWidth: 0.5)
+            }
+            .shadow(style: UnfadingTheme.Shadow.card)
+            .accessibilityIdentifier("offline-queue-banner")
+    }
 }
 
 struct UnfadingTabBar: View {
@@ -274,6 +299,7 @@ struct UnfadingTabBar: View {
         .environmentObject(AuthStore(preview: .signedIn(userId: UUID(), email: "preview@example.com")))
         .environmentObject(UserPreferences())
         .environmentObject(GroupStore.preview())
+        .environmentObject(OfflineQueue())
         .environmentObject(MemoryStore(memories: MemoryStore.uiTestStubMemories()))
         .environmentObject(SubscriptionStore())
 }

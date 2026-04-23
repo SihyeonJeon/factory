@@ -209,6 +209,10 @@ enum UnfadingLocalized {
         static func progressPercent(_ percent: Int) -> String {
             "\(percent)%"
         }
+
+        static func offlineQueueBanner(_ count: Int) -> String {
+            "대기 중 \(count)건 — 연결 복귀 시 자동 저장"
+        }
     }
 
     // MARK: Common
