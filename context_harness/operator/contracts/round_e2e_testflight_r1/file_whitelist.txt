@@ -1,0 +1,12 @@
+docs/product-specs/launchability-review-2026.md
+workspace/ios/Tests/SupabaseE2ETests.swift
+workspace/ios/scripts/archive.sh
+workspace/ios/scripts/export-options.plist
+workspace/ios/scripts/e2e_setup.md
+workspace/ios/scripts/harvest_screenshots.sh
+context_harness/operator/contracts/round_e2e_testflight_r1/spec.md
+context_harness/operator/contracts/round_e2e_testflight_r1/file_whitelist.txt
+context_harness/operator/meetings/2026-04-23_round24_e2e_testflight_plan.md
+context_harness/reports/round_e2e_testflight_r1/evidence/notes.md
+context_harness/blackboard.md
+docs/exec-plans/process-log.jsonl

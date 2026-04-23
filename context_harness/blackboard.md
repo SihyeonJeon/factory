@@ -1282,3 +1282,4 @@ xcodegen 성공. Sprint 26 완료입니다.
 # 2026-04-23 round_photos_r1: Opened requested iOS source/test files plus project.yml and SampleModels to wire PhotoUploader, DBMemoryInsert id, signed URL rendering, and tests; task explicitly required code changes outside FILE_INDEX exact pointers.
 # 2026-04-23 round_storekit_r1: Opened requested iOS source files, localized strings, app root, tests, and monetization spec to wire StoreKit 2 subscription state and required round artifacts.
 # 2026-04-23 round_ship_assets_r1: Opened requested iOS Info.plist and asset catalog files to wire AppIcon, LaunchLogo, UILaunchScreen, PrivacyInfo manifest, and round artifacts.
+# 2026-04-23 round_e2e_testflight_r1: Opened requested launchability review, UITests, project.yml, Supabase service/repository/model files, scripts list, and prior round artifacts to wire skipped E2E tests, screenshot harvest, TestFlight archive prep, and R24 artifacts.

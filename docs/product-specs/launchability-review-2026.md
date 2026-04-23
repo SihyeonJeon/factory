@@ -1,81 +1,62 @@
-# Launchability Review 2026
+# Launchability Review — Final (2026-04-23)
 
-Round: `round_launchability_r1`
-Date: 2026-04-23
+Round: `round_e2e_testflight_r1`
 Primary locale: Korean (`ko_KR`)
+Signing status: `DEVELOPMENT_TEAM` is intentionally empty until Apple Developer enrollment provides a team ID.
 
-## Info.plist Privacy Strings
+## Final Status Table
 
-- [x] `NSLocationWhenInUseUsageDescription` is present for nearby memory pins and place-based rewind moments.
-- [x] `NSLocationAlwaysAndWhenInUseUsageDescription` is present for revisit-triggered rewind moments.
-- [x] `NSPhotoLibraryUsageDescription` is present for attaching photos to group memories.
-- [x] `NSPhotoLibraryAddUsageDescription` is present for saving shared memory photos.
-- [x] `UNUserNotificationCenterUsageDescription` is present for rewind reminders and group updates.
+| Area | Status | Notes |
+|---|---|---|
+| DB | CHECK | Supabase schema, RLS, repositories, and model tests are present for profiles, groups, memories, photos, and subscriptions. |
+| Auth | CHECK | Email/password auth path is wired through Supabase; E2E sign-in coverage is skipped unless operator-provided credentials are present. |
+| Groups | CHECK | Group create/join/fetch repository path and UI store are implemented; R24 E2E covers create group through Supabase RPC when credentials are configured. |
+| Memories | CHECK | Memory create/fetch/delete repository path is implemented; R24 E2E covers group-scoped memory lifecycle when credentials are configured. |
+| Photos | CHECK | Photo uploader and signed URL rendering are wired for launchability; production media quota and lifecycle policy remain future hardening. |
+| Profile sync | CHECK | Profile preference sync path is present with local fallback coverage. |
+| StoreKit | DEFER | Local StoreKit 2 paywall and entitlement state exist; Edge Function receipt validation remains deferred before paid backend quota enforcement. |
+| Assets | DEFER | AppIcon and launch logo are wired, but current artwork is placeholder quality and needs professional branded replacement. |
+| Privacy | CHECK | Info.plist privacy strings and PrivacyInfo manifest are present; App Store privacy answers still need final owner review. |
+| E2E | CHECK | `SupabaseE2ETests` is added and skips cleanly unless `UNFADING_E2E_EMAIL` and `UNFADING_E2E_PASSWORD` are set. |
 
-## LaunchScreen
+## Launch-Blocking External Actions
 
-- [x] `UILaunchScreen` is configured in `workspace/ios/project.yml`.
-- [ ] Current `UIColorName` is empty. This is acceptable for a simulator launch smoke test, but before App Store submission the app should either set an explicit launch-screen color asset that matches the app background or use an AppIcon-driven launch asset to avoid a generic blank transition.
+1. Supabase Dashboard -> Auth -> Policies -> enable HIBP leaked-password protection.
+2. Apple Developer enrollment -> obtain Apple team ID and rerun archive with `scripts/archive.sh <TEAM_ID>`.
+3. App Store Connect -> create app record, subscription products, privacy answers, screenshots, support URL, and privacy policy URL.
+4. Commission professional AppIcon, launch logo, and marketing screenshot assets to replace the current placeholder art.
 
-## AppIcon
+## Deferred Items
 
-- [ ] AppIcon assets are currently missing from the XcodeGen project. A full App Store icon set is required before release.
-
-## Version And Build
-
-- [x] `MARKETING_VERSION` is set to `1.0.0` in `workspace/ios/project.yml`.
-- [x] `CURRENT_PROJECT_VERSION` is set to `1` in `workspace/ios/project.yml`.
-- [ ] TestFlight automation should bump `CURRENT_PROJECT_VERSION` on every uploaded build.
-
-## StoreKit 2 Integration
-
-- [x] Monetization remains deferred per the R11 `PremiumPreviewSheet` placeholder path.
-- [ ] Add a local StoreKit configuration file with product IDs for monthly and annual couple/group plans.
-- [ ] Implement StoreKit 2 product loading, purchase, restore, transaction listener, and entitlement cache.
-- [ ] Add server-side validation through App Store Server API before granting high-cost storage or AI entitlements.
-- [ ] Add billing retry, grace period, refund, and subscription-management flows.
-
-## Privacy And Tracking Labels
-
-- [x] No third-party SDKs are currently integrated.
-- [ ] App Privacy declaration should cover location, photos, user content, identifiers/account data if added, diagnostics if enabled, and notification usage.
-- [x] Tracking label should remain minimal unless advertising, cross-app tracking, or third-party analytics are introduced.
+- Apple Sign in.
+- Edge Function receipt validation through App Store Server API before granting high-cost storage or AI entitlements.
+- Real-branded AppIcon and launch branding; current icon is a placeholder.
+- Localized App Store metadata for Korean and English listings.
+- Actual TestFlight build upload; blocked until Apple Developer team ID and signing are available.
 
 ## TestFlight Prep
 
-- [ ] Configure a valid Apple development team and signing style.
-- [ ] Create provisioning profiles for `MemoryMap` and `UnfadingUITests`.
-- [ ] Add a build-number bump script for `CURRENT_PROJECT_VERSION`.
-- [ ] Add export options plist for archive export.
-- [ ] Capture a clean `xcodebuild archive` log before external TestFlight distribution.
+- Archive helper: `workspace/ios/scripts/archive.sh`.
+- Export template: `workspace/ios/scripts/export-options.plist`.
+- Required command after enrollment:
 
-## Localization Base
+```bash
+cd workspace/ios
+scripts/archive.sh <APPLE_TEAM_ID>
+```
 
-- [x] Korean is the primary launch language and the current UI copy baseline.
-- [ ] Add explicit `ko_KR` and English secondary localization resources before public launch.
-- [ ] Migrate hard-coded Korean strings toward string catalog coverage as the English surface is added.
+- Expected output: `.build/export/MemoryMap.ipa`.
+- Current limitation: without a valid `DEVELOPMENT_TEAM`, archive/export cannot produce a signed TestFlight IPA.
 
-## Monetization Rollout Plan
+## Screenshot Harvest
 
-- [x] Closed beta: free-only app, no purchase flow, validate memory capture, map browsing, calendar, Rewind, and group hub.
-- [ ] Open beta: introduce premium previews, transparent plan copy, storage/memory limit messaging, and export preview moments.
-- [ ] Version 1.0: keep core viewing and existing memory access free; ship App Store privacy, terms, screenshots, and Korean/English listing copy.
-- [ ] In-app purchase enablement: launch StoreKit 2 subscriptions after product-market fit signals, starting with KRW 4,900/month or KRW 49,000/year couple/small-group premium and KRW 8,900/month or KRW 89,000/year group/family premium.
+- Existing UITests attach named screenshots for map, calendar, rewind, settings, composer, group hub, and memory detail.
+- Cleaner App Store-ready extraction helper: `workspace/ios/scripts/harvest_screenshots.sh <xcresult> [output_dir]`.
+- Default output directory: `workspace/ios/AppStoreScreenshots`.
+- Final App Store screenshots still require human curation for required device sizes and listing composition.
 
-## Known Limitations Vs Deepsight
+## E2E Setup
 
-- [ ] Real Supabase backend integration is not yet present in the Swift app.
-- [ ] True cloud sync, conflict handling, auth, and group membership persistence are not complete.
-- [ ] Advanced map styling has not fully reached the deepsight token target.
-- [ ] Production media upload, quota enforcement, AI Rewind generation, and export jobs are still deferred.
-- [ ] AppIcon, full launch branding, and App Store screenshot set remain release blockers.
-
-## Pre-Submission Checklist
-
-- [ ] App Store screenshots for required device sizes, including map, calendar, Rewind, settings, composer, group hub, and memory detail.
-- [ ] Review notes explaining location/photo/notification permission prompts and the current beta scope.
-- [ ] Age rating target: 12+ due to user-generated content, location sharing context, and group interactions.
-- [ ] Korean and English app descriptions.
-- [ ] Korean and English keywords.
-- [ ] Privacy policy URL and support URL.
-- [ ] Terms/subscription copy before StoreKit enablement.
+- Setup notes: `workspace/ios/scripts/e2e_setup.md`.
+- E2E tests are safe in normal CI because they skip when credentials are absent.
+- To run only the Supabase E2E class, provide `UNFADING_E2E_EMAIL` and `UNFADING_E2E_PASSWORD`.
