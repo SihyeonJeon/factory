@@ -11,7 +11,10 @@ struct MemoryMapHomeView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
+    @EnvironmentObject private var groupStore: GroupStore
+    @EnvironmentObject private var memoryStore: MemoryStore
     private let evidenceMode: MemoryComposerEvidenceMode
+    @Binding private var sheetSnap: BottomSheetSnap
     @StateObject private var locationPermissionStore = LocationPermissionStore()
     @StateObject private var selection = MemorySelectionState()
     @State private var showingGroupHub = false
@@ -25,7 +28,8 @@ struct MemoryMapHomeView: View {
         )
     )
 
-    init(evidenceMode: MemoryComposerEvidenceMode = .none) {
+    init(sheetSnap: Binding<BottomSheetSnap> = .constant(.default_), evidenceMode: MemoryComposerEvidenceMode = .none) {
+        self._sheetSnap = sheetSnap
         self.evidenceMode = evidenceMode
     }
 
@@ -40,17 +44,36 @@ struct MemoryMapHomeView: View {
                         .padding(.horizontal, MemoryMapHomeLayout.horizontalInset)
                         .padding(.top, MemoryMapHomeLayout.topChromeTop)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        .opacity(sheetSnap == .expanded ? 0 : 1)
+                        .allowsHitTesting(sheetSnap != .expanded)
                         .zIndex(2)
 
                     filterRow
                         .padding(.horizontal, MemoryMapHomeLayout.horizontalInset)
                         .padding(.top, MemoryMapHomeLayout.filterChipTop)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        .opacity(sheetSnap == .expanded ? 0 : 1)
+                        .allowsHitTesting(sheetSnap != .expanded)
                         .zIndex(2)
 
-                    UnfadingBottomSheet(snap: $selection.sheetSnap, measuredHeight: $measuredSheetHeight) {
+                    UnfadingBottomSheet(
+                        snap: $sheetSnap,
+                        measuredHeight: $measuredSheetHeight,
+                        tabBarHeight: UnfadingTabBar.height,
+                        collapsedSummary: {
+                            CollapsedSummary(mode: groupStore.mode, count: memoryStore.memories.count)
+                        },
+                        expandedHeader: { collapseToDefault in
+                            SheetExpandedHeader(
+                                groupName: groupStore.activeGroup?.name ?? UnfadingLocalized.Home.groupChipPlaceholder,
+                                memberInitials: headerInitials,
+                                onBack: collapseToDefault
+                            )
+                        }
+                    ) {
                         MemorySummaryCard(
                             selectedPin: selection.selectedPin(from: SampleMemoryPin.samples),
+                            usesInternalScroll: false,
                             onDetailTap: openDetail,
                             onRewindTap: showRewindFromCuration
                         )
@@ -60,8 +83,10 @@ struct MemoryMapHomeView: View {
 
                     mapControls
                         .padding(.trailing, MemoryMapHomeLayout.mapControlsRight)
-                        .padding(.bottom, measuredSheetHeight + MemoryMapHomeLayout.mapControlsBottomGap)
+                        .padding(.bottom, measuredSheetHeight + UnfadingTabBar.height + MemoryMapHomeLayout.mapControlsBottomGap)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                        .opacity(sheetSnap == .expanded ? 0 : 1)
+                        .allowsHitTesting(sheetSnap != .expanded)
                         .zIndex(3)
 
                 }
@@ -109,6 +134,7 @@ struct MemoryMapHomeView: View {
                 Annotation(pin.title, coordinate: pin.coordinate) {
                     Button {
                         selection.select(pinID: pin.id)
+                        sheetSnap = selection.sheetSnap
                     } label: {
                         MemoryPinMarker(pin: pin)
                     }
@@ -200,6 +226,18 @@ struct MemoryMapHomeView: View {
             }
         }
         .animation(reduceMotion ? .easeInOut(duration: 0.25) : .interpolatingSpring(stiffness: 260, damping: 32), value: measuredSheetHeight)
+    }
+
+    private var headerInitials: [String] {
+        let profiles = groupStore.memberProfiles
+        if profiles.isEmpty {
+            return SampleGroup.sampleCouple.members.map(\.initial)
+        }
+
+        return profiles.prefix(3).map { profile in
+            let name = profile.displayName?.trimmingCharacters(in: .whitespacesAndNewlines)
+            return String((name?.first ?? "?"))
+        }
     }
 
     private func mapControlButton(systemName: String, accessibilityLabel: String, action: @escaping () -> Void) -> some View {

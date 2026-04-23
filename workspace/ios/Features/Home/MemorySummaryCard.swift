@@ -7,49 +7,60 @@ struct MemorySummaryCard: View {
     /// short label. When nil, it shows the default sample "오늘의 리와인드" copy.
     var selectedPin: SampleMemoryPin? = nil
     var photoStoragePath: String? = nil
+    var usesInternalScroll = true
     var onDetailTap: (() -> Void)? = nil
     var onRewindTap: (() -> Void)? = nil
 
     var body: some View {
-        ScrollView(.vertical, showsIndicators: dynamicTypeSize.isAccessibilitySize) {
-            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.lg - 2) {
-                if let path = resolvedPhotoStoragePath {
-                    RemoteImageView(storagePath: path)
-                        .frame(height: 148)
-                        .clipShape(RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous))
-                        .accessibilityHidden(true)
+        Group {
+            if usesInternalScroll {
+                ScrollView(.vertical, showsIndicators: dynamicTypeSize.isAccessibilitySize) {
+                    contentStack
                 }
-
-                header
-
-                Text(selectedPinBody)
-                    .font(UnfadingTheme.Font.subheadline())
-                    .foregroundStyle(UnfadingTheme.Color.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                tagSection
-
-                if shouldShowRewindHint, let onRewindTap {
-                    rewindHintCard(onTap: onRewindTap)
-                }
-
-                if let onDetailTap {
-                    Button(action: onDetailTap) {
-                        Label(UnfadingLocalized.Detail.detailCta, systemImage: "chevron.right.circle")
-                            .frame(maxWidth: .infinity, minHeight: 44)
-                    }
-                    .buttonStyle(.bordered)
-                    .accessibilityLabel(UnfadingLocalized.Detail.detailCta)
-                }
+            } else {
+                contentStack
             }
-            .padding(UnfadingTheme.Spacing.xl)
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(maxHeight: dynamicTypeSize.isAccessibilitySize ? 320 : nil, alignment: .top)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(UnfadingLocalized.Accessibility.memorySummaryLabel(title: selectedPinTitle, body: selectedPinBody))
         .accessibilityHint(onDetailTap == nil ? "" : UnfadingLocalized.Accessibility.memorySummaryHint)
+    }
+
+    private var contentStack: some View {
+        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.lg - 2) {
+            if let path = resolvedPhotoStoragePath {
+                RemoteImageView(storagePath: path)
+                    .frame(height: 148)
+                    .clipShape(RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous))
+                    .accessibilityHidden(true)
+            }
+
+            header
+
+            Text(selectedPinBody)
+                .font(UnfadingTheme.Font.subheadline())
+                .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            tagSection
+
+            if shouldShowRewindHint, let onRewindTap {
+                rewindHintCard(onTap: onRewindTap)
+            }
+
+            if let onDetailTap {
+                Button(action: onDetailTap) {
+                    Label(UnfadingLocalized.Detail.detailCta, systemImage: "chevron.right.circle")
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .buttonStyle(.bordered)
+                .accessibilityLabel(UnfadingLocalized.Detail.detailCta)
+            }
+        }
+        .padding(UnfadingTheme.Spacing.xl)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder

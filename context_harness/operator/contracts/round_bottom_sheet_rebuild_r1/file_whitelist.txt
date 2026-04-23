@@ -1,0 +1,13 @@
+workspace/ios/Shared/UnfadingBottomSheet.swift
+workspace/ios/Shared/SheetScrollCoordinator.swift
+workspace/ios/App/UnfadingTabShell.swift
+workspace/ios/Features/Home/MemoryMapHomeView.swift
+workspace/ios/Features/Home/MemorySummaryCard.swift
+workspace/ios/Features/Home/ComposeFAB.swift
+workspace/ios/Features/Home/SheetExpandedHeader.swift
+workspace/ios/Features/Home/CollapsedSummary.swift
+workspace/ios/Tests/UnfadingBottomSheetTests.swift
+workspace/ios/UITests/UnfadingUITests.swift
+context_harness/operator/contracts/round_bottom_sheet_rebuild_r1/file_whitelist.txt
+context_harness/operator/meetings/2026-04-23_round_bottom_sheet_rebuild_plan.md
+context_harness/reports/round_bottom_sheet_rebuild_r1/evidence/notes.md

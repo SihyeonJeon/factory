@@ -44,7 +44,7 @@ struct UnfadingTabShell: View {
     private let evidenceMode: MemoryComposerEvidenceMode
 
     @State private var selectedTab: ShellTab = .map
-    @State private var sheetExpanded = false
+    @State private var sheetSnap: BottomSheetSnap = .default_
     @State private var isPresentingComposer = false
     @State private var didPresentEvidenceComposer = false
 
@@ -57,10 +57,12 @@ struct UnfadingTabShell: View {
             currentScreen
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            if selectedTab == .map && !sheetExpanded {
+            if selectedTab == .map {
                 ComposeFAB {
                     isPresentingComposer = true
                 }
+                .opacity(sheetSnap == .expanded ? 0 : 1)
+                .allowsHitTesting(sheetSnap != .expanded)
                 .padding(.trailing, UnfadingTheme.Spacing.md2)
                 .padding(.bottom, UnfadingTabBar.height + UnfadingTheme.Spacing.md2)
                 .frame(maxWidth: .infinity, alignment: .trailing)
@@ -88,7 +90,7 @@ struct UnfadingTabShell: View {
     private var currentScreen: some View {
         switch selectedTab {
         case .map:
-            MemoryMapHomeView(evidenceMode: evidenceMode)
+            MemoryMapHomeView(sheetSnap: $sheetSnap, evidenceMode: evidenceMode)
         case .calendar:
             CalendarView()
         case .settings:

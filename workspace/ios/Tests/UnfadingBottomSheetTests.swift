@@ -72,7 +72,7 @@ final class UnfadingBottomSheetTests: XCTestCase {
                 velocityHeight: -3_000,
                 fullHeight: fullHeight
             ),
-            .default_
+            .expanded
         )
     }
 
