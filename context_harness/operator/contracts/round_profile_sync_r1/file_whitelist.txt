@@ -1,0 +1,12 @@
+workspace/ios/Shared/DBModels.swift
+workspace/ios/Shared/ProfileRepository.swift
+workspace/ios/Shared/UserPreferences.swift
+workspace/ios/Shared/UnfadingLocalized.swift
+workspace/ios/App/MemoryMapApp.swift
+workspace/ios/App/RootTabView.swift
+workspace/ios/Features/Settings/SettingsView.swift
+workspace/ios/Tests/ProfileSyncTests.swift
+context_harness/operator/contracts/round_profile_sync_r1/spec.md
+context_harness/operator/contracts/round_profile_sync_r1/file_whitelist.txt
+context_harness/operator/meetings/2026-04-23_round21_profile_sync_plan.md
+context_harness/reports/round_profile_sync_r1/evidence/notes.md

@@ -7,6 +7,7 @@ struct MemoryMapApp: App {
     @StateObject private var groupStore: GroupStore
     @StateObject private var memoryStore: MemoryStore
     @State private var memoryRealtimeTask: Task<Void, Never>?
+    @State private var bootstrappedPreferencesUserId: UUID?
 
     private let evidenceMode: MemoryComposerEvidenceMode = {
         guard
@@ -73,6 +74,7 @@ struct MemoryMapApp: App {
                         } else {
                             RootTabView(evidenceMode: evidenceMode)
                                 .environmentObject(authStore)
+                                .environmentObject(prefs)
                                 .environmentObject(groupStore)
                                 .environmentObject(memoryStore)
                         }
@@ -87,7 +89,14 @@ struct MemoryMapApp: App {
                 }
             }
             .onReceive(authStore.$state) { state in
-                guard case .signedIn = state else { return }
+                guard case let .signedIn(userId, _) = state else {
+                    bootstrappedPreferencesUserId = nil
+                    return
+                }
+                if bootstrappedPreferencesUserId != userId {
+                    bootstrappedPreferencesUserId = userId
+                    Task { await prefs.bootstrap(userId: userId) }
+                }
                 guard !Self.isUITestGroupStubEnabled else { return }
                 Task { await groupStore.bootstrap() }
             }

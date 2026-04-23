@@ -4,13 +4,14 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject private var authStore: AuthStore
     @EnvironmentObject private var memoryStore: MemoryStore
-    @StateObject private var prefs = UserPreferences()
+    @EnvironmentObject private var prefs: UserPreferences
     @State private var showingGroupHub = false
     @State private var showingPremium = false
 
     var body: some View {
         NavigationStack {
             List {
+                profileSection
                 accountSection
                 preferencesSection
                 groupSection
@@ -25,6 +26,21 @@ struct SettingsView: View {
             .sheet(isPresented: $showingPremium) {
                 PremiumPreviewSheet()
             }
+        }
+    }
+
+    private var profileSection: some View {
+        Section(UnfadingLocalized.Settings.profileSection) {
+            TextField(UnfadingLocalized.Settings.displayNamePlaceholder, text: $prefs.displayName)
+                .textContentType(.name)
+                .submitLabel(.done)
+                .frame(minHeight: 44)
+                .accessibilityLabel(UnfadingLocalized.Settings.displayNamePlaceholder)
+
+            Text(accountTitle)
+                .font(UnfadingTheme.Font.subheadline())
+                .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                .frame(minHeight: 44)
         }
     }
 
@@ -120,6 +136,7 @@ struct SettingsView: View {
 #Preview {
     SettingsView()
         .environmentObject(AuthStore(preview: .signedIn(userId: UUID(), email: "preview@example.com")))
+        .environmentObject(UserPreferences())
         .environmentObject(GroupStore.preview())
         .environmentObject(MemoryStore(memories: MemoryStore.uiTestStubMemories()))
 }
