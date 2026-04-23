@@ -42,14 +42,13 @@ enum GroupHubFormatting {
 struct GroupHubView: View {
     @EnvironmentObject private var authStore: AuthStore
     @EnvironmentObject private var groupStore: GroupStore
+    @EnvironmentObject private var userPreferences: UserPreferences
     @State private var toast: String?
     @State private var isRotatingInvite = false
     @State private var isEditingGroupName = false
     @State private var isEditingNickname = false
     @State private var isShowingGroupPicker = false
     @State private var isShowingQR = false
-    @State private var isMapThemeEnabled = false
-    @State private var isIconPackEnabled = false
     @State private var anniversaryNotifications = true
     @State private var rewindNotifications = true
     @State private var memberActivityNotifications = true
@@ -283,12 +282,44 @@ struct GroupHubView: View {
 
     private var appearanceSection: some View {
         GroupHubCard(title: UnfadingLocalized.GroupHub.appearanceSection) {
-            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.sm) {
-                Toggle(UnfadingLocalized.GroupHub.mapThemeToggle, isOn: $isMapThemeEnabled)
-                    .frame(minHeight: 44)
-                Toggle(UnfadingLocalized.GroupHub.iconPackToggle, isOn: $isIconPackEnabled)
-                    .frame(minHeight: 44)
-                Text(UnfadingLocalized.GroupHub.sprint7Placeholder)
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
+                ForEach(MapTheme.allCases, id: \.self) { theme in
+                    Button {
+                        userPreferences.mapTheme = theme
+                    } label: {
+                        HStack(spacing: UnfadingTheme.Spacing.md) {
+                            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
+                                Text(theme.title)
+                                    .font(UnfadingTheme.Font.subheadlineSemibold())
+                                    .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                                Text(theme.description)
+                                    .font(UnfadingTheme.Font.footnote())
+                                    .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: userPreferences.mapTheme == theme ? "largecircle.fill.circle" : "circle")
+                                .foregroundStyle(
+                                    userPreferences.mapTheme == theme
+                                    ? UnfadingTheme.Color.primary
+                                    : UnfadingTheme.Color.textSecondary
+                                )
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(theme.title)
+                    .accessibilityValue(
+                        userPreferences.mapTheme == theme
+                        ? UnfadingLocalized.MapTheme.selected
+                        : UnfadingLocalized.MapTheme.notSelected
+                    )
+                    .accessibilityHint(theme.description)
+                }
+
+                Text(UnfadingLocalized.MapTheme.footer)
                     .font(UnfadingTheme.Font.footnote())
                     .foregroundStyle(UnfadingTheme.Color.textSecondary)
             }

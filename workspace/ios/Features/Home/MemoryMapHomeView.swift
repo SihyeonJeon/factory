@@ -14,6 +14,7 @@ struct MemoryMapHomeView: View {
     @EnvironmentObject private var groupStore: GroupStore
     @EnvironmentObject private var categoryStore: CategoryStore
     @EnvironmentObject private var memoryStore: MemoryStore
+    @EnvironmentObject private var userPreferences: UserPreferences
     private let evidenceMode: MemoryComposerEvidenceMode
     private let groupSwitchResetToken: Int
     private let onSwitchGroup: () -> Void
@@ -221,7 +222,7 @@ struct MemoryMapHomeView: View {
                 }
             }
         }
-        .mapStyle(.standard(elevation: .realistic))
+        .mapStyle(userPreferences.mapTheme.style)
     }
 
     private var topChrome: some View {

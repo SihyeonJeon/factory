@@ -3,21 +3,29 @@ import Foundation
 struct DBProfilePreferences: Codable, Hashable, Sendable {
     var reminderEnabled: Bool = false
     var themePreference: String = "system"
+    var mapTheme: String = MapTheme.default_.rawValue
 
     enum CodingKeys: String, CodingKey {
         case reminderEnabled = "reminder_enabled"
         case themePreference = "theme_preference"
+        case mapTheme = "map_theme"
     }
 
-    init(reminderEnabled: Bool = false, themePreference: String = "system") {
+    init(
+        reminderEnabled: Bool = false,
+        themePreference: String = "system",
+        mapTheme: String = MapTheme.default_.rawValue
+    ) {
         self.reminderEnabled = reminderEnabled
         self.themePreference = themePreference
+        self.mapTheme = mapTheme
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         reminderEnabled = try container.decodeIfPresent(Bool.self, forKey: .reminderEnabled) ?? false
         themePreference = try container.decodeIfPresent(String.self, forKey: .themePreference) ?? "system"
+        mapTheme = try container.decodeIfPresent(String.self, forKey: .mapTheme) ?? MapTheme.default_.rawValue
     }
 }
 

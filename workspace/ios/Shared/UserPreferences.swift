@@ -20,6 +20,7 @@ final class UserPreferences: ObservableObject {
     private enum K {
         static let reminderEnabled = "unfading.preferences.reminderEnabled"
         static let themePreference = "unfading.preferences.themePreference"
+        static let mapTheme = "unfading.preferences.mapTheme"
         static let hasSeenOnboarding = "unfading.preferences.hasSeenOnboarding"
         static let displayName = "unfading.preferences.displayName"
         static let photoURL = "unfading.preferences.photoURL"
@@ -43,6 +44,13 @@ final class UserPreferences: ObservableObject {
     @Published var themePreference: ThemePreference {
         didSet {
             userDefaults.set(themePreference.rawValue, forKey: K.themePreference)
+            schedulePreferencesSync()
+        }
+    }
+
+    @Published var mapTheme: MapTheme {
+        didSet {
+            userDefaults.set(mapTheme.rawValue, forKey: K.mapTheme)
             schedulePreferencesSync()
         }
     }
@@ -83,6 +91,12 @@ final class UserPreferences: ObservableObject {
         } else {
             self.themePreference = .system
         }
+        if let raw = userDefaults.string(forKey: K.mapTheme),
+           let mapTheme = MapTheme(rawValue: raw) {
+            self.mapTheme = mapTheme
+        } else {
+            self.mapTheme = .default_
+        }
         let shouldSkipOnboarding = forceHasSeenOnboarding ?? Self.shouldSkipOnboardingForUITests
         self.hasSeenOnboarding = shouldSkipOnboarding || userDefaults.bool(forKey: K.hasSeenOnboarding)
         self.displayName = userDefaults.string(forKey: K.displayName) ?? ""
@@ -112,6 +126,7 @@ final class UserPreferences: ObservableObject {
         isApplyingRemoteState = true
         reminderEnabled = profile.preferences.reminderEnabled
         themePreference = ThemePreference(rawValue: profile.preferences.themePreference) ?? .system
+        mapTheme = MapTheme(rawValue: profile.preferences.mapTheme) ?? .default_
         displayName = profile.displayName ?? ""
         photoURL = profile.photoURL
         isApplyingRemoteState = false
@@ -122,7 +137,8 @@ final class UserPreferences: ObservableObject {
         preferencesSyncTask?.cancel()
         let prefs = DBProfilePreferences(
             reminderEnabled: reminderEnabled,
-            themePreference: themePreference.rawValue
+            themePreference: themePreference.rawValue,
+            mapTheme: mapTheme.rawValue
         )
         preferencesSyncTask = Task { [repository] in
             do {

@@ -11,7 +11,8 @@ final class ProfileSyncTests: XCTestCase {
           "photo_url": "https://example.com/profile.png",
           "preferences": {
             "reminder_enabled": true,
-            "theme_preference": "dark"
+            "theme_preference": "dark",
+            "map_theme": "warm"
           },
           "created_at": "2026-04-23T12:00:00Z"
         }
@@ -24,6 +25,7 @@ final class ProfileSyncTests: XCTestCase {
         XCTAssertEqual(decoded, profile)
         XCTAssertTrue(decoded.preferences.reminderEnabled)
         XCTAssertEqual(decoded.preferences.themePreference, "dark")
+        XCTAssertEqual(decoded.preferences.mapTheme, "warm")
     }
 
     func test_dbProfileDefaultsEmptyPreferencesJSON() throws {
@@ -42,6 +44,7 @@ final class ProfileSyncTests: XCTestCase {
 
         XCTAssertFalse(profile.preferences.reminderEnabled)
         XCTAssertEqual(profile.preferences.themePreference, "system")
+        XCTAssertEqual(profile.preferences.mapTheme, "default")
     }
 
     @MainActor
@@ -51,7 +54,7 @@ final class ProfileSyncTests: XCTestCase {
             userId: userId,
             displayName: "민지",
             photoURL: "https://example.com/minji.png",
-            preferences: DBProfilePreferences(reminderEnabled: true, themePreference: "light")
+            preferences: DBProfilePreferences(reminderEnabled: true, themePreference: "light", mapTheme: "warm")
         ))
         let prefs = UserPreferences(userDefaults: isolatedDefaults(), repository: repo)
 
@@ -59,6 +62,7 @@ final class ProfileSyncTests: XCTestCase {
 
         XCTAssertTrue(prefs.reminderEnabled)
         XCTAssertEqual(prefs.themePreference, .light)
+        XCTAssertEqual(prefs.mapTheme, .warm)
         XCTAssertEqual(prefs.displayName, "민지")
         XCTAssertEqual(prefs.photoURL, "https://example.com/minji.png")
     }
@@ -72,13 +76,17 @@ final class ProfileSyncTests: XCTestCase {
         await prefs.bootstrap(userId: userId)
         prefs.reminderEnabled = true
         prefs.themePreference = .dark
+        prefs.mapTheme = .mono
 
         try? await Task.sleep(nanoseconds: 700_000_000)
 
         let updates = await repo.preferenceUpdates
         XCTAssertEqual(updates.count, 1)
         XCTAssertEqual(updates.first?.userId, userId)
-        XCTAssertEqual(updates.first?.prefs, DBProfilePreferences(reminderEnabled: true, themePreference: "dark"))
+        XCTAssertEqual(
+            updates.first?.prefs,
+            DBProfilePreferences(reminderEnabled: true, themePreference: "dark", mapTheme: "mono")
+        )
     }
 
     private func profile(

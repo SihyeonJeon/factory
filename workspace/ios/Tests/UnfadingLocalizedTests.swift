@@ -85,6 +85,15 @@ final class UnfadingLocalizedTests: XCTestCase {
         XCTAssertEqual(UnfadingLocalized.Groups.memberCountFormat(5, mode: .general), "멤버 5명")
     }
 
+    func test_map_theme_strings_are_present_in_korean() {
+        XCTAssertEqual(UnfadingLocalized.MapTheme.defaultTitle, "기본")
+        XCTAssertEqual(UnfadingLocalized.MapTheme.warmTitle, "웜")
+        XCTAssertEqual(UnfadingLocalized.MapTheme.monoTitle, "모노")
+        XCTAssertTrue(containsHangul(UnfadingLocalized.MapTheme.defaultDescription))
+        XCTAssertTrue(containsHangul(UnfadingLocalized.MapTheme.warmDescription))
+        XCTAssertTrue(containsHangul(UnfadingLocalized.MapTheme.monoDescription))
+    }
+
     // MARK: Helper
 
     private func containsHangul(_ text: String) -> Bool {

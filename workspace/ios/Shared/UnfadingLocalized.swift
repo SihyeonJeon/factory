@@ -451,9 +451,6 @@ enum UnfadingLocalized {
         static let qrPlaceholder = "QR 코드는 다음 라운드에서 실제 링크와 연결돼요."
         static let inviteLinkCopied = "초대 링크를 복사했어요."
         static let appearanceSection = "지도 스타일"
-        static let mapThemeToggle = "지도 테마"
-        static let iconPackToggle = "아이콘 팩"
-        static let sprint7Placeholder = "Sprint 7에서 프리미엄 스타일과 연결됩니다."
         static let notificationsSection = "알림"
         static let anniversaryToggle = "기념일 알림"
         static let rewindToggle = "Rewind 알림"
@@ -484,6 +481,20 @@ enum UnfadingLocalized {
         static func inviteLink(code: String) -> String {
             "https://unfading.app/join/\(code)"
         }
+    }
+
+    // MARK: Map Theme
+
+    enum MapTheme {
+        static let defaultTitle = "기본"
+        static let warmTitle = "웜"
+        static let monoTitle = "모노"
+        static let defaultDescription = "표준 지도를 가장 담백하게 보여줘요."
+        static let warmDescription = "관심 지점을 줄이고 더 부드러운 톤으로 집중해요."
+        static let monoDescription = "채도를 낮춘 지도 위에 추억 핀만 또렷하게 남겨요."
+        static let footer = "지도 화면에 바로 반영되며, 계정 설정과 함께 동기화됩니다."
+        static let selected = "선택됨"
+        static let notSelected = "선택 안 됨"
     }
 
     // MARK: Categories
