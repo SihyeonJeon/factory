@@ -47,7 +47,7 @@ struct MemorySummaryCard: View {
             tagSection
 
             if shouldShowRewindHint, let onRewindTap {
-                rewindHintCard(onTap: onRewindTap)
+                RewindHintCard(onTap: onRewindTap)
             }
 
             if let onDetailTap {
@@ -124,7 +124,44 @@ struct MemorySummaryCard: View {
         }
     }
 
-    private func rewindHintCard(onTap: @escaping () -> Void) -> some View {
+    // MARK: Selected-pin-aware content
+
+    private var selectedPinEyebrow: String {
+        selectedPin == nil ? UnfadingLocalized.Summary.tonightsRewind : UnfadingLocalized.Summary.selectedEyebrow
+    }
+
+    private var selectedPinTitle: String {
+        selectedPin?.title ?? UnfadingLocalized.Summary.sampleTitle
+    }
+
+    private var selectedPinBody: String {
+        if let short = selectedPin?.shortLabel {
+            return UnfadingLocalized.Summary.selectedBodyTemplate(short: short)
+        }
+        return UnfadingLocalized.Summary.sampleBody
+    }
+
+    private var resolvedPhotoStoragePath: String? {
+        photoStoragePath ?? selectedPin?.detail()?.photoStoragePaths.first
+    }
+
+    private var shouldShowRewindHint: Bool {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["UNFADING_UI_TEST"] == "1" {
+            return true
+        }
+        #endif
+
+        let day = Calendar.current.component(.day, from: Date())
+        let range = Calendar.current.range(of: .day, in: .month, for: Date())
+        return day == range?.upperBound.advanced(by: -1)
+    }
+}
+
+struct RewindHintCard: View {
+    let onTap: () -> Void
+
+    var body: some View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
                 HStack(alignment: .top, spacing: UnfadingTheme.Spacing.md) {
@@ -169,39 +206,6 @@ struct MemorySummaryCard: View {
         .accessibilityLabel(UnfadingLocalized.Home.rewindHintTitle)
         .accessibilityHint(UnfadingLocalized.Home.rewindHintBody)
         .accessibilityIdentifier("home-rewind-hint")
-    }
-
-    // MARK: Selected-pin-aware content
-
-    private var selectedPinEyebrow: String {
-        selectedPin == nil ? UnfadingLocalized.Summary.tonightsRewind : UnfadingLocalized.Summary.selectedEyebrow
-    }
-
-    private var selectedPinTitle: String {
-        selectedPin?.title ?? UnfadingLocalized.Summary.sampleTitle
-    }
-
-    private var selectedPinBody: String {
-        if let short = selectedPin?.shortLabel {
-            return UnfadingLocalized.Summary.selectedBodyTemplate(short: short)
-        }
-        return UnfadingLocalized.Summary.sampleBody
-    }
-
-    private var resolvedPhotoStoragePath: String? {
-        photoStoragePath ?? selectedPin?.detail()?.photoStoragePaths.first
-    }
-
-    private var shouldShowRewindHint: Bool {
-        #if DEBUG
-        if ProcessInfo.processInfo.environment["UNFADING_UI_TEST"] == "1" {
-            return true
-        }
-        #endif
-
-        let day = Calendar.current.component(.day, from: Date())
-        let range = Calendar.current.range(of: .day, in: .month, for: Date())
-        return day == range?.upperBound.advanced(by: -1)
     }
 }
 

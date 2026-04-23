@@ -22,6 +22,7 @@ struct MemoryMapHomeView: View {
     @StateObject private var locationPermissionStore = LocationPermissionStore()
     @StateObject private var selection = MemorySelectionState()
     @State private var activeCategoryId = CategoryStore.allCategoryId
+    @State private var activeSheetTab: SheetTab = .curation
     @State private var showingRewind = false
     @State private var detailPin: SampleMemoryPin?
     @State private var measuredSheetHeight: CGFloat = 0
@@ -108,12 +109,19 @@ struct MemoryMapHomeView: View {
                             )
                         }
                     ) {
-                        MemorySummaryCard(
-                            selectedPin: selection.selectedPin(from: SampleMemoryPin.samples),
-                            usesInternalScroll: false,
-                            onDetailTap: openDetail,
-                            onRewindTap: showRewindFromCuration
-                        )
+                        if let selectedPin = selection.selectedPin(from: SampleMemoryPin.samples) {
+                            MemorySummaryCard(
+                                selectedPin: selectedPin,
+                                usesInternalScroll: false,
+                                onDetailTap: openDetail,
+                                onRewindTap: showRewindFromCuration
+                            )
+                        } else {
+                            HomeSheetContent(
+                                selectedTab: $activeSheetTab,
+                                onRewindTap: showRewindFromCuration
+                            )
+                        }
                     }
                     .ignoresSafeArea(.container, edges: .bottom)
                     .zIndex(50)
@@ -160,6 +168,7 @@ struct MemoryMapHomeView: View {
             .onChange(of: groupSwitchResetToken) { _, _ in
                 selection.clearSelection()
                 activeCategoryId = CategoryStore.allCategoryId
+                activeSheetTab = .curation
                 sheetSnap = .default_
             }
         }
