@@ -1,0 +1,11 @@
+docs/product-specs/launchability-review-2026.md
+docs/product-specs/phase2_release_notes_2026-04-24.md
+context_harness/SESSION_RESUME.md
+context_harness/operator/contracts/round_phase2_final_r1/spec.md
+context_harness/operator/contracts/round_phase2_final_r1/acceptance.md
+context_harness/operator/contracts/round_phase2_final_r1/eval_protocol.md
+context_harness/operator/contracts/round_phase2_final_r1/file_whitelist.txt
+context_harness/operator/meetings/2026-04-24_phase2_final.md
+context_harness/reports/phase2_final/evidence/notes.md
+context_harness/reports/phase2_final/evidence/xcresult_summary.json
+context_harness/reports/phase2_final/evidence/xcodebuild_test_r40.log

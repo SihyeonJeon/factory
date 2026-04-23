@@ -1,62 +1,71 @@
-# Launchability Review — Final (2026-04-23)
+# Launchability Review — Phase 2 Final (2026-04-24)
 
-Round: `round_e2e_testflight_r1`
+Round: `round_phase2_final_r1`
 Primary locale: Korean (`ko_KR`)
-Signing status: `DEVELOPMENT_TEAM` is intentionally empty until Apple Developer enrollment provides a team ID.
+Build target: `MemoryMap`
+Signing status: `DEVELOPMENT_TEAM` remains empty until Apple Developer team enrollment is available.
 
-## Final Status Table
+## Integrated Scope
+
+- Phase 1 complete: R26-R30 design token, shell, sheet, chrome, and overlay rebuild landed.
+- Phase 2 complete: R31-R35 composer, memory detail, calendar dial/plans, rewind stories, and group hub/settings landed.
+- Phase 2.5 complete: R36-R39 ship assets, storekit/paywall, launchability/TestFlight prep, and final stabilization landed.
+
+## Status Table
 
 | Area | Status | Notes |
 |---|---|---|
-| DB | CHECK | Supabase schema, RLS, repositories, and model tests are present for profiles, groups, memories, photos, and subscriptions. |
-| Auth | CHECK | Email/password auth path is wired through Supabase; E2E sign-in coverage is skipped unless operator-provided credentials are present. |
-| Groups | CHECK | Group create/join/fetch repository path and UI store are implemented; R24 E2E covers create group through Supabase RPC when credentials are configured. |
-| Memories | CHECK | Memory create/fetch/delete repository path is implemented; R24 E2E covers group-scoped memory lifecycle when credentials are configured. |
-| Photos | CHECK | Photo uploader and signed URL rendering are wired for launchability; production media quota and lifecycle policy remain future hardening. |
-| Profile sync | CHECK | Profile preference sync path is present with local fallback coverage. |
-| StoreKit | DEFER | Local StoreKit 2 paywall and entitlement state exist; Edge Function receipt validation remains deferred before paid backend quota enforcement. |
-| Assets | DEFER | AppIcon and launch logo are wired, but current artwork is placeholder quality and needs professional branded replacement. |
-| Privacy | CHECK | Info.plist privacy strings and PrivacyInfo manifest are present; App Store privacy answers still need final owner review. |
-| E2E | CHECK | `SupabaseE2ETests` is added and skips cleanly unless `UNFADING_E2E_EMAIL` and `UNFADING_E2E_PASSWORD` are set. |
+| Design shell | CHECK | Custom 3-tab shell, home FAB, top chrome, filter chrome, and rebuilt bottom sheet are integrated from R26-R30. |
+| Composer | CHECK | Phase 2 composer rewrite supports place confirmation, event binding, participants, emotions, and optional cost fields. |
+| Memory detail | CHECK | Sprint 28 detail structure, same-event carousel, meta strip, and inline extra-note UI are present. |
+| Calendar | CHECK | Calendar tab includes month picker, day detail, and general-group plan card flow. |
+| Rewind | CHECK | Rewind stories flow and home curation entry are wired with deterministic sample aggregation. |
+| Group hub / settings | CHECK | Settings entry, group overview, member state, invite placeholders, and notification toggles are integrated. |
+| Supabase core | CHECK | Auth, groups, memories, photos, and profile sync remain wired from earlier rounds. |
+| StoreKit local flow | CHECK | Local StoreKit paywall and entitlement surfaces exist for device verification. |
+| Archive helper | CHECK | `workspace/ios/scripts/archive.sh` passes shell syntax validation. |
+| Export options | CHECK | `workspace/ios/scripts/export-options.plist` passes `plutil -lint`. |
+| Screenshot harvest helper | CHECK | Helper script is present and syntactically valid; R40 extraction did not yield screenshots because the test bundle never started. |
+| Final simulator regression | BLOCKED | R40 `xcodebuild test` created an `.xcresult` bundle but failed before test execution in this sandbox due CoreSimulator unavailability and denied writes to `/Users/jeonsihyeon/.cache` / `~/Library/Caches`. |
+| Signed archive / TestFlight upload | DEFER | Still blocked on Apple team ID, signing, and a real upload pass. |
 
-## Launch-Blocking External Actions
+## R40 Verification Snapshot
 
-1. Supabase Dashboard -> Auth -> Policies -> enable HIBP leaked-password protection.
-2. Apple Developer enrollment -> obtain Apple team ID and rerun archive with `scripts/archive.sh <TEAM_ID>`.
-3. App Store Connect -> create app record, subscription products, privacy answers, screenshots, support URL, and privacy policy URL.
-4. Commission professional AppIcon, launch logo, and marketing screenshot assets to replace the current placeholder art.
-
-## Deferred Items
-
-- Apple Sign in.
-- Edge Function receipt validation through App Store Server API before granting high-cost storage or AI entitlements.
-- Real-branded AppIcon and launch branding; current icon is a placeholder.
-- Localized App Store metadata for Korean and English listings.
-- Actual TestFlight build upload; blocked until Apple Developer team ID and signing are available.
-
-## TestFlight Prep
-
-- Archive helper: `workspace/ios/scripts/archive.sh`.
-- Export template: `workspace/ios/scripts/export-options.plist`.
-- Required command after enrollment:
+- Requested command executed:
 
 ```bash
-cd workspace/ios
-scripts/archive.sh <APPLE_TEAM_ID>
+cd /Users/jeonsihyeon/factory/workspace/ios
+xcodebuild test \
+  -project MemoryMap.xcodeproj \
+  -scheme MemoryMap \
+  -destination 'platform=iOS Simulator,name=iPhone 16' \
+  -derivedDataPath .deriveddata/r40 \
+  -resultBundlePath .deriveddata/r40/Test-R40.xcresult
 ```
 
-- Expected output: `.build/export/MemoryMap.ipa`.
-- Current limitation: without a valid `DEVELOPMENT_TEAM`, archive/export cannot produce a signed TestFlight IPA.
+- Test inventory in source: 176 unit tests + 28 UITests = 204 test methods.
+- Executed tests in this sandbox: 0.
+- `xcresult` status: `failedToStart`.
+- Screenshot harvest status: attempted with `scripts/harvest_screenshots.sh`, but no PNGs were exported for R40 evidence.
 
-## Screenshot Harvest
+## Phase 3 Deferred (R41-R50)
 
-- Existing UITests attach named screenshots for map, calendar, rewind, settings, composer, group hub, and memory detail.
-- Cleaner App Store-ready extraction helper: `workspace/ios/scripts/harvest_screenshots.sh <xcresult> [output_dir]`.
-- Default output directory: `workspace/ios/AppStoreScreenshots`.
-- Final App Store screenshots still require human curation for required device sizes and listing composition.
+| Item | Target | Reason |
+|---|---|---|
+| Apple Sign in | R41-R50 | Required launch hardening item not implemented in current beta scope. |
+| Edge Function receipt validation | R41-R50 | Needed before backend-enforced paid quota or AI/storage entitlement trust. |
+| HIBP leaked-password toggle | R41-R50 | External Supabase dashboard action; not codified in-app. |
+| Real TestFlight upload | R41-R50 | Requires Apple Developer team ID, signing, archive, export, and App Store Connect upload. |
 
-## E2E Setup
+## External Owner Actions
 
-- Setup notes: `workspace/ios/scripts/e2e_setup.md`.
-- E2E tests are safe in normal CI because they skip when credentials are absent.
-- To run only the Supabase E2E class, provide `UNFADING_E2E_EMAIL` and `UNFADING_E2E_PASSWORD`.
+1. Apple Developer enrollment and team ID issuance.
+2. App Store Connect app record, subscriptions, privacy answers, screenshots, support URL, and privacy policy URL.
+3. Professional AppIcon / launch branding replacement and final store metadata.
+4. Real device smoke plus signed TestFlight upload after signing prerequisites are available.
+
+## Evidence
+
+- R40 evidence: `context_harness/reports/phase2_final/evidence/`
+- Archive helper: `workspace/ios/scripts/archive.sh`
+- Export plist: `workspace/ios/scripts/export-options.plist`
