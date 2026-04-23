@@ -14,6 +14,11 @@ final class AuthStore: ObservableObject {
     private var authTask: Task<Void, Never>?
     private let mode: Mode
 
+    var currentUserId: UUID? {
+        guard case let .signedIn(userId, _) = state else { return nil }
+        return userId
+    }
+
     static var isUITestAuthStubEnabled: Bool {
         ProcessInfo.processInfo.arguments.contains("-UI_TEST_AUTH_STUB")
             || ProcessInfo.processInfo.environment["UNFADING_UI_TEST_AUTH_STUB"] == "1"

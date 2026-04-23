@@ -231,6 +231,8 @@ enum UnfadingLocalized {
         static let createTab = "새로 만들기"
         static let joinTab = "초대 코드로 참여"
         static let namePlaceholder = "그룹 이름"
+        static let nicknamePlaceholder = "내 이름 (선택)"
+        static let nicknameHint = "이 그룹 안에서 사용할 이름"
         static let modeCouple = "커플"
         static let modeGroup = "그룹"
         static let introPlaceholder = "소개 (선택)"
@@ -245,6 +247,12 @@ enum UnfadingLocalized {
         static let rotateCode = "재생성"
         static let rotated = "새 초대 코드로 바뀌었어요."
         static let actionFailed = "잠시 후 다시 시도해주세요."
+        static let edit = "편집"
+        static let editGroupName = "그룹 이름 편집"
+        static let editNickname = "내 이름 편집"
+        static let groupNameUpdated = "그룹 이름을 바꿨어요."
+        static let nicknameUpdated = "내 이름을 바꿨어요."
+        static let notOwnerHint = "그룹 이름은 만든 사람만 바꿀 수 있어요."
 
         static func dayCountFormat(_ days: Int) -> String {
             "함께한 지 \(days)일"

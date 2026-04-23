@@ -38,7 +38,8 @@ final class SupabaseE2ETests: XCTestCase {
                 name: "E2E-\(UUID().uuidString.prefix(6))",
                 mode: "couple",
                 intro: nil,
-                coverColorHex: "#F5998C"
+                coverColorHex: "#F5998C",
+                nickname: nil
             )
             XCTAssertEqual(group.createdBy, user.id)
 

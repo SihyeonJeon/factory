@@ -52,6 +52,7 @@ final class DBModelsTests: XCTestCase {
           "id": "44444444-4444-4444-8444-444444444444",
           "group_id": "55555555-5555-4555-8555-555555555555",
           "user_id": "66666666-6666-4666-8666-666666666666",
+          "nickname": "그룹 별명",
           "joined_at": "2026-04-23T12:00:00Z"
         }
         """.data(using: .utf8)!
@@ -63,6 +64,35 @@ final class DBModelsTests: XCTestCase {
         XCTAssertEqual(decoded, member)
         XCTAssertEqual(decoded.groupId.uuidString.uppercased(), "55555555-5555-4555-8555-555555555555".uppercased())
         XCTAssertEqual(decoded.userId.uuidString.uppercased(), "66666666-6666-4666-8666-666666666666".uppercased())
+        XCTAssertEqual(decoded.nickname, "그룹 별명")
+    }
+
+    func test_dbGroupMemberWithProfileRoundTripsJoinedJSON() throws {
+        let json = """
+        {
+          "id": "77777777-7777-4777-8777-777777777777",
+          "nickname": "모임 이름",
+          "profiles": {
+            "id": "88888888-8888-4888-8888-888888888888",
+            "email": "joined@example.com",
+            "display_name": "프로필 이름",
+            "photo_url": null,
+            "preferences": {
+              "reminder_enabled": true,
+              "theme_preference": "system"
+            },
+            "created_at": "2026-04-23T12:00:00Z"
+          }
+        }
+        """.data(using: .utf8)!
+
+        let member = try decoder.decode(DBGroupMemberWithProfile.self, from: json)
+        let encoded = try encoder.encode(member)
+        let decoded = try decoder.decode(DBGroupMemberWithProfile.self, from: encoded)
+
+        XCTAssertEqual(decoded, member)
+        XCTAssertEqual(decoded.nickname, "모임 이름")
+        XCTAssertEqual(decoded.profiles.displayName, "프로필 이름")
     }
 
     private var decoder: JSONDecoder {

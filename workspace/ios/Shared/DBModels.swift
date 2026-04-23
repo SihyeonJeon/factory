@@ -86,14 +86,21 @@ struct DBGroupMember: Codable, Hashable, Identifiable {
     let id: UUID
     let groupId: UUID
     let userId: UUID
+    let nickname: String?
     let joinedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id
+        case id, nickname
         case groupId = "group_id"
         case userId = "user_id"
         case joinedAt = "joined_at"
     }
+}
+
+struct DBGroupMemberWithProfile: Codable, Hashable, Identifiable {
+    let id: UUID
+    let nickname: String?
+    let profiles: DBProfile
 }
 
 struct DBMemory: Codable, Hashable, Identifiable {

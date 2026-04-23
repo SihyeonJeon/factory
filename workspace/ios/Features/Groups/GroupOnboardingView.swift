@@ -8,6 +8,7 @@ struct GroupOnboardingView: View {
     @State private var mode: GroupMode = .couple
     @State private var intro = ""
     @State private var code = ""
+    @State private var nickname = ""
     @State private var banner: String?
     @State private var errorMessage: String?
     @State private var isSubmitting = false
@@ -66,6 +67,8 @@ struct GroupOnboardingView: View {
                 .textFieldStyle(.roundedBorder)
                 .accessibilityLabel(UnfadingLocalized.Groups.introPlaceholder)
 
+            nicknameField
+
             Button {
                 Task { await createGroup() }
             } label: {
@@ -95,6 +98,8 @@ struct GroupOnboardingView: View {
                     }
                 }
 
+            nicknameField
+
             Button {
                 Task { await joinGroup() }
             } label: {
@@ -105,6 +110,28 @@ struct GroupOnboardingView: View {
             .disabled(isSubmitting || code.count != 8)
             .accessibilityLabel(UnfadingLocalized.Groups.joinButton)
             .accessibilityIdentifier("group-join-button")
+        }
+    }
+
+    private var nicknameField: some View {
+        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
+            TextField(UnfadingLocalized.Groups.nicknamePlaceholder, text: $nickname)
+                .textContentType(.name)
+                .textInputAutocapitalization(.words)
+                .textFieldStyle(.roundedBorder)
+                .frame(minHeight: 44)
+                .accessibilityLabel(UnfadingLocalized.Groups.nicknamePlaceholder)
+                .accessibilityHint(UnfadingLocalized.Groups.nicknameHint)
+                .onChange(of: nickname) { _, newValue in
+                    let limited = String(newValue.prefix(40))
+                    if limited != newValue {
+                        nickname = limited
+                    }
+                }
+
+            Text(UnfadingLocalized.Groups.nicknameHint)
+                .font(.caption)
+                .foregroundStyle(UnfadingTheme.Color.textSecondary)
         }
     }
 
@@ -129,11 +156,15 @@ struct GroupOnboardingView: View {
             try await groupStore.createGroup(
                 name: trimmedName,
                 mode: mode,
-                intro: trimmedIntro.isEmpty ? nil : trimmedIntro
+                intro: trimmedIntro.isEmpty ? nil : trimmedIntro,
+                nickname: normalizedNickname
             )
             banner = UnfadingLocalized.Groups.createdBanner
         } catch {
-            errorMessage = UnfadingLocalized.Groups.actionFailed
+            errorMessage = UnfadingLocalized.Groups.actionFailed + errorSuffix(for: error)
+            #if DEBUG
+            print("GroupOnboarding createGroup error:", error)
+            #endif
         }
         isSubmitting = false
     }
@@ -147,12 +178,25 @@ struct GroupOnboardingView: View {
         isSubmitting = true
         errorMessage = nil
         do {
-            try await groupStore.joinGroup(code: code)
+            try await groupStore.joinGroup(code: code, nickname: normalizedNickname)
             banner = UnfadingLocalized.Groups.joinedBanner
         } catch {
-            errorMessage = UnfadingLocalized.Groups.invalidCode
+            errorMessage = UnfadingLocalized.Groups.actionFailed + errorSuffix(for: error)
+            #if DEBUG
+            print("GroupOnboarding joinGroup error:", error)
+            #endif
         }
         isSubmitting = false
+    }
+
+    private var normalizedNickname: String? {
+        let trimmed = nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    private func errorSuffix(for error: Error) -> String {
+        let raw = String(describing: error)
+        return " (\(String(raw.prefix(120))))"
     }
 
     private enum Tab: Hashable {

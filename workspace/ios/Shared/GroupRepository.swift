@@ -3,10 +3,12 @@ import Supabase
 
 protocol GroupRepository: Sendable {
     func fetchUserGroups() async throws -> [DBGroup]
-    func fetchMembers(groupId: UUID) async throws -> [DBProfile]
-    func createGroup(name: String, mode: String, intro: String?, coverColorHex: String) async throws -> DBGroup
-    func joinGroup(code: String) async throws -> DBGroup
+    func fetchMembersWithNicknames(groupId: UUID) async throws -> [DBGroupMemberWithProfile]
+    func createGroup(name: String, mode: String, intro: String?, coverColorHex: String, nickname: String?) async throws -> DBGroup
+    func joinGroup(code: String, nickname: String?) async throws -> DBGroup
     func rotateInviteCode(groupId: UUID) async throws -> String
+    func updateGroupName(groupId: UUID, name: String) async throws -> DBGroup
+    func setMyNickname(groupId: UUID, nickname: String?) async throws -> DBGroupMember
 }
 
 struct SupabaseGroupRepository: GroupRepository {
@@ -24,25 +26,21 @@ struct SupabaseGroupRepository: GroupRepository {
         return rows.map(\.groups)
     }
 
-    func fetchMembers(groupId: UUID) async throws -> [DBProfile] {
-        struct Row: Decodable {
-            let profiles: DBProfile
-        }
-
-        let rows: [Row] = try await db.from("group_members")
-            .select("profiles(*)")
+    func fetchMembersWithNicknames(groupId: UUID) async throws -> [DBGroupMemberWithProfile] {
+        try await db.from("group_members")
+            .select("id,nickname,profiles(*)")
             .eq("group_id", value: groupId.uuidString)
             .execute()
             .value
-        return rows.map(\.profiles)
     }
 
-    func createGroup(name: String, mode: String, intro: String?, coverColorHex: String) async throws -> DBGroup {
+    func createGroup(name: String, mode: String, intro: String?, coverColorHex: String, nickname: String?) async throws -> DBGroup {
         struct Params: Encodable {
             let p_name: String
             let p_mode: String
             let p_intro: String?
             let p_cover_color_hex: String
+            let p_nickname: String?
         }
 
         return try await db.rpc(
@@ -51,19 +49,21 @@ struct SupabaseGroupRepository: GroupRepository {
                 p_name: name,
                 p_mode: mode,
                 p_intro: intro,
-                p_cover_color_hex: coverColorHex
+                p_cover_color_hex: coverColorHex,
+                p_nickname: nickname
             )
         )
         .execute()
         .value
     }
 
-    func joinGroup(code: String) async throws -> DBGroup {
+    func joinGroup(code: String, nickname: String?) async throws -> DBGroup {
         struct Params: Encodable {
             let p_code: String
+            let p_nickname: String?
         }
 
-        return try await db.rpc("join_group_by_code", params: Params(p_code: code))
+        return try await db.rpc("join_group_by_code", params: Params(p_code: code, p_nickname: nickname))
             .execute()
             .value
     }
@@ -74,6 +74,28 @@ struct SupabaseGroupRepository: GroupRepository {
         }
 
         return try await db.rpc("rotate_invite_code", params: Params(p_group_id: groupId))
+            .execute()
+            .value
+    }
+
+    func updateGroupName(groupId: UUID, name: String) async throws -> DBGroup {
+        struct Params: Encodable {
+            let p_group_id: UUID
+            let p_name: String
+        }
+
+        return try await db.rpc("update_group_name", params: Params(p_group_id: groupId, p_name: name))
+            .execute()
+            .value
+    }
+
+    func setMyNickname(groupId: UUID, nickname: String?) async throws -> DBGroupMember {
+        struct Params: Encodable {
+            let p_group_id: UUID
+            let p_nickname: String?
+        }
+
+        return try await db.rpc("set_group_nickname", params: Params(p_group_id: groupId, p_nickname: nickname))
             .execute()
             .value
     }

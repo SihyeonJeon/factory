@@ -1,0 +1,14 @@
+workspace/ios/Shared/DBModels.swift
+workspace/ios/Shared/GroupRepository.swift
+workspace/ios/Shared/AuthStore.swift
+workspace/ios/Shared/UnfadingLocalized.swift
+workspace/ios/Features/Groups/GroupStore.swift
+workspace/ios/Features/Groups/GroupOnboardingView.swift
+workspace/ios/Features/Groups/GroupHubView.swift
+workspace/ios/Tests/GroupStoreTests.swift
+workspace/ios/Tests/DBModelsTests.swift
+workspace/ios/Tests/SupabaseE2ETests.swift
+context_harness/operator/contracts/round_group_ux_r1/spec.md
+context_harness/operator/contracts/round_group_ux_r1/file_whitelist.txt
+context_harness/operator/meetings/2026-04-23_round25_group_ux_plan.md
+context_harness/reports/round_group_ux_r1/evidence/notes.md

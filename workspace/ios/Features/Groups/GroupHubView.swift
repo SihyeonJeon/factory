@@ -2,9 +2,16 @@ import SwiftUI
 import UIKit
 
 struct GroupHubView: View {
+    @EnvironmentObject private var authStore: AuthStore
     @EnvironmentObject private var groupStore: GroupStore
     @State private var toast: String?
     @State private var isRotatingInvite = false
+    @State private var isEditingGroupName = false
+    @State private var isEditingNickname = false
+    @State private var editedGroupName = ""
+    @State private var editedNickname = ""
+    @State private var isSavingGroupName = false
+    @State private var isSavingNickname = false
 
     var body: some View {
         NavigationStack {
@@ -19,6 +26,16 @@ struct GroupHubView: View {
             }
             .background(UnfadingTheme.Color.cream)
             .navigationTitle(UnfadingLocalized.Groups.navTitle)
+            .sheet(isPresented: $isEditingGroupName) {
+                editGroupNameSheet
+                    .presentationDetents([.medium])
+                    .presentationDragIndicator(.visible)
+            }
+            .sheet(isPresented: $isEditingNickname) {
+                editNicknameSheet
+                    .presentationDetents([.medium])
+                    .presentationDragIndicator(.visible)
+            }
         }
     }
 
@@ -27,9 +44,27 @@ struct GroupHubView: View {
             Text(UnfadingLocalized.Groups.coverEyebrow)
                 .font(UnfadingTheme.Font.captionSemibold())
                 .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
-            Text(groupStore.activeGroup?.name ?? "-")
-                .font(UnfadingTheme.Font.title())
-                .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
+            HStack(alignment: .firstTextBaseline, spacing: UnfadingTheme.Spacing.md) {
+                Text(groupStore.activeGroup?.name ?? "-")
+                    .font(UnfadingTheme.Font.title())
+                    .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                if isOwner {
+                    Button {
+                        editedGroupName = groupStore.activeGroup?.name ?? ""
+                        isEditingGroupName = true
+                    } label: {
+                        Text(UnfadingLocalized.Groups.edit)
+                            .font(UnfadingTheme.Font.captionSemibold())
+                            .frame(minWidth: 44, minHeight: 44)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(UnfadingTheme.Color.sheet.opacity(0.24))
+                    .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
+                    .accessibilityLabel(UnfadingLocalized.Groups.editGroupName)
+                }
+            }
             Text(groupStore.mode.koreanTitle)
                 .font(UnfadingTheme.Font.subheadlineSemibold())
                 .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
@@ -63,6 +98,16 @@ struct GroupHubView: View {
                     .foregroundStyle(UnfadingTheme.Color.textSecondary)
             }
             UnfadingAvatarStack(members: avatarMembers)
+
+            Button {
+                editedNickname = currentNickname ?? ""
+                isEditingNickname = true
+            } label: {
+                Label(UnfadingLocalized.Groups.editNickname, systemImage: "person.text.rectangle")
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint(UnfadingLocalized.Groups.nicknameHint)
         }
         .padding(UnfadingTheme.Spacing.lg)
         .unfadingCardBackground(fill: UnfadingTheme.Color.sheet, radius: UnfadingTheme.Radius.card)
@@ -143,15 +188,129 @@ struct GroupHubView: View {
     }
 
     private var avatarMembers: [SampleGroupMember] {
-        groupStore.members.map { profile in
-            let name = profile.displayName ?? "이름 없음"
+        groupStore.members.map { member in
+            let name = groupStore.displayName(for: member.profiles.id)
             return SampleGroupMember(
-                id: profile.id,
+                id: member.profiles.id,
                 name: name,
                 initial: String(name.first ?? "?"),
                 relation: ""
             )
         }
+    }
+
+    private var isOwner: Bool {
+        guard let userId = authStore.currentUserId else { return false }
+        return groupStore.activeGroup?.createdBy == userId
+    }
+
+    private var currentNickname: String? {
+        guard let userId = authStore.currentUserId else { return nil }
+        return groupStore.members.first(where: { $0.profiles.id == userId })?.nickname
+    }
+
+    private var editGroupNameSheet: some View {
+        NavigationStack {
+            Form {
+                Section(UnfadingLocalized.Groups.editGroupName) {
+                    TextField(UnfadingLocalized.Groups.namePlaceholder, text: $editedGroupName)
+                        .textInputAutocapitalization(.words)
+                        .frame(minHeight: 44)
+                        .accessibilityLabel(UnfadingLocalized.Groups.namePlaceholder)
+                }
+            }
+            .navigationTitle(UnfadingLocalized.Groups.editGroupName)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(UnfadingLocalized.Common.cancel) {
+                        isEditingGroupName = false
+                    }
+                    .frame(minHeight: 44)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(UnfadingLocalized.Common.confirm) {
+                        Task { await saveGroupName() }
+                    }
+                    .disabled(isSavingGroupName || editedGroupName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .frame(minHeight: 44)
+                }
+            }
+        }
+    }
+
+    private var editNicknameSheet: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField(UnfadingLocalized.Groups.nicknamePlaceholder, text: $editedNickname)
+                        .textContentType(.name)
+                        .textInputAutocapitalization(.words)
+                        .frame(minHeight: 44)
+                        .accessibilityLabel(UnfadingLocalized.Groups.nicknamePlaceholder)
+                        .accessibilityHint(UnfadingLocalized.Groups.nicknameHint)
+                        .onChange(of: editedNickname) { _, newValue in
+                            let limited = String(newValue.prefix(40))
+                            if limited != newValue {
+                                editedNickname = limited
+                            }
+                        }
+                    Text(UnfadingLocalized.Groups.nicknameHint)
+                        .font(.caption)
+                        .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                } header: {
+                    Text(UnfadingLocalized.Groups.editNickname)
+                }
+            }
+            .navigationTitle(UnfadingLocalized.Groups.editNickname)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(UnfadingLocalized.Common.cancel) {
+                        isEditingNickname = false
+                    }
+                    .frame(minHeight: 44)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(UnfadingLocalized.Common.confirm) {
+                        Task { await saveNickname() }
+                    }
+                    .disabled(isSavingNickname)
+                    .frame(minHeight: 44)
+                }
+            }
+        }
+    }
+
+    private func saveGroupName() async {
+        guard isOwner else {
+            toast = UnfadingLocalized.Groups.notOwnerHint
+            isEditingGroupName = false
+            return
+        }
+
+        let trimmed = editedGroupName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        isSavingGroupName = true
+        do {
+            try await groupStore.updateGroupName(trimmed)
+            toast = UnfadingLocalized.Groups.groupNameUpdated
+            isEditingGroupName = false
+        } catch {
+            toast = UnfadingLocalized.Groups.actionFailed
+        }
+        isSavingGroupName = false
+    }
+
+    private func saveNickname() async {
+        isSavingNickname = true
+        do {
+            try await groupStore.setMyNickname(editedNickname)
+            toast = UnfadingLocalized.Groups.nicknameUpdated
+            isEditingNickname = false
+        } catch {
+            toast = UnfadingLocalized.Groups.actionFailed
+        }
+        isSavingNickname = false
     }
 
     private func rotateInvite() async {
@@ -183,9 +342,18 @@ struct GroupHubView: View {
                     )
                 ],
                 members: [
-                    DBProfile(id: UUID(), email: nil, displayName: "시현", photoURL: nil, createdAt: nil),
-                    DBProfile(id: UUID(), email: nil, displayName: "민지", photoURL: nil, createdAt: nil)
+                    DBGroupMemberWithProfile(
+                        id: UUID(),
+                        nickname: "시현",
+                        profiles: DBProfile(id: UUID(), email: nil, displayName: "시현 프로필", photoURL: nil, createdAt: nil)
+                    ),
+                    DBGroupMemberWithProfile(
+                        id: UUID(),
+                        nickname: nil,
+                        profiles: DBProfile(id: UUID(), email: nil, displayName: "민지", photoURL: nil, createdAt: nil)
+                    )
                 ]
             )
         )
+        .environmentObject(AuthStore(preview: .signedIn(userId: UUID(), email: "preview@example.com")))
 }
