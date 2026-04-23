@@ -64,6 +64,49 @@ final class MemoryStoreTests: XCTestCase {
         XCTAssertEqual(reader.state, .loaded)
     }
 
+    func test_handleRealtimeInserted_setsPendingIncomingMemoryIdForOtherUser_andClearsAfterDelay() async throws {
+        let currentUserId = UUID(uuidString: "00000000-0000-0000-0000-000000000017")!
+        let incomingUserId = UUID(uuidString: "00000000-0000-0000-0000-000000000018")!
+        let incoming = Self.memory(
+            id: UUID(uuidString: "eeeeeee4-eeee-4eee-8eee-eeeeeeeeeee4")!,
+            userId: incomingUserId,
+            title: "새로 도착한 추억",
+            note: "실시간으로 들어온 기록",
+            emotions: ["joy"]
+        )
+        let store = MemoryStore(
+            repo: InMemoryMemoryRepository(),
+            offlineCacheURL: tempURL(),
+            currentUserId: currentUserId,
+            pendingIncomingClearDelay: 0.05
+        )
+
+        store.handleRealtimeInserted(incoming)
+
+        XCTAssertEqual(store.memories.first?.id, incoming.id)
+        XCTAssertEqual(store.pendingIncomingMemoryId, incoming.id)
+
+        try await Task.sleep(nanoseconds: 120_000_000)
+
+        XCTAssertNil(store.pendingIncomingMemoryId)
+    }
+
+    func test_handleRealtimeInserted_fromCurrentUser_doesNotSetPendingIncomingMemoryId() {
+        let currentUserId = UUID(uuidString: "00000000-0000-0000-0000-000000000017")!
+        let store = MemoryStore(
+            repo: InMemoryMemoryRepository(),
+            offlineCacheURL: tempURL(),
+            currentUserId: currentUserId,
+            pendingIncomingClearDelay: 0.05
+        )
+        let ownMemory = Self.memory(id: UUID(uuidString: "eeeeeee5-eeee-4eee-8eee-eeeeeeeeeee5")!)
+
+        store.handleRealtimeInserted(ownMemory)
+
+        XCTAssertEqual(store.memories.first?.id, ownMemory.id)
+        XCTAssertNil(store.pendingIncomingMemoryId)
+    }
+
     private func tempURL() -> URL {
         FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
@@ -98,6 +141,7 @@ final class MemoryStoreTests: XCTestCase {
 
     private static func memory(
         id: UUID = UUID(),
+        userId: UUID = UUID(uuidString: "00000000-0000-0000-0000-000000000017")!,
         groupId: UUID = UUID(uuidString: "11111111-1111-4111-8111-111111111117")!,
         title: String = "상수 루프톱 저녁",
         note: String = "친구들과 공연 이야기를 나눈 밤",
@@ -105,7 +149,7 @@ final class MemoryStoreTests: XCTestCase {
     ) -> DBMemory {
         DBMemory(
             id: id,
-            userId: UUID(uuidString: "00000000-0000-0000-0000-000000000017")!,
+            userId: userId,
             groupId: groupId,
             title: title,
             note: note,

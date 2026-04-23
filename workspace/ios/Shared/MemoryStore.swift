@@ -13,20 +13,32 @@ final class MemoryStore: ObservableObject {
 
     @Published private(set) var memories: [DBMemory] = []
     @Published private(set) var state: LoadState = .idle
+    @Published private(set) var pendingIncomingMemoryId: UUID?
 
     private let repo: MemoryRepository
     private let offlineCacheURL: URL?
+    private let pendingIncomingClearDelayNanoseconds: UInt64
     private let logger = Logger(subsystem: "com.jeonsihyeon.memorymap", category: "MemoryStore")
+    private var currentUserId: UUID?
+    private var pendingIncomingClearTask: Task<Void, Never>?
 
-    init(repo: MemoryRepository = SupabaseMemoryRepository(), offlineCacheURL: URL? = nil) {
+    init(
+        repo: MemoryRepository = SupabaseMemoryRepository(),
+        offlineCacheURL: URL? = nil,
+        currentUserId: UUID? = nil,
+        pendingIncomingClearDelay: TimeInterval = 3
+    ) {
         self.repo = repo
         self.offlineCacheURL = offlineCacheURL
+        self.currentUserId = currentUserId
+        self.pendingIncomingClearDelayNanoseconds = UInt64(max(pendingIncomingClearDelay, 0) * 1_000_000_000)
     }
 
     #if DEBUG
     init(memories: [DBMemory]) {
         self.repo = PreviewMemoryRepository()
         self.offlineCacheURL = nil
+        self.pendingIncomingClearDelayNanoseconds = 3_000_000_000
         self.memories = memories
         self.state = .loaded
     }
@@ -135,6 +147,10 @@ final class MemoryStore: ObservableObject {
         legacyDrafts
     }
 
+    func setCurrentUserId(_ userId: UUID?) {
+        currentUserId = userId
+    }
+
     func loadMemories(for groupId: UUID) async {
         state = .loading
         do {
@@ -172,6 +188,19 @@ final class MemoryStore: ObservableObject {
         memories.removeAll { $0.id == id }
     }
 
+    func clearPendingIncomingMemory() {
+        pendingIncomingClearTask?.cancel()
+        pendingIncomingClearTask = nil
+        pendingIncomingMemoryId = nil
+    }
+
+    func handleRealtimeInserted(_ memory: DBMemory) {
+        upsert(memory)
+
+        guard memory.userId != currentUserId else { return }
+        announcePendingIncomingMemory(id: memory.id)
+    }
+
     func subscribeRealtime(groupId: UUID) -> Task<Void, Never> {
         Task { [weak self] in
             guard let self else { return }
@@ -198,7 +227,7 @@ final class MemoryStore: ObservableObject {
                         guard !Task.isCancelled else { return }
                         do {
                             let memory = try insertion.decodeRecord(as: DBMemory.self, decoder: Self.supabaseDecoder())
-                            await MainActor.run { self.upsert(memory) }
+                            await MainActor.run { self.handleRealtimeInserted(memory) }
                         } catch {
                             await MainActor.run {
                                 self.logger.error("INSERT 메모리 디코드 실패: \(error.localizedDescription, privacy: .public)")
@@ -249,6 +278,29 @@ final class MemoryStore: ObservableObject {
             memories.insert(memory, at: 0)
         }
         memories.sort { $0.date > $1.date }
+    }
+
+    private func announcePendingIncomingMemory(id: UUID) {
+        pendingIncomingClearTask?.cancel()
+        pendingIncomingMemoryId = id
+
+        pendingIncomingClearTask = Task { [weak self] in
+            guard let self else { return }
+
+            if self.pendingIncomingClearDelayNanoseconds > 0 {
+                try? await Task.sleep(nanoseconds: self.pendingIncomingClearDelayNanoseconds)
+            }
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                guard self.pendingIncomingMemoryId == id else {
+                    self.pendingIncomingClearTask = nil
+                    return
+                }
+                self.pendingIncomingMemoryId = nil
+                self.pendingIncomingClearTask = nil
+            }
+        }
     }
 
     private func writeOfflineCache(_ memories: [DBMemory], groupId: UUID) throws {

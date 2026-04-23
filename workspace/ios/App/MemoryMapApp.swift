@@ -131,8 +131,10 @@ struct MemoryMapApp: App {
             .onReceive(authStore.$state) { state in
                 guard case let .signedIn(userId, _) = state else {
                     bootstrappedPreferencesUserId = nil
+                    memoryStore.setCurrentUserId(nil)
                     return
                 }
+                memoryStore.setCurrentUserId(userId)
                 if bootstrappedPreferencesUserId != userId {
                     bootstrappedPreferencesUserId = userId
                     Task { await prefs.bootstrap(userId: userId) }
@@ -141,6 +143,7 @@ struct MemoryMapApp: App {
                 Task { await groupStore.bootstrap() }
             }
             .onAppear {
+                memoryStore.setCurrentUserId(authStore.currentUserId)
                 configureMemorySync(for: groupStore.activeGroupId)
             }
             .onChange(of: groupStore.activeGroupId) { _, activeGroupId in

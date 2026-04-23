@@ -18,6 +18,7 @@ struct MemoryMapHomeView: View {
     private let groupSwitchResetToken: Int
     private let onSwitchGroup: () -> Void
     private let onEditCategories: () -> Void
+    @Binding private var autoSelectMemoryId: UUID?
     @Binding private var sheetSnap: BottomSheetSnap
     @StateObject private var locationPermissionStore = LocationPermissionStore()
     @StateObject private var selection = MemorySelectionState()
@@ -35,12 +36,14 @@ struct MemoryMapHomeView: View {
 
     init(
         sheetSnap: Binding<BottomSheetSnap> = .constant(.default_),
+        autoSelectMemoryId: Binding<UUID?> = .constant(nil),
         evidenceMode: MemoryComposerEvidenceMode = .none,
         groupSwitchResetToken: Int = 0,
         onSwitchGroup: @escaping () -> Void = {},
         onEditCategories: @escaping () -> Void = {}
     ) {
         self._sheetSnap = sheetSnap
+        self._autoSelectMemoryId = autoSelectMemoryId
         self.evidenceMode = evidenceMode
         self.groupSwitchResetToken = groupSwitchResetToken
         self.onSwitchGroup = onSwitchGroup
@@ -174,6 +177,15 @@ struct MemoryMapHomeView: View {
                 activeCategoryId = CategoryStore.allCategoryId
                 activeSheetTab = .curation
                 sheetSnap = .default_
+            }
+            .onChange(of: autoSelectMemoryId) { _, _ in
+                applyAutoSelectionIfNeeded()
+            }
+            .onChange(of: memoryStore.memories) { _, _ in
+                applyAutoSelectionIfNeeded()
+            }
+            .onAppear {
+                applyAutoSelectionIfNeeded()
             }
         }
     }
@@ -459,6 +471,18 @@ struct MemoryMapHomeView: View {
     private func showRewindFromCuration() {
         showingRewind = true
         sheetSnap = .default_
+    }
+
+    private func applyAutoSelectionIfNeeded() {
+        guard let autoSelectMemoryId,
+              memoryStore.memories.contains(where: { $0.id == autoSelectMemoryId }) else { return }
+
+        if selection.selectedPinID != autoSelectMemoryId {
+            selection.select(pinID: autoSelectMemoryId)
+        }
+        activeSheetTab = .curation
+        sheetSnap = .default_
+        self.autoSelectMemoryId = nil
     }
 }
 

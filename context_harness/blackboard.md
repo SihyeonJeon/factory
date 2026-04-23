@@ -1298,3 +1298,5 @@ xcodegen 성공. Sprint 26 완료입니다.
 - 2026-04-24 R38 Codex: opened Features/Rewind/RewindData.swift after SampleMemoryPin runtime reference search; reason: remove production SampleMemoryPin dependency from rewind sample fallback.
 - 2026-04-24 Codex: opened local supabase-swift package sources under workspace/ios/.deriveddata/r25/SourcePackages/checkouts/supabase-swift to verify Functions API signatures for R42 subscription sync implementation.
 2026-04-23T16:08:32Z | Opened unindexed files for R43 Apple Sign In implementation: active round lock/contracts, SupabaseService, tests, localized strings, and iOS auth references.
+2026-04-24 Codex | Opened unindexed round lookup via rg for active R44 lock/contract discovery before implementation.
+2026-04-24 Codex | Opened unindexed AuthStore path lookup via rg after expected path mismatch during R44 implementation.

@@ -141,6 +141,8 @@ enum UnfadingLocalized {
         static let searchLabel = "검색"
         static let searchHint = "장소나 추억을 검색합니다."
         static let addMemoryFab = "추억 기록"
+        static let incomingMemoryToast = "새 추억이 도착했어요"
+        static let incomingMemoryBadge = "새 추억 도착"
         static let groupChipPlaceholder = "우리 그룹"
         static let groupChipHint = "현재 그룹을 바꾸거나 그룹 허브를 엽니다."
         static let filterAll = "전체"

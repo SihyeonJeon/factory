@@ -41,6 +41,8 @@ enum ShellTab: String, CaseIterable {
 }
 
 struct UnfadingTabShell: View {
+    @EnvironmentObject private var memoryStore: MemoryStore
+
     private let evidenceMode: MemoryComposerEvidenceMode
 
     @State private var selectedTab: ShellTab = .map
@@ -51,6 +53,7 @@ struct UnfadingTabShell: View {
     @State private var showingCategoryEditor = false
     @State private var didPresentEvidenceComposer = false
     @State private var groupSwitchResetToken = 0
+    @State private var pendingAutoselectMemoryId: UUID?
     @StateObject private var categoryStore: CategoryStore
 
     init(evidenceMode: MemoryComposerEvidenceMode = .none, initialSheetSnap: BottomSheetSnap = Self.initialSheetSnap()) {
@@ -85,8 +88,28 @@ struct UnfadingTabShell: View {
                     .zIndex(70)
                 }
 
-                UnfadingTabBar(selected: $selectedTab)
+                UnfadingTabBar(
+                    selected: $selectedTab,
+                    showsMapBadge: memoryStore.pendingIncomingMemoryId != nil,
+                    onTabSelected: handleTabSelection
+                )
                     .zIndex(120)
+            }
+            .overlay(alignment: .bottom) {
+                if let pendingMemoryId = memoryStore.pendingIncomingMemoryId {
+                    Button {
+                        openIncomingMemory(id: pendingMemoryId)
+                    } label: {
+                        UnfadingToast(message: UnfadingLocalized.Home.incomingMemoryToast)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, UnfadingTheme.Spacing.lg)
+                    .padding(.bottom, UnfadingTabBar.height + UnfadingTheme.Spacing.sm)
+                    .accessibilityLabel(UnfadingLocalized.Home.incomingMemoryToast)
+                    .accessibilityHint(UnfadingLocalized.Accessibility.mapTabHint)
+                    .accessibilityIdentifier("incoming-memory-toast")
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
             .overlay {
                 GroupPickerOverlay(
@@ -133,6 +156,7 @@ struct UnfadingTabShell: View {
         case .map:
             MemoryMapHomeView(
                 sheetSnap: $sheetSnap,
+                autoSelectMemoryId: $pendingAutoselectMemoryId,
                 evidenceMode: evidenceMode,
                 groupSwitchResetToken: groupSwitchResetToken,
                 onSwitchGroup: { showingGroupPicker = true },
@@ -158,12 +182,39 @@ struct UnfadingTabShell: View {
         }
         return .default_
     }
+
+    private func handleTabSelection(_ tab: ShellTab) {
+        if tab == .map, let pendingMemoryId = memoryStore.pendingIncomingMemoryId {
+            openIncomingMemory(id: pendingMemoryId)
+            return
+        }
+
+        selectedTab = tab
+    }
+
+    private func openIncomingMemory(id: UUID) {
+        selectedTab = .map
+        pendingAutoselectMemoryId = id
+        memoryStore.clearPendingIncomingMemory()
+    }
 }
 
 struct UnfadingTabBar: View {
     static let height: CGFloat = 83
 
     @Binding var selected: ShellTab
+    let showsMapBadge: Bool
+    let onTabSelected: (ShellTab) -> Void
+
+    init(
+        selected: Binding<ShellTab>,
+        showsMapBadge: Bool = false,
+        onTabSelected: @escaping (ShellTab) -> Void = { _ in }
+    ) {
+        self._selected = selected
+        self.showsMapBadge = showsMapBadge
+        self.onTabSelected = onTabSelected
+    }
 
     var body: some View {
         HStack(spacing: 0) {
@@ -184,11 +235,24 @@ struct UnfadingTabBar: View {
 
     private func tabButton(_ tab: ShellTab) -> some View {
         Button {
-            selected = tab
+            onTabSelected(tab)
         } label: {
             VStack(spacing: UnfadingTheme.Spacing.xxs) {
                 Image(systemName: tab.systemImage)
                     .imageScale(.medium)
+                    .overlay(alignment: .topTrailing) {
+                        if tab == .map, showsMapBadge {
+                            Circle()
+                                .fill(UnfadingTheme.Color.primary)
+                                .frame(width: 10, height: 10)
+                                .overlay {
+                                    Circle()
+                                        .stroke(UnfadingTheme.Color.sheet, lineWidth: 1.5)
+                                }
+                                .offset(x: 6, y: -3)
+                                .accessibilityHidden(true)
+                        }
+                    }
                 Text(tab.label)
                     .font(UnfadingTheme.Font.tag(11))
             }
@@ -200,6 +264,7 @@ struct UnfadingTabBar: View {
         .buttonStyle(.plain)
         .accessibilityLabel(tab.accessibilityLabel)
         .accessibilityHint(tab.accessibilityHint)
+        .accessibilityValue(tab == .map && showsMapBadge ? UnfadingLocalized.Home.incomingMemoryBadge : "")
         .accessibilityIdentifier(tab.identifier)
     }
 }
