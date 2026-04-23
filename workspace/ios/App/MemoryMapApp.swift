@@ -2,7 +2,7 @@ import SwiftUI
 
 @main
 struct MemoryMapApp: App {
-    @StateObject private var prefs = UserPreferences()
+    @StateObject private var prefs: UserPreferences
 
     private let evidenceMode: MemoryComposerEvidenceMode = {
         guard
@@ -14,6 +14,15 @@ struct MemoryMapApp: App {
 
         return mode
     }()
+
+    init() {
+        _prefs = StateObject(wrappedValue: UserPreferences(forceHasSeenOnboarding: Self.shouldSkipOnboardingForUITests))
+    }
+
+    private static var shouldSkipOnboardingForUITests: Bool {
+        ProcessInfo.processInfo.arguments.contains("-UI_TEST_SKIP_ONBOARDING")
+            || ProcessInfo.processInfo.environment["UNFADING_UI_TEST"] == "1"
+    }
 
     var body: some Scene {
         WindowGroup {

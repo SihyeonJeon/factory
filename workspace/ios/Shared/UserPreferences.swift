@@ -37,7 +37,7 @@ final class UserPreferences: ObservableObject {
         didSet { userDefaults.set(hasSeenOnboarding, forKey: K.hasSeenOnboarding) }
     }
 
-    init(userDefaults: UserDefaults = .standard) {
+    init(userDefaults: UserDefaults = .standard, forceHasSeenOnboarding: Bool? = nil) {
         self.userDefaults = userDefaults
         self.reminderEnabled = userDefaults.bool(forKey: K.reminderEnabled)
         if let raw = userDefaults.string(forKey: K.themePreference),
@@ -46,6 +46,15 @@ final class UserPreferences: ObservableObject {
         } else {
             self.themePreference = .system
         }
-        self.hasSeenOnboarding = userDefaults.bool(forKey: K.hasSeenOnboarding)
+        let shouldSkipOnboarding = forceHasSeenOnboarding ?? Self.shouldSkipOnboardingForUITests
+        self.hasSeenOnboarding = shouldSkipOnboarding || userDefaults.bool(forKey: K.hasSeenOnboarding)
+        if shouldSkipOnboarding {
+            userDefaults.set(true, forKey: K.hasSeenOnboarding)
+        }
+    }
+
+    private static var shouldSkipOnboardingForUITests: Bool {
+        ProcessInfo.processInfo.arguments.contains("-UI_TEST_SKIP_ONBOARDING")
+            || ProcessInfo.processInfo.environment["UNFADING_UI_TEST"] == "1"
     }
 }

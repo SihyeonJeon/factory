@@ -1,0 +1,14 @@
+workspace/ios/UITests/UnfadingUITests.swift
+workspace/ios/project.yml
+workspace/ios/App/MemoryMapApp.swift
+workspace/ios/Shared/UserPreferences.swift
+docs/product-specs/launchability-review-2026.md
+context_harness/operator/contracts/round_launchability_r1/**
+context_harness/operator/locks/round_launchability_r1.lock
+context_harness/operator/locks/round_launchability_r1.events.jsonl
+context_harness/operator/meetings/2026-04-23_round14_*.md
+context_harness/operator/codex_transcripts/codex_r14_*.log
+context_harness/reports/round_launchability_r1/**
+context_harness/SESSION_RESUME.md
+docs/exec-plans/process-log.jsonl
+workspace/ios/MemoryMap.xcodeproj/**
