@@ -1,0 +1,11 @@
+workspace/ios/project.yml
+workspace/ios/App/Info.plist
+workspace/ios/App/PrivacyInfo.xcprivacy
+workspace/ios/App/Assets.xcassets/LaunchLogo.imageset/Contents.json
+workspace/ios/App/Assets.xcassets/LaunchLogo.imageset/launch_logo.png
+context_harness/operator/contracts/round_ship_assets_r1/spec.md
+context_harness/operator/contracts/round_ship_assets_r1/file_whitelist.txt
+context_harness/operator/meetings/2026-04-23_round23_ship_assets_plan.md
+context_harness/reports/round_ship_assets_r1/evidence/notes.md
+context_harness/blackboard.md
+docs/exec-plans/process-log.jsonl
