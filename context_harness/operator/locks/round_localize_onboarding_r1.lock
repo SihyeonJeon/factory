@@ -2,7 +2,7 @@
   "round_id": "round_localize_onboarding_r1",
   "schema_version": 2,
   "started_at": "2026-04-22T17:57:33.109258+00:00",
-  "status": "active",
+  "status": "closed",
   "operators": {
     "claude_code": {
       "session": "this-session",
@@ -22,8 +22,18 @@
     "acceptance.md": "sha256:37342bff8aa130683e1827b57ee82b07a0b76060982131fbf4c2e6428108b33e",
     "eval_protocol.md": "sha256:401674359b1b24bfd9be6ffc8d003153e9668e36262fc8381129b4e57565d238"
   },
-  "amendments": [],
+  "amendments": [
+    {
+      "file": "file_whitelist.amendment.1.txt",
+      "target": "file_whitelist.txt",
+      "sha256": "sha256:92e8abecf10e94494e3161a9be76ad9b26082a617e09d8240a559f3bfb658bbf",
+      "supersedes": [
+        "file_whitelist.txt"
+      ],
+      "meeting": "context_harness/operator/meetings/2026-04-23_round12_whitelist_amend.md"
+    }
+  ],
   "stages_completed": [],
-  "gate_evidence_sha256": null,
-  "closed_at": null
+  "gate_evidence_sha256": "sha256:09fe1e414fc9561cf99e44354cdc197bfacf0b05d6725d1aa8d2ae38322307b0",
+  "closed_at": "2026-04-23T00:31:56.140678+00:00"
 }
