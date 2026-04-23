@@ -1,0 +1,10 @@
+workspace/ios/Features/Settings/SettingsView.swift
+workspace/ios/Features/Groups/GroupHubView.swift
+workspace/ios/Shared/UnfadingLocalized.swift
+workspace/ios/Tests/GroupHubTests.swift
+workspace/ios/UITests/UnfadingUITests.swift
+workspace/ios/MemoryMap.xcodeproj/
+context_harness/operator/contracts/round_group_hub_settings_r1/
+context_harness/operator/meetings/2026-04-23_r35_group_hub_settings.md
+context_harness/reports/round_group_hub_settings_r1/verdict.md
+context_harness/blackboard.md

@@ -7,7 +7,6 @@ struct SettingsView: View {
     @EnvironmentObject private var prefs: UserPreferences
     @EnvironmentObject private var subscriptionStore: SubscriptionStore
     @Environment(\.openURL) private var openURL
-    @State private var showingGroupHub = false
     @State private var showingPremium = false
 
     var body: some View {
@@ -22,9 +21,6 @@ struct SettingsView: View {
             }
             .listStyle(.insetGrouped)
             .navigationTitle(UnfadingLocalized.Settings.navTitle)
-            .sheet(isPresented: $showingGroupHub) {
-                GroupHubView()
-            }
             .sheet(isPresented: $showingPremium) {
                 PremiumPaywallView()
                     .environmentObject(subscriptionStore)
@@ -103,8 +99,8 @@ struct SettingsView: View {
 
     private var groupSection: some View {
         Section(UnfadingLocalized.Settings.groupsSection) {
-            Button {
-                showingGroupHub = true
+            NavigationLink {
+                GroupHubView()
             } label: {
                 Label(UnfadingLocalized.Settings.groupsRow, systemImage: "person.3")
                     .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)

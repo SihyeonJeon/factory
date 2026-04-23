@@ -1,6 +1,44 @@
 import SwiftUI
 import UIKit
 
+enum GroupHubDestructiveAction: Identifiable, Equatable {
+    case leave
+    case delete
+
+    var id: String {
+        switch self {
+        case .leave: "leave"
+        case .delete: "delete"
+        }
+    }
+}
+
+struct GroupHubPresentationState: Equatable {
+    var destructiveAction: GroupHubDestructiveAction?
+
+    var showsWarningDialog: Bool {
+        destructiveAction != nil
+    }
+}
+
+enum GroupHubFormatting {
+    static func roleLabel(mode: String, isOwner: Bool, isCurrentUser: Bool) -> String {
+        let base: String
+        if mode == "group" || mode == "general_group" {
+            base = isOwner ? UnfadingLocalized.GroupHub.ownerRole : UnfadingLocalized.GroupHub.memberRole
+        } else {
+            base = UnfadingLocalized.GroupHub.partnerRole
+        }
+
+        return isCurrentUser ? "\(base) · \(UnfadingLocalized.GroupHub.youSuffix)" : base
+    }
+
+    static func startedAt(_ date: Date?) -> String {
+        guard let date else { return "-" }
+        return UnfadingLocalized.GroupHub.startedAtFormat(date)
+    }
+}
+
 struct GroupHubView: View {
     @EnvironmentObject private var authStore: AuthStore
     @EnvironmentObject private var groupStore: GroupStore
@@ -8,24 +46,35 @@ struct GroupHubView: View {
     @State private var isRotatingInvite = false
     @State private var isEditingGroupName = false
     @State private var isEditingNickname = false
+    @State private var isShowingGroupPicker = false
+    @State private var isShowingQR = false
+    @State private var isMapThemeEnabled = false
+    @State private var isIconPackEnabled = false
+    @State private var anniversaryNotifications = true
+    @State private var rewindNotifications = true
+    @State private var memberActivityNotifications = true
+    @State private var presentationState = GroupHubPresentationState()
     @State private var editedGroupName = ""
     @State private var editedNickname = ""
     @State private var isSavingGroupName = false
     @State private var isSavingNickname = false
 
     var body: some View {
-        NavigationStack {
+        ZStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xl) {
-                    cover
-                    membersSummary
-                    membersList
-                    inviteCodeRow
+                    overviewSection
+                    membersSection
+                    inviteSection
+                    appearanceSection
+                    notificationsSection
+                    dataSection
+                    dangerSection
                 }
                 .padding(UnfadingTheme.Spacing.xl)
             }
-            .background(UnfadingTheme.Color.cream)
-            .navigationTitle(UnfadingLocalized.Groups.navTitle)
+            .background(UnfadingTheme.Color.cream.ignoresSafeArea())
+            .navigationTitle(UnfadingLocalized.GroupHub.navTitle)
             .sheet(isPresented: $isEditingGroupName) {
                 editGroupNameSheet
                     .presentationDetents([.medium])
@@ -36,166 +85,375 @@ struct GroupHubView: View {
                     .presentationDetents([.medium])
                     .presentationDragIndicator(.visible)
             }
+            .confirmationDialog(
+                warningTitle,
+                isPresented: warningBinding,
+                titleVisibility: .visible
+            ) {
+                Button(UnfadingLocalized.GroupHub.destructiveConfirm, role: .destructive) {
+                    toast = UnfadingLocalized.GroupHub.destructivePlaceholder
+                    presentationState.destructiveAction = nil
+                }
+                Button(UnfadingLocalized.Common.cancel, role: .cancel) {
+                    presentationState.destructiveAction = nil
+                }
+            } message: {
+                Text(warningMessage)
+            }
+
+            GroupPickerOverlay(
+                isPresented: $isShowingGroupPicker,
+                onCreateGroup: {
+                    toast = UnfadingLocalized.Groups.pickerCreateNew
+                },
+                onGroupChanged: {
+                    toast = UnfadingLocalized.GroupHub.switchGroupCTA
+                }
+            )
+        }
+        .accessibilityIdentifier("group-hub")
+    }
+
+    private var overviewSection: some View {
+        GroupHubCard(title: UnfadingLocalized.GroupHub.overviewSection) {
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
+                HStack(alignment: .firstTextBaseline, spacing: UnfadingTheme.Spacing.md) {
+                    Text(groupStore.activeGroup?.name ?? "-")
+                        .font(UnfadingTheme.Font.title())
+                        .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    if isOwner {
+                        Button {
+                            editedGroupName = groupStore.activeGroup?.name ?? ""
+                            isEditingGroupName = true
+                        } label: {
+                            Text(UnfadingLocalized.Groups.edit)
+                                .font(UnfadingTheme.Font.captionSemibold())
+                                .frame(minWidth: 44, minHeight: 44)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(UnfadingTheme.Color.primary)
+                        .accessibilityLabel(UnfadingLocalized.Groups.editGroupName)
+                    }
+                }
+
+                infoRow(
+                    title: UnfadingLocalized.Groups.modePickerLabel,
+                    value: groupStore.mode.koreanTitle,
+                    systemImage: "person.2"
+                )
+                infoRow(
+                    title: UnfadingLocalized.GroupHub.startedAtLabel,
+                    value: GroupHubFormatting.startedAt(groupStore.activeGroup?.createdAt),
+                    systemImage: "calendar"
+                )
+                infoRow(
+                    title: UnfadingLocalized.Groups.membersLabel,
+                    value: UnfadingLocalized.Groups.memberCountFormat(groupStore.members.count),
+                    systemImage: "person.3"
+                )
+
+                Button {
+                    withAnimation(.easeInOut(duration: 0.18)) {
+                        isShowingGroupPicker = true
+                    }
+                } label: {
+                    Label(UnfadingLocalized.GroupHub.switchGroupCTA, systemImage: "arrow.triangle.2.circlepath")
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(UnfadingTheme.Color.primary)
+                .accessibilityIdentifier("group-hub-switch-group")
+            }
         }
     }
 
-    private var cover: some View {
-        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
-            Text(UnfadingLocalized.Groups.coverEyebrow)
-                .font(UnfadingTheme.Font.captionSemibold())
-                .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
-            HStack(alignment: .firstTextBaseline, spacing: UnfadingTheme.Spacing.md) {
-                Text(groupStore.activeGroup?.name ?? "-")
-                    .font(UnfadingTheme.Font.title())
-                    .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+    private var membersSection: some View {
+        GroupHubCard(title: UnfadingLocalized.GroupHub.membersSection) {
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
+                UnfadingAvatarStack(members: avatarMembers)
 
-                if isOwner {
-                    Button {
-                        editedGroupName = groupStore.activeGroup?.name ?? ""
-                        isEditingGroupName = true
-                    } label: {
-                        Text(UnfadingLocalized.Groups.edit)
-                            .font(UnfadingTheme.Font.captionSemibold())
-                            .frame(minWidth: 44, minHeight: 44)
+                ForEach(memberRows) { member in
+                    HStack(spacing: UnfadingTheme.Spacing.md) {
+                        Text(member.initial)
+                            .font(UnfadingTheme.Font.footnoteSemibold())
+                            .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
+                            .frame(width: 44, height: 44)
+                            .background(member.color, in: Circle())
+
+                        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
+                            Text(member.name)
+                                .font(UnfadingTheme.Font.subheadlineSemibold())
+                                .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                            Text(member.role)
+                                .font(UnfadingTheme.Font.subheadline())
+                                .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                        }
+
+                        Spacer()
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(UnfadingTheme.Color.sheet.opacity(0.24))
-                    .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
-                    .accessibilityLabel(UnfadingLocalized.Groups.editGroupName)
+                    .frame(minHeight: 44)
+                    .accessibilityElement(children: .combine)
                 }
-            }
-            Text(groupStore.mode.koreanTitle)
-                .font(UnfadingTheme.Font.subheadlineSemibold())
-                .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
-            if let intro = groupStore.activeGroup?.intro, !intro.isEmpty {
-                Text(intro)
-                    .font(UnfadingTheme.Font.subheadline())
-                    .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
+
+                Button {
+                    editedNickname = currentNickname ?? ""
+                    isEditingNickname = true
+                } label: {
+                    Label(UnfadingLocalized.Groups.editNickname, systemImage: "person.text.rectangle")
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint(UnfadingLocalized.Groups.nicknameHint)
             }
         }
-        .padding(UnfadingTheme.Spacing.xl)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            LinearGradient(
-                colors: [UnfadingTheme.Color.primary, UnfadingTheme.Color.lavender],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
-            in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.sheet, style: .continuous)
+    }
+
+    private var inviteSection: some View {
+        GroupHubCard(title: UnfadingLocalized.GroupHub.inviteSection) {
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
+                Text(UnfadingLocalized.GroupHub.inviteLinkLabel)
+                    .font(UnfadingTheme.Font.subheadlineSemibold())
+                    .foregroundStyle(UnfadingTheme.Color.textPrimary)
+
+                Text(inviteLink)
+                    .font(UnfadingTheme.Font.subheadline())
+                    .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                    .lineLimit(2)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+
+                HStack(spacing: UnfadingTheme.Spacing.sm) {
+                    Button {
+                        UIPasteboard.general.string = inviteLink
+                        toast = UnfadingLocalized.GroupHub.inviteLinkCopied
+                    } label: {
+                        Label(UnfadingLocalized.GroupHub.createInviteLink, systemImage: "link")
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button {
+                        isShowingQR.toggle()
+                    } label: {
+                        Label(UnfadingLocalized.GroupHub.showQRCode, systemImage: "qrcode")
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                    }
+                    .buttonStyle(.bordered)
+                }
+
+                if isShowingQR {
+                    qrPlaceholder
+                }
+
+                HStack(spacing: UnfadingTheme.Spacing.sm) {
+                    Text(groupStore.activeGroup?.inviteCode ?? "-")
+                        .font(UnfadingTheme.Font.title3Bold())
+                        .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+
+                    Button {
+                        UIPasteboard.general.string = groupStore.activeGroup?.inviteCode
+                        toast = UnfadingLocalized.Groups.copyCode
+                    } label: {
+                        Label(UnfadingLocalized.Groups.copyCode, systemImage: "doc.on.doc")
+                            .labelStyle(.iconOnly)
+                            .frame(width: 44, height: 44)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(UnfadingLocalized.Groups.copyCode)
+
+                    Button {
+                        Task { await rotateInvite() }
+                    } label: {
+                        Label(UnfadingLocalized.Groups.rotateCode, systemImage: "arrow.clockwise")
+                            .labelStyle(.iconOnly)
+                            .frame(width: 44, height: 44)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isRotatingInvite || groupStore.activeGroup == nil)
+                    .accessibilityLabel(UnfadingLocalized.Groups.rotateCode)
+                }
+
+                toastView
+            }
+        }
+    }
+
+    private var appearanceSection: some View {
+        GroupHubCard(title: UnfadingLocalized.GroupHub.appearanceSection) {
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.sm) {
+                Toggle(UnfadingLocalized.GroupHub.mapThemeToggle, isOn: $isMapThemeEnabled)
+                    .frame(minHeight: 44)
+                Toggle(UnfadingLocalized.GroupHub.iconPackToggle, isOn: $isIconPackEnabled)
+                    .frame(minHeight: 44)
+                Text(UnfadingLocalized.GroupHub.sprint7Placeholder)
+                    .font(UnfadingTheme.Font.footnote())
+                    .foregroundStyle(UnfadingTheme.Color.textSecondary)
+            }
+        }
+    }
+
+    private var notificationsSection: some View {
+        GroupHubCard(title: UnfadingLocalized.GroupHub.notificationsSection) {
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.sm) {
+                Toggle(UnfadingLocalized.GroupHub.anniversaryToggle, isOn: $anniversaryNotifications)
+                    .frame(minHeight: 44)
+                Toggle(UnfadingLocalized.GroupHub.rewindToggle, isOn: $rewindNotifications)
+                    .frame(minHeight: 44)
+                Toggle(UnfadingLocalized.GroupHub.memberActivityToggle, isOn: $memberActivityNotifications)
+                    .frame(minHeight: 44)
+            }
+        }
+    }
+
+    private var dataSection: some View {
+        GroupHubCard(title: UnfadingLocalized.GroupHub.dataSection) {
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
+                infoRow(
+                    title: UnfadingLocalized.GroupHub.iCloudStatusLabel,
+                    value: UnfadingLocalized.GroupHub.iCloudStatusReady,
+                    systemImage: "icloud"
+                )
+
+                Button {
+                    toast = UnfadingLocalized.GroupHub.exportPlaceholder
+                } label: {
+                    Label(UnfadingLocalized.GroupHub.exportAllCTA, systemImage: "square.and.arrow.up")
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+    }
+
+    private var dangerSection: some View {
+        GroupHubCard(title: UnfadingLocalized.GroupHub.dangerSection) {
+            VStack(spacing: UnfadingTheme.Spacing.sm) {
+                Button(role: .destructive) {
+                    presentationState.destructiveAction = .leave
+                } label: {
+                    Label(UnfadingLocalized.GroupHub.leaveGroupCTA, systemImage: "rectangle.portrait.and.arrow.right")
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                }
+                .accessibilityIdentifier("group-hub-leave")
+
+                Button(role: .destructive) {
+                    presentationState.destructiveAction = .delete
+                } label: {
+                    Label(UnfadingLocalized.GroupHub.deleteGroupCTA, systemImage: "trash")
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                }
+                .disabled(!isOwner)
+                .accessibilityIdentifier("group-hub-delete")
+            }
+        }
+    }
+
+    private func infoRow(title: String, value: String, systemImage: String) -> some View {
+        HStack(spacing: UnfadingTheme.Spacing.md) {
+            Image(systemName: systemImage)
+                .foregroundStyle(UnfadingTheme.Color.primary)
+                .frame(width: 24)
+            Text(title)
+                .font(UnfadingTheme.Font.subheadline())
+                .foregroundStyle(UnfadingTheme.Color.textSecondary)
+            Spacer()
+            Text(value)
+                .font(UnfadingTheme.Font.subheadlineSemibold())
+                .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                .multilineTextAlignment(.trailing)
+        }
+        .frame(minHeight: 44)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var qrPlaceholder: some View {
+        VStack(spacing: UnfadingTheme.Spacing.sm) {
+            Image(systemName: "qrcode")
+                .font(UnfadingTheme.Font.pageTitle(52))
+                .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                .frame(width: 116, height: 116)
+                .background(UnfadingTheme.Color.surface, in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.button, style: .continuous))
+            Text(UnfadingLocalized.GroupHub.qrPlaceholder)
+                .font(UnfadingTheme.Font.footnote())
+                .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity, minHeight: 44)
+        .padding(.vertical, UnfadingTheme.Spacing.sm)
+    }
+
+    @ViewBuilder
+    private var toastView: some View {
+        if let toast {
+            Text(toast)
+                .font(UnfadingTheme.Font.captionSemibold())
+                .foregroundStyle(UnfadingTheme.Color.primary)
+                .frame(minHeight: 44, alignment: .leading)
+        }
+    }
+
+    private var warningBinding: Binding<Bool> {
+        Binding(
+            get: { presentationState.showsWarningDialog },
+            set: { isPresented in
+                if !isPresented {
+                    presentationState.destructiveAction = nil
+                }
+            }
         )
     }
 
-    private var membersSummary: some View {
-        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
-            HStack {
-                Text(UnfadingLocalized.Groups.membersLabel)
-                    .font(UnfadingTheme.Font.subheadlineSemibold())
-                    .foregroundStyle(UnfadingTheme.Color.textPrimary)
-                Spacer()
-                Text(UnfadingLocalized.Groups.memberCountFormat(groupStore.members.count))
-                    .font(UnfadingTheme.Font.captionSemibold())
-                    .foregroundStyle(UnfadingTheme.Color.textSecondary)
-            }
-            UnfadingAvatarStack(members: avatarMembers)
-
-            Button {
-                editedNickname = currentNickname ?? ""
-                isEditingNickname = true
-            } label: {
-                Label(UnfadingLocalized.Groups.editNickname, systemImage: "person.text.rectangle")
-                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-            }
-            .buttonStyle(.plain)
-            .accessibilityHint(UnfadingLocalized.Groups.nicknameHint)
-        }
-        .padding(UnfadingTheme.Spacing.lg)
-        .unfadingCardBackground(fill: UnfadingTheme.Color.sheet, radius: UnfadingTheme.Radius.card)
-    }
-
-    private var membersList: some View {
-        VStack(spacing: UnfadingTheme.Spacing.sm) {
-            ForEach(avatarMembers) { member in
-                HStack(spacing: UnfadingTheme.Spacing.md) {
-                    Text(member.initial)
-                        .font(UnfadingTheme.Font.footnoteSemibold())
-                        .foregroundStyle(UnfadingTheme.Color.primary)
-                        .frame(width: 44, height: 44)
-                        .background(UnfadingTheme.Color.primarySoft, in: Circle())
-
-                    VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
-                        Text(member.name)
-                            .font(UnfadingTheme.Font.subheadlineSemibold())
-                            .foregroundStyle(UnfadingTheme.Color.textPrimary)
-                        Text(member.relation)
-                            .font(UnfadingTheme.Font.subheadline())
-                            .foregroundStyle(UnfadingTheme.Color.textSecondary)
-                    }
-                    Spacer()
-                }
-                .frame(minHeight: 44)
-                .padding(UnfadingTheme.Spacing.md)
-                .unfadingCardBackground(fill: UnfadingTheme.Color.sheet, radius: UnfadingTheme.Radius.button, shadow: false)
-                .accessibilityElement(children: .combine)
-            }
+    private var warningTitle: String {
+        switch presentationState.destructiveAction {
+        case .leave:
+            return UnfadingLocalized.GroupHub.leaveWarningTitle
+        case .delete:
+            return UnfadingLocalized.GroupHub.deleteWarningTitle
+        case nil:
+            return ""
         }
     }
 
-    private var inviteCodeRow: some View {
-        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
-            Text(UnfadingLocalized.Groups.inviteCodeLabel)
-                .font(UnfadingTheme.Font.subheadlineSemibold())
-                .foregroundStyle(UnfadingTheme.Color.textPrimary)
-
-            HStack(spacing: UnfadingTheme.Spacing.sm) {
-                Text(groupStore.activeGroup?.inviteCode ?? "-")
-                    .font(UnfadingTheme.Font.title3Bold())
-                    .foregroundStyle(UnfadingTheme.Color.textPrimary)
-                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-
-                Button {
-                    UIPasteboard.general.string = groupStore.activeGroup?.inviteCode
-                    toast = UnfadingLocalized.Groups.copyCode
-                } label: {
-                    Label(UnfadingLocalized.Groups.copyCode, systemImage: "doc.on.doc")
-                        .labelStyle(.iconOnly)
-                        .frame(width: 44, height: 44)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(UnfadingLocalized.Groups.copyCode)
-
-                Button {
-                    Task { await rotateInvite() }
-                } label: {
-                    Label(UnfadingLocalized.Groups.rotateCode, systemImage: "arrow.clockwise")
-                        .labelStyle(.iconOnly)
-                        .frame(width: 44, height: 44)
-                }
-                .buttonStyle(.plain)
-                .disabled(isRotatingInvite || groupStore.activeGroup == nil)
-                .accessibilityLabel(UnfadingLocalized.Groups.rotateCode)
-            }
-
-            if let toast {
-                Text(toast)
-                    .font(UnfadingTheme.Font.captionSemibold())
-                    .foregroundStyle(UnfadingTheme.Color.primary)
-                    .frame(minHeight: 44, alignment: .leading)
-            }
+    private var warningMessage: String {
+        switch presentationState.destructiveAction {
+        case .leave:
+            return UnfadingLocalized.GroupHub.leaveWarningMessage
+        case .delete:
+            return UnfadingLocalized.GroupHub.deleteWarningMessage
+        case nil:
+            return ""
         }
-        .padding(UnfadingTheme.Spacing.lg)
-        .unfadingCardBackground(fill: UnfadingTheme.Color.sheet, radius: UnfadingTheme.Radius.card)
     }
 
-    private var avatarMembers: [SampleGroupMember] {
-        groupStore.members.map { member in
+    private var inviteLink: String {
+        UnfadingLocalized.GroupHub.inviteLink(code: groupStore.activeGroup?.inviteCode ?? "-")
+    }
+
+    private var memberRows: [GroupHubMemberRowModel] {
+        groupStore.members.enumerated().map { index, member in
             let name = groupStore.displayName(for: member.profiles.id)
-            return SampleGroupMember(
+            let isCurrentUser = member.profiles.id == authStore.currentUserId
+            let isMemberOwner = member.profiles.id == groupStore.activeGroup?.createdBy
+            return GroupHubMemberRowModel(
                 id: member.profiles.id,
                 name: name,
                 initial: String(name.first ?? "?"),
-                relation: ""
+                role: GroupHubFormatting.roleLabel(
+                    mode: groupStore.activeGroup?.mode ?? "group",
+                    isOwner: isMemberOwner,
+                    isCurrentUser: isCurrentUser
+                ),
+                color: UnfadingTheme.Color.memberPalette[index % UnfadingTheme.Color.memberPalette.count]
             )
+        }
+    }
+
+    private var avatarMembers: [SampleGroupMember] {
+        memberRows.map { member in
+            SampleGroupMember(id: member.id, name: member.name, initial: member.initial, relation: member.role)
         }
     }
 
@@ -255,7 +513,7 @@ struct GroupHubView: View {
                             }
                         }
                     Text(UnfadingLocalized.Groups.nicknameHint)
-                        .font(.caption)
+                        .font(UnfadingTheme.Font.footnote())
                         .foregroundStyle(UnfadingTheme.Color.textSecondary)
                 } header: {
                     Text(UnfadingLocalized.Groups.editNickname)
@@ -325,35 +583,70 @@ struct GroupHubView: View {
     }
 }
 
+private struct GroupHubMemberRowModel: Identifiable {
+    let id: UUID
+    let name: String
+    let initial: String
+    let role: String
+    let color: Color
+}
+
+private struct GroupHubCard<Content: View>: View {
+    let title: String
+    private let content: Content
+
+    init(title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
+            Text(title)
+                .font(UnfadingTheme.Font.subheadlineSemibold())
+                .foregroundStyle(UnfadingTheme.Color.textPrimary)
+
+            content
+        }
+        .padding(UnfadingTheme.Spacing.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .unfadingCardBackground(fill: UnfadingTheme.Color.sheet, radius: UnfadingTheme.Radius.card)
+    }
+}
+
 #Preview {
-    GroupHubView()
-        .environmentObject(
-            GroupStore.preview(
-                groups: [
-                    DBGroup(
-                        id: UUID(),
-                        name: "주말 모임",
-                        inviteCode: "PREVIEW1",
-                        createdAt: Date(),
-                        createdBy: UUID(),
-                        mode: "group",
-                        intro: "함께 남기는 지도",
-                        coverColorHex: "#F5998C"
-                    )
-                ],
-                members: [
-                    DBGroupMemberWithProfile(
-                        id: UUID(),
-                        nickname: "시현",
-                        profiles: DBProfile(id: UUID(), email: nil, displayName: "시현 프로필", photoURL: nil, createdAt: nil)
-                    ),
-                    DBGroupMemberWithProfile(
-                        id: UUID(),
-                        nickname: nil,
-                        profiles: DBProfile(id: UUID(), email: nil, displayName: "민지", photoURL: nil, createdAt: nil)
-                    )
-                ]
+    let ownerId = UUID()
+    let secondId = UUID()
+    NavigationStack {
+        GroupHubView()
+            .environmentObject(
+                GroupStore.preview(
+                    groups: [
+                        DBGroup(
+                            id: UUID(),
+                            name: "주말 모임",
+                            inviteCode: "PREVIEW1",
+                            createdAt: Date(timeIntervalSince1970: 1_776_000_000),
+                            createdBy: ownerId,
+                            mode: "group",
+                            intro: "함께 남기는 지도",
+                            coverColorHex: "#F5998C"
+                        )
+                    ],
+                    members: [
+                        DBGroupMemberWithProfile(
+                            id: UUID(),
+                            nickname: "시현",
+                            profiles: DBProfile(id: ownerId, email: nil, displayName: "시현 프로필", photoURL: nil, createdAt: nil)
+                        ),
+                        DBGroupMemberWithProfile(
+                            id: UUID(),
+                            nickname: nil,
+                            profiles: DBProfile(id: secondId, email: nil, displayName: "민지", photoURL: nil, createdAt: nil)
+                        )
+                    ]
+                )
             )
-        )
-        .environmentObject(AuthStore(preview: .signedIn(userId: UUID(), email: "preview@example.com")))
+            .environmentObject(AuthStore(preview: .signedIn(userId: ownerId, email: "preview@example.com")))
+    }
 }

@@ -311,6 +311,60 @@ enum UnfadingLocalized {
         }
     }
 
+    // MARK: Group Hub
+
+    enum GroupHub {
+        static let navTitle = "그룹 허브"
+        static let overviewSection = "그룹 정보"
+        static let startedAtLabel = "시작일"
+        static let switchGroupCTA = "다른 그룹으로 전환"
+        static let membersSection = "멤버"
+        static let ownerRole = "그룹장"
+        static let memberRole = "멤버"
+        static let partnerRole = "파트너"
+        static let youSuffix = "나"
+        static let inviteSection = "멤버 초대"
+        static let inviteLinkLabel = "초대 링크"
+        static let createInviteLink = "링크 생성"
+        static let showQRCode = "QR 보기"
+        static let qrPlaceholder = "QR 코드는 다음 라운드에서 실제 링크와 연결돼요."
+        static let inviteLinkCopied = "초대 링크를 복사했어요."
+        static let appearanceSection = "지도 스타일"
+        static let mapThemeToggle = "지도 테마"
+        static let iconPackToggle = "아이콘 팩"
+        static let sprint7Placeholder = "Sprint 7에서 프리미엄 스타일과 연결됩니다."
+        static let notificationsSection = "알림"
+        static let anniversaryToggle = "기념일 알림"
+        static let rewindToggle = "Rewind 알림"
+        static let memberActivityToggle = "멤버 활동 알림"
+        static let dataSection = "데이터"
+        static let iCloudStatusLabel = "iCloud 동기화"
+        static let iCloudStatusReady = "준비됨"
+        static let exportAllCTA = "전체 내보내기"
+        static let exportPlaceholder = "R49에서 JSON과 사진 ZIP 내보내기를 완성합니다."
+        static let dangerSection = "그룹 관리"
+        static let leaveGroupCTA = "그룹 떠나기"
+        static let deleteGroupCTA = "그룹 삭제"
+        static let leaveWarningTitle = "그룹을 떠날까요?"
+        static let leaveWarningMessage = "이 그룹의 새 추억과 알림을 더 이상 볼 수 없습니다."
+        static let deleteWarningTitle = "그룹을 삭제할까요?"
+        static let deleteWarningMessage = "그룹과 연결된 데이터 삭제는 되돌릴 수 없습니다."
+        static let destructiveConfirm = "계속"
+        static let destructivePlaceholder = "서버 작업은 다음 백엔드 라운드에서 연결됩니다."
+
+        static func startedAtFormat(_ date: Date) -> String {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "ko_KR")
+            formatter.timeZone = TimeZone(identifier: "Asia/Seoul") ?? .autoupdatingCurrent
+            formatter.dateFormat = "yyyy.MM.dd"
+            return formatter.string(from: date)
+        }
+
+        static func inviteLink(code: String) -> String {
+            "https://unfading.app/join/\(code)"
+        }
+    }
+
     // MARK: Categories
 
     enum Categories {
@@ -406,7 +460,7 @@ enum UnfadingLocalized {
         static let themeLabel = "테마"
         static let groupsSection = "그룹"
         static let groupsRow = "그룹 관리"
-        static let groupsRowHint = "현재는 기존 그룹 허브를 엽니다. 다가오는 라운드에서 지도 위 그룹 칩으로 이동합니다."
+        static let groupsRowHint = "그룹 허브로 이동합니다."
         static let premiumSection = "프리미엄"
         static let premiumExplore = "프리미엄 둘러보기"
         static let premiumComingSoon = "출시 예정"
