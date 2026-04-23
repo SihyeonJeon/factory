@@ -1,6 +1,6 @@
 import SwiftUI
 
-// vibe-limit-checked: 7 retention hook surfaced honestly, 8 Toggle a11y/44pt/Dynamic Type, 14 small reusable row
+// vibe-limit-checked: 8 Toggle a11y/44pt/Dynamic Type, 7 retention hook surfaced honestly, 14 small reusable row
 struct RewindReminderRow: View {
     @State private var isEnabled = false
 
@@ -10,6 +10,7 @@ struct RewindReminderRow: View {
                 .foregroundStyle(UnfadingTheme.Color.primary)
                 .frame(width: 44, height: 44)
                 .background(UnfadingTheme.Color.primarySoft, in: Circle())
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
                 Toggle(isOn: $isEnabled) {

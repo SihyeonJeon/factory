@@ -8,6 +8,7 @@ import UIKit
 /// both summary content and sheet snap.
 struct MemoryMapHomeView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
     private let evidenceMode: MemoryComposerEvidenceMode
@@ -62,7 +63,7 @@ struct MemoryMapHomeView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
                         .opacity(selection.sheetSnap == .expanded ? 0 : 1)
                         .allowsHitTesting(selection.sheetSnap != .expanded)
-                        .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.85), value: selection.sheetSnap)
+                        .animation(reduceMotion ? nil : .interactiveSpring(response: 0.3, dampingFraction: 0.85), value: selection.sheetSnap)
                         .zIndex(2)
                 }
             }
@@ -123,6 +124,8 @@ struct MemoryMapHomeView: View {
                         MemoryPinMarker(pin: pin)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(UnfadingLocalized.Accessibility.mapPinLabel(title: pin.title))
+                    .accessibilityHint(UnfadingLocalized.Accessibility.mapPinHint)
                 }
             }
         }
@@ -188,6 +191,9 @@ struct MemoryMapHomeView: View {
             }
             .padding(.horizontal, UnfadingTheme.Spacing.sm)
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(UnfadingLocalized.Accessibility.filterRowLabel)
+        .accessibilityHint(UnfadingLocalized.Accessibility.filterRowHint)
     }
 
     private var fab: some View {
@@ -203,10 +209,12 @@ struct MemoryMapHomeView: View {
         }
         .buttonStyle(.unfadingPrimary)
         .accessibilityLabel(UnfadingLocalized.Accessibility.addMemoryLabel)
+        .accessibilityHint(UnfadingLocalized.Accessibility.addMemoryHint)
     }
 
     // MARK: Helpers
 
+    // vibe-limit-checked: 8 a11y/hints/reduce-motion, 1 parent owns navigation, 12 navigation state transition testable
     private var recoveryPromptIsPresented: Binding<Bool> {
         Binding(
             get: { locationPermissionStore.recoveryPrompt != nil },
@@ -226,7 +234,7 @@ struct MemoryMapHomeView: View {
         }
     }
 
-    // vibe-limit-checked: 1 parent owns navigation, 12 navigation state transition testable
+    // vibe-limit-checked: 8 a11y detail handoff remains labeled, 1 parent owns navigation, 12 navigation state transition testable
     private func openDetail() {
         detailPin = selection.selectedPin(from: SampleMemoryPin.samples) ?? SampleMemoryPin.samples.first
     }

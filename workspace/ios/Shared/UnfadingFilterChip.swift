@@ -3,6 +3,7 @@ import SwiftUI
 /// Reusable selectable filter chip. Coral background when selected, cream/card
 /// background when not. 44pt minimum tap height. Used in the map filter row
 /// (전체 / 데이트 / 여행 / 기념일 / 맛집) per deepsight.
+// vibe-limit-checked: 8 chip labels/hints/44pt, 2 reusable asset, 7 visual fidelity
 struct UnfadingFilterChip: View {
     let title: String
     let systemImage: String?
@@ -37,6 +38,8 @@ struct UnfadingFilterChip: View {
             .contentShape(RoundedRectangle(cornerRadius: UnfadingTheme.Radius.chip, style: .continuous))
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityHint(UnfadingLocalized.Accessibility.filterChipHint(title: title, isSelected: isSelected))
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 

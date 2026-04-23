@@ -11,6 +11,7 @@ import SwiftUI
 ///   ```
 struct UnfadingPrimaryButtonStyle: ButtonStyle {
     var fullWidth: Bool = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -24,9 +25,9 @@ struct UnfadingPrimaryButtonStyle: ButtonStyle {
                 UnfadingTheme.Color.primary,
                 in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.button, style: .continuous)
             )
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .scaleEffect(reduceMotion ? 1 : (configuration.isPressed ? 0.97 : 1))
             .opacity(configuration.isPressed ? 0.9 : 1)
-            .animation(.interactiveSpring(response: 0.25, dampingFraction: 0.8), value: configuration.isPressed)
+            .animation(reduceMotion ? nil : .interactiveSpring(response: 0.25, dampingFraction: 0.8), value: configuration.isPressed)
             .contentShape(Rectangle())
     }
 }

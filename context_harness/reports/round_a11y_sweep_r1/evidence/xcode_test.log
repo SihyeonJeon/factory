@@ -1,0 +1,535 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project /Users/jeonsihyeon/factory/workspace/ios/MemoryMap.xcodeproj -scheme MemoryMap -destination "platform=iOS Simulator,name=iPhone 17" test
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (2 targets)
+    Target 'MemoryMapTests' in project 'MemoryMap'
+        ➜ Explicit dependency on target 'MemoryMap' in project 'MemoryMap'
+    Target 'MemoryMap' in project 'MemoryMap' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.4-23E237-686eebb5dc1d8ecb277353a59184f4aa.sdkstatcache
+    cd /Users/jeonsihyeon/factory/workspace/ios/MemoryMap.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -o /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.4-23E237-686eebb5dc1d8ecb277353a59184f4aa.sdkstatcache
+
+SwiftDriver MemoryMap normal arm64 com.apple.xcode.tools.swift.compiler (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name MemoryMap -Onone @/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -target arm64-apple-ios18.0-simulator -g -module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator -F /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.4-23E237-686eebb5dc1d8ecb277353a59184f4aa.sdkstatcache -output-file-map /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap_const_extract_protocols.json -Xcc -iquote -Xcc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-generated-files.hmap -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-own-target-headers.hmap -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-all-target-headers.hmap -Xcc -iquote -Xcc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-project-headers.hmap -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/DerivedSources-normal/arm64 -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/DerivedSources/arm64 -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap-Swift.h -working-directory /Users/jeonsihyeon/factory/workspace/ios -experimental-emit-module-separately -disable-cmo
+
+SwiftCompile normal arm64 Compiling\ MemorySummaryCard.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemorySummaryCard.swift (in target 'MemoryMap' from project 'MemoryMap')
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemorySummaryCard.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 Compiling\ MemoryDetailView.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Detail/MemoryDetailView.swift (in target 'MemoryMap' from project 'MemoryMap')
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Features/Detail/MemoryDetailView.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ MemoryMap (in target 'MemoryMap' from project 'MemoryMap')
+
+EmitSwiftModule normal arm64 (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 Compiling\ MemoryComposerSheet.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemoryComposerSheet.swift (in target 'MemoryMap' from project 'MemoryMap')
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemoryComposerSheet.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 Compiling\ MemoryMapHomeView.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemoryMapHomeView.swift (in target 'MemoryMap' from project 'MemoryMap')
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Features/Home/MemoryMapHomeView.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling MemorySummaryCard.swift (in target 'MemoryMap' from project 'MemoryMap')
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for MemoryMap (in target 'MemoryMap' from project 'MemoryMap')
+
+SwiftDriver\ Compilation\ Requirements MemoryMap normal arm64 com.apple.xcode.tools.swift.compiler (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name MemoryMap -Onone @/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -target arm64-apple-ios18.0-simulator -g -module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator -F /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.4-23E237-686eebb5dc1d8ecb277353a59184f4aa.sdkstatcache -output-file-map /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap_const_extract_protocols.json -Xcc -iquote -Xcc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-generated-files.hmap -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-own-target-headers.hmap -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-all-target-headers.hmap -Xcc -iquote -Xcc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-project-headers.hmap -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/DerivedSources-normal/arm64 -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/DerivedSources/arm64 -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap-Swift.h -working-directory /Users/jeonsihyeon/factory/workspace/ios -experimental-emit-module-separately -disable-cmo
+
+Copy /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.swiftsourceinfo (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.swiftsourceinfo /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo
+
+Copy /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.swiftmodule/arm64-apple-ios-simulator.abi.json /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.abi.json (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.abi.json /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.swiftmodule/arm64-apple-ios-simulator.abi.json
+
+SwiftDriver MemoryMapTests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'MemoryMapTests' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name MemoryMapTests -Onone @/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests.SwiftFileList -DDEBUG -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -target arm64-apple-ios18.0-simulator -g -module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib -F /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk/Developer/Library/Frameworks -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.4-23E237-686eebb5dc1d8ecb277353a59184f4aa.sdkstatcache -output-file-map /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests_const_extract_protocols.json -Xcc -iquote -Xcc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/MemoryMapTests-generated-files.hmap -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/MemoryMapTests-own-target-headers.hmap -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/MemoryMapTests-all-target-headers.hmap -Xcc -iquote -Xcc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/MemoryMapTests-project-headers.hmap -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/DerivedSources-normal/arm64 -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/DerivedSources/arm64 -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests-Swift.h -working-directory /Users/jeonsihyeon/factory/workspace/ios -experimental-emit-module-separately -disable-cmo
+
+SwiftDriverJobDiscovery normal arm64 Compiling MemoryDetailView.swift (in target 'MemoryMap' from project 'MemoryMap')
+
+SwiftDriverJobDiscovery normal arm64 Compiling MemoryMapHomeView.swift (in target 'MemoryMap' from project 'MemoryMap')
+
+SwiftCompile normal arm64 Compiling\ GroupHubView.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Groups/GroupHubView.swift (in target 'MemoryMap' from project 'MemoryMap')
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Features/Groups/GroupHubView.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 Compiling\ RootTabView.swift /Users/jeonsihyeon/factory/workspace/ios/App/RootTabView.swift (in target 'MemoryMap' from project 'MemoryMap')
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/App/RootTabView.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 Compiling\ CalendarView.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Calendar/CalendarView.swift (in target 'MemoryMap' from project 'MemoryMap')
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Features/Calendar/CalendarView.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 Compiling\ RewindFeedView.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Rewind/RewindFeedView.swift (in target 'MemoryMap' from project 'MemoryMap')
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Features/Rewind/RewindFeedView.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 Compiling\ SettingsView.swift /Users/jeonsihyeon/factory/workspace/ios/Features/Settings/SettingsView.swift (in target 'MemoryMap' from project 'MemoryMap')
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Features/Settings/SettingsView.swift (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling MemoryComposerSheet.swift (in target 'MemoryMap' from project 'MemoryMap')
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ MemoryMapTests (in target 'MemoryMapTests' from project 'MemoryMap')
+
+EmitSwiftModule normal arm64 (in target 'MemoryMapTests' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 Compiling\ RootNavigationTests.swift /Users/jeonsihyeon/factory/workspace/ios/Tests/RootNavigationTests.swift (in target 'MemoryMapTests' from project 'MemoryMap')
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Tests/RootNavigationTests.swift (in target 'MemoryMapTests' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 Compiling\ AccessibilityAuditTests.swift /Users/jeonsihyeon/factory/workspace/ios/Tests/AccessibilityAuditTests.swift (in target 'MemoryMapTests' from project 'MemoryMap')
+
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Tests/AccessibilityAuditTests.swift (in target 'MemoryMapTests' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftCompile normal arm64 Compiling\ UnfadingLocalizedTests.swift /Users/jeonsihyeon/factory/workspace/ios/Tests/UnfadingLocalizedTests.swift (in target 'MemoryMapTests' from project 'MemoryMap')
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Tests/UnfadingLocalizedTests.swift (in target 'MemoryMapTests' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling RewindFeedView.swift (in target 'MemoryMap' from project 'MemoryMap')
+
+SwiftCompile normal arm64 Compiling\ UnfadingComponentTests.swift /Users/jeonsihyeon/factory/workspace/ios/Tests/UnfadingComponentTests.swift (in target 'MemoryMapTests' from project 'MemoryMap')
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Tests/UnfadingComponentTests.swift (in target 'MemoryMapTests' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for MemoryMapTests (in target 'MemoryMapTests' from project 'MemoryMap')
+
+SwiftDriver\ Compilation\ Requirements MemoryMapTests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'MemoryMapTests' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name MemoryMapTests -Onone @/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests.SwiftFileList -DDEBUG -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -target arm64-apple-ios18.0-simulator -g -module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib -F /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk/Developer/Library/Frameworks -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.4-23E237-686eebb5dc1d8ecb277353a59184f4aa.sdkstatcache -output-file-map /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests_const_extract_protocols.json -Xcc -iquote -Xcc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/MemoryMapTests-generated-files.hmap -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/MemoryMapTests-own-target-headers.hmap -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/MemoryMapTests-all-target-headers.hmap -Xcc -iquote -Xcc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/MemoryMapTests-project-headers.hmap -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/DerivedSources-normal/arm64 -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/DerivedSources/arm64 -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests-Swift.h -working-directory /Users/jeonsihyeon/factory/workspace/ios -experimental-emit-module-separately -disable-cmo
+
+SwiftDriverJobDiscovery normal arm64 Compiling RootNavigationTests.swift (in target 'MemoryMapTests' from project 'MemoryMap')
+
+SwiftCompile normal arm64 Compiling\ UnfadingBottomSheetTests.swift /Users/jeonsihyeon/factory/workspace/ios/Tests/UnfadingBottomSheetTests.swift (in target 'MemoryMapTests' from project 'MemoryMap')
+SwiftCompile normal arm64 /Users/jeonsihyeon/factory/workspace/ios/Tests/UnfadingBottomSheetTests.swift (in target 'MemoryMapTests' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+
+Copy /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMapTests.swiftmodule/arm64-apple-ios-simulator.swiftmodule /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests.swiftmodule (in target 'MemoryMapTests' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests.swiftmodule /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMapTests.swiftmodule/arm64-apple-ios-simulator.swiftmodule
+
+SwiftDriverJobDiscovery normal arm64 Compiling AccessibilityAuditTests.swift (in target 'MemoryMapTests' from project 'MemoryMap')
+
+Copy /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMapTests.swiftmodule/arm64-apple-ios-simulator.swiftdoc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests.swiftdoc (in target 'MemoryMapTests' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests.swiftdoc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMapTests.swiftmodule/arm64-apple-ios-simulator.swiftdoc
+
+Copy /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMapTests.swiftmodule/arm64-apple-ios-simulator.abi.json /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests.abi.json (in target 'MemoryMapTests' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests.abi.json /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMapTests.swiftmodule/arm64-apple-ios-simulator.abi.json
+
+Copy /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMapTests.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests.swiftsourceinfo (in target 'MemoryMapTests' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests.swiftsourceinfo /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMapTests.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo
+
+SwiftDriverJobDiscovery normal arm64 Compiling GroupHubView.swift (in target 'MemoryMap' from project 'MemoryMap')
+
+SwiftDriverJobDiscovery normal arm64 Compiling RootTabView.swift (in target 'MemoryMap' from project 'MemoryMap')
+
+SwiftDriverJobDiscovery normal arm64 Compiling SettingsView.swift (in target 'MemoryMap' from project 'MemoryMap')
+
+SwiftDriverJobDiscovery normal arm64 Compiling CalendarView.swift (in target 'MemoryMap' from project 'MemoryMap')
+
+SwiftDriver\ Compilation MemoryMap normal arm64 com.apple.xcode.tools.swift.compiler (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name MemoryMap -Onone @/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -target arm64-apple-ios18.0-simulator -g -module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator -F /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.4-23E237-686eebb5dc1d8ecb277353a59184f4aa.sdkstatcache -output-file-map /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap_const_extract_protocols.json -Xcc -iquote -Xcc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-generated-files.hmap -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-own-target-headers.hmap -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-all-target-headers.hmap -Xcc -iquote -Xcc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-project-headers.hmap -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/DerivedSources-normal/arm64 -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/DerivedSources/arm64 -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap-Swift.h -working-directory /Users/jeonsihyeon/factory/workspace/ios -experimental-emit-module-separately -disable-cmo
+
+Ld /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/MemoryMap.debug.dylib normal (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios18.0-simulator -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -O0 -L/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -L/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator -F/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -F/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator -filelist /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.LinkFileList -install_name @rpath/MemoryMap.debug.dylib -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @executable_path/Frameworks -Xlinker -dead_strip -Xlinker -object_path_lto -Xlinker /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -Xlinker -dependency_info -Xlinker /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphonesimulator -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.swiftmodule @/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap-linker-args.resp -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -framework MapKit -Xlinker -no_adhoc_codesign -o /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/MemoryMap.debug.dylib
+
+SwiftDriverJobDiscovery normal arm64 Compiling UnfadingLocalizedTests.swift (in target 'MemoryMapTests' from project 'MemoryMap')
+
+SwiftDriverJobDiscovery normal arm64 Compiling UnfadingComponentTests.swift (in target 'MemoryMapTests' from project 'MemoryMap')
+
+SwiftDriverJobDiscovery normal arm64 Compiling UnfadingBottomSheetTests.swift (in target 'MemoryMapTests' from project 'MemoryMap')
+
+SwiftDriver\ Compilation MemoryMapTests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'MemoryMapTests' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name MemoryMapTests -Onone @/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests.SwiftFileList -DDEBUG -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -target arm64-apple-ios18.0-simulator -g -module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib -F /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk/Developer/Library/Frameworks -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.4-23E237-686eebb5dc1d8ecb277353a59184f4aa.sdkstatcache -output-file-map /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests_const_extract_protocols.json -Xcc -iquote -Xcc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/MemoryMapTests-generated-files.hmap -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/MemoryMapTests-own-target-headers.hmap -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/MemoryMapTests-all-target-headers.hmap -Xcc -iquote -Xcc /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/MemoryMapTests-project-headers.hmap -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/DerivedSources-normal/arm64 -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/DerivedSources/arm64 -Xcc -I/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests-Swift.h -working-directory /Users/jeonsihyeon/factory/workspace/ios -experimental-emit-module-separately -disable-cmo
+
+ConstructStubExecutorLinkFileList /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-ExecutorLinkFileList-normal-arm64.txt (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    construct-stub-executor-link-file-list /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/MemoryMap.debug.dylib /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-ExecutorLinkFileList-normal-arm64.txt
+note: Using stub executor library with Swift entry point. (in target 'MemoryMap' from project 'MemoryMap')
+
+Ld /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/MemoryMap normal (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios18.0-simulator -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -O0 -L/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator -F/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker @executable_path/Frameworks -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-DebugDylibPath-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-DebugDylibInstallName-normal-arm64.txt -Xlinker -filelist -Xlinker /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap-ExecutorLinkFileList-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __entitlements -Xlinker /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap.app-Simulated.xcent -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __ents_der -Xlinker /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap.app-Simulated.xcent.der /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/MemoryMap.debug.dylib -Xlinker -no_adhoc_codesign -o /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/MemoryMap
+
+CopySwiftLibs /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-swiftStdLibTool --copy --verbose --sign - --scan-executable /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/MemoryMap.debug.dylib --scan-folder /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/Frameworks --scan-folder /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/PlugIns --scan-folder /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/SystemExtensions --scan-folder /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/Extensions --scan-folder /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk/System/Library/Frameworks/MapKit.framework --platform iphonesimulator --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+
+ExtractAppIntentsMetadata (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name MemoryMap --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk --xcode-version 17E192 --platform-family iOS --deployment-target 18.0 --bundle-identifier com.jeonsihyeon.memorymap --output /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app --target-triple arm64-apple-ios18.0-simulator --binary-file /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/MemoryMap --dependency-file /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap_dependency_info.dat --stringsdata-file /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.SwiftFileList --metadata-file-list /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap.DependencyMetadataFileList --static-metadata-file-list /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/MemoryMap.DependencyStaticMetadataFileList --swift-const-vals-list /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMap.build/Objects-normal/arm64/MemoryMap.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-04-23 09:45:14.389 appintentsmetadataprocessor[42072:1082476] Starting appintentsmetadataprocessor export
+2026-04-23 09:45:14.395 appintentsmetadataprocessor[42072:1082476] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+
+ProcessInfoPlistFile /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/PlugIns/MemoryMapTests.xctest/Info.plist /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/empty-MemoryMapTests.plist (in target 'MemoryMapTests' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-infoPlistUtility /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/empty-MemoryMapTests.plist -producttype com.apple.product-type.bundle.unit-test -expandbuildsettings -format binary -platform iphonesimulator -o /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/PlugIns/MemoryMapTests.xctest/Info.plist
+
+Ld /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/PlugIns/MemoryMapTests.xctest/MemoryMapTests normal (in target 'MemoryMapTests' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios18.0-simulator -bundle -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -O0 -L/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -L/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator -L/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib -F/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -F/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator -iframework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks -iframework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk/Developer/Library/Frameworks -filelist /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests.LinkFileList -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @loader_path/Frameworks -Xlinker -rpath -Xlinker @executable_path/Frameworks -Xlinker -dead_strip -bundle_loader /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/MemoryMap -Xlinker -object_path_lto -Xlinker /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -Xlinker -dependency_info -Xlinker /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphonesimulator -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests.swiftmodule @/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests-linker-args.resp -Xlinker -needed_framework -Xlinker XCTest -framework XCTest -Xlinker -needed-lXCTestSwiftSupport -lXCTestSwiftSupport /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/MemoryMap.debug.dylib -Xlinker -no_adhoc_codesign -o /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/PlugIns/MemoryMapTests.xctest/MemoryMapTests
+
+CopySwiftLibs /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/PlugIns/MemoryMapTests.xctest (in target 'MemoryMapTests' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-swiftStdLibTool --copy --verbose --sign - --scan-executable /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/PlugIns/MemoryMapTests.xctest/MemoryMapTests --scan-folder /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/PlugIns/MemoryMapTests.xctest/Frameworks --scan-folder /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/PlugIns/MemoryMapTests.xctest/PlugIns --scan-folder /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/PlugIns/MemoryMapTests.xctest/SystemExtensions --scan-folder /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/PlugIns/MemoryMapTests.xctest/Extensions --platform iphonesimulator --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/PlugIns/MemoryMapTests.xctest/Frameworks --strip-bitcode --scan-executable /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libXCTestSwiftSupport.dylib --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+
+ExtractAppIntentsMetadata (in target 'MemoryMapTests' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name MemoryMapTests --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk --xcode-version 17E192 --platform-family iOS --deployment-target 18.0 --bundle-identifier com.jeonsihyeon.memorymap --output /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/PlugIns/MemoryMapTests.xctest --target-triple arm64-apple-ios18.0-simulator --binary-file /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/PlugIns/MemoryMapTests.xctest/MemoryMapTests --dependency-file /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests_dependency_info.dat --stringsdata-file /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests.SwiftFileList --metadata-file-list /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/MemoryMapTests.DependencyMetadataFileList --static-metadata-file-list /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/MemoryMapTests.DependencyStaticMetadataFileList --swift-const-vals-list /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Intermediates.noindex/MemoryMap.build/Debug-iphonesimulator/MemoryMapTests.build/Objects-normal/arm64/MemoryMapTests.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-04-23 09:45:14.715 appintentsmetadataprocessor[42075:1082489] Starting appintentsmetadataprocessor export
+2026-04-23 09:45:14.717 appintentsmetadataprocessor[42075:1082489] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+
+CodeSign /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/PlugIns/MemoryMapTests.xctest (in target 'MemoryMapTests' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --timestamp\=none --generate-entitlement-der /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/PlugIns/MemoryMapTests.xctest
+
+CodeSign /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/MemoryMap.debug.dylib (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --timestamp\=none --generate-entitlement-der /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/MemoryMap.debug.dylib
+
+CodeSign /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/__preview.dylib (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --timestamp\=none --generate-entitlement-der /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/__preview.dylib
+/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app/__preview.dylib: replacing existing signature
+
+CodeSign /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --timestamp\=none --generate-entitlement-der /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app
+
+Validate /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app (in target 'MemoryMap' from project 'MemoryMap')
+    cd /Users/jeonsihyeon/factory/workspace/ios
+    builtin-validationUtility /Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Build/Products/Debug-iphonesimulator/MemoryMap.app -shallow-bundle -infoplist-subpath Info.plist
+
+Test Suite 'All tests' started at 2026-04-23 09:45:45.767.
+Test Suite 'MemoryMapTests.xctest' started at 2026-04-23 09:45:45.768.
+Test Suite 'AccessibilityAuditTests' started at 2026-04-23 09:45:45.768.
+Test Case '-[MemoryMapTests.AccessibilityAuditTests test_accessibility_namespace_required_strings_are_non_empty]' started.
+Test Case '-[MemoryMapTests.AccessibilityAuditTests test_accessibility_namespace_required_strings_are_non_empty]' passed (0.002 seconds).
+Test Case '-[MemoryMapTests.AccessibilityAuditTests test_bottom_sheet_handle_accessibility_copy_and_view_build]' started.
+Test Case '-[MemoryMapTests.AccessibilityAuditTests test_bottom_sheet_handle_accessibility_copy_and_view_build]' passed (0.059 seconds).
+Test Case '-[MemoryMapTests.AccessibilityAuditTests test_map_fab_and_pin_accessibility_copy_is_non_empty]' started.
+Test Case '-[MemoryMapTests.AccessibilityAuditTests test_map_fab_and_pin_accessibility_copy_is_non_empty]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.AccessibilityAuditTests test_memory_summary_card_builds_with_accessibility_contract_copy]' started.
+Test Case '-[MemoryMapTests.AccessibilityAuditTests test_memory_summary_card_builds_with_accessibility_contract_copy]' passed (0.014 seconds).
+Test Suite 'AccessibilityAuditTests' passed at 2026-04-23 09:45:45.846.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.076 (0.078) seconds
+Test Suite 'EmptyStateTests' started at 2026-04-23 09:45:45.846.
+Test Case '-[MemoryMapTests.EmptyStateTests test_empty_state_builds_with_cta]' started.
+Test Case '-[MemoryMapTests.EmptyStateTests test_empty_state_builds_with_cta]' passed (0.004 seconds).
+Test Case '-[MemoryMapTests.EmptyStateTests test_empty_state_builds_without_cta]' started.
+Test Case '-[MemoryMapTests.EmptyStateTests test_empty_state_builds_without_cta]' passed (0.001 seconds).
+Test Suite 'EmptyStateTests' passed at 2026-04-23 09:45:45.852.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.005 (0.006) seconds
+Test Suite 'GroupHubTests' started at 2026-04-23 09:45:45.852.
+Test Case '-[MemoryMapTests.GroupHubTests test_avatar_stack_overflow_count]' started.
+Test Case '-[MemoryMapTests.GroupHubTests test_avatar_stack_overflow_count]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.GroupHubTests test_group_store_switches_current_group_by_mode]' started.
+Test Case '-[MemoryMapTests.GroupHubTests test_group_store_switches_current_group_by_mode]' passed (0.002 seconds).
+Test Case '-[MemoryMapTests.GroupHubTests test_sample_groups_have_members]' started.
+Test Case '-[MemoryMapTests.GroupHubTests test_sample_groups_have_members]' passed (0.001 seconds).
+Test Suite 'GroupHubTests' passed at 2026-04-23 09:45:45.856.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.003 (0.004) seconds
+Test Suite 'MemoryCalendarStoreTests' started at 2026-04-23 09:45:45.856.
+Test Case '-[MemoryMapTests.MemoryCalendarStoreTests test_has_memory_works_for_seeded_components]' started.
+Test Case '-[MemoryMapTests.MemoryCalendarStoreTests test_has_memory_works_for_seeded_components]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryCalendarStoreTests test_init_produces_start_of_current_month]' started.
+Test Case '-[MemoryMapTests.MemoryCalendarStoreTests test_init_produces_start_of_current_month]' passed (0.002 seconds).
+Test Case '-[MemoryMapTests.MemoryCalendarStoreTests test_next_and_previous_month_change_displayed_month]' started.
+Test Case '-[MemoryMapTests.MemoryCalendarStoreTests test_next_and_previous_month_change_displayed_month]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryCalendarStoreTests test_select_and_unselect]' started.
+Test Case '-[MemoryMapTests.MemoryCalendarStoreTests test_select_and_unselect]' passed (0.002 seconds).
+Test Case '-[MemoryMapTests.MemoryCalendarStoreTests test_weeks_returns_six_weeks_of_seven_days]' started.
+Test Case '-[MemoryMapTests.MemoryCalendarStoreTests test_weeks_returns_six_weeks_of_seven_days]' passed (0.005 seconds).
+Test Suite 'MemoryCalendarStoreTests' passed at 2026-04-23 09:45:45.868.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.010 (0.012) seconds
+Test Suite 'MemoryComposerStateTests' started at 2026-04-23 09:45:45.868.
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_add_photo_enables_save]' started.
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_add_photo_enables_save]' passed (0.002 seconds).
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_initial_state_is_empty_and_save_disabled]' started.
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_initial_state_is_empty_and_save_disabled]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_reset_clears_all_user_input]' started.
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_reset_clears_all_user_input]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_set_note_enables_save]' started.
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_set_note_enables_save]' passed (0.004 seconds).
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_toggle_mood_adds_then_removes]' started.
+Test Case '-[MemoryMapTests.MemoryComposerStateTests test_toggle_mood_adds_then_removes]' passed (0.001 seconds).
+Test Suite 'MemoryComposerStateTests' passed at 2026-04-23 09:45:45.878.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.008 (0.009) seconds
+Test Suite 'MemoryDetailTests' started at 2026-04-23 09:45:45.878.
+Test Case '-[MemoryMapTests.MemoryDetailTests test_memory_detail_view_builds_for_each_sample_pin]' started.
+Test Case '-[MemoryMapTests.MemoryDetailTests test_memory_detail_view_builds_for_each_sample_pin]' passed (0.016 seconds).
+Test Case '-[MemoryMapTests.MemoryDetailTests test_pin_detail_resolution_works_for_existing_pin_ids]' started.
+Test Case '-[MemoryMapTests.MemoryDetailTests test_pin_detail_resolution_works_for_existing_pin_ids]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryDetailTests test_sample_memory_details_are_non_empty]' started.
+Test Case '-[MemoryMapTests.MemoryDetailTests test_sample_memory_details_are_non_empty]' passed (0.001 seconds).
+Test Suite 'MemoryDetailTests' passed at 2026-04-23 09:45:45.896.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.017 (0.018) seconds
+Test Suite 'MemoryMapTests' started at 2026-04-23 09:45:45.896.
+Test Case '-[MemoryMapTests.MemoryMapTests testAuthorizedLocationTapCentersOnUser]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testAuthorizedLocationTapCentersOnUser]' passed (0.002 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testContinueWithoutLocationEnablesManualFallbackAndDismissesPrompt]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testContinueWithoutLocationEnablesManualFallbackAndDismissesPrompt]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testCurrentLocationTapRequestsAuthorizationWhenUndetermined]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testCurrentLocationTapRequestsAuthorizationWhenUndetermined]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testDeniedLocationTapShowsSettingsAndManualFallback]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testDeniedLocationTapShowsSettingsAndManualFallback]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testOpenSettingsKeepsManualFallbackDisabled]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testOpenSettingsKeepsManualFallbackDisabled]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testPlaceSuggestionMatchingUsesTitleAndSubtitle]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testPlaceSuggestionMatchingUsesTitleAndSubtitle]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testRefreshClearsManualFallbackAfterAuthorizationReturns]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testRefreshClearsManualFallbackAfterAuthorizationReturns]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testRestrictedLocationTapShowsManualFallbackOnly]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testRestrictedLocationTapShowsManualFallbackOnly]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testRewindMomentsExist]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testRewindMomentsExist]' passed (0.000 seconds).
+Test Case '-[MemoryMapTests.MemoryMapTests testSamplePinsExist]' started.
+Test Case '-[MemoryMapTests.MemoryMapTests testSamplePinsExist]' passed (0.000 seconds).
+Test Suite 'MemoryMapTests' passed at 2026-04-23 09:45:45.905.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.007 (0.010) seconds
+Test Suite 'MemorySelectionStateTests' started at 2026-04-23 09:45:45.906.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_clearSelection_resets_snap_to_default]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_clearSelection_resets_snap_to_default]' passed (0.002 seconds).
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_filter_has_five_cases_matching_deepsight_plan]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_filter_has_five_cases_matching_deepsight_plan]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_initial_state_has_no_selection_default_filter_default_snap]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_initial_state_has_no_selection_default_filter_default_snap]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_select_sets_pin_and_expands_sheet]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_select_sets_pin_and_expands_sheet]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_selectedPin_resolves_id_to_sample]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_selectedPin_resolves_id_to_sample]' passed (0.007 seconds).
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_selectedPin_returns_nil_when_no_selection]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_selectedPin_returns_nil_when_no_selection]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_selecting_different_pin_switches_selection]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_selecting_different_pin_switches_selection]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_selecting_same_pin_twice_clears_and_restores_default]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_selecting_same_pin_twice_clears_and_restores_default]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_toggleFilter_activates_then_reverts_to_all]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_toggleFilter_activates_then_reverts_to_all]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_toggleFilter_swaps_between_filters]' started.
+Test Case '-[MemoryMapTests.MemorySelectionStateTests test_toggleFilter_swaps_between_filters]' passed (0.001 seconds).
+Test Suite 'MemorySelectionStateTests' passed at 2026-04-23 09:45:45.935.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.014 (0.030) seconds
+Test Suite 'MemoryStoreTests' started at 2026-04-23 09:45:45.936.
+Test Case '-[MemoryMapTests.MemoryStoreTests test_delete_removes_draft]' started.
+2026-04-23 09:45:45.942914+0900 MemoryMap[42346:1084959] [MemoryStore] 메모리 초안 저장소를 기본 샘플로 시작합니다: The file “CC451094-743C-42E6-9270-A23A6992A1D7.json” couldn’t be opened because there is no such file.
+Test Case '-[MemoryMapTests.MemoryStoreTests test_delete_removes_draft]' passed (0.011 seconds).
+Test Case '-[MemoryMapTests.MemoryStoreTests test_persist_and_reload_restores_all_saved_values]' started.
+2026-04-23 09:45:45.948158+0900 MemoryMap[42346:1084959] [MemoryStore] 메모리 초안 저장소를 기본 샘플로 시작합니다: The file “BAD61C51-4171-4153-9D79-03D670C4502D.json” couldn’t be opened because there is no such file.
+Test Case '-[MemoryMapTests.MemoryStoreTests test_persist_and_reload_restores_all_saved_values]' passed (0.002 seconds).
+Test Case '-[MemoryMapTests.MemoryStoreTests test_save_then_reload_roundtrip]' started.
+2026-04-23 09:45:45.950405+0900 MemoryMap[42346:1084959] [MemoryStore] 메모리 초안 저장소를 기본 샘플로 시작합니다: The file “482C9139-E527-4879-B4E4-350A9E152306.json” couldn’t be opened because there is no such file.
+Test Case '-[MemoryMapTests.MemoryStoreTests test_save_then_reload_roundtrip]' passed (0.002 seconds).
+Test Suite 'MemoryStoreTests' passed at 2026-04-23 09:45:45.952.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.015 (0.016) seconds
+Test Suite 'OnboardingTests' started at 2026-04-23 09:45:45.952.
+Test Case '-[MemoryMapTests.OnboardingTests test_has_seen_onboarding_roundtrips_through_user_defaults]' started.
+Test Case '-[MemoryMapTests.OnboardingTests test_has_seen_onboarding_roundtrips_through_user_defaults]' passed (0.004 seconds).
+Test Case '-[MemoryMapTests.OnboardingTests test_onboarding_view_builds]' started.
+Test Case '-[MemoryMapTests.OnboardingTests test_onboarding_view_builds]' passed (0.011 seconds).
+Test Suite 'OnboardingTests' passed at 2026-04-23 09:45:45.967.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.014 (0.015) seconds
+Test Suite 'RewindTests' started at 2026-04-23 09:45:45.967.
+Test Case '-[MemoryMapTests.RewindTests test_rewind_feed_view_builds_with_samples]' started.
+Test Case '-[MemoryMapTests.RewindTests test_rewind_feed_view_builds_with_samples]' passed (0.004 seconds).
+Test Case '-[MemoryMapTests.RewindTests test_rewind_reminder_row_builds_and_copy_is_korean]' started.
+Test Case '-[MemoryMapTests.RewindTests test_rewind_reminder_row_builds_and_copy_is_korean]' passed (0.008 seconds).
+Test Suite 'RewindTests' passed at 2026-04-23 09:45:45.980.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.012 (0.013) seconds
+Test Suite 'RootNavigationTests' started at 2026-04-23 09:45:45.980.
+Test Case '-[MemoryMapTests.RootNavigationTests test_accessibility_labels_match_tab_purpose]' started.
+Test Case '-[MemoryMapTests.RootNavigationTests test_accessibility_labels_match_tab_purpose]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.RootNavigationTests test_calendar_stub_has_korean_placeholder]' started.
+Test Case '-[MemoryMapTests.RootNavigationTests test_calendar_stub_has_korean_placeholder]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.RootNavigationTests test_compose_tab_intercept_contract]' started.
+Test Case '-[MemoryMapTests.RootNavigationTests test_compose_tab_intercept_contract]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.RootNavigationTests test_settings_stub_exposes_groups_row]' started.
+Test Case '-[MemoryMapTests.RootNavigationTests test_settings_stub_exposes_groups_row]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.RootNavigationTests test_tab_labels_are_korean]' started.
+Test Case '-[MemoryMapTests.RootNavigationTests test_tab_labels_are_korean]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.RootNavigationTests test_tab_order_matches_deepsight_plan]' started.
+Test Case '-[MemoryMapTests.RootNavigationTests test_tab_order_matches_deepsight_plan]' passed (0.002 seconds).
+Test Suite 'RootNavigationTests' passed at 2026-04-23 09:45:45.987.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.005 (0.007) seconds
+Test Suite 'SettingsSanityTests' started at 2026-04-23 09:45:45.987.
+Test Case '-[MemoryMapTests.SettingsSanityTests test_settings_localized_strings_are_non_empty]' started.
+Test Case '-[MemoryMapTests.SettingsSanityTests test_settings_localized_strings_are_non_empty]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.SettingsSanityTests test_settings_view_builds]' started.
+Test Case '-[MemoryMapTests.SettingsSanityTests test_settings_view_builds]' passed (0.023 seconds).
+Test Suite 'SettingsSanityTests' passed at 2026-04-23 09:45:46.012.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.024 (0.025) seconds
+Test Suite 'UnfadingBottomSheetTests' started at 2026-04-23 09:45:46.012.
+Test Case '-[MemoryMapTests.UnfadingBottomSheetTests test_bottom_sheet_view_builds]' started.
+Test Case '-[MemoryMapTests.UnfadingBottomSheetTests test_bottom_sheet_view_builds]' passed (0.002 seconds).
+Test Case '-[MemoryMapTests.UnfadingBottomSheetTests test_nearest_picks_closest_snap]' started.
+Test Case '-[MemoryMapTests.UnfadingBottomSheetTests test_nearest_picks_closest_snap]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingBottomSheetTests test_ordered_is_monotonic]' started.
+Test Case '-[MemoryMapTests.UnfadingBottomSheetTests test_ordered_is_monotonic]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingBottomSheetTests test_snap_fractions_match_deepsight]' started.
+Test Case '-[MemoryMapTests.UnfadingBottomSheetTests test_snap_fractions_match_deepsight]' passed (0.001 seconds).
+Test Suite 'UnfadingBottomSheetTests' passed at 2026-04-23 09:45:46.017.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.003 (0.005) seconds
+Test Suite 'UnfadingComponentTests' started at 2026-04-23 09:45:46.017.
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_card_background_modifier_can_be_applied]' started.
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_card_background_modifier_can_be_applied]' passed (0.029 seconds).
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_card_background_uses_theme_defaults]' started.
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_card_background_uses_theme_defaults]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_primary_button_style_applies_to_button]' started.
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_primary_button_style_applies_to_button]' passed (0.019 seconds).
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_primary_button_style_shorthand_exists]' started.
+Test Case '-[MemoryMapTests.UnfadingComponentTests test_unfading_primary_button_style_shorthand_exists]' passed (0.001 seconds).
+Test Suite 'UnfadingComponentTests' passed at 2026-04-23 09:45:46.068.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.049 (0.051) seconds
+Test Suite 'UnfadingFilterChipTests' started at 2026-04-23 09:45:46.068.
+Test Case '-[MemoryMapTests.UnfadingFilterChipTests test_chip_action_callable]' started.
+Test Case '-[MemoryMapTests.UnfadingFilterChipTests test_chip_action_callable]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingFilterChipTests test_chip_title_is_required]' started.
+Test Case '-[MemoryMapTests.UnfadingFilterChipTests test_chip_title_is_required]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingFilterChipTests test_filter_chip_builds_for_selected_and_unselected]' started.
+Test Case '-[MemoryMapTests.UnfadingFilterChipTests test_filter_chip_builds_for_selected_and_unselected]' passed (0.004 seconds).
+Test Suite 'UnfadingFilterChipTests' passed at 2026-04-23 09:45:46.074.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.005 (0.006) seconds
+Test Suite 'UnfadingLocalizedTests' started at 2026-04-23 09:45:46.075.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_accessibility_labels_contain_korean]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_accessibility_labels_contain_korean]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_composer_navigation_strings_present]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_composer_navigation_strings_present]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_draft_tag_helper_maps_known_ids]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_draft_tag_helper_maps_known_ids]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_draft_tag_helper_returns_fallback_for_unknown_id]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_draft_tag_helper_returns_fallback_for_unknown_id]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_place_suggestion_helper_returns_korean_for_known_ids]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_place_suggestion_helper_returns_korean_for_known_ids]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_summary_sample_copy_is_non_empty_korean]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_summary_sample_copy_is_non_empty_korean]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_tab_labels_are_korean_and_non_empty]' started.
+Test Case '-[MemoryMapTests.UnfadingLocalizedTests test_tab_labels_are_korean_and_non_empty]' passed (0.000 seconds).
+Test Suite 'UnfadingLocalizedTests' passed at 2026-04-23 09:45:46.081.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.004 (0.006) seconds
+Test Suite 'UnfadingMonthGridTests' started at 2026-04-23 09:45:46.081.
+Test Case '-[MemoryMapTests.UnfadingMonthGridTests test_grid_builds_for_sample_weeks]' started.
+2026-04-23 09:45:46.082135+0900 MemoryMap[42346:1084959] [SwiftUI] Accessing State's value outside of being installed on a View. This will result in a constant Binding of the initial value and will not update.
+Test Case '-[MemoryMapTests.UnfadingMonthGridTests test_grid_builds_for_sample_weeks]' passed (0.080 seconds).
+Test Case '-[MemoryMapTests.UnfadingMonthGridTests test_weekday_headers_are_korean]' started.
+Test Case '-[MemoryMapTests.UnfadingMonthGridTests test_weekday_headers_are_korean]' passed (0.001 seconds).
+Test Suite 'UnfadingMonthGridTests' passed at 2026-04-23 09:45:46.162.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.081 (0.082) seconds
+Test Suite 'UnfadingPhotoGridTests' started at 2026-04-23 09:45:46.163.
+Test Case '-[MemoryMapTests.UnfadingPhotoGridTests test_empty_selection_render_smoke]' started.
+2026-04-23 09:45:46.163694+0900 MemoryMap[42346:1084959] [SwiftUI] Accessing State's value outside of being installed on a View. This will result in a constant Binding of the initial value and will not update.
+Test Case '-[MemoryMapTests.UnfadingPhotoGridTests test_empty_selection_render_smoke]' passed (0.046 seconds).
+Test Case '-[MemoryMapTests.UnfadingPhotoGridTests test_max_selection_respected_by_configuration]' started.
+Test Case '-[MemoryMapTests.UnfadingPhotoGridTests test_max_selection_respected_by_configuration]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingPhotoGridTests test_populated_selection_render_smoke]' started.
+2026-04-23 09:45:46.210378+0900 MemoryMap[42346:1084959] [SwiftUI] Accessing State's value outside of being installed on a View. This will result in a constant Binding of the initial value and will not update.
+Test Case '-[MemoryMapTests.UnfadingPhotoGridTests test_populated_selection_render_smoke]' passed (0.018 seconds).
+Test Case '-[MemoryMapTests.UnfadingPhotoGridTests test_remove_button_label_is_korean]' started.
+Test Case '-[MemoryMapTests.UnfadingPhotoGridTests test_remove_button_label_is_korean]' passed (0.001 seconds).
+Test Suite 'UnfadingPhotoGridTests' passed at 2026-04-23 09:45:46.229.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.065 (0.066) seconds
+Test Suite 'UnfadingThemeTests' started at 2026-04-23 09:45:46.229.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_coral_matches_deepsight_hex]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_coral_matches_deepsight_hex]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_cream_matches_deepsight_hex]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_cream_matches_deepsight_hex]' passed (0.000 seconds).
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_lavender_matches_deepsight_hex]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_lavender_matches_deepsight_hex]' passed (0.000 seconds).
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_primary_aliases_coral]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_primary_aliases_coral]' passed (0.000 seconds).
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_radius_covers_deepsight_scale]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_radius_covers_deepsight_scale]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_sheet_snap_points_match_deepsight]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_sheet_snap_points_match_deepsight]' passed (0.001 seconds).
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_spacing_is_monotonic]' started.
+Test Case '-[MemoryMapTests.UnfadingThemeTests test_spacing_is_monotonic]' passed (0.001 seconds).
+Test Suite 'UnfadingThemeTests' passed at 2026-04-23 09:45:46.235.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.004 (0.006) seconds
+Test Suite 'UserPreferencesTests' started at 2026-04-23 09:45:46.236.
+Test Case '-[MemoryMapTests.UserPreferencesTests test_defaults_are_loaded_when_empty]' started.
+Test Case '-[MemoryMapTests.UserPreferencesTests test_defaults_are_loaded_when_empty]' passed (0.003 seconds).
+Test Case '-[MemoryMapTests.UserPreferencesTests test_roundtrip_via_user_defaults]' started.
+Test Case '-[MemoryMapTests.UserPreferencesTests test_roundtrip_via_user_defaults]' passed (0.005 seconds).
+Test Suite 'UserPreferencesTests' passed at 2026-04-23 09:45:46.245.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.009 (0.009) seconds
+Test Suite 'MemoryMapTests.xctest' passed at 2026-04-23 09:45:46.245.
+	 Executed 90 tests, with 0 failures (0 unexpected) in 0.429 (0.477) seconds
+Test Suite 'All tests' passed at 2026-04-23 09:45:46.248.
+	 Executed 90 tests, with 0 failures (0 unexpected) in 0.429 (0.481) seconds
+2026-04-23 09:46:01.306 xcodebuild[42019:1082198] [MT] IDETestOperationsObserverDebug: 46.382 elapsed -- Testing started completed.
+2026-04-23 09:46:01.306 xcodebuild[42019:1082198] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-04-23 09:46:01.306 xcodebuild[42019:1082198] [MT] IDETestOperationsObserverDebug: 46.382 sec, +46.382 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/jeonsihyeon/Library/Developer/Xcode/DerivedData/MemoryMap-cpseiceroeyklggzayvndqdepqkc/Logs/Test/Test-MemoryMap-2026.04.23_09-45-10-+0900.xcresult
+
+** TEST SUCCEEDED **
+
+Testing started

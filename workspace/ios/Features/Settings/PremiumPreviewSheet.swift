@@ -1,6 +1,6 @@
 import SwiftUI
 
-// vibe-limit-checked: 7 Korean monetization copy, 8 accessible CTA, 14 reusable tier-card layout
+// vibe-limit-checked: 8 accessible CTA/grouping, 7 Korean monetization copy, 14 reusable tier-card layout
 struct PremiumPreviewSheet: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -37,6 +37,7 @@ struct PremiumPreviewSheet: View {
                     }
                     .buttonStyle(.unfadingPrimaryFullWidth)
                     .disabled(true)
+                    .accessibilityHint(UnfadingLocalized.Accessibility.premiumComingSoonHint)
                 }
                 .padding(UnfadingTheme.Spacing.xl)
             }
@@ -82,6 +83,7 @@ struct PremiumPreviewSheet: View {
         }
         .padding(UnfadingTheme.Spacing.lg)
         .unfadingCardBackground(fill: UnfadingTheme.Color.sheet, radius: UnfadingTheme.Radius.card)
+        .accessibilityElement(children: .combine)
     }
 }
 

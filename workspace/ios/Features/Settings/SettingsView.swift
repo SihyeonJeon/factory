@@ -1,6 +1,6 @@
 import SwiftUI
 
-// vibe-limit-checked: 5 @MainActor settings state objects, 7 Korean UI, 8 44pt rows, 14 reuses preference/store models
+// vibe-limit-checked: 8 a11y hints/44pt rows, 5 @MainActor settings state objects, 7 Korean UI, 14 reuses preference/store models
 struct SettingsView: View {
     @StateObject private var prefs = UserPreferences()
     @StateObject private var memoryStore = MemoryStore()
@@ -82,6 +82,7 @@ struct SettingsView: View {
                     .foregroundStyle(UnfadingTheme.Color.primary)
                     .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             }
+            .accessibilityHint(UnfadingLocalized.Accessibility.premiumExploreHint)
         }
     }
 

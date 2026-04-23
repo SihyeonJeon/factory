@@ -34,22 +34,28 @@ struct MemorySummaryCard: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(maxHeight: dynamicTypeSize.isAccessibilitySize ? 320 : nil, alignment: .top)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(UnfadingLocalized.Accessibility.memorySummaryLabel(title: selectedPinTitle, body: selectedPinBody))
+        .accessibilityHint(onDetailTap == nil ? "" : UnfadingLocalized.Accessibility.memorySummaryHint)
     }
 
     @ViewBuilder
     private var header: some View {
-        if dynamicTypeSize.isAccessibilitySize {
-            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
-                titleBlock
-                peopleBadge
-            }
-        } else {
-            HStack(alignment: .top, spacing: UnfadingTheme.Spacing.md) {
-                titleBlock
-                Spacer(minLength: UnfadingTheme.Spacing.md)
-                peopleBadge
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
+                    titleBlock
+                    peopleBadge
+                }
+            } else {
+                HStack(alignment: .top, spacing: UnfadingTheme.Spacing.md) {
+                    titleBlock
+                    Spacer(minLength: UnfadingTheme.Spacing.md)
+                    peopleBadge
+                }
             }
         }
+        .accessibilityElement(children: .combine)
     }
 
     private var titleBlock: some View {
@@ -62,6 +68,7 @@ struct MemorySummaryCard: View {
                 .foregroundStyle(UnfadingTheme.Color.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
         }
+        .accessibilityElement(children: .combine)
     }
 
     private var peopleBadge: some View {

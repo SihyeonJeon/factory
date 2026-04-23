@@ -40,6 +40,7 @@ struct UnfadingBottomSheet<Content: View>: View {
     @ViewBuilder let content: () -> Content
     @State private var dragOffset: CGFloat = 0
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         GeometryReader { proxy in
@@ -66,7 +67,7 @@ struct UnfadingBottomSheet<Content: View>: View {
             .contentShape(Rectangle())
             .gesture(dragGesture(fullHeight: fullHeight))
             .frame(maxHeight: .infinity, alignment: .bottom)
-            .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.85), value: snap)
+            .animation(reduceMotion ? nil : .interactiveSpring(response: 0.3, dampingFraction: 0.85), value: snap)
         }
     }
 
@@ -78,6 +79,9 @@ struct UnfadingBottomSheet<Content: View>: View {
             .padding(.bottom, UnfadingTheme.Spacing.sm)
             .frame(maxWidth: .infinity)
             .contentShape(Rectangle().inset(by: -16))
+            .accessibilityElement()
+            .accessibilityLabel(UnfadingLocalized.Accessibility.bottomSheetHandleLabel)
+            .accessibilityHint(UnfadingLocalized.Accessibility.bottomSheetHandleHint)
     }
 
     private func dragGesture(fullHeight: CGFloat) -> some Gesture {

@@ -1,6 +1,6 @@
 import SwiftUI
 
-// vibe-limit-checked: 1 single detail surface, 7 runtime-fidelity sections, 8 a11y/44pt, 11 sample-detail mapping
+// vibe-limit-checked: 8 a11y/44pt/grouping, 1 single detail surface, 7 runtime-fidelity sections, 11 sample-detail mapping
 struct MemoryDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var currentPin: SampleMemoryPin
@@ -89,6 +89,7 @@ struct MemoryDetailView: View {
         .foregroundStyle(UnfadingTheme.Color.textSecondary)
         .padding(UnfadingTheme.Spacing.lg)
         .unfadingCardBackground(fill: UnfadingTheme.Color.cream)
+        .accessibilityElement(children: .combine)
     }
 
     private var moodSection: some View {
@@ -151,6 +152,7 @@ struct MemoryDetailView: View {
         }
         .padding(UnfadingTheme.Spacing.md)
         .unfadingCardBackground(fill: UnfadingTheme.Color.cream, radius: UnfadingTheme.Radius.button)
+        .accessibilityElement(children: .combine)
     }
 
     private var photoSymbols: [String] {

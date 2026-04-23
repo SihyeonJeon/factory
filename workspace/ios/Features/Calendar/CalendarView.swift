@@ -1,6 +1,6 @@
 import SwiftUI
 
-// vibe-limit-checked: 1 screen uses reusable grid/store, 7 runtime-fidelity, 8 Korean/Dynamic Type/a11y
+// vibe-limit-checked: 8 Korean/Dynamic Type/a11y grouping, 1 screen uses reusable grid/store, 7 runtime-fidelity
 struct CalendarView: View {
     @StateObject private var store = MemoryCalendarStore()
 
@@ -41,6 +41,7 @@ struct CalendarView: View {
                     .frame(width: 44, height: 44)
             }
             .accessibilityLabel(UnfadingLocalized.Calendar.previousMonthHint)
+            .accessibilityHint(UnfadingLocalized.Accessibility.monthNavigationHint(monthTitle: store.monthTitle()))
 
             Spacer()
 
@@ -57,6 +58,7 @@ struct CalendarView: View {
                     .frame(width: 44, height: 44)
             }
             .accessibilityLabel(UnfadingLocalized.Calendar.nextMonthHint)
+            .accessibilityHint(UnfadingLocalized.Accessibility.monthNavigationHint(monthTitle: store.monthTitle()))
         }
     }
 
@@ -91,6 +93,7 @@ struct CalendarView: View {
                     }
                     .padding(UnfadingTheme.Spacing.md)
                     .unfadingCardBackground(fill: UnfadingTheme.Color.sheet, radius: UnfadingTheme.Radius.button, shadow: false)
+                    .accessibilityElement(children: .combine)
                 }
             }
         }

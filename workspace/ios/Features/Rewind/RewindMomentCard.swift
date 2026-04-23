@@ -1,6 +1,6 @@
 import SwiftUI
 
-// vibe-limit-checked: 7 immersive runtime fidelity, 8 44pt/a11y/Dynamic Type, 14 narrow reusable-token surface
+// vibe-limit-checked: 8 44pt/a11y/Dynamic Type, 7 immersive runtime fidelity, 14 narrow reusable-token surface
 struct RewindMomentCard: View {
     let moment: RewindMoment
 
@@ -24,6 +24,7 @@ struct RewindMomentCard: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
+                .accessibilityElement(children: .combine)
 
                 HStack(spacing: UnfadingTheme.Spacing.sm) {
                     Button {
@@ -33,6 +34,7 @@ struct RewindMomentCard: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(UnfadingTheme.Color.primary)
+                    .accessibilityHint(UnfadingLocalized.Accessibility.shareRewindHint)
 
                     Button {
                     } label: {
@@ -40,6 +42,7 @@ struct RewindMomentCard: View {
                             .frame(maxWidth: .infinity, minHeight: 44)
                     }
                     .buttonStyle(.bordered)
+                    .accessibilityHint(UnfadingLocalized.Accessibility.rewatchRewindHint)
                 }
             }
             .padding(UnfadingTheme.Spacing.xl)

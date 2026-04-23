@@ -76,7 +76,7 @@ struct MemoryComposerSheet: View {
         }
     }
 
-    // vibe-limit-checked: 2 reusable UnfadingPhotoGrid, 8 Dynamic Type/a11y labels
+    // vibe-limit-checked: 8 Dynamic Type/a11y labels, 2 reusable UnfadingPhotoGrid
     private var photoSection: some View {
         SectionContainer(title: UnfadingLocalized.Composer.photoSection) {
             VStack(spacing: UnfadingTheme.Spacing.md) {
@@ -93,7 +93,7 @@ struct MemoryComposerSheet: View {
         }
     }
 
-    // vibe-limit-checked: 6 no silent failure in location path, 8 44pt edit/current-location targets
+    // vibe-limit-checked: 8 44pt edit/current-location targets, 6 no silent failure in location path
     private var placeSection: some View {
         SectionContainer(title: UnfadingLocalized.Composer.placeSection) {
             VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
@@ -101,6 +101,7 @@ struct MemoryComposerSheet: View {
                     Image(systemName: "mappin.and.ellipse")
                         .foregroundStyle(UnfadingTheme.Color.primary)
                         .frame(width: 28, height: 28)
+                        .accessibilityHidden(true)
 
                     VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
                         Text(state.selectedPlace)
@@ -118,7 +119,9 @@ struct MemoryComposerSheet: View {
                     }
                     .buttonStyle(.bordered)
                     .frame(minHeight: 44)
+                    .accessibilityHint(UnfadingLocalized.Accessibility.placeEditHint)
                 }
+                .accessibilityElement(children: .contain)
 
                 Button {
                     handleCurrentLocationTap()
@@ -127,6 +130,7 @@ struct MemoryComposerSheet: View {
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
                 .buttonStyle(.unfadingPrimary)
+                .accessibilityHint(UnfadingLocalized.Accessibility.useCurrentLocationComposerHint)
             }
         }
     }
@@ -159,6 +163,7 @@ struct MemoryComposerSheet: View {
                 .labelsHidden()
                 .environment(\.locale, Locale(identifier: "ko_KR"))
             }
+            .accessibilityElement(children: .combine)
         }
     }
 
@@ -175,7 +180,7 @@ struct MemoryComposerSheet: View {
         }
     }
 
-    // vibe-limit-checked: 2 reused UnfadingFilterChip, 12 state transition tested by MemoryComposerStateTests
+    // vibe-limit-checked: 8 chip a11y inherited from UnfadingFilterChip, 2 reused component, 12 state transition tested by MemoryComposerStateTests
     private var moodSection: some View {
         SectionContainer(title: UnfadingLocalized.Composer.moodLabel) {
             ScrollView(.horizontal, showsIndicators: false) {
@@ -274,11 +279,13 @@ private struct LocationPermissionRecoverySheet: View {
                         presentManualPlacePicker()
                     }
                     .buttonStyle(.unfadingPrimary)
+                    .accessibilityHint(UnfadingLocalized.Accessibility.searchPlaceHint)
 
                     Button(UnfadingLocalized.Composer.openSettings) {
                         openSettings()
                     }
                     .buttonStyle(.bordered)
+                    .accessibilityHint(UnfadingLocalized.Accessibility.openSettingsHint)
                 }
 
                 VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.sm) {
@@ -289,6 +296,7 @@ private struct LocationPermissionRecoverySheet: View {
                         .foregroundStyle(UnfadingTheme.Color.textSecondary)
                 }
                 .padding(.horizontal)
+                .accessibilityElement(children: .combine)
 
                 Spacer(minLength: 0)
             }
@@ -352,6 +360,7 @@ private struct ManualPlacePickerSheet: View {
                                 Image(systemName: suggestion.systemImage)
                                     .foregroundStyle(UnfadingTheme.Color.primary)
                                     .frame(width: 24, height: 24)
+                                    .accessibilityHidden(true)
 
                                 VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
                                     Text(localized.title)

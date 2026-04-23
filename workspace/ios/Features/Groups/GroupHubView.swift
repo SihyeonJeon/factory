@@ -1,6 +1,6 @@
 import SwiftUI
 
-// vibe-limit-checked: 7 Korean group hub fidelity, 8 44pt/a11y/Dynamic Type, 11 sample group mapping, 14 reusable avatar stack
+// vibe-limit-checked: 8 44pt/a11y/Dynamic Type, 7 Korean group hub fidelity, 11 sample group mapping, 14 reusable avatar stack
 struct GroupHubView: View {
     @StateObject private var store = GroupStore()
 
@@ -60,6 +60,7 @@ struct GroupHubView: View {
             }
         }
         .pickerStyle(.segmented)
+        .accessibilityLabel(UnfadingLocalized.Groups.modePickerLabel)
     }
 
     private var membersSummary: some View {
@@ -102,6 +103,7 @@ struct GroupHubView: View {
                 .frame(minHeight: 44)
                 .padding(UnfadingTheme.Spacing.md)
                 .unfadingCardBackground(fill: UnfadingTheme.Color.sheet, radius: UnfadingTheme.Radius.button, shadow: false)
+                .accessibilityElement(children: .combine)
             }
         }
     }
@@ -113,6 +115,7 @@ struct GroupHubView: View {
                 .frame(maxWidth: .infinity, minHeight: 44)
         }
         .buttonStyle(.unfadingPrimaryFullWidth)
+        .accessibilityHint(UnfadingLocalized.Accessibility.inviteGroupHint)
     }
 }
 

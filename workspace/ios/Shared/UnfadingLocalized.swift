@@ -1,6 +1,6 @@
 import Foundation
 
-// vibe-limit-checked: 7 Korean UI fidelity, 8 accessibility copy, 11 sample-data mapping
+// vibe-limit-checked: 8 accessibility copy, 7 Korean UI fidelity, 11 sample-data mapping
 /// Korean user-facing string namespace. All SwiftUI `Text`, `Label`, and
 /// `accessibilityLabel`/`accessibilityHint` arguments in `App/` and `Features/`
 /// MUST resolve to a member of this namespace. Plain Swift (not `.xcstrings`)
@@ -40,6 +40,76 @@ enum UnfadingLocalized {
         static let showCurrentLocationHint = "위치 권한이 있을 때 지도를 현재 위치로 이동합니다."
 
         static let addMemoryLabel = "추억 추가"
+        static let addMemoryHint = "새 추억 기록 화면을 엽니다."
+        static let mapPinHint = "탭하면 이 추억의 요약을 엽니다."
+        static let filterRowLabel = "추억 필터"
+        static let filterRowHint = "가로로 넘겨 지도에 표시할 추억 종류를 고릅니다."
+        static let bottomSheetHandleLabel = "추억 요약 패널"
+        static let bottomSheetHandleHint = "위아래로 드래그해 패널 높이를 조절합니다."
+        static let memorySummaryHint = "상세 보기를 선택하면 추억 상세 화면으로 이동합니다."
+        static let shareRewindHint = "리와인드 순간을 공유합니다."
+        static let rewatchRewindHint = "리와인드 스토리를 다시 엽니다."
+        static let inviteGroupHint = "현재 그룹에 새 멤버를 초대합니다."
+        static let premiumExploreHint = "프리미엄 요금제 안내 화면을 엽니다."
+        static let premiumComingSoonHint = "프리미엄 결제는 아직 사용할 수 없습니다."
+        static let placeEditHint = "장소 선택 화면을 엽니다."
+        static let useCurrentLocationComposerHint = "위치 권한 상태에 따라 현재 위치를 사용하거나 복구 안내를 엽니다."
+        static let openSettingsHint = "설정 앱에서 위치 접근 권한을 변경합니다."
+        static let searchPlaceHint = "장소 검색 화면을 엽니다."
+        static let onboardingSkipHint = "온보딩을 마치고 앱으로 이동합니다."
+        static let onboardingStartHint = "온보딩을 완료하고 앱을 시작합니다."
+
+        static func mapPinLabel(title: String) -> String {
+            "추억 핀, \(title)"
+        }
+
+        static func filterChipHint(title: String, isSelected: Bool) -> String {
+            isSelected ? "\(title) 필터를 해제합니다." : "\(title) 필터를 적용합니다."
+        }
+
+        static func memorySummaryLabel(title: String, body: String) -> String {
+            "\(title). \(body)"
+        }
+
+        static func monthNavigationHint(monthTitle: String) -> String {
+            "\(monthTitle) 달력으로 이동합니다."
+        }
+
+        static let requiredStrings: [String] = [
+            mapTabLabel,
+            mapTabHint,
+            calendarTabLabel,
+            calendarTabHint,
+            composeTabLabel,
+            composeTabHint,
+            rewindTabLabel,
+            rewindTabHint,
+            settingsTabLabel,
+            settingsTabHint,
+            groupsTabLabel,
+            groupsTabHint,
+            showCurrentLocationLabel,
+            showCurrentLocationHint,
+            addMemoryLabel,
+            addMemoryHint,
+            mapPinHint,
+            filterRowLabel,
+            filterRowHint,
+            bottomSheetHandleLabel,
+            bottomSheetHandleHint,
+            memorySummaryHint,
+            shareRewindHint,
+            rewatchRewindHint,
+            inviteGroupHint,
+            premiumExploreHint,
+            premiumComingSoonHint,
+            placeEditHint,
+            useCurrentLocationComposerHint,
+            openSettingsHint,
+            searchPlaceHint,
+            onboardingSkipHint,
+            onboardingStartHint
+        ]
     }
 
     // MARK: Photo grid

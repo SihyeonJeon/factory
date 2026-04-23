@@ -1,6 +1,6 @@
 import SwiftUI
 
-// vibe-limit-checked: 5 MainActor completion flow, 7 Korean onboarding copy, 8 Dynamic Type/a11y/44pt controls, 14 reusable slide model
+// vibe-limit-checked: 8 Dynamic Type/a11y/44pt controls, 5 MainActor completion flow, 7 Korean onboarding copy, 14 reusable slide model
 struct OnboardingView: View {
     private struct Slide: Identifiable {
         let id: Int
@@ -60,6 +60,7 @@ struct OnboardingView: View {
                         Button(UnfadingLocalized.Onboarding.skipCta, action: onComplete)
                             .buttonStyle(.bordered)
                             .frame(minHeight: 44)
+                            .accessibilityHint(UnfadingLocalized.Accessibility.onboardingSkipHint)
                     }
                     Spacer()
                 }
@@ -99,6 +100,7 @@ struct OnboardingView: View {
                 Button(UnfadingLocalized.Onboarding.startCta, action: onComplete)
                     .buttonStyle(.unfadingPrimaryFullWidth)
                     .padding(.top, UnfadingTheme.Spacing.md)
+                    .accessibilityHint(UnfadingLocalized.Accessibility.onboardingStartHint)
             }
 
             Spacer(minLength: 96)
