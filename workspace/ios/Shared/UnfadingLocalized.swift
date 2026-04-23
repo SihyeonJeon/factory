@@ -204,6 +204,37 @@ enum UnfadingLocalized {
         static let reminderLabel = "장소 기반 알림"
         static let reminderHint = "이곳 근처에 가면 관련 추억을 알려드려요."
         static let storyViewTitle = "리와인드 스토리"
+        static let closeLabel = "리와인드 닫기"
+        static let closeHint = "닫으면 홈 요약 패널로 돌아갑니다."
+        static let previousStoryLabel = "이전 리와인드 카드"
+        static let nextStoryLabel = "다음 리와인드 카드"
+        static let eyebrow = "REWIND"
+        static let coverHeadline = "이번 달,\n함께 지나온 곳들"
+        static let coverPhotoLabel = "이번 달 리와인드 커버 사진"
+        static let topPlacesTitle = "가장 많이 간 곳 TOP 3"
+        static let topPlacesSubtitle = "이번 달에 가장 자주 다시 찾은 장소예요."
+        static let firstVisitsTitle = "처음 가본 곳"
+        static let firstVisitsSubtitle = "새로 지도에 남긴 장소를 모았어요."
+        static let photoDayTitle = "사진 가장 많이 찍은 날"
+        static let photoDaySubtitle = "셔터를 가장 많이 누른 하루예요."
+        static let emotionCloudTitle = "감정 태그 클라우드"
+        static let emotionCloudSubtitle = "남긴 감정의 비율대로 크게 보여드려요."
+        static let timeTogetherTitle = "함께 보낸 시간"
+        static let timeTogetherSubtitle = "장소에 머문 시간을 모두 더했어요."
+        static let hoursTogetherUnit = "시간"
+        static let timeTogetherBody = "함께 머문 시간이 한 장의 리와인드가 되었어요."
+
+        static func visitCount(_ count: Int) -> String {
+            "\(count)번 방문"
+        }
+
+        static func photoCount(_ count: Int) -> String {
+            "사진 \(count)장"
+        }
+
+        static func progressLabel(_ index: Int, total: Int) -> String {
+            "리와인드 진행 \(index)/\(total)"
+        }
 
         static func dateLabel(for moment: RewindMoment) -> String {
             moment.dateLabel

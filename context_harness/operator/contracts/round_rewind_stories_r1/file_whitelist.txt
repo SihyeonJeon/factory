@@ -1,0 +1,13 @@
+workspace/ios/Features/Rewind/RewindData.swift
+workspace/ios/Features/Rewind/RewindFeedView.swift
+workspace/ios/Features/Rewind/RewindMomentCard.swift
+workspace/ios/Features/Home/MemoryMapHomeView.swift
+workspace/ios/Shared/UnfadingLocalized.swift
+workspace/ios/Tests/RewindTests.swift
+workspace/ios/UITests/UnfadingUITests.swift
+workspace/ios/project.yml
+workspace/ios/MemoryMap.xcodeproj/**
+context_harness/operator/contracts/round_rewind_stories_r1/**
+context_harness/operator/meetings/2026-04-23_round_rewind_stories_plan.md
+context_harness/reports/round_rewind_stories_r1/**
+context_harness/blackboard.md

@@ -121,8 +121,11 @@ struct MemoryMapHomeView: View {
                 .frame(width: proxy.size.width, height: proxy.size.height)
             }
             .toolbar(.hidden, for: .navigationBar)
-            .sheet(isPresented: $showingRewind) {
-                RewindFeedView()
+            .fullScreenCover(isPresented: $showingRewind) {
+                RewindFeedView {
+                    showingRewind = false
+                    sheetSnap = .default_
+                }
             }
             .navigationDestination(item: $detailPin) { pin in
                 MemoryDetailView(pin: pin)
@@ -419,6 +422,7 @@ struct MemoryMapHomeView: View {
 
     private func showRewindFromCuration() {
         showingRewind = true
+        sheetSnap = .default_
     }
 }
 
