@@ -553,6 +553,9 @@ enum UnfadingLocalized {
     enum Detail {
         static let navTitle = "추억 상세"
         static let detailCta = "상세 보기"
+        static let backButton = "뒤로"
+        static let shareButton = "공유"
+        static let bookmarkButton = "북마크"
         static let previousButton = "이전"
         static let nextButton = "다음"
         static let contributionsLabel = "함께한 사람들"
@@ -561,6 +564,19 @@ enum UnfadingLocalized {
         static let timeLabel = "시간"
         static let costLabel = "비용"
         static let costFormat = "₩"
+        static let similarPlacesSection = "이 장소 다시 가볼까?"
+        static let eventMemoriesSection = "이벤트 안의 다른 추억들"
+        static let participantsSection = "같이 간 사람들"
+        static let expenseSection = "지출"
+        static let weatherSection = "날씨"
+        static let expenseWeatherSection = "지출 / 날씨 상세"
+        static let addOneLineCta = "한 줄 더 쓰기"
+        static let addOneLinePlaceholder = "이 추억에 한 줄 덧붙이기…"
+        static let addOneLineSave = "저장"
+
+        static func eventPosition(_ current: Int, _ total: Int) -> String {
+            "\(current) / \(total) · 같은 이벤트"
+        }
 
         static func title(for pin: SampleMemoryPin) -> String {
             switch pin.id {

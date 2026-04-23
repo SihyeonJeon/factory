@@ -83,6 +83,14 @@ final class UnfadingUITests: XCTestCase {
         }
     }
 
+    func testMemoryDetailOpensAndShowsSections() throws {
+        // MemorySummaryCard 의 "상세 보기" 버튼은 핀이 선택된 상태에서만
+        // 노출됨. Simulator 에서 마커 탭 시뮬 + stub 기본 선택 경로가 R37
+        // (Marker 선택) 에서 정리된 뒤 재활성화 예정. 본 라운드에서는
+        // MemoryDetailTests 유닛으로 carousel bounds / section visibility 커버.
+        try XCTSkipIf(true, "deferred to R37 marker_cluster round (requires selected-pin bootstrap)")
+    }
+
     // MARK: Sheet gesture tests — simulator 한계
     // 42x5pt handle + tight drag gesture 는 XCUITest swipeUp/swipeDown 시뮬레이터
     // 에서 재현이 불안정하다. 실기기 smoke 검증으로 위임하고, 스냅/back/스크롤
@@ -251,6 +259,17 @@ final class UnfadingUITests: XCTestCase {
         }
         XCTAssertTrue(hint.waitForExistence(timeout: 5))
         hint.tap()
+    }
+
+    private func openMemoryDetail() {
+        let detailButton = app.buttons.matching(identifier: "상세 보기").firstMatch
+        if !detailButton.waitForExistence(timeout: 2) {
+            let sheet = app.otherElements["unfading-bottom-sheet"].firstMatch
+            XCTAssertTrue(sheet.waitForExistence(timeout: 5))
+            sheet.swipeUp()
+        }
+        XCTAssertTrue(detailButton.waitForExistence(timeout: 5))
+        detailButton.tap()
     }
 
     private func openGroupPicker() {

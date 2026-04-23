@@ -1,0 +1,13 @@
+workspace/ios/Features/Detail/MemoryDetailView.swift
+workspace/ios/Features/Detail/SimilarPlaceCard.swift
+workspace/ios/Features/Detail/EventMemoryMiniGallery.swift
+workspace/ios/Features/Detail/ParticipantAvatarRow.swift
+workspace/ios/Shared/UnfadingLocalized.swift
+workspace/ios/Shared/MemoryStore.swift
+workspace/ios/Tests/MemoryDetailTests.swift
+workspace/ios/UITests/UnfadingUITests.swift
+context_harness/operator/contracts/round_memory_detail_sprint28_r1/file_whitelist.txt
+context_harness/operator/meetings/2026-04-23_round_memory_detail_sprint28_plan.md
+context_harness/reports/round_memory_detail_sprint28_r1/evidence/notes.md
+context_harness/blackboard.md
+docs/exec-plans/process-log.jsonl

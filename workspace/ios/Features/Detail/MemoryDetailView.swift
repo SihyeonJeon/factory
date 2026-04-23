@@ -1,204 +1,513 @@
 import SwiftUI
+import UIKit
 
-// vibe-limit-checked: 8 a11y/44pt/grouping, 1 single detail surface, 7 runtime-fidelity sections, 11 sample-detail mapping
+// vibe-limit-checked: 8 a11y/44pt, 7 Korean detail copy, 11 DBMemory event scoped carousel
 struct MemoryDetailView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var currentPin: SampleMemoryPin
 
-    init(pin: SampleMemoryPin) {
-        _currentPin = State(initialValue: pin)
+    let memory: DBMemory
+    let eventMemories: [DBMemory]
+    let participants: [DBProfile]
+    let mode: GroupMode
+
+    @State private var currentIndex: Int
+    @State private var extraLine: String = ""
+    @State private var didSubmitExtraLine = false
+
+    init(
+        memory: DBMemory,
+        eventMemories: [DBMemory],
+        participants: [DBProfile],
+        mode: GroupMode
+    ) {
+        self.memory = memory
+        self.eventMemories = eventMemories
+        self.participants = participants
+        self.mode = mode
+        _currentIndex = State(initialValue: MemoryDetailEventScope.initialIndex(memory: memory, eventMemories: eventMemories))
     }
 
-    private var detail: SampleMemoryDetail? {
-        currentPin.detail()
+    init(pin: SampleMemoryPin) {
+        let memory = DBMemory.sample(from: pin)
+        let sameEvent = SampleMemoryPin.samples
+            .map(DBMemory.sample(from:))
+            .filter { $0.eventId == memory.eventId }
+        self.init(
+            memory: memory,
+            eventMemories: sameEvent.isEmpty ? [memory] : sameEvent,
+            participants: DBProfile.sampleParticipants,
+            mode: .general
+        )
     }
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xl) {
-                photoCarousel
-                titleLocationTimeCard
-                moodSection
-                noteSection
-                contributionsSection
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xl2) {
+                carousel
+                metaStrip
+                noteBlock
+                tagChips
+                similarPlacesSection
+                eventMemoriesSection
+                if MemoryDetailEventScope.showsParticipantsSection(mode: mode) {
+                    participantsSection
+                }
+                expenseWeatherSection
+                addOneLineSection
             }
-            .padding(UnfadingTheme.Spacing.xl)
+            .padding(.horizontal, UnfadingTheme.Spacing.lg)
+            .padding(.bottom, UnfadingTheme.Spacing.tabBarClear)
         }
-        .background(UnfadingTheme.Color.sheet)
-        .navigationTitle(UnfadingLocalized.Detail.navTitle)
+        .background(UnfadingTheme.Color.sheet.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
+            ToolbarItem(placement: .topBarLeading) {
                 Button {
-                    move(delta: -1)
+                    dismiss()
                 } label: {
                     Image(systemName: "chevron.left")
                         .frame(width: 44, height: 44)
                 }
-                .accessibilityLabel(UnfadingLocalized.Detail.previousButton)
+                .accessibilityLabel(UnfadingLocalized.Detail.backButton)
+            }
 
+            ToolbarItemGroup(placement: .topBarTrailing) {
                 Button {
-                    move(delta: 1)
                 } label: {
-                    Image(systemName: "chevron.right")
+                    Image(systemName: "square.and.arrow.up")
                         .frame(width: 44, height: 44)
                 }
-                .accessibilityLabel(UnfadingLocalized.Detail.nextButton)
+                .accessibilityLabel(UnfadingLocalized.Detail.shareButton)
+
+                Button {
+                } label: {
+                    Image(systemName: "bookmark")
+                        .frame(width: 44, height: 44)
+                }
+                .accessibilityLabel(UnfadingLocalized.Detail.bookmarkButton)
             }
         }
+        .accessibilityIdentifier("memory-detail-screen")
     }
 
-    private var photoCarousel: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: UnfadingTheme.Spacing.md) {
-                if photoStoragePaths.isEmpty == false {
-                    ForEach(photoStoragePaths, id: \.self) { path in
-                        RemoteImageView(storagePath: path)
-                        .frame(width: 220, height: 165)
-                        .clipShape(RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous))
-                        .accessibilityHidden(true)
-                    }
-                } else {
-                    ForEach(photoSymbols, id: \.self) { symbol in
-                        RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous)
-                            .fill(
-                                LinearGradient(
-                                    colors: [UnfadingTheme.Color.primarySoft, UnfadingTheme.Color.primary],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(width: 220, height: 165)
-                            .overlay {
-                                Image(systemName: symbol)
-                                    .font(.largeTitle.weight(.semibold))
-                                    .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
-                            }
-                            .accessibilityHidden(true)
-                    }
+    private var carousel: some View {
+        VStack(spacing: UnfadingTheme.Spacing.md) {
+            TabView(selection: $currentIndex) {
+                ForEach(Array(scopedMemories.enumerated()), id: \.element.id) { index, item in
+                    heroPhoto(for: item)
+                        .tag(index)
                 }
             }
+            .tabViewStyle(.page(indexDisplayMode: .automatic))
+            .frame(height: min(UIScreen.main.bounds.width * 4 / 3, 520))
+            .clipShape(RoundedRectangle(cornerRadius: UnfadingTheme.Radius.card, style: .continuous))
+
+            HStack(spacing: UnfadingTheme.Spacing.sm) {
+                carouselButton(title: UnfadingLocalized.Detail.previousButton, systemImage: "chevron.left", delta: -1)
+                Text(UnfadingLocalized.Detail.eventPosition(currentIndex + 1, scopedMemories.count))
+                    .font(UnfadingTheme.Font.metaNum())
+                    .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .background(
+                        UnfadingTheme.Color.card,
+                        in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.button, style: .continuous)
+                    )
+                carouselButton(title: UnfadingLocalized.Detail.nextButton, systemImage: "chevron.right", delta: 1)
+            }
         }
+        .padding(.top, UnfadingTheme.Spacing.sm)
+        .accessibilityIdentifier("memory-detail-carousel")
     }
 
-    private var titleLocationTimeCard: some View {
+    private var metaStrip: some View {
         VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
-            Text(UnfadingLocalized.Detail.title(for: currentPin))
-                .font(UnfadingTheme.Font.title3Bold())
+            Text(currentMemory.title)
+                .font(UnfadingTheme.Font.pageTitle(26))
                 .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
 
-            Label(UnfadingLocalized.Detail.place(for: currentPin), systemImage: "mappin.and.ellipse")
-            Label(UnfadingLocalized.Detail.time(for: currentPin), systemImage: "clock")
-
-            if let costText {
-                Label(costText, systemImage: "wonsign.circle")
-            }
-        }
-        .font(UnfadingTheme.Font.subheadline())
-        .foregroundStyle(UnfadingTheme.Color.textSecondary)
-        .padding(UnfadingTheme.Spacing.lg)
-        .unfadingCardBackground(fill: UnfadingTheme.Color.cream)
-        .accessibilityElement(children: .combine)
-    }
-
-    private var moodSection: some View {
-        SectionBlock(title: UnfadingLocalized.Detail.moodLabel) {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: UnfadingTheme.Spacing.sm) {
-                    ForEach(detail?.moodTagIDs ?? [], id: \.self) { id in
-                        UnfadingFilterChip(
-                            title: UnfadingLocalized.Detail.moodTitle(id: id),
-                            isSelected: true
-                        ) {}
-                        .allowsHitTesting(false)
-                    }
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 132), spacing: UnfadingTheme.Spacing.sm)], alignment: .leading, spacing: UnfadingTheme.Spacing.sm) {
+                metaItem(systemImage: "calendar", text: KSTDateFormatter.dateTime.string(from: currentMemory.date))
+                metaItem(systemImage: "sun.max", text: weatherText)
+                metaItem(systemImage: "mappin.and.ellipse", text: currentMemory.placeTitle)
+                HStack(spacing: UnfadingTheme.Spacing.xs) {
+                    avatarInitial(authorName)
+                    Text(authorName)
+                        .font(UnfadingTheme.Font.footnote())
+                        .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                        .lineLimit(1)
                 }
+                .frame(minHeight: 44, alignment: .leading)
             }
         }
+        .padding(UnfadingTheme.Spacing.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .unfadingCardBackground(fill: UnfadingTheme.Color.card)
+        .accessibilityIdentifier("memory-detail-meta")
     }
 
-    private var noteSection: some View {
-        Text(detail?.noteBody ?? "")
-            .font(UnfadingTheme.Font.subheadline())
+    private var noteBlock: some View {
+        Text(currentMemory.note)
+            .font(UnfadingTheme.Font.body(15))
+            .lineSpacing(15 * 0.55)
             .foregroundStyle(UnfadingTheme.Color.textPrimary)
+            .fixedSize(horizontal: false, vertical: true)
             .padding(UnfadingTheme.Spacing.lg)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .unfadingCardBackground(fill: UnfadingTheme.Color.cream)
+            .unfadingCardBackground(fill: UnfadingTheme.Color.card)
+            .accessibilityIdentifier("memory-detail-note")
     }
 
-    private var contributionsSection: some View {
-        SectionBlock(title: UnfadingLocalized.Detail.contributionsLabel) {
-            VStack(spacing: UnfadingTheme.Spacing.md) {
-                ForEach(detail?.contributions ?? []) { contribution in
-                    contributionCard(contribution)
+    @ViewBuilder
+    private var tagChips: some View {
+        if !currentMemory.emotions.isEmpty {
+            section(title: UnfadingLocalized.Detail.moodLabel, identifier: "memory-detail-tags") {
+                FlowLayout(spacing: UnfadingTheme.Spacing.sm) {
+                    ForEach(currentMemory.emotions, id: \.self) { emotion in
+                        Text("#\(UnfadingLocalized.draftTag(id: emotion, fallback: emotion))")
+                            .font(UnfadingTheme.Font.chip())
+                            .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                            .padding(.horizontal, UnfadingTheme.Spacing.md)
+                            .frame(minHeight: 44)
+                            .background(
+                                UnfadingTheme.Color.chipBg,
+                                in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.segment, style: .continuous)
+                            )
+                    }
                 }
             }
         }
     }
 
-    private func contributionCard(_ contribution: SampleMemoryContribution) -> some View {
-        HStack(alignment: .top, spacing: UnfadingTheme.Spacing.md) {
-            Text(contribution.authorInitial)
-                .font(UnfadingTheme.Font.footnoteSemibold())
-                .foregroundStyle(UnfadingTheme.Color.primary)
-                .frame(width: 44, height: 44)
-                .background(UnfadingTheme.Color.primarySoft, in: Circle())
+    private var similarPlacesSection: some View {
+        section(title: UnfadingLocalized.Detail.similarPlacesSection, identifier: "memory-detail-similar-places") {
+            VStack(spacing: UnfadingTheme.Spacing.md) {
+                SimilarPlaceCard(name: "\(currentMemory.placeTitle) 근처 산책길", distanceText: "도보 7분")
+                SimilarPlaceCard(name: "\(currentMemory.placeTitle) 다음 코스", distanceText: "1.2km")
+            }
+        }
+    }
+
+    private var eventMemoriesSection: some View {
+        section(title: UnfadingLocalized.Detail.eventMemoriesSection, identifier: "memory-detail-event-memories") {
+            EventMemoryMiniGallery(memories: scopedMemories, selectedMemoryId: currentMemory.id) { selected in
+                guard let next = scopedMemories.firstIndex(where: { $0.id == selected.id }) else { return }
+                currentIndex = next
+            }
+        }
+    }
+
+    private var participantsSection: some View {
+        section(title: UnfadingLocalized.Detail.participantsSection, identifier: "memory-detail-participants") {
+            ParticipantAvatarRow(participants: visibleParticipants)
+        }
+    }
+
+    private var expenseWeatherSection: some View {
+        section(title: UnfadingLocalized.Detail.expenseWeatherSection, identifier: "memory-detail-expense-weather") {
+            VStack(spacing: UnfadingTheme.Spacing.md) {
+                if let costText {
+                    infoRow(systemImage: "wonsign.circle", title: UnfadingLocalized.Detail.expenseSection, value: costText)
+                }
+                infoRow(systemImage: "cloud.sun", title: UnfadingLocalized.Detail.weatherSection, value: weatherDetailText)
+            }
+        }
+    }
+
+    private var addOneLineSection: some View {
+        section(title: UnfadingLocalized.Detail.addOneLineCta, identifier: "memory-detail-add-one-line") {
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
+                if didSubmitExtraLine {
+                    Text(extraLine)
+                        .font(UnfadingTheme.Font.body())
+                        .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(UnfadingTheme.Spacing.md)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(
+                            UnfadingTheme.Color.accentSoft,
+                            in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.button, style: .continuous)
+                        )
+                }
+
+                HStack(alignment: .center, spacing: UnfadingTheme.Spacing.sm) {
+                    TextField(UnfadingLocalized.Detail.addOneLinePlaceholder, text: $extraLine, axis: .vertical)
+                        .font(UnfadingTheme.Font.body())
+                        .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                        .lineLimit(1...3)
+                        .disabled(didSubmitExtraLine)
+                        .padding(.horizontal, UnfadingTheme.Spacing.md)
+                        .frame(minHeight: 44)
+                        .background(
+                            UnfadingTheme.Color.surface,
+                            in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.button, style: .continuous)
+                        )
+                        .accessibilityIdentifier("memory-detail-extra-line-field")
+
+                    Button(UnfadingLocalized.Detail.addOneLineSave) {
+                        submitExtraLine()
+                    }
+                    .buttonStyle(.unfadingPrimary)
+                    .disabled(didSubmitExtraLine || extraLine.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .opacity(didSubmitExtraLine ? 0.55 : 1)
+                    .accessibilityIdentifier("memory-detail-extra-line-save")
+                }
+            }
+        }
+    }
+
+    private func heroPhoto(for memory: DBMemory) -> some View {
+        ZStack(alignment: .bottomLeading) {
+            if let path = memory.detailPhotoPaths.first {
+                RemoteImageView(storagePath: path)
+                    .accessibilityHidden(true)
+            } else {
+                Rectangle()
+                    .fill(UnfadingTheme.Color.accentSoft)
+                    .overlay {
+                        Image(systemName: "photo")
+                            .imageScale(.large)
+                            .foregroundStyle(UnfadingTheme.Color.primary)
+                    }
+                    .accessibilityHidden(true)
+            }
+
+            LinearGradient(
+                colors: [UnfadingTheme.Color.textOnPrimary.opacity(0), UnfadingTheme.Color.textPrimary.opacity(0.34)],
+                startPoint: .center,
+                endPoint: .bottom
+            )
 
             VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
-                HStack {
-                    Text(contribution.authorName)
-                        .font(UnfadingTheme.Font.subheadlineSemibold())
-                        .foregroundStyle(UnfadingTheme.Color.textPrimary)
-                    Spacer()
-                    Text(contribution.timeAgo)
-                        .font(UnfadingTheme.Font.captionSemibold())
-                        .foregroundStyle(UnfadingTheme.Color.textTertiary)
-                }
-                Text(contribution.comment)
-                    .font(UnfadingTheme.Font.subheadline())
-                    .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                Text(memory.placeTitle)
+                    .font(UnfadingTheme.Font.sectionTitle(18))
+                    .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
+                Text(KSTDateFormatter.shortTime.string(from: memory.date))
+                    .font(UnfadingTheme.Font.metaNum(12))
+                    .foregroundStyle(UnfadingTheme.Color.textOnPrimary.opacity(0.88))
             }
+            .padding(UnfadingTheme.Spacing.lg)
+        }
+    }
+
+    private func carouselButton(title: String, systemImage: String, delta: Int) -> some View {
+        Button {
+            move(delta: delta)
+        } label: {
+            Label(title, systemImage: systemImage)
+                .labelStyle(.iconOnly)
+                .frame(width: 44, height: 44)
+        }
+        .disabled(!canMove(delta: delta))
+        .foregroundStyle(canMove(delta: delta) ? UnfadingTheme.Color.textPrimary : UnfadingTheme.Color.textTertiary)
+        .background(
+            UnfadingTheme.Color.card,
+            in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.button, style: .continuous)
+        )
+        .accessibilityLabel(title)
+    }
+
+    private func metaItem(systemImage: String, text: String) -> some View {
+        Label(text, systemImage: systemImage)
+            .font(UnfadingTheme.Font.footnote())
+            .foregroundStyle(UnfadingTheme.Color.textSecondary)
+            .frame(minHeight: 44, alignment: .leading)
+            .lineLimit(2)
+    }
+
+    private func infoRow(systemImage: String, title: String, value: String) -> some View {
+        HStack(spacing: UnfadingTheme.Spacing.md) {
+            Image(systemName: systemImage)
+                .foregroundStyle(UnfadingTheme.Color.primary)
+                .frame(width: 44, height: 44)
+                .background(UnfadingTheme.Color.accentSoft, in: Circle())
+
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xxs) {
+                Text(title)
+                    .font(UnfadingTheme.Font.footnote())
+                    .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                Text(value)
+                    .font(UnfadingTheme.Font.sectionTitle())
+                    .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
         }
         .padding(UnfadingTheme.Spacing.md)
-        .unfadingCardBackground(fill: UnfadingTheme.Color.cream, radius: UnfadingTheme.Radius.button)
-        .accessibilityElement(children: .combine)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .unfadingCardBackground(fill: UnfadingTheme.Color.card, radius: UnfadingTheme.Radius.button)
     }
 
-    private var photoSymbols: [String] {
-        let symbols = detail?.photoPlaceholders ?? []
-        return symbols.isEmpty ? ["photo"] : symbols
+    private func avatarInitial(_ name: String) -> some View {
+        Text(String(name.prefix(1)))
+            .font(UnfadingTheme.Font.footnoteSemibold())
+            .foregroundStyle(UnfadingTheme.Color.primary)
+            .frame(width: 32, height: 32)
+            .background(UnfadingTheme.Color.accentSoft, in: Circle())
     }
 
-    private var photoStoragePaths: [String] {
-        detail?.photoStoragePaths ?? []
+    private func section<Content: View>(
+        title: String,
+        identifier: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
+            Text(title)
+                .font(UnfadingTheme.Font.sectionTitle())
+                .foregroundStyle(UnfadingTheme.Color.textPrimary)
+            content()
+        }
+        .accessibilityIdentifier(identifier)
+    }
+
+    private var scopedMemories: [DBMemory] {
+        MemoryDetailEventScope.scopedMemories(memory: memory, eventMemories: eventMemories)
+    }
+
+    private var currentMemory: DBMemory {
+        let memories = scopedMemories
+        guard memories.indices.contains(currentIndex) else { return memories.first ?? memory }
+        return memories[currentIndex]
+    }
+
+    private var visibleParticipants: [DBProfile] {
+        let ids = currentMemory.participantUserIds
+        guard !ids.isEmpty else { return participants }
+        let filtered = participants.filter { ids.contains($0.id) }
+        return filtered.isEmpty ? participants : filtered
+    }
+
+    private var authorName: String {
+        participants.first(where: { $0.id == currentMemory.userId })?.displayName ?? "작성자"
     }
 
     private var costText: String? {
-        guard let cost = detail?.costKRW else { return nil }
-        return "\(UnfadingLocalized.Detail.costFormat)\(cost.formatted())"
+        guard let cost = currentMemory.cost else { return nil }
+        return "\(UnfadingLocalized.Detail.costFormat) \(cost.formatted())"
+    }
+
+    private var weatherText: String { "맑음" }
+    private var weatherDetailText: String { "맑음 · 바람 약함 · 산책하기 좋은 날" }
+
+    private func canMove(delta: Int) -> Bool {
+        scopedMemories.indices.contains(currentIndex + delta)
     }
 
     private func move(delta: Int) {
-        guard let currentIndex = SampleMemoryPin.samples.firstIndex(where: { $0.id == currentPin.id }) else {
-            currentPin = SampleMemoryPin.samples.first ?? currentPin
-            return
-        }
-        let count = SampleMemoryPin.samples.count
-        guard count > 0 else { return }
-        let nextIndex = (currentIndex + delta + count) % count
-        currentPin = SampleMemoryPin.samples[nextIndex]
+        guard canMove(delta: delta) else { return }
+        currentIndex += delta
+    }
+
+    private func submitExtraLine() {
+        let trimmed = extraLine.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard MemoryDetailExtraLinePolicy.canSubmit(line: trimmed, didSubmit: didSubmitExtraLine) else { return }
+        extraLine = trimmed
+        didSubmitExtraLine = true
     }
 }
 
-private struct SectionBlock<Content: View>: View {
-    let title: String
+enum MemoryDetailEventScope {
+    static func scopedMemories(memory: DBMemory, eventMemories: [DBMemory]) -> [DBMemory] {
+        let candidates = eventMemories.isEmpty ? [memory] : eventMemories
+        let scoped: [DBMemory]
+        if let eventId = memory.eventId {
+            scoped = candidates.filter { $0.eventId == eventId }
+        } else {
+            scoped = candidates.filter { $0.id == memory.id }
+        }
+
+        if scoped.contains(where: { $0.id == memory.id }) {
+            return scoped
+        }
+        return [memory] + scoped
+    }
+
+    static func initialIndex(memory: DBMemory, eventMemories: [DBMemory]) -> Int {
+        scopedMemories(memory: memory, eventMemories: eventMemories).firstIndex { $0.id == memory.id } ?? 0
+    }
+
+    static func boundedIndex(current: Int, delta: Int, count: Int) -> Int {
+        min(max(current + delta, 0), max(count - 1, 0))
+    }
+
+    static func showsParticipantsSection(mode: GroupMode) -> Bool {
+        mode == .general
+    }
+}
+
+enum MemoryDetailExtraLinePolicy {
+    static func canSubmit(line: String, didSubmit: Bool) -> Bool {
+        !didSubmit && !line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+}
+
+private extension DBMemory {
+    var detailPhotoPaths: [String] {
+        let paths = photoURLs + [photoURL].compactMap { $0 }
+        return paths.filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    }
+
+    static func sample(from pin: SampleMemoryPin) -> DBMemory {
+        let participants = DBProfile.sampleParticipants
+        let author = participants.first?.id ?? UUID(uuidString: "00000000-0000-0000-0000-000000000017")!
+
+        return DBMemory(
+            id: pin.id,
+            userId: author,
+            groupId: UUID(uuidString: "11111111-1111-4111-8111-111111111117")!,
+            eventId: UUID(uuidString: "99999999-9999-4999-8999-999999999991")!,
+            title: UnfadingLocalized.Detail.title(for: pin),
+            note: pin.detail()?.noteBody ?? pin.shortLabel,
+            placeTitle: UnfadingLocalized.Detail.place(for: pin),
+            address: UnfadingLocalized.Detail.place(for: pin),
+            locationLat: pin.coordinate.latitude,
+            locationLng: pin.coordinate.longitude,
+            date: Date(timeIntervalSince1970: 1_776_000_000),
+            capturedAt: nil,
+            photoURL: nil,
+            photoURLs: [],
+            categories: [],
+            emotions: pin.detail()?.moodTagIDs ?? [],
+            participantUserIds: participants.map(\.id),
+            cost: pin.detail()?.costKRW,
+            reactionCount: 0,
+            createdAt: nil
+        )
+    }
+}
+
+private extension DBProfile {
+    static let sampleParticipants: [DBProfile] = [
+        DBProfile(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000017")!,
+            email: "sample1@unfading.app",
+            displayName: "시현",
+            photoURL: nil,
+            createdAt: Date(timeIntervalSince1970: 1_776_000_000)
+        ),
+        DBProfile(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000018")!,
+            email: "sample2@unfading.app",
+            displayName: "민지",
+            photoURL: nil,
+            createdAt: Date(timeIntervalSince1970: 1_776_000_000)
+        ),
+        DBProfile(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000019")!,
+            email: "sample3@unfading.app",
+            displayName: "준호",
+            photoURL: nil,
+            createdAt: Date(timeIntervalSince1970: 1_776_000_000)
+        )
+    ]
+}
+
+private struct FlowLayout<Content: View>: View {
+    let spacing: CGFloat
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
-            Text(title)
-                .font(UnfadingTheme.Font.subheadlineSemibold())
-                .foregroundStyle(UnfadingTheme.Color.textSecondary)
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 92), spacing: spacing)], alignment: .leading, spacing: spacing) {
             content()
         }
     }

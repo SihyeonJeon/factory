@@ -3,6 +3,7 @@
 # Blackboard Compact
 
 ## Recent entries
+- **[2026-04-23 R32]** Codex opened round-mandated unindexed iOS/design files for Memory Detail Sprint 28 implementation; scope limited to spec-listed files and R32 artifacts.
 - **[2026-04-10 23:29:03]** `code_review` via `ios_architect:claude-opus-4-6`
 - **[2026-04-10 23:42:06]** `hig_audit` via `visual_qa:claude-sonnet-4-6`
 - **[2026-04-10 23:44:49]** `visual_qa` via `visual_qa:claude-sonnet-4-6`

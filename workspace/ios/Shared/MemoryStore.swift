@@ -40,11 +40,19 @@ final class MemoryStore: ObservableObject {
         groupId: UUID = UUID(uuidString: "11111111-1111-4111-8111-111111111117")!,
         userId: UUID = UUID(uuidString: "00000000-0000-0000-0000-000000000017")!
     ) -> [DBMemory] {
-        [
+        let eventId = UUID(uuidString: "99999999-9999-4999-8999-999999999991")!
+        let participantIds = [
+            userId,
+            UUID(uuidString: "00000000-0000-0000-0000-000000000018")!,
+            UUID(uuidString: "00000000-0000-0000-0000-000000000019")!
+        ]
+
+        return [
             DBMemory(
                 id: UUID(uuidString: "eeeeeee1-eeee-4eee-8eee-eeeeeeeeeee1")!,
                 userId: userId,
                 groupId: groupId,
+                eventId: eventId,
                 title: "상수 루프톱 저녁",
                 note: "친구들과 공연 이야기를 나눈 밤",
                 placeTitle: "상수 루프톱",
@@ -57,6 +65,8 @@ final class MemoryStore: ObservableObject {
                 photoURLs: [],
                 categories: ["food"],
                 emotions: ["joy", "grateful"],
+                participantUserIds: participantIds,
+                cost: 68_000,
                 reactionCount: 2,
                 createdAt: Date(timeIntervalSince1970: 1_776_000_000)
             ),
@@ -64,6 +74,7 @@ final class MemoryStore: ObservableObject {
                 id: UUID(uuidString: "eeeeeee2-eeee-4eee-8eee-eeeeeeeeeee2")!,
                 userId: userId,
                 groupId: groupId,
+                eventId: eventId,
                 title: "한강 산책",
                 note: "노을을 보며 천천히 걸었던 시간",
                 placeTitle: "여의도 한강공원",
@@ -76,6 +87,8 @@ final class MemoryStore: ObservableObject {
                 photoURLs: [],
                 categories: ["walk"],
                 emotions: ["calm", "nostalgic"],
+                participantUserIds: participantIds,
+                cost: 12_000,
                 reactionCount: 1,
                 createdAt: Date(timeIntervalSince1970: 1_776_086_400)
             ),
@@ -83,6 +96,7 @@ final class MemoryStore: ObservableObject {
                 id: UUID(uuidString: "eeeeeee3-eeee-4eee-8eee-eeeeeeeeeee3")!,
                 userId: userId,
                 groupId: groupId,
+                eventId: eventId,
                 title: "해돋이 산책",
                 note: "차가운 아침 공기와 함께 걷던 시간",
                 placeTitle: "광화문",
@@ -95,6 +109,8 @@ final class MemoryStore: ObservableObject {
                 photoURLs: [],
                 categories: ["trip"],
                 emotions: ["calm"],
+                participantUserIds: [userId],
+                cost: nil,
                 reactionCount: 0,
                 createdAt: Date(timeIntervalSince1970: 1_776_172_800)
             )
