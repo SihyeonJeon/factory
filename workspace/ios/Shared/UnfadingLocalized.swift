@@ -642,6 +642,7 @@ enum UnfadingLocalized {
         static let showPaywall = "프리미엄 보기"
         static let manage = "구독 관리"
         static let manageHint = "App Store 구독 관리 화면을 엽니다."
+        static let serverSyncFailedToast = "서버에 동기화하지 못했지만, 구독은 정상이에요"
     }
 
     enum Theme {

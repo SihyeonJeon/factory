@@ -6,6 +6,7 @@ struct PremiumPaywallView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var store: SubscriptionStore
     @State private var alertMessage: String?
+    @State private var toastMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -40,6 +41,15 @@ struct PremiumPaywallView: View {
             } message: {
                 Text(alertMessage ?? "")
             }
+            .overlay(alignment: .bottom) {
+                if let toastMessage {
+                    UnfadingToast(message: toastMessage)
+                        .padding(.horizontal, UnfadingTheme.Spacing.xl)
+                        .padding(.bottom, UnfadingTheme.Spacing.xl)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .animation(.easeInOut(duration: 0.2), value: toastMessage)
         }
     }
 
@@ -162,7 +172,14 @@ struct PremiumPaywallView: View {
     private func purchase(_ product: Product) async {
         do {
             _ = try await store.purchase(product)
-            dismiss()
+            if let warning = store.consumePendingServerSyncMessage() {
+                toastMessage = warning
+                try? await Task.sleep(for: .seconds(1.8))
+                dismiss()
+                toastMessage = nil
+            } else {
+                dismiss()
+            }
         } catch {
             alertMessage = error.localizedDescription
         }

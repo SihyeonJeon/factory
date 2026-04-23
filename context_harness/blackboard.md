@@ -1296,3 +1296,4 @@ xcodegen 성공. Sprint 26 완료입니다.
 - 2026-04-23 Codex R36: opened user-mandated design handoff, Home sheet Swift files, SampleModels, localization/theme, tests, and project.yml; reason: implement sheet curated content and archive tab with no matching R36 lock file found.
 - 2026-04-24 R38 Codex: opened user-specified iOS source/test files not individually indexed to connect MemoryStore real data for calendar/map/home sheet.
 - 2026-04-24 R38 Codex: opened Features/Rewind/RewindData.swift after SampleMemoryPin runtime reference search; reason: remove production SampleMemoryPin dependency from rewind sample fallback.
+- 2026-04-24 Codex: opened local supabase-swift package sources under workspace/ios/.deriveddata/r25/SourcePackages/checkouts/supabase-swift to verify Functions API signatures for R42 subscription sync implementation.

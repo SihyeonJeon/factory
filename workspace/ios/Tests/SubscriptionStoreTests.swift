@@ -3,6 +3,30 @@ import XCTest
 
 @MainActor
 final class SubscriptionStoreTests: XCTestCase {
+    fileprivate actor StubSubscriptionServerSyncer: SubscriptionServerSyncing {
+        var validateCalls: [SubscriptionValidationPayload] = []
+        var fetchCalls = 0
+        var validationResult = SubscriptionValidationResult(ok: true, status: "active", expiresAtRaw: nil)
+        var validationError: Error?
+        var currentSubscription: SubscriptionServerRow?
+
+        func validateSubscription(_ payload: SubscriptionValidationPayload) async throws -> SubscriptionValidationResult {
+            validateCalls.append(payload)
+            if let validationError {
+                throw validationError
+            }
+            return validationResult
+        }
+
+        func fetchCurrentSubscription() async throws -> SubscriptionServerRow? {
+            fetchCalls += 1
+            return currentSubscription
+        }
+    }
+
+    private struct StubError: LocalizedError {
+        let errorDescription: String? = "stub failure"
+    }
 
     func test_product_ids_match_subscription_constants() {
         XCTAssertEqual(
@@ -37,5 +61,48 @@ final class SubscriptionStoreTests: XCTestCase {
         let store = SubscriptionStore()
         await store.loadProducts()
         XCTAssertFalse(store.isLoading)
+    }
+
+    func test_sync_subscription_for_testing_invokes_edge_function_stub_with_payload() async {
+        let syncer = StubSubscriptionServerSyncer()
+        let store = SubscriptionStore(serverSyncer: syncer)
+        let payload = SubscriptionValidationPayload(
+            originalTransactionId: "1000000999",
+            productId: SubscriptionStore.productIDs[0],
+            bundleId: "com.jeonsihyeon.memorymap",
+            environment: "sandbox"
+        )
+
+        await store.syncSubscriptionToServerForTesting(payload)
+
+        let loggedCalls = await syncer.validateCalls
+        XCTAssertEqual(loggedCalls, [payload])
+        XCTAssertFalse(store.hasPendingServerSync)
+        XCTAssertNil(store.consumePendingServerSyncMessage())
+    }
+
+    func test_sync_subscription_for_testing_marks_pending_warning_when_edge_function_fails() async {
+        let syncer = StubSubscriptionServerSyncer()
+        await syncer.setValidationErrorForTest(StubError())
+        let store = SubscriptionStore(serverSyncer: syncer)
+        let payload = SubscriptionValidationPayload(
+            originalTransactionId: "1000001000",
+            productId: SubscriptionStore.productIDs[1],
+            bundleId: "com.jeonsihyeon.memorymap",
+            environment: "production"
+        )
+
+        await store.syncSubscriptionToServerForTesting(payload)
+
+        let loggedCalls = await syncer.validateCalls
+        XCTAssertEqual(loggedCalls, [payload])
+        XCTAssertTrue(store.hasPendingServerSync)
+        XCTAssertEqual(store.consumePendingServerSyncMessage(), UnfadingLocalized.Premium.serverSyncFailedToast)
+    }
+}
+
+private extension SubscriptionStoreTests.StubSubscriptionServerSyncer {
+    func setValidationErrorForTest(_ error: Error?) {
+        validationError = error
     }
 }
