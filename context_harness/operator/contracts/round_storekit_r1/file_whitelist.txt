@@ -1,0 +1,17 @@
+./.gitignore
+workspace/ios/StoreKitConfiguration.storekit
+workspace/ios/project.yml
+workspace/ios/scripts/apply_storekit_scheme.sh
+workspace/ios/App/MemoryMapApp.swift
+workspace/ios/Shared/SubscriptionStore.swift
+workspace/ios/Shared/UnfadingLocalized.swift
+workspace/ios/Features/Settings/SettingsView.swift
+workspace/ios/Features/Settings/PremiumPreviewSheet.swift
+workspace/ios/Features/Premium/PremiumPaywallView.swift
+workspace/ios/Tests/SubscriptionStoreTests.swift
+workspace/ios/Tests/UnfadingLocalizedTests.swift
+context_harness/operator/contracts/round_storekit_r1/spec.md
+context_harness/operator/contracts/round_storekit_r1/file_whitelist.txt
+context_harness/operator/meetings/2026-04-23_round22_storekit_plan.md
+context_harness/reports/round_storekit_r1/evidence/notes.md
+context_harness/blackboard.md

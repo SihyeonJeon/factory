@@ -326,6 +326,26 @@ enum UnfadingLocalized {
         }
     }
 
+    // MARK: Premium
+
+    enum Premium {
+        static let title = "Unfading 프리미엄"
+        static let heroTitle = "Unfading 프리미엄으로 더 많은 추억을"
+        static let subtitle = "소중한 추억을 무제한으로"
+        static let monthlyTitle = "월간 구독"
+        static let yearlyTitle = "연간 구독"
+        static let yearlyBadge = "33% 절약"
+        static let currentFree = "무료 플랜"
+        static let currentPremium = "프리미엄 활성"
+        static let restore = "구매 복원"
+        static let cancel = "App Store에서 언제든 취소 가능해요."
+        static let loading = "상품 불러오는 중…"
+        static let subscribedBanner = "프리미엄이 활성화되었어요!"
+        static let showPaywall = "프리미엄 보기"
+        static let manage = "구독 관리"
+        static let manageHint = "App Store 구독 관리 화면을 엽니다."
+    }
+
     enum Theme {
         static let system = "시스템 설정"
         static let light = "라이트"

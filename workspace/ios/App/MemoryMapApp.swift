@@ -6,6 +6,7 @@ struct MemoryMapApp: App {
     @StateObject private var authStore: AuthStore
     @StateObject private var groupStore: GroupStore
     @StateObject private var memoryStore: MemoryStore
+    @StateObject private var subscriptionStore: SubscriptionStore
     @State private var memoryRealtimeTask: Task<Void, Never>?
     @State private var bootstrappedPreferencesUserId: UUID?
 
@@ -29,6 +30,7 @@ struct MemoryMapApp: App {
         _authStore = StateObject(wrappedValue: AuthStore())
         _groupStore = StateObject(wrappedValue: Self.makeGroupStore())
         _memoryStore = StateObject(wrappedValue: MemoryStore())
+        _subscriptionStore = StateObject(wrappedValue: SubscriptionStore())
     }
 
     private static var shouldSkipOnboardingForUITests: Bool {
@@ -87,6 +89,10 @@ struct MemoryMapApp: App {
                     AuthLandingView()
                         .environmentObject(authStore)
                 }
+            }
+            .environmentObject(subscriptionStore)
+            .task {
+                await subscriptionStore.loadProducts()
             }
             .onReceive(authStore.$state) { state in
                 guard case let .signedIn(userId, _) = state else {

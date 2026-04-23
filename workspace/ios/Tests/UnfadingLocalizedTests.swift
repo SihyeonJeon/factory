@@ -33,6 +33,17 @@ final class UnfadingLocalizedTests: XCTestCase {
         XCTAssertEqual(UnfadingLocalized.Common.cancel, "취소")
     }
 
+    func test_premium_strings_present() {
+        XCTAssertEqual(UnfadingLocalized.Premium.title, "Unfading 프리미엄")
+        XCTAssertEqual(UnfadingLocalized.Premium.monthlyTitle, "월간 구독")
+        XCTAssertEqual(UnfadingLocalized.Premium.yearlyTitle, "연간 구독")
+        XCTAssertEqual(UnfadingLocalized.Premium.yearlyBadge, "33% 절약")
+        XCTAssertEqual(UnfadingLocalized.Premium.currentFree, "무료 플랜")
+        XCTAssertEqual(UnfadingLocalized.Premium.currentPremium, "프리미엄 활성")
+        XCTAssertEqual(UnfadingLocalized.Premium.restore, "구매 복원")
+        XCTAssertEqual(UnfadingLocalized.Premium.loading, "상품 불러오는 중…")
+    }
+
     func test_draft_tag_helper_maps_known_ids() {
         XCTAssertEqual(UnfadingLocalized.draftTag(id: "joy", fallback: "Joy"), "기쁨")
         XCTAssertEqual(UnfadingLocalized.draftTag(id: "calm", fallback: "Calm"), "차분함")

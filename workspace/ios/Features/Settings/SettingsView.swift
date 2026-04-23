@@ -5,6 +5,8 @@ struct SettingsView: View {
     @EnvironmentObject private var authStore: AuthStore
     @EnvironmentObject private var memoryStore: MemoryStore
     @EnvironmentObject private var prefs: UserPreferences
+    @EnvironmentObject private var subscriptionStore: SubscriptionStore
+    @Environment(\.openURL) private var openURL
     @State private var showingGroupHub = false
     @State private var showingPremium = false
 
@@ -24,7 +26,8 @@ struct SettingsView: View {
                 GroupHubView()
             }
             .sheet(isPresented: $showingPremium) {
-                PremiumPreviewSheet()
+                PremiumPaywallView()
+                    .environmentObject(subscriptionStore)
             }
         }
     }
@@ -112,14 +115,36 @@ struct SettingsView: View {
 
     private var premiumSection: some View {
         Section(UnfadingLocalized.Settings.premiumSection) {
-            Button {
-                showingPremium = true
-            } label: {
-                Label(UnfadingLocalized.Settings.premiumExplore, systemImage: "sparkles")
-                    .foregroundStyle(UnfadingTheme.Color.primary)
-                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            HStack {
+                Label(UnfadingLocalized.Premium.title, systemImage: "sparkles")
+                    .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                Spacer()
+                Text(subscriptionStore.hasPremium ? UnfadingLocalized.Premium.currentPremium : UnfadingLocalized.Premium.currentFree)
+                    .font(UnfadingTheme.Font.subheadlineSemibold())
+                    .foregroundStyle(subscriptionStore.hasPremium ? UnfadingTheme.Color.primary : UnfadingTheme.Color.textSecondary)
             }
-            .accessibilityHint(UnfadingLocalized.Accessibility.premiumExploreHint)
+            .frame(minHeight: 44)
+
+            if subscriptionStore.hasPremium {
+                Button {
+                    if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+                        openURL(url)
+                    }
+                } label: {
+                    Label(UnfadingLocalized.Premium.manage, systemImage: "person.crop.circle.badge.checkmark")
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                }
+                .accessibilityHint(UnfadingLocalized.Premium.manageHint)
+            } else {
+                Button {
+                    showingPremium = true
+                } label: {
+                    Label(UnfadingLocalized.Premium.showPaywall, systemImage: "sparkles")
+                        .foregroundStyle(UnfadingTheme.Color.primary)
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                }
+                .accessibilityHint(UnfadingLocalized.Accessibility.premiumExploreHint)
+            }
         }
     }
 
@@ -139,4 +164,5 @@ struct SettingsView: View {
         .environmentObject(UserPreferences())
         .environmentObject(GroupStore.preview())
         .environmentObject(MemoryStore(memories: MemoryStore.uiTestStubMemories()))
+        .environmentObject(SubscriptionStore())
 }

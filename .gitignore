@@ -8,6 +8,9 @@ workspace/ios/*
 !workspace/ios/Tests/
 !workspace/ios/UITests/
 !workspace/ios/project.yml
+!workspace/ios/StoreKitConfiguration.storekit
+!workspace/ios/scripts/
+!workspace/ios/scripts/apply_storekit_scheme.sh
 workspace/ios/MemoryMap.xcodeproj/
 workspace/ios/.build/
 workspace/ios/.deriveddata/

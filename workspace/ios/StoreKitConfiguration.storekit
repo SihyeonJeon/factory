@@ -1,0 +1,99 @@
+{
+  "identifier" : "MemoryMap-StoreKit",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_askToBuyEnabled" : false,
+    "_billingIssuesEnabled" : false,
+    "_compatibilityTimeRate" : 1,
+    "_disableDialogs" : false,
+    "_failTransactionsEnabled" : false,
+    "_locale" : "ko_KR",
+    "_storefront" : "KOR",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21000000",
+      "localizations" : [
+        {
+          "description" : "Unfading 프리미엄",
+          "displayName" : "Unfading Premium",
+          "locale" : "ko_KR"
+        }
+      ],
+      "name" : "Unfading Premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "4900",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "22000001",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unfading 프리미엄 월간 구독",
+              "displayName" : "프리미엄 월간",
+              "locale" : "ko_KR"
+            }
+          ],
+          "productID" : "com.jeonsihyeon.memorymap.premium.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Premium Monthly",
+          "subscriptionGroupID" : "21000000",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "39000",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "22000002",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unfading 프리미엄 연간 구독 (33% 절약)",
+              "displayName" : "프리미엄 연간",
+              "locale" : "ko_KR"
+            }
+          ],
+          "productID" : "com.jeonsihyeon.memorymap.premium.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Premium Yearly",
+          "subscriptionGroupID" : "21000000",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

@@ -1,6 +1,7 @@
 name: MemoryMap
 options:
   bundleIdPrefix: com.jeonsihyeon
+  postGenCommand: ./scripts/apply_storekit_scheme.sh
   deploymentTarget:
     iOS: "18.0"
 settings:
@@ -74,7 +75,10 @@ schemes:
         MemoryMap: all
         MemoryMapTests: [test]
         UnfadingUITests: [test]
+    run:
+      storeKitConfiguration: StoreKitConfiguration.storekit
     test:
+      storeKitConfiguration: StoreKitConfiguration.storekit
       targets:
         - MemoryMapTests
         - UnfadingUITests
