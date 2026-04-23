@@ -1,0 +1,20 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test -project MemoryMap.xcodeproj -scheme MemoryMap -destination "platform=iOS Simulator,name=iPhone 16" -derivedDataPath .deriveddata/r50 -resultBundlePath .deriveddata/r50/Test-R50.xcresult
+
+Resolve Package Graph
+
+Fetching from https://github.com/pointfreeco/swift-clocks
+
+Fetching from https://github.com/supabase/supabase-swift
+
+Fetching from https://github.com/pointfreeco/swift-concurrency-extras
+
+Fetching from https://github.com/apple/swift-http-types.git
+
+Fetching from https://github.com/apple/swift-asn1.git
+
+Fetching from https://github.com/pointfreeco/xctest-dynamic-overlay
+
+Fetching from https://github.com/apple/swift-crypto.git
+
+fatalError
