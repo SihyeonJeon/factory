@@ -1,0 +1,13 @@
+workspace/ios/App/MemoryMapApp.swift
+workspace/ios/App/RootTabView.swift
+workspace/ios/App/UnfadingTabShell.swift
+workspace/ios/Features/Home/ComposeFAB.swift
+workspace/ios/Features/Home/MemoryMapHomeView.swift
+workspace/ios/Features/Home/MemoryPinMarker.swift
+workspace/ios/Features/Home/MemorySelectionState.swift
+workspace/ios/Shared/UnfadingFilterChip.swift
+workspace/ios/Tests/MemorySelectionStateTests.swift
+workspace/ios/UITests/UnfadingUITests.swift
+context_harness/operator/contracts/round_home_chrome_r1/file_whitelist.txt
+context_harness/operator/meetings/2026-04-23_round_home_chrome_plan.md
+context_harness/reports/round_home_chrome_r1/evidence/notes.md

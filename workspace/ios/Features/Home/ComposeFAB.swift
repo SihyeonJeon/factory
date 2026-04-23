@@ -19,9 +19,17 @@ struct ComposeFAB: View {
                 )
                 .shadow(style: UnfadingTheme.Shadow.activeCard)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(ComposeFABButtonStyle())
         .accessibilityLabel(UnfadingLocalized.Accessibility.composeTabLabel)
         .accessibilityIdentifier("home-fab")
+    }
+}
+
+private struct ComposeFABButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
+            .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
     }
 }
 

@@ -46,6 +46,20 @@ struct MemoryMapApp: App {
             || ProcessInfo.processInfo.environment["UNFADING_UI_TEST_GROUP_STUB"] == "1"
     }
 
+    private static func initialSheetSnap() -> BottomSheetSnap {
+        for arg in ProcessInfo.processInfo.arguments {
+            if arg.hasPrefix("-UI_TEST_SHEET_SNAP=") {
+                let value = String(arg.dropFirst("-UI_TEST_SHEET_SNAP=".count))
+                switch value {
+                case "collapsed": return .collapsed
+                case "expanded": return .expanded
+                default: return .default_
+                }
+            }
+        }
+        return .default_
+    }
+
     @MainActor
     private static func makeGroupStore() -> GroupStore {
         #if DEBUG
@@ -77,7 +91,7 @@ struct MemoryMapApp: App {
                             GroupOnboardingView()
                                 .environmentObject(groupStore)
                         } else {
-                            RootTabView(evidenceMode: evidenceMode)
+                            RootTabView(evidenceMode: evidenceMode, initialSheetSnap: Self.initialSheetSnap())
                                 .environmentObject(authStore)
                                 .environmentObject(prefs)
                                 .environmentObject(groupStore)

@@ -12,19 +12,29 @@ final class MemorySelectionState: ObservableObject {
     /// non-filtered state.
     enum Filter: String, CaseIterable, Hashable {
         case all
-        case date
-        case trip
-        case anniversary
+        case memory
         case food
+        case cafe
+        case experience
 
         /// Korean display title resolved at render time.
         var title: String {
             switch self {
             case .all: return UnfadingLocalized.Home.filterAll
-            case .date: return UnfadingLocalized.Home.filterDate
-            case .trip: return UnfadingLocalized.Home.filterTrip
-            case .anniversary: return UnfadingLocalized.Home.filterAnniversary
-            case .food: return UnfadingLocalized.Home.filterFood
+            case .memory: return "추억"
+            case .food: return "밥"
+            case .cafe: return "카페"
+            case .experience: return "경험"
+            }
+        }
+
+        var systemImage: String {
+            switch self {
+            case .all: return "sparkles"
+            case .memory: return "heart.fill"
+            case .food: return "fork.knife"
+            case .cafe: return "cup.and.saucer.fill"
+            case .experience: return "safari.fill"
             }
         }
     }
@@ -33,16 +43,15 @@ final class MemorySelectionState: ObservableObject {
     @Published private(set) var activeFilter: Filter = .all
     @Published var sheetSnap: BottomSheetSnap = .default_
 
-    /// Select a pin. Selecting snaps the sheet to expanded; selecting the
-    /// currently-selected pin again clears the selection and returns the sheet
-    /// to its default snap.
+    /// Select a pin. Selecting snaps the sheet to default; selecting the
+    /// currently-selected pin again clears the selection and keeps default snap.
     func select(pinID: UUID) {
         if selectedPinID == pinID {
             clearSelection()
             return
         }
         selectedPinID = pinID
-        sheetSnap = .expanded
+        sheetSnap = .default_
     }
 
     /// Clear any active pin selection and restore the default sheet snap.

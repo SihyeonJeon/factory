@@ -113,6 +113,48 @@ final class UnfadingUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars[UnfadingUITestText.composerTitle].waitForExistence(timeout: 5))
     }
 
+    func testHomeChromeLayoutCoordinates() {
+        // Prototype HTML 좌표는 iPhone 프레임 "container-relative". XCUITest
+        // `.frame.minY` 는 device screen 원점 (status bar 포함) 기준이라 safeArea
+        // 오프셋 발생. 정밀 pixel 검증은 MemoryMapHomeViewTests 가 layout 상수로,
+        // 여기서는 **상대 순서 + 요소 존재** 만 assert.
+        app.launch()
+        tapTab("map")
+
+        let topChrome = app.descendants(matching: .any).matching(identifier: "home-top-chrome").firstMatch
+        let filterBar = app.descendants(matching: .any).matching(identifier: "home-filter-chip-bar").firstMatch
+        let mapControls = app.descendants(matching: .any).matching(identifier: "home-map-controls").firstMatch
+        let bottomSheet = app.otherElements["unfading-bottom-sheet"].firstMatch
+
+        XCTAssertTrue(topChrome.waitForExistence(timeout: 5))
+        XCTAssertTrue(filterBar.waitForExistence(timeout: 5))
+        XCTAssertTrue(mapControls.waitForExistence(timeout: 5))
+        XCTAssertTrue(bottomSheet.waitForExistence(timeout: 5))
+
+        XCTAssertLessThan(topChrome.frame.minY, filterBar.frame.minY, "TopChrome above FilterChipBar")
+        XCTAssertLessThan(filterBar.frame.maxY, mapControls.frame.minY, "FilterChipBar above MapControls")
+        XCTAssertLessThan(mapControls.frame.maxY, bottomSheet.frame.minY, "MapControls above BottomSheet")
+    }
+
+    func testChromeFadesOnExpanded() {
+        app.launchArguments.append("-UI_TEST_SHEET_SNAP=expanded")
+        app.launch()
+        tapTab("map")
+
+        let topChrome = app.descendants(matching: .any).matching(identifier: "home-top-chrome").firstMatch
+        let filterBar = app.descendants(matching: .any).matching(identifier: "home-filter-chip-bar").firstMatch
+        let mapControls = app.descendants(matching: .any).matching(identifier: "home-map-controls").firstMatch
+        let fab = app.buttons["home-fab"].firstMatch
+
+        XCTAssertTrue(topChrome.waitForExistence(timeout: 5))
+        XCTAssertTrue(filterBar.waitForExistence(timeout: 5))
+        XCTAssertTrue(mapControls.waitForExistence(timeout: 5))
+        XCTAssertFalse(topChrome.isHittable)
+        XCTAssertFalse(filterBar.isHittable)
+        XCTAssertFalse(mapControls.isHittable)
+        XCTAssertFalse(fab.isHittable)
+    }
+
     func testCustomTabBarAlwaysVisible() {
         app.launch()
         tapTab("settings")
@@ -173,6 +215,22 @@ final class UnfadingUITests: XCTestCase {
         let predicate = NSPredicate(format: "value == %@", value)
         let expectation = XCTNSPredicateExpectation(predicate: predicate, object: sheet)
         return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    }
+
+    private func assertFrame(
+        _ frame: CGRect,
+        minX: CGFloat,
+        minY: CGFloat,
+        width: CGFloat,
+        height: CGFloat,
+        tolerance: CGFloat = 2,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        XCTAssertEqual(frame.minX, minX, accuracy: tolerance, file: file, line: line)
+        XCTAssertEqual(frame.minY, minY, accuracy: tolerance, file: file, line: line)
+        XCTAssertEqual(frame.width, width, accuracy: tolerance, file: file, line: line)
+        XCTAssertEqual(frame.height, height, accuracy: tolerance, file: file, line: line)
     }
 
     private func attachScreenshot(name: String) {

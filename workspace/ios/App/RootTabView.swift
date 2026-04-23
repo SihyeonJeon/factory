@@ -5,13 +5,15 @@ import SwiftUI
 /// root z-layer stack.
 struct RootTabView: View {
     private let evidenceMode: MemoryComposerEvidenceMode
+    private let initialSheetSnap: BottomSheetSnap
 
-    init(evidenceMode: MemoryComposerEvidenceMode = .none) {
+    init(evidenceMode: MemoryComposerEvidenceMode = .none, initialSheetSnap: BottomSheetSnap = .default_) {
         self.evidenceMode = evidenceMode
+        self.initialSheetSnap = initialSheetSnap
     }
 
     var body: some View {
-        UnfadingTabShell(evidenceMode: evidenceMode)
+        UnfadingTabShell(evidenceMode: evidenceMode, initialSheetSnap: initialSheetSnap)
     }
 }
 

@@ -14,6 +14,7 @@ struct MemoryMapHomeView: View {
     @EnvironmentObject private var groupStore: GroupStore
     @EnvironmentObject private var memoryStore: MemoryStore
     private let evidenceMode: MemoryComposerEvidenceMode
+    private let onSwitchGroup: () -> Void
     @Binding private var sheetSnap: BottomSheetSnap
     @StateObject private var locationPermissionStore = LocationPermissionStore()
     @StateObject private var selection = MemorySelectionState()
@@ -28,33 +29,62 @@ struct MemoryMapHomeView: View {
         )
     )
 
-    init(sheetSnap: Binding<BottomSheetSnap> = .constant(.default_), evidenceMode: MemoryComposerEvidenceMode = .none) {
+    init(
+        sheetSnap: Binding<BottomSheetSnap> = .constant(.default_),
+        evidenceMode: MemoryComposerEvidenceMode = .none,
+        onSwitchGroup: @escaping () -> Void = {}
+    ) {
         self._sheetSnap = sheetSnap
         self.evidenceMode = evidenceMode
+        self.onSwitchGroup = onSwitchGroup
     }
 
     var body: some View {
         NavigationStack {
             GeometryReader { proxy in
-                ZStack(alignment: .bottom) {
+                let screenWidth = proxy.size.width
+                let screenHeight = proxy.size.height
+                let safeBottom = proxy.safeAreaInsets.bottom
+                let sheetTop = MemoryMapHomeLayout.sheetTopY(
+                    screenHeight: screenHeight,
+                    safeBottom: safeBottom,
+                    snap: sheetSnap
+                )
+
+                ZStack(alignment: .topLeading) {
                     mapLayer
                         .ignoresSafeArea(edges: .top)
+                        .zIndex(10)
 
                     topChrome
-                        .padding(.horizontal, MemoryMapHomeLayout.horizontalInset)
-                        .padding(.top, MemoryMapHomeLayout.topChromeTop)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                        .opacity(sheetSnap == .expanded ? 0 : 1)
-                        .allowsHitTesting(sheetSnap != .expanded)
-                        .zIndex(2)
+                        .frame(
+                            width: screenWidth - (MemoryMapHomeLayout.horizontalInset * 2),
+                            height: MemoryMapHomeLayout.topChromeHeight
+                        )
+                        .position(
+                            x: screenWidth / 2,
+                            y: MemoryMapHomeLayout.topChromeTop + (MemoryMapHomeLayout.topChromeHeight / 2)
+                        )
+                        .chromeVisibility(sheetSnap)
+                        .zIndex(30)
 
                     filterRow
-                        .padding(.horizontal, MemoryMapHomeLayout.horizontalInset)
-                        .padding(.top, MemoryMapHomeLayout.filterChipTop)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                        .opacity(sheetSnap == .expanded ? 0 : 1)
-                        .allowsHitTesting(sheetSnap != .expanded)
-                        .zIndex(2)
+                        .frame(width: screenWidth, height: MemoryMapHomeLayout.filterChipHeight)
+                        .position(
+                            x: screenWidth / 2,
+                            y: MemoryMapHomeLayout.filterChipTop + (MemoryMapHomeLayout.filterChipHeight / 2)
+                        )
+                        .chromeVisibility(sheetSnap)
+                        .zIndex(28)
+
+                    mapControls
+                        .frame(width: MemoryMapHomeLayout.mapControlsSize, height: MemoryMapHomeLayout.mapControlsStackHeight)
+                        .position(
+                            x: screenWidth - MemoryMapHomeLayout.mapControlsRight - (MemoryMapHomeLayout.mapControlsSize / 2),
+                            y: sheetTop - MemoryMapHomeLayout.mapControlsBottomGap - (MemoryMapHomeLayout.mapControlsStackHeight / 2)
+                        )
+                        .chromeVisibility(sheetSnap)
+                        .zIndex(26)
 
                     UnfadingBottomSheet(
                         snap: $sheetSnap,
@@ -79,16 +109,7 @@ struct MemoryMapHomeView: View {
                         )
                     }
                     .ignoresSafeArea(.container, edges: .bottom)
-                    .zIndex(4)
-
-                    mapControls
-                        .padding(.trailing, MemoryMapHomeLayout.mapControlsRight)
-                        .padding(.bottom, measuredSheetHeight + UnfadingTabBar.height + MemoryMapHomeLayout.mapControlsBottomGap)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                        .opacity(sheetSnap == .expanded ? 0 : 1)
-                        .allowsHitTesting(sheetSnap != .expanded)
-                        .zIndex(3)
-
+                    .zIndex(50)
                 }
                 .frame(width: proxy.size.width, height: proxy.size.height)
             }
@@ -136,7 +157,11 @@ struct MemoryMapHomeView: View {
                         selection.select(pinID: pin.id)
                         sheetSnap = selection.sheetSnap
                     } label: {
-                        MemoryPinMarker(pin: pin)
+                        MemoryPinMarker(
+                            pin: pin,
+                            isSelected: selection.selectedPinID == pin.id,
+                            isDimmed: selection.selectedPinID != nil && selection.selectedPinID != pin.id
+                        )
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(UnfadingLocalized.Accessibility.mapPinLabel(title: pin.title))
@@ -150,29 +175,30 @@ struct MemoryMapHomeView: View {
     private var topChrome: some View {
         HStack(spacing: UnfadingTheme.Spacing.sm) {
             Button {
+                onSwitchGroup()
                 showingGroupHub = true
             } label: {
                 HStack(spacing: UnfadingTheme.Spacing.xs) {
-                    Image(systemName: "person.2.fill")
-                        .imageScale(.small)
-                    Text(UnfadingLocalized.Home.groupChipPlaceholder)
-                        .font(UnfadingTheme.Font.footnoteSemibold())
+                    avatarStack
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(groupName)
+                            .font(UnfadingTheme.Font.sectionTitle(15))
+                            .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                            .lineLimit(1)
+                        Text(groupSubtitle)
+                            .font(UnfadingTheme.Font.tag(11))
+                            .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                            .lineLimit(1)
+                    }
                     Image(systemName: "chevron.down")
                         .imageScale(.small)
+                        .foregroundStyle(UnfadingTheme.Color.textSecondary)
                 }
-                .padding(.horizontal, UnfadingTheme.Spacing.md)
-                .padding(.vertical, UnfadingTheme.Spacing.sm)
-                .frame(minHeight: 44)
-                .foregroundStyle(UnfadingTheme.Color.textPrimary)
-                .background(
-                    UnfadingTheme.Color.sheet,
-                    in: Capsule()
-                )
-                .shadow(color: UnfadingTheme.Color.shadow, radius: 6, x: 0, y: 2)
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .accessibilityLabel(UnfadingLocalized.Home.groupChipPlaceholder)
+            .accessibilityLabel(groupName)
             .accessibilityHint(UnfadingLocalized.Home.groupChipHint)
 
             Button {
@@ -181,14 +207,27 @@ struct MemoryMapHomeView: View {
                 Image(systemName: "magnifyingglass")
                     .imageScale(.medium)
                     .foregroundStyle(UnfadingTheme.Color.textPrimary)
-                    .frame(width: 44, height: 44)
-                    .background(UnfadingTheme.Color.sheet, in: Circle())
-                    .shadow(color: UnfadingTheme.Color.shadow, radius: 6, x: 0, y: 2)
+                    .frame(width: 32, height: 32)
+                    .background(UnfadingTheme.Color.surface, in: Circle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel(UnfadingLocalized.Home.searchLabel)
             .accessibilityHint(UnfadingLocalized.Home.searchHint)
         }
+        .padding(.horizontal, UnfadingTheme.Spacing.md)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background {
+            RoundedRectangle(cornerRadius: MemoryMapHomeLayout.topChromeRadius, style: .continuous)
+                .fill(UnfadingTheme.Color.sheet.opacity(0.94))
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: MemoryMapHomeLayout.topChromeRadius, style: .continuous))
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: MemoryMapHomeLayout.topChromeRadius, style: .continuous)
+                .stroke(UnfadingTheme.Color.divider, lineWidth: 0.5)
+        }
+        .shadow(style: UnfadingTheme.Shadow.card)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("home-top-chrome")
     }
 
     private var filterRow: some View {
@@ -197,21 +236,41 @@ struct MemoryMapHomeView: View {
                 ForEach(MemorySelectionState.Filter.allCases, id: \.self) { filter in
                     UnfadingFilterChip(
                         title: filter.title,
+                        systemImage: filter.systemImage,
                         isSelected: selection.activeFilter == filter
                     ) {
                         selection.toggleFilter(filter)
                     }
                 }
+
+                Button {
+                    // Category editor overlay arrives in R30.
+                } label: {
+                    Image(systemName: "plus")
+                        .imageScale(.small)
+                        .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                        .frame(width: 36, height: 36)
+                        .overlay {
+                            Circle()
+                                .stroke(
+                                    UnfadingTheme.Color.divider,
+                                    style: StrokeStyle(lineWidth: 1, dash: [4, 3])
+                                )
+                        }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("카테고리 추가")
             }
-            .padding(.horizontal, UnfadingTheme.Spacing.sm)
+            .padding(.horizontal, UnfadingTheme.Spacing.md)
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(UnfadingLocalized.Accessibility.filterRowLabel)
         .accessibilityHint(UnfadingLocalized.Accessibility.filterRowHint)
+        .accessibilityIdentifier("home-filter-chip-bar")
     }
 
     private var mapControls: some View {
-        VStack(spacing: UnfadingTheme.Spacing.sm) {
+        VStack(spacing: MemoryMapHomeLayout.mapControlsSpacing) {
             mapControlButton(systemName: "location.fill", accessibilityLabel: "Current location") {
                 _ = locationPermissionStore.handleCurrentLocationTap()
             }
@@ -226,6 +285,56 @@ struct MemoryMapHomeView: View {
             }
         }
         .animation(reduceMotion ? .easeInOut(duration: 0.25) : .interpolatingSpring(stiffness: 260, damping: 32), value: measuredSheetHeight)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("home-map-controls")
+    }
+
+    private var avatarStack: some View {
+        let initials = Array(headerInitials.prefix(3))
+        return ZStack(alignment: .leading) {
+            ForEach(Array(initials.enumerated()), id: \.offset) { index, initial in
+                Text(initial)
+                    .font(UnfadingTheme.Font.tag(11))
+                    .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
+                    .frame(width: 28, height: 28)
+                    .background(UnfadingTheme.Color.memberPalette[index % UnfadingTheme.Color.memberPalette.count], in: Circle())
+                    .overlay(Circle().stroke(UnfadingTheme.Color.sheet, lineWidth: 1.5))
+                    .offset(x: CGFloat(index) * 18)
+            }
+
+            if groupStore.mode == .couple, initials.count >= 2 {
+                Image(systemName: "heart.fill")
+                    .imageScale(.small)
+                    .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
+                    .frame(width: 16, height: 16)
+                    .background(UnfadingTheme.Color.primary, in: Circle())
+                    .offset(x: 20, y: 8)
+            }
+        }
+        .frame(width: max(28, 28 + CGFloat(max(0, initials.count - 1)) * 18), height: 34, alignment: .leading)
+    }
+
+    private var groupName: String {
+        groupStore.activeGroup?.name ?? SampleGroup.sampleCouple.name
+    }
+
+    private var groupSubtitle: String {
+        let days = daysTogether
+        if groupStore.mode == .couple {
+            return "함께한 지 \(days)일"
+        }
+        return "\(max(memberCount, 1))명 · 함께한 지 \(days)일"
+    }
+
+    private var memberCount: Int {
+        let count = groupStore.memberProfiles.count
+        return count > 0 ? count : SampleGroup.sampleCouple.members.count
+    }
+
+    private var daysTogether: Int {
+        let start = groupStore.activeGroup?.createdAt ?? Calendar.current.date(byAdding: .day, value: -99, to: Date()) ?? Date()
+        let days = Calendar.current.dateComponents([.day], from: start, to: Date()).day ?? 0
+        return max(days + 1, 1)
     }
 
     private var headerInitials: [String] {
@@ -245,11 +354,15 @@ struct MemoryMapHomeView: View {
             Image(systemName: systemName)
                 .imageScale(.medium)
                 .foregroundStyle(UnfadingTheme.Color.textPrimary)
-                .frame(width: 44, height: 44)
-                .background(UnfadingTheme.Color.sheet, in: Circle())
-                .shadow(color: UnfadingTheme.Color.shadow, radius: 8, x: 0, y: 2)
+                .frame(width: MemoryMapHomeLayout.mapControlsSize, height: MemoryMapHomeLayout.mapControlsSize)
+                .background {
+                    Circle()
+                        .fill(UnfadingTheme.Color.sheet.opacity(0.94))
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+                .shadow(color: UnfadingTheme.Color.textPrimary.opacity(0.10), radius: 8, x: 0, y: 2)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MapControlButtonStyle())
         .accessibilityLabel(accessibilityLabel)
     }
 
@@ -286,13 +399,53 @@ struct MemoryMapHomeView: View {
 }
 
 enum MemoryMapHomeLayout {
-    static let horizontalInset: CGFloat = 14
+    /// Prototype HTML `padding: '0 14px'` — 14pt.
+    static let horizontalInset: CGFloat = UnfadingTheme.Spacing.sm2
     static let topChromeTop: CGFloat = 54
+    static let topChromeHeight: CGFloat = 60
+    static let topChromeRadius: CGFloat = 18
     static let filterChipTop: CGFloat = 108
+    static let filterChipHeight: CGFloat = 44
     static let fabRight: CGFloat = 18
     static let fabBottomGap: CGFloat = 18
-    static let mapControlsRight: CGFloat = 14
+    /// Prototype HTML `right: 14`.
+    static let mapControlsRight: CGFloat = UnfadingTheme.Spacing.sm2
+    static let mapControlsSize: CGFloat = 40
+    static let mapControlsSpacing: CGFloat = UnfadingTheme.Spacing.xs
+    static let mapControlsStackHeight: CGFloat = (mapControlsSize * 2) + mapControlsSpacing
+    /// Prototype HTML `bottom: calc(var(--sheet-height) + 88px)`.
     static let mapControlsBottomGap: CGFloat = 88
+
+    static func sheetTopY(screenHeight: CGFloat, safeBottom: CGFloat, snap: BottomSheetSnap) -> CGFloat {
+        let availableHeight = max(screenHeight - UnfadingTabBar.height - safeBottom, 1)
+        let sheetHeight = availableHeight * CGFloat(snap.fraction)
+        return screenHeight - UnfadingTabBar.height - safeBottom - sheetHeight
+    }
+}
+
+private struct HomeChromeVisibilityModifier: ViewModifier {
+    let snap: BottomSheetSnap
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(snap == .expanded ? 0 : 1)
+            .allowsHitTesting(snap != .expanded)
+            .animation(.easeInOut(duration: 0.22), value: snap)
+    }
+}
+
+private struct MapControlButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.92 : 1)
+            .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
+    }
+}
+
+private extension View {
+    func chromeVisibility(_ snap: BottomSheetSnap) -> some View {
+        modifier(HomeChromeVisibilityModifier(snap: snap))
+    }
 }
 
 #Preview {

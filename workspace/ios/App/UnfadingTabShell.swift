@@ -44,33 +44,44 @@ struct UnfadingTabShell: View {
     private let evidenceMode: MemoryComposerEvidenceMode
 
     @State private var selectedTab: ShellTab = .map
-    @State private var sheetSnap: BottomSheetSnap = .default_
+    @State private var sheetSnap: BottomSheetSnap
     @State private var isPresentingComposer = false
     @State private var didPresentEvidenceComposer = false
 
-    init(evidenceMode: MemoryComposerEvidenceMode = .none) {
+    init(evidenceMode: MemoryComposerEvidenceMode = .none, initialSheetSnap: BottomSheetSnap = Self.initialSheetSnap()) {
         self.evidenceMode = evidenceMode
+        self._sheetSnap = State(initialValue: initialSheetSnap)
     }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            currentScreen
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        GeometryReader { proxy in
+            let sheetTop = MemoryMapHomeLayout.sheetTopY(
+                screenHeight: proxy.size.height,
+                safeBottom: proxy.safeAreaInsets.bottom,
+                snap: sheetSnap
+            )
 
-            if selectedTab == .map {
-                ComposeFAB {
-                    isPresentingComposer = true
+            ZStack(alignment: .bottom) {
+                currentScreen
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                if selectedTab == .map {
+                    ComposeFAB {
+                        isPresentingComposer = true
+                    }
+                    .opacity(sheetSnap == .expanded ? 0 : 1)
+                    .allowsHitTesting(sheetSnap != .expanded)
+                    .animation(.easeInOut(duration: 0.22), value: sheetSnap)
+                    .position(
+                        x: proxy.size.width - MemoryMapHomeLayout.fabRight - 28,
+                        y: sheetTop - MemoryMapHomeLayout.fabBottomGap - 28
+                    )
+                    .zIndex(70)
                 }
-                .opacity(sheetSnap == .expanded ? 0 : 1)
-                .allowsHitTesting(sheetSnap != .expanded)
-                .padding(.trailing, UnfadingTheme.Spacing.md2)
-                .padding(.bottom, UnfadingTabBar.height + UnfadingTheme.Spacing.md2)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .zIndex(70)
-            }
 
-            UnfadingTabBar(selected: $selectedTab)
-                .zIndex(120)
+                UnfadingTabBar(selected: $selectedTab)
+                    .zIndex(120)
+            }
         }
         .background(UnfadingTheme.Color.bg)
         .fullScreenCover(isPresented: $isPresentingComposer) {
@@ -96,6 +107,20 @@ struct UnfadingTabShell: View {
         case .settings:
             SettingsView()
         }
+    }
+
+    private static func initialSheetSnap() -> BottomSheetSnap {
+        for arg in ProcessInfo.processInfo.arguments {
+            if arg.hasPrefix("-UI_TEST_SHEET_SNAP=") {
+                let value = String(arg.dropFirst("-UI_TEST_SHEET_SNAP=".count))
+                switch value {
+                case "collapsed": return .collapsed
+                case "expanded": return .expanded
+                default: return .default_
+                }
+            }
+        }
+        return .default_
     }
 }
 

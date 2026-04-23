@@ -35,6 +35,18 @@ struct UnfadingFilterChip: View {
                 background,
                 in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.chip, style: .continuous)
             )
+            .overlay {
+                if !isSelected {
+                    RoundedRectangle(cornerRadius: UnfadingTheme.Radius.chip, style: .continuous)
+                        .stroke(UnfadingTheme.Color.divider, lineWidth: 0.5)
+                }
+            }
+            .shadow(
+                color: isSelected ? UnfadingTheme.Color.primary.opacity(0.35) : .clear,
+                radius: isSelected ? 8 : 0,
+                x: 0,
+                y: isSelected ? 2 : 0
+            )
             .contentShape(RoundedRectangle(cornerRadius: UnfadingTheme.Radius.chip, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -48,6 +60,6 @@ struct UnfadingFilterChip: View {
     }
 
     private var background: Color {
-        isSelected ? UnfadingTheme.Color.primary : UnfadingTheme.Color.card
+        isSelected ? UnfadingTheme.Color.primary : UnfadingTheme.Color.sheet
     }
 }
