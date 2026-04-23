@@ -79,7 +79,17 @@ struct MemoryComposerSheet: View {
     // vibe-limit-checked: 2 reusable UnfadingPhotoGrid, 8 Dynamic Type/a11y labels
     private var photoSection: some View {
         SectionContainer(title: UnfadingLocalized.Composer.photoSection) {
-            UnfadingPhotoGrid(selection: $state.selectedPhotos)
+            VStack(spacing: UnfadingTheme.Spacing.md) {
+                UnfadingPhotoGrid(selection: $state.selectedPhotos)
+
+                if state.selectedPhotos.isEmpty {
+                    UnfadingEmptyState(
+                        systemImage: "photo.on.rectangle",
+                        title: UnfadingLocalized.Composer.photoSection,
+                        body: UnfadingLocalized.EmptyState.composerPhotoHint
+                    )
+                }
+            }
         }
     }
 

@@ -64,18 +64,11 @@ struct CalendarView: View {
     private var dayMemoriesList: some View {
         let memories = store.memoriesForSelectedDate()
         if memories.isEmpty {
-            VStack(spacing: UnfadingTheme.Spacing.sm) {
-                Text(UnfadingLocalized.Calendar.emptyDayTitle)
-                    .font(UnfadingTheme.Font.subheadlineSemibold())
-                    .foregroundStyle(UnfadingTheme.Color.textPrimary)
-                Text(UnfadingLocalized.Calendar.emptyDayBody)
-                    .font(UnfadingTheme.Font.subheadline())
-                    .foregroundStyle(UnfadingTheme.Color.textSecondary)
-                    .multilineTextAlignment(.center)
-            }
-            .padding(UnfadingTheme.Spacing.lg)
-            .frame(maxWidth: .infinity)
-            .unfadingCardBackground(fill: UnfadingTheme.Color.sheet, shadow: false)
+            UnfadingEmptyState(
+                systemImage: "calendar.badge.clock",
+                title: UnfadingLocalized.Calendar.emptyDayTitle,
+                body: UnfadingLocalized.Calendar.emptyDayBody
+            )
         } else {
             VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
                 Text(UnfadingLocalized.Calendar.memoryCountFormat(memories.count))

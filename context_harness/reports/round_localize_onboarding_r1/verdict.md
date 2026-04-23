@@ -1,0 +1,1 @@
+# Verdict r12: PASS 86/86. Korean sample data + OnboardingView + UnfadingEmptyState. Dispatched via fresh Codex session after resumed session lost R12 context; 1 test-fix cycle for English→Korean assertion drift.

@@ -1,0 +1,1 @@
+# Evidence r12: Korean sample data + Onboarding + UnfadingEmptyState. 86 tests (82→86, +4). Codex fresh session dispatch + test fix. First-launch onboarding screenshot captured (persists hasSeenOnboarding).

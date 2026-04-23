@@ -74,6 +74,28 @@ enum UnfadingLocalized {
         static let cancel = "취소"
     }
 
+    // MARK: Onboarding
+
+    enum Onboarding {
+        static let slide1Title = "추억을 지도 위에 남기다"
+        static let slide1Body = "함께 간 장소를 핀으로 기록하고 언제든 다시 꺼내 봐요."
+        static let slide2Title = "장소 기반 리와인드"
+        static let slide2Body = "그 자리에 다시 서면 예전 추억이 부드럽게 돌아와요."
+        static let slide3Title = "둘, 또는 함께"
+        static let slide3Body = "커플부터 친구 그룹까지. 우리만의 지도를 만들어 봐요."
+        static let startCta = "시작하기"
+        static let skipCta = "건너뛰기"
+        static let pageIndicatorHint = "페이지 이동"
+    }
+
+    // MARK: Empty states
+
+    enum EmptyState {
+        static let rewindTitle = "아직 리와인드가 없어요"
+        static let rewindBody = "함께 만든 순간이 쌓이면 이곳에 나타나요."
+        static let composerPhotoHint = "사진을 추가하면 시간과 장소가 자동으로 채워져요."
+    }
+
     // MARK: Rewind
 
     enum Rewind {
@@ -85,35 +107,19 @@ enum UnfadingLocalized {
         static let storyViewTitle = "리와인드 스토리"
 
         static func dateLabel(for moment: RewindMoment) -> String {
-            switch moment.title {
-            case "Concert afterglow": return "3년 전 오늘"
-            case "Late-night river ride": return "1년 전"
-            default: return moment.dateLabel
-            }
+            moment.dateLabel
         }
 
         static func title(for moment: RewindMoment) -> String {
-            switch moment.title {
-            case "Concert afterglow": return "공연 뒤의 여운"
-            case "Late-night river ride": return "늦은 밤 한강 라이딩"
-            default: return moment.title
-            }
+            moment.title
         }
 
         static func location(for moment: RewindMoment) -> String {
-            switch moment.title {
-            case "Concert afterglow": return "서울 망원"
-            case "Late-night river ride": return "여의도 한강공원"
-            default: return moment.location
-            }
+            moment.location
         }
 
         static func summary(for moment: RewindMoment) -> String {
-            switch moment.title {
-            case "Concert afterglow": return "루프톱 저녁이 가장 많이 다시 열린 추억 묶음이 되었어요."
-            case "Late-night river ride": return "노을 사진과 라이딩 기록이 아직도 자주 열리는 리와인드예요."
-            default: return moment.summary
-            }
+            moment.summary
         }
     }
 

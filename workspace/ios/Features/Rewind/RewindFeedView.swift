@@ -8,8 +8,16 @@ struct RewindFeedView: View {
                 VStack(spacing: UnfadingTheme.Spacing.lg) {
                     RewindReminderRow()
 
-                    ForEach(RewindMoment.samples) { moment in
-                        RewindMomentCard(moment: moment)
+                    if RewindMoment.samples.isEmpty {
+                        UnfadingEmptyState(
+                            systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90",
+                            title: UnfadingLocalized.EmptyState.rewindTitle,
+                            body: UnfadingLocalized.EmptyState.rewindBody
+                        )
+                    } else {
+                        ForEach(RewindMoment.samples) { moment in
+                            RewindMomentCard(moment: moment)
+                        }
                     }
                 }
                 .padding(UnfadingTheme.Spacing.xl)

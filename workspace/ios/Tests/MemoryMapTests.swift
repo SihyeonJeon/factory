@@ -13,8 +13,16 @@ final class MemoryMapTests: XCTestCase {
 
     func testPlaceSuggestionMatchingUsesTitleAndSubtitle() {
         XCTAssertEqual(PlaceSuggestion.matching("").count, PlaceSuggestion.samples.count)
-        XCTAssertEqual(PlaceSuggestion.matching("Jeju").map(\.title), ["Jeju Sunrise Trail"])
-        XCTAssertEqual(PlaceSuggestion.matching("Mapo").map(\.title), ["Sangsu Rooftop"])
+
+        let jejuMatches = PlaceSuggestion.matching("제주")
+        XCTAssertEqual(jejuMatches.map(\.id), ["jeju-sunrise"])
+        XCTAssertEqual(jejuMatches.map(\.title), ["제주 성산일출봉"])
+        XCTAssertEqual(jejuMatches.map(\.subtitle), ["제주 성산읍"])
+
+        let sangsuMatches = PlaceSuggestion.matching("마포구")
+        XCTAssertEqual(sangsuMatches.map(\.id), ["sangsu-rooftop"])
+        XCTAssertEqual(sangsuMatches.map(\.title), ["상수 루프톱"])
+        XCTAssertEqual(sangsuMatches.map(\.subtitle), ["서울 마포구"])
     }
 
     @MainActor

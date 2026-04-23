@@ -2,6 +2,8 @@ import SwiftUI
 
 @main
 struct MemoryMapApp: App {
+    @StateObject private var prefs = UserPreferences()
+
     private let evidenceMode: MemoryComposerEvidenceMode = {
         guard
             let rawValue = ProcessInfo.processInfo.environment["MEMORYMAP_EVIDENCE_MODE"],
@@ -15,7 +17,15 @@ struct MemoryMapApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootTabView(evidenceMode: evidenceMode)
+            Group {
+                if prefs.hasSeenOnboarding {
+                    RootTabView(evidenceMode: evidenceMode)
+                } else {
+                    OnboardingView {
+                        prefs.hasSeenOnboarding = true
+                    }
+                }
+            }
         }
     }
 }

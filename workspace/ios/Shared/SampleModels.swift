@@ -18,12 +18,12 @@ struct SampleMemoryPin: Identifiable, Hashable {
     }
 
     static let samples: [SampleMemoryPin] = [
-        .init(id: UUID(uuidString: "11111111-1111-4111-8111-111111111111")!, title: "Rooftop Dinner", shortLabel: "Dinner", coordinate: .init(latitude: 37.5519, longitude: 126.9215), symbol: "fork.knife", color: UnfadingTheme.Color.primary),
-        .init(id: UUID(uuidString: "22222222-2222-4222-8222-222222222222")!, title: "Han River Ride", shortLabel: "Ride", coordinate: .init(latitude: 37.5283, longitude: 126.9326), symbol: "bicycle", color: UnfadingTheme.Color.lavender),
-        .init(id: UUID(uuidString: "33333333-3333-4333-8333-333333333333")!, title: "Sunrise Walk", shortLabel: "Dawn", coordinate: .init(latitude: 37.5700, longitude: 126.9768), symbol: "sunrise.fill", color: UnfadingTheme.Color.primarySoft)
+        .init(id: UUID(uuidString: "11111111-1111-4111-8111-111111111111")!, title: "루프톱 저녁", shortLabel: "저녁", coordinate: .init(latitude: 37.5519, longitude: 126.9215), symbol: "fork.knife", color: UnfadingTheme.Color.primary),
+        .init(id: UUID(uuidString: "22222222-2222-4222-8222-222222222222")!, title: "한강 라이딩", shortLabel: "라이딩", coordinate: .init(latitude: 37.5283, longitude: 126.9326), symbol: "bicycle", color: UnfadingTheme.Color.lavender),
+        .init(id: UUID(uuidString: "33333333-3333-4333-8333-333333333333")!, title: "해돋이 산책", shortLabel: "해돋이", coordinate: .init(latitude: 37.5700, longitude: 126.9768), symbol: "sunrise.fill", color: UnfadingTheme.Color.primarySoft)
     ]
 
-    // vibe-limit-checked: 1 architecture coherence, 11 sample data maps to detail model
+    // vibe-limit-checked: 7 Korean sample labels, 11 sample data maps to detail model
     func detail() -> SampleMemoryDetail? {
         SampleMemoryDetail.samples.first { $0.pinID == id }
     }
@@ -97,22 +97,22 @@ struct RewindMoment: Identifiable {
 
     static let samples: [RewindMoment] = [
         .init(
-            dateLabel: "3 years ago today",
-            title: "Concert afterglow",
-            location: "Mangwon, Seoul",
-            summary: "A rooftop dinner turned into your group's most reacted memory set.",
-            people: "Minji, Yuna, 2 more",
-            mood: "Joy",
-            gradient: LinearGradient(colors: [.orange, .pink], startPoint: .topLeading, endPoint: .bottomTrailing)
+            dateLabel: "3년 전 오늘",
+            title: "공연 뒤의 여운",
+            location: "서울 망원",
+            summary: "루프톱 저녁이 가장 많이 다시 열린 추억 묶음이 되었어요.",
+            people: "민지, 유나 외 2명",
+            mood: "기쁨",
+            gradient: LinearGradient(colors: [UnfadingTheme.Color.primary, UnfadingTheme.Color.lavender], startPoint: .topLeading, endPoint: .bottomTrailing)
         ),
         .init(
-            dateLabel: "1 year ago",
-            title: "Late-night river ride",
-            location: "Yeouido Hangang Park",
-            summary: "Your ride log and sunset shots still drive the most rewind opens.",
-            people: "Joon, Haru",
-            mood: "Calm",
-            gradient: LinearGradient(colors: [.blue, .mint], startPoint: .topLeading, endPoint: .bottomTrailing)
+            dateLabel: "1년 전",
+            title: "늦은 밤 한강 라이딩",
+            location: "여의도 한강공원",
+            summary: "노을 사진과 라이딩 기록이 아직도 자주 열리는 리와인드예요.",
+            people: "준호, 하루",
+            mood: "차분함",
+            gradient: LinearGradient(colors: [UnfadingTheme.Color.lavender, UnfadingTheme.Color.primarySoft], startPoint: .topLeading, endPoint: .bottomTrailing)
         )
     ]
 }
@@ -124,8 +124,8 @@ struct GroupPreview: Identifiable {
     let summary: String
 
     static let samples: [GroupPreview] = [
-        .init(name: "Weekend Club", members: "8 members", summary: "Pins across Seoul food spots, concerts, and river rides."),
-        .init(name: "Family Trips", members: "5 members", summary: "Shared memories, rewind reminders, and place-based albums.")
+        .init(name: "주말 모임", members: "멤버 8명", summary: "서울 맛집, 공연, 한강 라이딩을 함께 남겼어요."),
+        .init(name: "가족 여행", members: "멤버 5명", summary: "함께한 추억과 리와인드 알림, 장소별 앨범을 모았어요.")
     ]
 }
 
@@ -213,9 +213,9 @@ struct PlaceSuggestion: Identifiable, Equatable {
     let systemImage: String
 
     static let samples: [PlaceSuggestion] = [
-        .init(id: "sangsu-rooftop", title: "Sangsu Rooftop", subtitle: "Mapo-gu, Seoul", systemImage: "building.2"),
-        .init(id: "jeju-sunrise", title: "Jeju Sunrise Trail", subtitle: "Seongsan-eup, Jeju", systemImage: "sunrise"),
-        .init(id: "yeouido-park", title: "Yeouido Hangang Park", subtitle: "Yeongdeungpo-gu, Seoul", systemImage: "figure.walk")
+        .init(id: "sangsu-rooftop", title: "상수 루프톱", subtitle: "서울 마포구", systemImage: "building.2"),
+        .init(id: "jeju-sunrise", title: "제주 성산일출봉", subtitle: "제주 성산읍", systemImage: "sunrise"),
+        .init(id: "yeouido-park", title: "여의도 한강공원", subtitle: "서울 영등포구", systemImage: "figure.walk")
     ]
 
     static func matching(_ query: String) -> [PlaceSuggestion] {
@@ -243,9 +243,9 @@ struct MemoryDraftTag: Identifiable, Hashable {
     let systemImage: String
 
     static let samples: [MemoryDraftTag] = [
-        .init(id: "joy", title: "Joy", systemImage: "sun.max"),
-        .init(id: "calm", title: "Calm", systemImage: "moon.stars"),
-        .init(id: "grateful", title: "Grateful", systemImage: "heart"),
-        .init(id: "nostalgic", title: "Nostalgic", systemImage: "sparkles")
+        .init(id: "joy", title: "기쁨", systemImage: "sun.max"),
+        .init(id: "calm", title: "차분함", systemImage: "moon.stars"),
+        .init(id: "grateful", title: "감사", systemImage: "heart"),
+        .init(id: "nostalgic", title: "그리움", systemImage: "sparkles")
     ]
 }
