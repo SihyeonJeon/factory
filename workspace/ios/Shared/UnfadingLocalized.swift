@@ -142,6 +142,7 @@ enum UnfadingLocalized {
 
     enum Common {
         static let cancel = "취소"
+        static let confirm = "확인"
     }
 
     // MARK: Auth

@@ -3,8 +3,8 @@ import SwiftUI
 // vibe-limit-checked: 8 a11y hints/44pt rows, 5 @MainActor settings state objects, 7 Korean UI, 14 reuses preference/store models
 struct SettingsView: View {
     @EnvironmentObject private var authStore: AuthStore
+    @EnvironmentObject private var memoryStore: MemoryStore
     @StateObject private var prefs = UserPreferences()
-    @StateObject private var memoryStore = MemoryStore()
     @State private var showingGroupHub = false
     @State private var showingPremium = false
 
@@ -121,4 +121,5 @@ struct SettingsView: View {
     SettingsView()
         .environmentObject(AuthStore(preview: .signedIn(userId: UUID(), email: "preview@example.com")))
         .environmentObject(GroupStore.preview())
+        .environmentObject(MemoryStore(memories: MemoryStore.uiTestStubMemories()))
 }

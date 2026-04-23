@@ -47,3 +47,66 @@ struct DBGroupMember: Codable, Hashable, Identifiable {
         case joinedAt = "joined_at"
     }
 }
+
+struct DBMemory: Codable, Hashable, Identifiable {
+    let id: UUID
+    let userId: UUID
+    let groupId: UUID
+    let title: String
+    let note: String
+    let placeTitle: String
+    let address: String?
+    let locationLat: Double
+    let locationLng: Double
+    let date: Date
+    let capturedAt: Date?
+    let photoURL: String?
+    let photoURLs: [String]
+    let categories: [String]
+    let emotions: [String]
+    let reactionCount: Int
+    let createdAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id, title, note, date, address, categories, emotions
+        case userId = "user_id"
+        case groupId = "group_id"
+        case placeTitle = "place_title"
+        case locationLat = "location_lat"
+        case locationLng = "location_lng"
+        case capturedAt = "captured_at"
+        case photoURL = "photo_url"
+        case photoURLs = "photo_urls"
+        case reactionCount = "reaction_count"
+        case createdAt = "created_at"
+    }
+}
+
+struct DBMemoryInsert: Encodable {
+    let userId: UUID
+    let groupId: UUID
+    let title: String
+    let note: String
+    let placeTitle: String
+    let address: String?
+    let locationLat: Double
+    let locationLng: Double
+    let date: Date
+    let capturedAt: Date?
+    let photoURL: String?
+    let photoURLs: [String]
+    let categories: [String]
+    let emotions: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case title, note, date, address, categories, emotions
+        case userId = "user_id"
+        case groupId = "group_id"
+        case placeTitle = "place_title"
+        case locationLat = "location_lat"
+        case locationLng = "location_lng"
+        case capturedAt = "captured_at"
+        case photoURL = "photo_url"
+        case photoURLs = "photo_urls"
+    }
+}

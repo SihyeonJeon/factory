@@ -5,6 +5,9 @@ struct MemoryComposerSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.openURL) private var openURL
+    @EnvironmentObject private var authStore: AuthStore
+    @EnvironmentObject private var groupStore: GroupStore
+    @EnvironmentObject private var memoryStore: MemoryStore
 
     private let initialLocationPermissionState: LocationPermissionState
     private let evidenceMode: MemoryComposerEvidenceMode
@@ -13,6 +16,7 @@ struct MemoryComposerSheet: View {
     @State private var showingDeniedRecovery = false
     @State private var showingPlaceSearch = false
     @State private var didApplyEvidenceMode = false
+    @State private var saveErrorMessage: String?
 
     init(
         initialLocationPermissionState: LocationPermissionState = .denied,
@@ -50,7 +54,7 @@ struct MemoryComposerSheet: View {
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
-                        dismiss()
+                        save()
                     } label: {
                         Text(UnfadingLocalized.Composer.savePrimary)
                     }
@@ -71,6 +75,11 @@ struct MemoryComposerSheet: View {
                 ManualPlacePickerSheet(selectedPlace: $state.selectedPlace)
                     .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.medium, .large])
                     .presentationDragIndicator(.visible)
+            }
+            .alert("저장하지 못했어요", isPresented: saveErrorIsPresented) {
+                Button(UnfadingLocalized.Common.confirm, role: .cancel) {}
+            } message: {
+                Text(saveErrorMessage ?? "잠시 후 다시 시도해 주세요.")
             }
             .onAppear(perform: applyEvidenceModeIfNeeded)
         }
@@ -241,6 +250,28 @@ struct MemoryComposerSheet: View {
         }
 
         openURL(settingsURL)
+    }
+
+    private var saveErrorIsPresented: Binding<Bool> {
+        Binding(
+            get: { saveErrorMessage != nil },
+            set: { isPresented in
+                if !isPresented {
+                    saveErrorMessage = nil
+                }
+            }
+        )
+    }
+
+    private func save() {
+        Task {
+            do {
+                try await state.save(memoryStore: memoryStore, authStore: authStore, groupStore: groupStore)
+                dismiss()
+            } catch {
+                saveErrorMessage = error.localizedDescription
+            }
+        }
     }
 }
 

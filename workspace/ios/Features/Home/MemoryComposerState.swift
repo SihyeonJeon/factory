@@ -60,4 +60,49 @@ final class MemoryComposerState: ObservableObject {
         selectedMoods = []
         locationPermissionState = .denied
     }
+
+    func save(memoryStore: MemoryStore, authStore: AuthStore, groupStore: GroupStore) async throws {
+        guard case let .signedIn(userId, _) = authStore.state else {
+            throw SaveError.missingUser
+        }
+        guard let groupId = groupStore.activeGroupId else {
+            throw SaveError.missingGroup
+        }
+
+        let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        let fallbackTitle = selectedPlace.trimmingCharacters(in: .whitespacesAndNewlines)
+        let title = trimmedNote.split(separator: "\n").first.map(String.init) ?? fallbackTitle
+        let insert = DBMemoryInsert(
+            userId: userId,
+            groupId: groupId,
+            title: title.isEmpty ? fallbackTitle : title,
+            note: trimmedNote,
+            placeTitle: fallbackTitle.isEmpty ? UnfadingLocalized.Composer.samplePlace : fallbackTitle,
+            address: nil,
+            locationLat: 37.5665,
+            locationLng: 126.9780,
+            date: selectedTime,
+            capturedAt: selectedTime,
+            photoURL: nil,
+            photoURLs: [],
+            categories: [],
+            emotions: selectedMoods.map(\.id).sorted()
+        )
+        _ = try await memoryStore.createMemory(insert)
+        reset()
+    }
+
+    enum SaveError: LocalizedError {
+        case missingUser
+        case missingGroup
+
+        var errorDescription: String? {
+            switch self {
+            case .missingUser:
+                return "로그인이 필요해요."
+            case .missingGroup:
+                return "활성 그룹을 찾을 수 없어요."
+            }
+        }
+    }
 }

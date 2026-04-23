@@ -1,0 +1,16 @@
+context_harness/operator/contracts/round_memories_r1/spec.md
+context_harness/operator/contracts/round_memories_r1/file_whitelist.txt
+context_harness/operator/meetings/2026-04-23_round19_memories_plan.md
+context_harness/reports/round_memories_r1/evidence/notes.md
+workspace/ios/App/MemoryMapApp.swift
+workspace/ios/App/RootTabView.swift
+workspace/ios/Features/Home/MemoryComposerSheet.swift
+workspace/ios/Features/Home/MemoryComposerState.swift
+workspace/ios/Features/Home/MemoryMapHomeView.swift
+workspace/ios/Features/Settings/SettingsView.swift
+workspace/ios/Shared/DBModels.swift
+workspace/ios/Shared/MemoryRepository.swift
+workspace/ios/Shared/MemoryStore.swift
+workspace/ios/Shared/UnfadingLocalized.swift
+workspace/ios/Tests/DBMemoryTests.swift
+workspace/ios/Tests/MemoryStoreTests.swift

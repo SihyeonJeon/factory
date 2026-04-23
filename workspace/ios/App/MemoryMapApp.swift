@@ -5,6 +5,8 @@ struct MemoryMapApp: App {
     @StateObject private var prefs: UserPreferences
     @StateObject private var authStore: AuthStore
     @StateObject private var groupStore: GroupStore
+    @StateObject private var memoryStore: MemoryStore
+    @State private var memoryRealtimeTask: Task<Void, Never>?
 
     private let evidenceMode: MemoryComposerEvidenceMode = {
         guard
@@ -25,6 +27,7 @@ struct MemoryMapApp: App {
         _prefs = StateObject(wrappedValue: UserPreferences(forceHasSeenOnboarding: Self.shouldSkipOnboardingForUITests))
         _authStore = StateObject(wrappedValue: AuthStore())
         _groupStore = StateObject(wrappedValue: Self.makeGroupStore())
+        _memoryStore = StateObject(wrappedValue: MemoryStore())
     }
 
     private static var shouldSkipOnboardingForUITests: Bool {
@@ -71,6 +74,7 @@ struct MemoryMapApp: App {
                             RootTabView(evidenceMode: evidenceMode)
                                 .environmentObject(authStore)
                                 .environmentObject(groupStore)
+                                .environmentObject(memoryStore)
                         }
                     } else {
                         OnboardingView {
@@ -87,6 +91,32 @@ struct MemoryMapApp: App {
                 guard !Self.isUITestGroupStubEnabled else { return }
                 Task { await groupStore.bootstrap() }
             }
+            .onAppear {
+                configureMemorySync(for: groupStore.activeGroupId)
+            }
+            .onChange(of: groupStore.activeGroupId) { _, activeGroupId in
+                configureMemorySync(for: activeGroupId)
+            }
         }
+    }
+
+    @MainActor
+    private func configureMemorySync(for activeGroupId: UUID?) {
+        memoryRealtimeTask?.cancel()
+        memoryRealtimeTask = nil
+
+        guard let activeGroupId else { return }
+
+        #if DEBUG
+        if Self.isUITestGroupStubEnabled {
+            memoryStore.applyUITestStub(groupId: activeGroupId)
+            return
+        }
+        #endif
+
+        Task {
+            await memoryStore.loadMemories(for: activeGroupId)
+        }
+        memoryRealtimeTask = memoryStore.subscribeRealtime(groupId: activeGroupId)
     }
 }

@@ -242,5 +242,7 @@ struct MemoryMapHomeView: View {
 
 #Preview {
     MemoryMapHomeView()
+        .environmentObject(AuthStore(preview: .signedIn(userId: UUID(), email: "preview@example.com")))
         .environmentObject(GroupStore.preview())
+        .environmentObject(MemoryStore(memories: MemoryStore.uiTestStubMemories()))
 }
