@@ -6,6 +6,7 @@ workspace/ios/*
 !workspace/ios/Features/
 !workspace/ios/Shared/
 !workspace/ios/Tests/
+!workspace/ios/UITests/
 !workspace/ios/project.yml
 workspace/ios/MemoryMap.xcodeproj/
 workspace/ios/.build/
