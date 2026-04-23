@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 enum ThemePreference: String, CaseIterable, Hashable, Sendable {
     case system
@@ -10,6 +11,14 @@ enum ThemePreference: String, CaseIterable, Hashable, Sendable {
         case .system: return UnfadingLocalized.Theme.system
         case .light: return UnfadingLocalized.Theme.light
         case .dark: return UnfadingLocalized.Theme.dark
+        }
+    }
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: return nil
+        case .light: return .light
+        case .dark: return .dark
         }
     }
 }

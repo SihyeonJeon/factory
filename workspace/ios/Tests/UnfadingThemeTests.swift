@@ -30,7 +30,28 @@ final class UnfadingThemeTests: XCTestCase {
         ]
 
         for (color, red, green, blue) in expected {
-            let components = try resolveRGB(color)
+            let components = try resolveRGB(color, style: .light)
+            XCTAssertEqual(components.red, red)
+            XCTAssertEqual(components.green, green)
+            XCTAssertEqual(components.blue, blue)
+        }
+    }
+
+    func test_dark_palette_matches_round_r47_values() throws {
+        let expected: [(SwiftUI.Color, Int, Int, Int)] = [
+            (UnfadingTheme.Color.bg, 0x1C, 0x17, 0x14),
+            (UnfadingTheme.Color.sheet, 0x22, 0x1C, 0x18),
+            (UnfadingTheme.Color.card, 0x2B, 0x23, 0x20),
+            (UnfadingTheme.Color.surface, 0x32, 0x29, 0x24),
+            (UnfadingTheme.Color.primary, 0xF5, 0x99, 0x8C),
+            (UnfadingTheme.Color.textPrimary, 0xF2, 0xEA, 0xE2),
+            (UnfadingTheme.Color.textSecondary, 0xBB, 0xA8, 0x9C),
+            (UnfadingTheme.Color.textTertiary, 0x6D, 0x60, 0x5A),
+            (UnfadingTheme.Color.divider, 0x3A, 0x2F, 0x28)
+        ]
+
+        for (color, red, green, blue) in expected {
+            let components = try resolveRGB(color, style: .dark)
             XCTAssertEqual(components.red, red)
             XCTAssertEqual(components.green, green)
             XCTAssertEqual(components.blue, blue)
@@ -38,25 +59,43 @@ final class UnfadingThemeTests: XCTestCase {
     }
 
     func test_lavender_matches_deepsight_hex() throws {
-        let components = try resolveRGB(UnfadingTheme.Color.lavender)
+        let components = try resolveRGB(UnfadingTheme.Color.lavender, style: .light)
         XCTAssertEqual(components.red, 0xC2)
         XCTAssertEqual(components.green, 0xB0)
         XCTAssertEqual(components.blue, 0xDE)
     }
 
     func test_cream_matches_deepsight_hex() throws {
-        let components = try resolveRGB(UnfadingTheme.Color.cream)
+        let components = try resolveRGB(UnfadingTheme.Color.cream, style: .light)
         XCTAssertEqual(components.red, 0xFF)
         XCTAssertEqual(components.green, 0xF8)
         XCTAssertEqual(components.blue, 0xF0)
     }
 
     func test_primary_aliases_coral() throws {
-        let coral = try resolveRGB(UnfadingTheme.Color.coral)
-        let primary = try resolveRGB(UnfadingTheme.Color.primary)
+        let coral = try resolveRGB(UnfadingTheme.Color.coral, style: .dark)
+        let primary = try resolveRGB(UnfadingTheme.Color.primary, style: .dark)
         XCTAssertEqual(coral.red, primary.red)
         XCTAssertEqual(coral.green, primary.green)
         XCTAssertEqual(coral.blue, primary.blue)
+    }
+
+    func test_adaptive_helper_switches_by_interface_style() throws {
+        // 정확한 (255,0,0)/(0,0,255) 를 위해 SwiftUI `.red`/`.blue` 대신 명시 RGB 사용
+        let adaptive = UnfadingTheme.Color.adaptive(
+            light: SwiftUI.Color(red: 1, green: 0, blue: 0),
+            dark: SwiftUI.Color(red: 0, green: 0, blue: 1)
+        )
+
+        let light = try resolveRGB(adaptive, style: .light)
+        XCTAssertEqual(light.red, 255)
+        XCTAssertEqual(light.green, 0)
+        XCTAssertEqual(light.blue, 0)
+
+        let dark = try resolveRGB(adaptive, style: .dark)
+        XCTAssertEqual(dark.red, 0)
+        XCTAssertEqual(dark.green, 0)
+        XCTAssertEqual(dark.blue, 255)
     }
 
     func test_member_palette_contains_ten_design_handoff_colors() {
@@ -109,8 +148,9 @@ final class UnfadingThemeTests: XCTestCase {
 
     // MARK: Helpers
 
-    private func resolveRGB(_ color: Color) throws -> (red: Int, green: Int, blue: Int) {
-        let uiColor = UIColor(color)
+    private func resolveRGB(_ color: Color, style: UIUserInterfaceStyle) throws -> (red: Int, green: Int, blue: Int) {
+        let traitCollection = UITraitCollection(userInterfaceStyle: style)
+        let uiColor = UIColor(color).resolvedColor(with: traitCollection)
         var r: CGFloat = 0
         var g: CGFloat = 0
         var b: CGFloat = 0

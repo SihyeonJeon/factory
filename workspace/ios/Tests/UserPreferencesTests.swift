@@ -1,4 +1,5 @@
 import XCTest
+import SwiftUI
 @testable import MemoryMap
 
 @MainActor
@@ -28,6 +29,12 @@ final class UserPreferencesTests: XCTestCase {
         XCTAssertEqual(restored.themePreference, .dark)
         XCTAssertEqual(restored.mapTheme, .mono)
         XCTAssertTrue(restored.hasSeenOnboarding)
+    }
+
+    func test_theme_preference_exposes_matching_color_scheme() {
+        XCTAssertNil(ThemePreference.system.colorScheme)
+        XCTAssertEqual(ThemePreference.light.colorScheme, .light)
+        XCTAssertEqual(ThemePreference.dark.colorScheme, .dark)
     }
 
     func test_bootstrap_and_preferences_sync_roundtrip_map_theme() async {

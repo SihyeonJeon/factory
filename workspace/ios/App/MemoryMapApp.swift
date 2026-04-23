@@ -113,6 +113,7 @@ struct MemoryMapApp: App {
             }
             .environmentObject(subscriptionStore)
             .environmentObject(locationPermission)
+            .preferredColorScheme(prefs.themePreference.colorScheme)
             .task {
                 offlineQueue.startMonitoring()
             }

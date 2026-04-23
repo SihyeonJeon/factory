@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Canonical Unfading design token namespace. App, feature, and shared UI code
 /// should consume colors, radii, spacing, typography, shadows, and sheet snap
@@ -8,45 +9,74 @@ enum UnfadingTheme {
     // MARK: Color
 
     enum Color {
-        static let bg: SwiftUI.Color = hex(0xFF, 0xF8, 0xF0)
-        static let sheet: SwiftUI.Color = hex(0xFF, 0xFB, 0xF5)
-        static let card: SwiftUI.Color = hex(0xFF, 0xFF, 0xFF)
-        static let surface: SwiftUI.Color = hex(0xF5, 0xEE, 0xE4)
-        static let primary: SwiftUI.Color = hex(0xF5, 0x99, 0x8C)
-        static let primaryHover: SwiftUI.Color = hex(0xE8, 0x87, 0x7A)
-        static let accentSoft: SwiftUI.Color = hex(0xFA, 0xE4, 0xDD)
-        static let secondary: SwiftUI.Color = hex(0x8F, 0xB7, 0xA8)
-        static let secondaryLight: SwiftUI.Color = hex(0xCD, 0xE2, 0xDA)
-        static let textPrimary: SwiftUI.Color = hex(0x40, 0x38, 0x33)
-        static let textSecondary: SwiftUI.Color = hex(0x8C, 0x82, 0x7A)
-        static let textTertiary: SwiftUI.Color = hex(0xB8, 0xAE, 0xA5)
-        static let divider: SwiftUI.Color = hex(0xEB, 0xE1, 0xD4)
-        static let chipBg: SwiftUI.Color = hex(0xF5, 0xEE, 0xE4)
-        static let mapBase: SwiftUI.Color = hex(0xFF, 0xF3, 0xE6)
-        static let mapLand: SwiftUI.Color = hex(0xFF, 0xE8, 0xD1)
-        static let mapWater: SwiftUI.Color = hex(0xDC, 0xE7, 0xE4)
-        static let mapRoad: SwiftUI.Color = hex(0xF5, 0xEE, 0xE0)
+        private static let bgLight: SwiftUI.Color = hex(0xFF, 0xF8, 0xF0)
+        private static let sheetLight: SwiftUI.Color = hex(0xFF, 0xFB, 0xF5)
+        private static let cardLight: SwiftUI.Color = hex(0xFF, 0xFF, 0xFF)
+        private static let surfaceLight: SwiftUI.Color = hex(0xF5, 0xEE, 0xE4)
+        private static let primaryLight: SwiftUI.Color = hex(0xF5, 0x99, 0x8C)
+        private static let primaryHoverLight: SwiftUI.Color = hex(0xE8, 0x87, 0x7A)
+        private static let accentSoftLight: SwiftUI.Color = hex(0xFA, 0xE4, 0xDD)
+        private static let secondaryLightToken: SwiftUI.Color = hex(0x8F, 0xB7, 0xA8)
+        private static let secondaryBackgroundLight: SwiftUI.Color = hex(0xCD, 0xE2, 0xDA)
+        private static let textPrimaryLight: SwiftUI.Color = hex(0x40, 0x38, 0x33)
+        private static let textSecondaryLight: SwiftUI.Color = hex(0x8C, 0x82, 0x7A)
+        private static let textTertiaryLight: SwiftUI.Color = hex(0xB8, 0xAE, 0xA5)
+        private static let dividerLight: SwiftUI.Color = hex(0xEB, 0xE1, 0xD4)
+        private static let chipBgLight: SwiftUI.Color = hex(0xF5, 0xEE, 0xE4)
+        private static let mapBaseLight: SwiftUI.Color = hex(0xFF, 0xF3, 0xE6)
+        private static let mapLandLight: SwiftUI.Color = hex(0xFF, 0xE8, 0xD1)
+        private static let mapWaterLight: SwiftUI.Color = hex(0xDC, 0xE7, 0xE4)
+        private static let mapRoadLight: SwiftUI.Color = hex(0xF5, 0xEE, 0xE0)
+
+        private static let bgDarkToken: SwiftUI.Color = hex(0x1C, 0x17, 0x14)
+        private static let sheetDarkToken: SwiftUI.Color = hex(0x22, 0x1C, 0x18)
+        private static let cardDarkToken: SwiftUI.Color = hex(0x2B, 0x23, 0x20)
+        private static let surfaceDarkToken: SwiftUI.Color = hex(0x32, 0x29, 0x24)
+        private static let primaryDarkToken: SwiftUI.Color = hex(0xF5, 0x99, 0x8C)
+        private static let textPrimaryDarkToken: SwiftUI.Color = hex(0xF2, 0xEA, 0xE2)
+        private static let textSecondaryDarkToken: SwiftUI.Color = hex(0xBB, 0xA8, 0x9C)
+        private static let textTertiaryDarkToken: SwiftUI.Color = hex(0x6D, 0x60, 0x5A)
+        private static let dividerDarkToken: SwiftUI.Color = hex(0x3A, 0x2F, 0x28)
+
+        static let bg: SwiftUI.Color = adaptive(light: bgLight, dark: bgDarkToken)
+        static let sheet: SwiftUI.Color = adaptive(light: sheetLight, dark: sheetDarkToken)
+        static let card: SwiftUI.Color = adaptive(light: cardLight, dark: cardDarkToken)
+        static let surface: SwiftUI.Color = adaptive(light: surfaceLight, dark: surfaceDarkToken)
+        static let primary: SwiftUI.Color = adaptive(light: primaryLight, dark: primaryDarkToken)
+        static let primaryHover: SwiftUI.Color = adaptive(light: primaryHoverLight, dark: primaryDarkToken.opacity(0.92))
+        static let accentSoft: SwiftUI.Color = adaptive(light: accentSoftLight, dark: surfaceDarkToken)
+        static let secondary: SwiftUI.Color = adaptive(light: secondaryLightToken, dark: secondaryLightToken)
+        static let secondaryLight: SwiftUI.Color = adaptive(light: secondaryBackgroundLight, dark: surfaceDarkToken)
+        static let textPrimary: SwiftUI.Color = adaptive(light: textPrimaryLight, dark: textPrimaryDarkToken)
+        static let textSecondary: SwiftUI.Color = adaptive(light: textSecondaryLight, dark: textSecondaryDarkToken)
+        static let textTertiary: SwiftUI.Color = adaptive(light: textTertiaryLight, dark: textTertiaryDarkToken)
+        static let divider: SwiftUI.Color = adaptive(light: dividerLight, dark: dividerDarkToken)
+        static let chipBg: SwiftUI.Color = adaptive(light: chipBgLight, dark: surfaceDarkToken)
+        static let mapBase: SwiftUI.Color = adaptive(light: mapBaseLight, dark: bgDarkToken)
+        static let mapLand: SwiftUI.Color = adaptive(light: mapLandLight, dark: cardDarkToken)
+        static let mapWater: SwiftUI.Color = adaptive(light: mapWaterLight, dark: surfaceDarkToken)
+        static let mapRoad: SwiftUI.Color = adaptive(light: mapRoadLight, dark: dividerDarkToken)
 
         // Compatibility aliases retained for R24/R25 UI surfaces.
         static var coral: SwiftUI.Color { primary }
         static var primarySoft: SwiftUI.Color { accentSoft }
-        static let lavender: SwiftUI.Color = hex(0xC2, 0xB0, 0xDE)
+        static let lavender: SwiftUI.Color = adaptive(light: hex(0xC2, 0xB0, 0xDE), dark: hex(0xA1, 0x92, 0xBA))
         static var cream: SwiftUI.Color { bg }
-        static let textOnPrimary: SwiftUI.Color = .white
-        static let textOnOverlay: SwiftUI.Color = SwiftUI.Color.white.opacity(0.92)
-        static let overlayBackdrop: SwiftUI.Color = textPrimary.opacity(0.28)
-        static let shadow: SwiftUI.Color = textPrimary.opacity(0.06)
-        static let pinShadow: SwiftUI.Color = textPrimary.opacity(0.18)
+        static let textOnPrimary: SwiftUI.Color = adaptive(light: .white, dark: textPrimaryLight)
+        static let textOnOverlay: SwiftUI.Color = adaptive(light: SwiftUI.Color.white.opacity(0.92), dark: textPrimaryDarkToken.opacity(0.92))
+        static let overlayBackdrop: SwiftUI.Color = adaptive(light: textPrimaryLight.opacity(0.28), dark: SwiftUI.Color.black.opacity(0.45))
+        static let shadow: SwiftUI.Color = adaptive(light: textPrimaryLight.opacity(0.06), dark: SwiftUI.Color.black.opacity(0.22))
+        static let pinShadow: SwiftUI.Color = adaptive(light: textPrimaryLight.opacity(0.18), dark: SwiftUI.Color.black.opacity(0.30))
 
-        static let amber: SwiftUI.Color = hex(0xE4, 0xB9, 0x78)
+        static let amber: SwiftUI.Color = adaptive(light: hex(0xE4, 0xB9, 0x78), dark: hex(0xD2, 0xA6, 0x67))
         static let mint: SwiftUI.Color = secondary
-        static let lavenderMember: SwiftUI.Color = hex(0xA9, 0xA1, 0xC7)
-        static let blue: SwiftUI.Color = hex(0x7B, 0x9F, 0xD4)
-        static let rose: SwiftUI.Color = hex(0xD4, 0x8F, 0xB2)
-        static let camel: SwiftUI.Color = hex(0xC7, 0xA7, 0x7B)
-        static let violet: SwiftUI.Color = hex(0x9A, 0x85, 0xC0)
-        static let teal: SwiftUI.Color = hex(0x7B, 0xAF, 0xB1)
-        static let sage: SwiftUI.Color = hex(0x8F, 0xA8, 0x8B)
+        static let lavenderMember: SwiftUI.Color = adaptive(light: hex(0xA9, 0xA1, 0xC7), dark: hex(0x95, 0x8D, 0xB6))
+        static let blue: SwiftUI.Color = adaptive(light: hex(0x7B, 0x9F, 0xD4), dark: hex(0x69, 0x8D, 0xC2))
+        static let rose: SwiftUI.Color = adaptive(light: hex(0xD4, 0x8F, 0xB2), dark: hex(0xC0, 0x7E, 0xA0))
+        static let camel: SwiftUI.Color = adaptive(light: hex(0xC7, 0xA7, 0x7B), dark: hex(0xB4, 0x95, 0x6D))
+        static let violet: SwiftUI.Color = adaptive(light: hex(0x9A, 0x85, 0xC0), dark: hex(0x88, 0x74, 0xAE))
+        static let teal: SwiftUI.Color = adaptive(light: hex(0x7B, 0xAF, 0xB1), dark: hex(0x6A, 0x9D, 0x9F))
+        static let sage: SwiftUI.Color = adaptive(light: hex(0x8F, 0xA8, 0x8B), dark: hex(0x7E, 0x97, 0x7A))
 
         static let memberPalette: [SwiftUI.Color] = [
             coral,
@@ -66,6 +96,15 @@ enum UnfadingTheme {
                 red: Double(r) / 255.0,
                 green: Double(g) / 255.0,
                 blue: Double(b) / 255.0
+            )
+        }
+
+        static func adaptive(light: SwiftUI.Color, dark: SwiftUI.Color) -> SwiftUI.Color {
+            SwiftUI.Color(
+                UIColor { traitCollection in
+                    let color = traitCollection.userInterfaceStyle == .dark ? dark : light
+                    return UIColor(color)
+                }
             )
         }
     }
@@ -116,7 +155,7 @@ enum UnfadingTheme {
 
     enum Shadow {
         static let card = ShadowStyle(
-            color: Color.hex(0x40, 0x38, 0x33).opacity(0.04),
+            color: Color.shadow,
             radius: 6,
             x: 0,
             y: 2
@@ -128,7 +167,7 @@ enum UnfadingTheme {
             y: 4
         )
         static let overlay = ShadowStyle(
-            color: Color.hex(0x40, 0x38, 0x33).opacity(0.25),
+            color: Color.pinShadow,
             radius: 60,
             x: 0,
             y: 20
