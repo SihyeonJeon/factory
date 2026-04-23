@@ -1,0 +1,12 @@
+workspace/ios/App/UnfadingTabShell.swift
+workspace/ios/Features/Home/MemoryMapHomeView.swift
+workspace/ios/Features/Home/CategoryEditorOverlay.swift
+workspace/ios/Features/Groups/GroupPickerOverlay.swift
+workspace/ios/Features/Groups/GroupStore.swift
+workspace/ios/Shared/CategoryStore.swift
+workspace/ios/Shared/UnfadingLocalized.swift
+workspace/ios/Shared/UnfadingTheme.swift
+workspace/ios/UITests/UnfadingUITests.swift
+context_harness/operator/contracts/round_overlays_r1/file_whitelist.txt
+context_harness/operator/meetings/2026-04-23_round_overlays_plan.md
+context_harness/reports/round_overlays_r1/evidence/notes.md

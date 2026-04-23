@@ -34,6 +34,7 @@ enum UnfadingTheme {
         static var cream: SwiftUI.Color { bg }
         static let textOnPrimary: SwiftUI.Color = .white
         static let textOnOverlay: SwiftUI.Color = SwiftUI.Color.white.opacity(0.92)
+        static let overlayBackdrop: SwiftUI.Color = textPrimary.opacity(0.28)
         static let shadow: SwiftUI.Color = textPrimary.opacity(0.06)
         static let pinShadow: SwiftUI.Color = textPrimary.opacity(0.18)
 

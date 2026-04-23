@@ -12,13 +12,16 @@ struct MemoryMapHomeView: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var groupStore: GroupStore
+    @EnvironmentObject private var categoryStore: CategoryStore
     @EnvironmentObject private var memoryStore: MemoryStore
     private let evidenceMode: MemoryComposerEvidenceMode
+    private let groupSwitchResetToken: Int
     private let onSwitchGroup: () -> Void
+    private let onEditCategories: () -> Void
     @Binding private var sheetSnap: BottomSheetSnap
     @StateObject private var locationPermissionStore = LocationPermissionStore()
     @StateObject private var selection = MemorySelectionState()
-    @State private var showingGroupHub = false
+    @State private var activeCategoryId = CategoryStore.allCategoryId
     @State private var showingRewind = false
     @State private var detailPin: SampleMemoryPin?
     @State private var measuredSheetHeight: CGFloat = 0
@@ -32,11 +35,15 @@ struct MemoryMapHomeView: View {
     init(
         sheetSnap: Binding<BottomSheetSnap> = .constant(.default_),
         evidenceMode: MemoryComposerEvidenceMode = .none,
-        onSwitchGroup: @escaping () -> Void = {}
+        groupSwitchResetToken: Int = 0,
+        onSwitchGroup: @escaping () -> Void = {},
+        onEditCategories: @escaping () -> Void = {}
     ) {
         self._sheetSnap = sheetSnap
         self.evidenceMode = evidenceMode
+        self.groupSwitchResetToken = groupSwitchResetToken
         self.onSwitchGroup = onSwitchGroup
+        self.onEditCategories = onEditCategories
     }
 
     var body: some View {
@@ -114,9 +121,6 @@ struct MemoryMapHomeView: View {
                 .frame(width: proxy.size.width, height: proxy.size.height)
             }
             .toolbar(.hidden, for: .navigationBar)
-            .sheet(isPresented: $showingGroupHub) {
-                GroupHubView()
-            }
             .sheet(isPresented: $showingRewind) {
                 RewindFeedView()
             }
@@ -143,6 +147,17 @@ struct MemoryMapHomeView: View {
             }
             .onChange(of: scenePhase) { _, newPhase in
                 if newPhase == .active { locationPermissionStore.refresh() }
+            }
+            .onChange(of: categoryStore.categories) { _, categories in
+                guard activeCategoryId == CategoryStore.allCategoryId || categories.contains(where: { $0.id == activeCategoryId }) else {
+                    activeCategoryId = CategoryStore.allCategoryId
+                    return
+                }
+            }
+            .onChange(of: groupSwitchResetToken) { _, _ in
+                selection.clearSelection()
+                activeCategoryId = CategoryStore.allCategoryId
+                sheetSnap = .default_
             }
         }
     }
@@ -176,7 +191,6 @@ struct MemoryMapHomeView: View {
         HStack(spacing: UnfadingTheme.Spacing.sm) {
             Button {
                 onSwitchGroup()
-                showingGroupHub = true
             } label: {
                 HStack(spacing: UnfadingTheme.Spacing.xs) {
                     avatarStack
@@ -200,6 +214,7 @@ struct MemoryMapHomeView: View {
             .buttonStyle(.plain)
             .accessibilityLabel(groupName)
             .accessibilityHint(UnfadingLocalized.Home.groupChipHint)
+            .accessibilityIdentifier("home-top-chrome-group-button")
 
             Button {
                 // Search stub — full implementation in a future round.
@@ -233,33 +248,42 @@ struct MemoryMapHomeView: View {
     private var filterRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: UnfadingTheme.Spacing.sm) {
-                ForEach(MemorySelectionState.Filter.allCases, id: \.self) { filter in
+                UnfadingFilterChip(
+                    title: UnfadingLocalized.Home.filterAll,
+                    systemImage: "sparkles",
+                    isSelected: activeCategoryId == CategoryStore.allCategoryId
+                ) {
+                    activeCategoryId = CategoryStore.allCategoryId
+                }
+
+                ForEach(categoryStore.categories) { category in
                     UnfadingFilterChip(
-                        title: filter.title,
-                        systemImage: filter.systemImage,
-                        isSelected: selection.activeFilter == filter
+                        title: category.name,
+                        systemImage: category.icon,
+                        isSelected: activeCategoryId == category.id
                     ) {
-                        selection.toggleFilter(filter)
+                        activeCategoryId = activeCategoryId == category.id ? CategoryStore.allCategoryId : category.id
                     }
                 }
 
                 Button {
-                    // Category editor overlay arrives in R30.
+                    onEditCategories()
                 } label: {
                     Image(systemName: "plus")
                         .imageScale(.small)
-                        .foregroundStyle(UnfadingTheme.Color.textPrimary)
-                        .frame(width: 36, height: 36)
+                        .foregroundStyle(UnfadingTheme.Color.primary.opacity(0.66))
+                        .frame(width: 44, height: 44)
                         .overlay {
                             Circle()
                                 .stroke(
-                                    UnfadingTheme.Color.divider,
+                                    UnfadingTheme.Color.primary.opacity(0.66),
                                     style: StrokeStyle(lineWidth: 1, dash: [4, 3])
                                 )
                         }
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("카테고리 추가")
+                .accessibilityLabel(UnfadingLocalized.Categories.addCategory)
+                .accessibilityIdentifier("home-filter-add-category")
             }
             .padding(.horizontal, UnfadingTheme.Spacing.md)
         }
@@ -452,5 +476,6 @@ private extension View {
     MemoryMapHomeView()
         .environmentObject(AuthStore(preview: .signedIn(userId: UUID(), email: "preview@example.com")))
         .environmentObject(GroupStore.preview())
+        .environmentObject(CategoryStore.shared)
         .environmentObject(MemoryStore(memories: MemoryStore.uiTestStubMemories()))
 }

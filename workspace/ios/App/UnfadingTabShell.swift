@@ -46,11 +46,17 @@ struct UnfadingTabShell: View {
     @State private var selectedTab: ShellTab = .map
     @State private var sheetSnap: BottomSheetSnap
     @State private var isPresentingComposer = false
+    @State private var isPresentingGroupOnboarding = false
+    @State private var showingGroupPicker = false
+    @State private var showingCategoryEditor = false
     @State private var didPresentEvidenceComposer = false
+    @State private var groupSwitchResetToken = 0
+    @StateObject private var categoryStore: CategoryStore
 
     init(evidenceMode: MemoryComposerEvidenceMode = .none, initialSheetSnap: BottomSheetSnap = Self.initialSheetSnap()) {
         self.evidenceMode = evidenceMode
         self._sheetSnap = State(initialValue: initialSheetSnap)
+        self._categoryStore = StateObject(wrappedValue: CategoryStore.shared)
     }
 
     var body: some View {
@@ -82,13 +88,37 @@ struct UnfadingTabShell: View {
                 UnfadingTabBar(selected: $selectedTab)
                     .zIndex(120)
             }
+            .overlay {
+                GroupPickerOverlay(
+                    isPresented: $showingGroupPicker,
+                    onCreateGroup: { isPresentingGroupOnboarding = true },
+                    onGroupChanged: {
+                        sheetSnap = .default_
+                        groupSwitchResetToken += 1
+                    }
+                )
+                .environmentObject(categoryStore)
+
+                CategoryEditorOverlay(isPresented: $showingCategoryEditor)
+                    .environmentObject(categoryStore)
+            }
         }
         .background(UnfadingTheme.Color.bg)
+        .environmentObject(categoryStore)
         .fullScreenCover(isPresented: $isPresentingComposer) {
             MemoryComposerSheet(
                 initialLocationPermissionState: .denied,
                 evidenceMode: evidenceMode
             )
+        }
+        .sheet(isPresented: $isPresentingGroupOnboarding) {
+            GroupOnboardingView()
+        }
+        .onChange(of: showingGroupPicker) { _, isShowing in
+            if isShowing { showingCategoryEditor = false }
+        }
+        .onChange(of: showingCategoryEditor) { _, isShowing in
+            if isShowing { showingGroupPicker = false }
         }
         .onAppear {
             guard evidenceMode != .none, didPresentEvidenceComposer == false else { return }
@@ -101,7 +131,13 @@ struct UnfadingTabShell: View {
     private var currentScreen: some View {
         switch selectedTab {
         case .map:
-            MemoryMapHomeView(sheetSnap: $sheetSnap, evidenceMode: evidenceMode)
+            MemoryMapHomeView(
+                sheetSnap: $sheetSnap,
+                evidenceMode: evidenceMode,
+                groupSwitchResetToken: groupSwitchResetToken,
+                onSwitchGroup: { showingGroupPicker = true },
+                onEditCategories: { showingCategoryEditor = true }
+            )
         case .calendar:
             CalendarView()
         case .settings:

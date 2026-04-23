@@ -179,7 +179,17 @@ final class GroupStore: ObservableObject {
             intro: "UI 테스트 그룹",
             coverColorHex: "#F5998C"
         )
-        groups = [group]
+        let secondGroup = DBGroup(
+            id: UUID(uuidString: "33333333-3333-4333-8333-333333333337")!,
+            name: "두번째 그룹",
+            inviteCode: "UITEST30",
+            createdAt: Date(timeIntervalSince1970: 1_776_086_400),
+            createdBy: UUID(uuidString: "00000000-0000-0000-0000-000000000017")!,
+            mode: "couple",
+            intro: "UI 테스트 전환 그룹",
+            coverColorHex: "#8FB7A8"
+        )
+        groups = [group, secondGroup]
         activeGroupId = group.id
         members = [
             DBGroupMemberWithProfile(

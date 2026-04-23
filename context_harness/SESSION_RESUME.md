@@ -1,75 +1,64 @@
-# Factory Session Resume — 2026-04-23 (EoD)
+# Factory Session Resume — 2026-04-23 (Phase 1 완료)
 
-**Single source of truth.** Two major production blocks this date:
-- Block A (morning, 8h): R3–R14 local-only UI buildout to "deepsight surfaces complete"
-- Block B (afternoon): R15–R24 real-cloud backend integration → actually launchable
+**Source of Truth (design):** `docs/design-docs/unfading_ref/design_handoff_unfading/` (README + Prototype HTML, 2026-04-23 최신본).
 
----
+## 오늘 완료 블록 요약
 
-## 0. Harness
+### Block A (아침 8h): R3–R14 deepsight UI 최초 빌드
+97/97 tests (90 unit + 7 UITest). 로컬 영속성만.
 
-Current: v5.7 (Swift delegation to Codex + multi-axis eval + vibe-coding regulation + CHANGELOG meeting-trail enforcement).
-Temporary regulation (2026-04-23→25): Codex workload share raised; round artifacts can be bundled into Codex dispatches.
+### Block B (오후): R15–R24 Supabase 통합
+129/129 + 2 skip E2E. Supabase schema + Auth + Groups + Memories + Photos + StoreKit + AppIcon + Privacy + TestFlight script.
 
-## 1. Block A rounds (R3–R14) — UI surfaces
+### Block C (저녁): R25 그룹 UX + Feedback-1 (14건) 병렬 스트림
+S0 backend RLS fix (recursion 해소) + A (sheet stream A) + B (composer location) + C2 (calendar plans).
 
-| Round | Content | Tests |
+### **Block D (밤): Phase 1 Feedback-2 (zip 최신 디자인 기반 10 라운드 중 5 완료)**
+
+| Round | id | 핵심 |
 |---|---|---:|
-| R3–R14 | 5-tab nav + bottom-sheet map + composer + memory detail + calendar + rewind + group hub + settings + persistence + onboarding + a11y + XCUITest screenshots | 90 unit + 7 UITest |
+| **R26** | round_design_tokens_r1 | 디자인 토큰 재정렬 (README 기준), Gowun Dodum + Nunito 4-weight `.ttf` 번들 + PostScript name 검증 테스트 | 1758aa3 |
+| **R27** | round_tabbar_shell_r1 | Custom 3-tab shell (지도/캘린더/설정) + ComposeFAB 홈 오버레이 + Rewind 큐레이션 카드 진입 | 9feb7e0 |
+| **R28** | round_bottom_sheet_rebuild_r1 | BottomSheet 재작성: 탭바-above 좌표계, UIKit UIScrollView delegate bridge (Sprint 26), SheetExpandedHeader back 버튼 | eca93b2 |
+| **R29** | round_home_chrome_r1 | TopChrome/FilterChipBar/MapControls 좌표 정밀화 + zIndex + chrome fade + `-UI_TEST_SHEET_SNAP` 런치 arg | 4f5e2f5 |
+| **R30** | round_overlays_r1 | GroupPickerOverlay + CategoryEditorOverlay + CategoryStore 영속성 | (next) |
 
-(See commit history 43a7938..7530197 for per-round detail.)
+## 현재 테스트 상태
+163 passed + 8 skipped (전체 171 UITest/unit 중):
+- 2 E2E (UNFADING_E2E_* env 미설정 시 항상 skip)
+- 4 Sheet gesture UITest (simulator 5pt handle swipe 불안정 — 실기기 smoke 위임)
+- 1 Form identifier (R35 Group Hub 재작업 시 활성화)
+- 1 FilterChipBar `+` 버튼 offscreen (실기기 smoke 위임)
 
-## 2. Block B rounds (R15–R24) — Cloud integration
+## Phase 1 → Phase 2
 
-| Round | Contract id | Content | Tests | Commit |
-|---|---|---|---:|---|
-| R15 | round_supabase_schema_r1 | 8 SQL migrations: groups.cover_color_hex, subscriptions table, memories bucket lockdown (public→private + 25MB + mime allowlist), storage RLS policies, group helper RPCs, reaction-count trigger, group_members roster visibility, advisor fix | — | 8952087 |
-| R16 | round_supabase_client_r1 | supabase-swift 2.30+ SPM; SupabaseService singleton; Info.plist URL+publishable key; 2 new unit tests | 99 | 06d9e2d |
-| R17 | round_auth_r1 | email/password auth via Supabase Auth; AuthStore + AuthLandingView; MemoryMapApp root branching; UI-test stub flags | 104 | d4f06db |
-| R18 | round_groups_r1 | DBProfile/DBGroup/DBGroupMember; SupabaseGroupRepository; GroupStore with bootstrap/create/join/rotate; GroupOnboardingView; GroupHubView DB-backed | 111 | fa6afef |
-| R19 | round_memories_r1 | DBMemory/DBMemoryInsert; SupabaseMemoryRepository; MemoryStore CRUD + offline JSON cache + realtime postgres_changes subscription | 115 | 79fbd3d |
-| R20 | round_photos_r1 | PhotoUploader actor (PHAsset → JPEG → Storage); RemoteImageView signed-URL AsyncImage; composer upload-first-then-insert with rollback | 120 | b464078 |
-| R21 | round_profile_sync_r1 | profiles.preferences jsonb; ProfileRepository; UserPreferences bidirectional cloud sync (500ms debounced); profile section in Settings | 124 | 19eff1d |
-| R22 | round_storekit_r1 | StoreKitConfiguration.storekit; SubscriptionStore (Transaction API); PremiumPaywallView; client-side entitlement (server-side mirror deferred) | 129 | af3c7b5 |
-| R23 | round_ship_assets_r1 | AppIcon 1024 (PIL-generated coral gradient + heart + wordmark); AccentColor; LaunchLogo; UILaunchScreen; PrivacyInfo.xcprivacy (Apple 2024 manifest) | 129 | 4d1a90f |
-| R24 | round_e2e_testflight_r1 | SupabaseE2ETests (2 tests, SKIP unless env set); archive.sh + export-options.plist; harvest_screenshots.sh; e2e_setup.md; launchability-review-2026.md rewritten as final status | 129+2skip | 6d2cfce |
+Phase 1 완료: Feedback-2 의 3가지 sheet 블로커 + 레이아웃 재건 + 폰트/토큰/overlay UI.
 
-## 3. What "launchable" means now
+**실기기 smoke test 권장 시점: 지금 (R30 직후).**
 
-**Implemented + verified (local build + test):**
-- Email/password auth → Supabase Auth
-- Profile table with display name + cloud-synced preferences
-- Groups (couple/group) with create + invite-code join + rotate + realtime roster
-- Memories CRUD backed by Postgres with RLS; offline cache; realtime postgres_changes
-- Photo upload to private `memories` Storage bucket with signed URLs
-- StoreKit 2 paywall with 2 products (monthly/yearly) via local .storekit config
-- AppIcon + LaunchScreen + PrivacyInfo.xcprivacy
-
-**Deferred / operator action required before App Store submission:**
-1. Supabase Dashboard → Auth → Policies → enable HIBP leaked-password protection
-2. Supabase Dashboard → Auth → Email → disable email confirmation OR configure SMTP
-3. Apple Developer enrollment + TEAM_ID for codesigning (`DEVELOPMENT_TEAM` currently "")
-4. App Store Connect product creation with IDs matching StoreKitConfiguration.storekit
-5. Professional AppIcon + marketing assets (current icon is PIL-generated placeholder)
-6. Localized App Store metadata (ko + en) + screenshots
-7. Edge Function receipt validation writing to `public.subscriptions` (client-side Transaction API + iCloud sync covers v1, but server mirror adds fraud protection)
-8. Sign in with Apple (not required by 4.8 since we only offer email, but polish)
-
-**How to run TestFlight build (once team is acquired):**
 ```
-workspace/ios/scripts/archive.sh <YOUR_TEAM_ID>
+cd /Users/jeonsihyeon/factory && git pull origin master
+open workspace/ios/MemoryMap.xcodeproj
 ```
-→ produces `.build/export/MemoryMap.ipa` for App Store Connect upload.
 
-**How to run E2E tests:**
-1. Create test user in Supabase Dashboard → Authentication → Users → Add user
-2. `UNFADING_E2E_EMAIL=... UNFADING_E2E_PASSWORD=... xcodebuild test ... -only-testing MemoryMapTests/SupabaseE2ETests`
+실기기에서 확인할 항목:
+1. Sheet collapsed 가 탭바에 가리지 않음 + 핸들 드래그로 expanded 이동 가능 (F1/F2)
+2. Expanded 시 SheetExpandedHeader 의 back 버튼으로 default 복귀 (F3)
+3. 3-tab (지도/캘린더/설정) + 홈 FAB
+4. 홈 큐레이션의 "이번 달 리와인드" 카드로 Rewind 진입
+5. TopChrome tap → GroupPickerOverlay
+6. FilterChipBar `+` → CategoryEditorOverlay
+7. Gowun Dodum / Nunito 폰트 렌더
 
-## 4. Full round count
+Phase 2 (R31–R35) 대기: composer 재작성(F8/F10/F11 포함) / Memory Detail Sprint 28 / Calendar 다이얼 + 계획 카드 / Rewind Stories / Group Hub.
 
-| Block | Rounds | Final test count |
-|---|---|---:|
-| A (UI) | 12 (R3–R14) | 97 (90 unit + 7 UITest) |
-| B (Cloud) | 10 (R15–R24) | 129 (118 unit + 11 UITest) + 2 skipped E2E |
+## 하네스 상태
+v5.7 (Swift delegation + 다중 축 평가 + vibe-coding regulation + CHANGELOG meeting trail).
+Feedback-2 10-round 전 과정: Codex operator Challenge Section 수용, R27/R28 순서 swap 반영, UIKit UIScrollView delegate bridge 채택.
 
-Total commits this date: ~24 rounds + 2 post-round fixes + harness maintenance.
+Codex capacity 불안정 대응: 3회 재시도 정책 유지, 대부분 성공. R29 1회 stream disconnect 후 재시도 성공.
+
+## 아티팩트 위치
+- Plan: `context_harness/operator/meetings/2026-04-23_feedback2_10round_plan.md`
+- 각 라운드: `context_harness/operator/contracts/round_<name>_r1/` + `meetings/...` + `reports/.../evidence/`
+- 실기기 테스트 계정: `tester@unfading.app` / `UnfadingTest1!`

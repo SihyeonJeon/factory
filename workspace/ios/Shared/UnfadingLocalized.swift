@@ -256,6 +256,12 @@ enum UnfadingLocalized {
         static let groupNameUpdated = "그룹 이름을 바꿨어요."
         static let nicknameUpdated = "내 이름을 바꿨어요."
         static let notOwnerHint = "그룹 이름은 만든 사람만 바꿀 수 있어요."
+        static let pickerTitle = "그룹 선택"
+        static let pickerSubtitle = "여러 그룹을 동시에 쓸 수 있어요"
+        static let pickerCoupleBadge = "COUPLE"
+        static let pickerGroupBadge = "GROUP"
+        static let pickerCreateNew = "새 그룹 만들기"
+        static let pickerClose = "그룹 선택 닫기"
 
         static func dayCountFormat(_ days: Int) -> String {
             "함께한 지 \(days)일"
@@ -264,6 +270,34 @@ enum UnfadingLocalized {
         static func memberCountFormat(_ count: Int) -> String {
             "멤버 \(count)명"
         }
+
+        static func pickerMembersFormat(_ count: Int) -> String {
+            "\(count)명"
+        }
+
+        static func pickerAnniversaryFormat(_ days: Int) -> String {
+            "함께한 지 \(days)일"
+        }
+    }
+
+    // MARK: Categories
+
+    enum Categories {
+        static let editorTitle = "카테고리 편집"
+        static let editorSubtitle = "기본 · 추억 / 밥 / 카페 / 경험 · 직접 추가 가능"
+        static let newCategoryLabel = "새 카테고리"
+        static let newCategoryPlaceholder = "예: 산책, 공연, 전시…"
+        static let addButton = "추가"
+        static let resetDefault = "기본값"
+        static let save = "저장"
+        static let duplicateError = "이미 있는 카테고리예요."
+        static let emptyNameError = "카테고리 이름을 입력해주세요."
+        static let defaultMemory = "추억"
+        static let defaultMeal = "밥"
+        static let defaultCafe = "카페"
+        static let defaultExperience = "경험"
+        static let addCategory = "카테고리 추가"
+        static let close = "카테고리 편집 닫기"
     }
 
     // MARK: Calendar (stub in R3; full impl in R8)
