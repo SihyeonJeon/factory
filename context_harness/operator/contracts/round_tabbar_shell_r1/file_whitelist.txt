@@ -1,0 +1,13 @@
+workspace/ios/App/UnfadingTabShell.swift
+workspace/ios/App/RootTabView.swift
+workspace/ios/App/MemoryMapApp.swift
+workspace/ios/Features/Home/ComposeFAB.swift
+workspace/ios/Features/Home/MemoryMapHomeView.swift
+workspace/ios/Features/Home/MemorySummaryCard.swift
+workspace/ios/UITests/UnfadingUITests.swift
+workspace/ios/Tests/RootNavigationTests.swift
+workspace/ios/Shared/UnfadingTheme.swift
+workspace/ios/Shared/UnfadingLocalized.swift
+context_harness/operator/contracts/round_tabbar_shell_r1/file_whitelist.txt
+context_harness/operator/meetings/2026-04-23_round_tabbar_shell_plan.md
+context_harness/reports/round_tabbar_shell_r1/evidence/notes.md

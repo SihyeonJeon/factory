@@ -136,6 +136,9 @@ enum UnfadingLocalized {
         static let filterTrip = "여행"
         static let filterAnniversary = "기념일"
         static let filterFood = "맛집"
+        static let rewindHintTitle = "이번 달 리와인드"
+        static let rewindHintBody = "함께 남긴 장소와 사진을 모아 한 번에 돌아봐요."
+        static let rewindHintCta = "리와인드 보기"
     }
 
     // MARK: Common

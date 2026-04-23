@@ -8,6 +8,7 @@ struct MemorySummaryCard: View {
     var selectedPin: SampleMemoryPin? = nil
     var photoStoragePath: String? = nil
     var onDetailTap: (() -> Void)? = nil
+    var onRewindTap: (() -> Void)? = nil
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: dynamicTypeSize.isAccessibilitySize) {
@@ -27,6 +28,10 @@ struct MemorySummaryCard: View {
                     .fixedSize(horizontal: false, vertical: true)
 
                 tagSection
+
+                if shouldShowRewindHint, let onRewindTap {
+                    rewindHintCard(onTap: onRewindTap)
+                }
 
                 if let onDetailTap {
                     Button(action: onDetailTap) {
@@ -108,6 +113,53 @@ struct MemorySummaryCard: View {
         }
     }
 
+    private func rewindHintCard(onTap: @escaping () -> Void) -> some View {
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
+                HStack(alignment: .top, spacing: UnfadingTheme.Spacing.md) {
+                    Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                        .imageScale(.medium)
+                        .foregroundStyle(UnfadingTheme.Color.primary)
+                        .frame(width: 36, height: 36)
+                        .background(UnfadingTheme.Color.accentSoft, in: Circle())
+
+                    VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
+                        Text(UnfadingLocalized.Home.rewindHintTitle)
+                            .font(UnfadingTheme.Font.sectionTitle())
+                            .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(UnfadingLocalized.Home.rewindHintBody)
+                            .font(UnfadingTheme.Font.footnote())
+                            .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
+                HStack(spacing: UnfadingTheme.Spacing.xs) {
+                    Text(UnfadingLocalized.Home.rewindHintCta)
+                    Image(systemName: "chevron.right")
+                        .imageScale(.small)
+                }
+                .font(UnfadingTheme.Font.subheadlineSemibold())
+                .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
+                .padding(.horizontal, UnfadingTheme.Spacing.lg)
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: 44)
+                .background(
+                    UnfadingTheme.Color.primary,
+                    in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.button, style: .continuous)
+                )
+            }
+            .padding(UnfadingTheme.Spacing.lg)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .unfadingCardBackground(fill: UnfadingTheme.Color.sheet)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(UnfadingLocalized.Home.rewindHintTitle)
+        .accessibilityHint(UnfadingLocalized.Home.rewindHintBody)
+        .accessibilityIdentifier("home-rewind-hint")
+    }
+
     // MARK: Selected-pin-aware content
 
     private var selectedPinEyebrow: String {
@@ -127,6 +179,18 @@ struct MemorySummaryCard: View {
 
     private var resolvedPhotoStoragePath: String? {
         photoStoragePath ?? selectedPin?.detail()?.photoStoragePaths.first
+    }
+
+    private var shouldShowRewindHint: Bool {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["UNFADING_UI_TEST"] == "1" {
+            return true
+        }
+        #endif
+
+        let day = Calendar.current.component(.day, from: Date())
+        let range = Calendar.current.range(of: .day, in: .month, for: Date())
+        return day == range?.upperBound.advanced(by: -1)
     }
 }
 

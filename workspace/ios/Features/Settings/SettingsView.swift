@@ -109,6 +109,7 @@ struct SettingsView: View {
                 Label(UnfadingLocalized.Settings.groupsRow, systemImage: "person.3")
                     .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             }
+            .accessibilityIdentifier("settings-groups-row")
             .accessibilityHint(UnfadingLocalized.Settings.groupsRowHint)
         }
     }

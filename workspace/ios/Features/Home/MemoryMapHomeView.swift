@@ -14,9 +14,8 @@ struct MemoryMapHomeView: View {
     private let evidenceMode: MemoryComposerEvidenceMode
     @StateObject private var locationPermissionStore = LocationPermissionStore()
     @StateObject private var selection = MemorySelectionState()
-    @State private var showingComposer = false
-    @State private var didPresentEvidenceComposer = false
     @State private var showingGroupHub = false
+    @State private var showingRewind = false
     @State private var detailPin: SampleMemoryPin?
     @State private var measuredSheetHeight: CGFloat = 0
     @State private var cameraPosition: MapCameraPosition = .region(
@@ -52,7 +51,8 @@ struct MemoryMapHomeView: View {
                     UnfadingBottomSheet(snap: $selection.sheetSnap, measuredHeight: $measuredSheetHeight) {
                         MemorySummaryCard(
                             selectedPin: selection.selectedPin(from: SampleMemoryPin.samples),
-                            onDetailTap: openDetail
+                            onDetailTap: openDetail,
+                            onRewindTap: showRewindFromCuration
                         )
                     }
                     .ignoresSafeArea(.container, edges: .bottom)
@@ -64,28 +64,15 @@ struct MemoryMapHomeView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
                         .zIndex(3)
 
-                    fab
-                        .padding(.trailing, MemoryMapHomeLayout.fabRight)
-                        .padding(.bottom, measuredSheetHeight + MemoryMapHomeLayout.fabBottomGap)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                        .opacity(selection.sheetSnap == .expanded ? 0 : 1)
-                        .allowsHitTesting(selection.sheetSnap != .expanded)
-                        .animation(reduceMotion ? .easeInOut(duration: 0.25) : .interpolatingSpring(stiffness: 260, damping: 32), value: measuredSheetHeight)
-                        .zIndex(5)
                 }
                 .frame(width: proxy.size.width, height: proxy.size.height)
             }
             .toolbar(.hidden, for: .navigationBar)
-            .sheet(isPresented: $showingComposer) {
-                MemoryComposerSheet(
-                    initialLocationPermissionState: .denied,
-                    evidenceMode: evidenceMode
-                )
-                .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.medium, .large])
-                .presentationDragIndicator(.visible)
-            }
             .sheet(isPresented: $showingGroupHub) {
                 GroupHubView()
+            }
+            .sheet(isPresented: $showingRewind) {
+                RewindFeedView()
             }
             .navigationDestination(item: $detailPin) { pin in
                 MemoryDetailView(pin: pin)
@@ -110,11 +97,6 @@ struct MemoryMapHomeView: View {
             }
             .onChange(of: scenePhase) { _, newPhase in
                 if newPhase == .active { locationPermissionStore.refresh() }
-            }
-            .onAppear {
-                guard evidenceMode != .none, didPresentEvidenceComposer == false else { return }
-                didPresentEvidenceComposer = true
-                showingComposer = true
             }
         }
     }
@@ -202,22 +184,6 @@ struct MemoryMapHomeView: View {
         .accessibilityHint(UnfadingLocalized.Accessibility.filterRowHint)
     }
 
-    private var fab: some View {
-        Button {
-            showingComposer = true
-        } label: {
-            Image(systemName: "plus")
-                .font(.title2.weight(.bold))
-                .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
-                .frame(width: 56, height: 56)
-                .background(UnfadingTheme.Color.primary.gradient, in: Circle())
-                .shadow(color: UnfadingTheme.Color.primary.opacity(0.35), radius: 10, x: 0, y: 6)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(UnfadingLocalized.Accessibility.addMemoryLabel)
-        .accessibilityHint(UnfadingLocalized.Accessibility.addMemoryHint)
-    }
-
     private var mapControls: some View {
         VStack(spacing: UnfadingTheme.Spacing.sm) {
             mapControlButton(systemName: "location.fill", accessibilityLabel: "Current location") {
@@ -274,6 +240,10 @@ struct MemoryMapHomeView: View {
     // vibe-limit-checked: 8 a11y detail handoff remains labeled, 1 parent owns navigation, 12 navigation state transition testable
     private func openDetail() {
         detailPin = selection.selectedPin(from: SampleMemoryPin.samples) ?? SampleMemoryPin.samples.first
+    }
+
+    private func showRewindFromCuration() {
+        showingRewind = true
     }
 }
 
