@@ -2,6 +2,7 @@ import SwiftUI
 
 // vibe-limit-checked: 8 a11y hints/44pt rows, 5 @MainActor settings state objects, 7 Korean UI, 14 reuses preference/store models
 struct SettingsView: View {
+    @EnvironmentObject private var authStore: AuthStore
     @StateObject private var prefs = UserPreferences()
     @StateObject private var memoryStore = MemoryStore()
     @State private var showingGroupHub = false
@@ -30,7 +31,7 @@ struct SettingsView: View {
     private var accountSection: some View {
         Section(UnfadingLocalized.Settings.accountSection) {
             VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xs) {
-                Text("시현 (샘플)")
+                Text(accountTitle)
                     .font(UnfadingTheme.Font.subheadlineSemibold())
                     .foregroundStyle(UnfadingTheme.Color.textPrimary)
                 Text(UnfadingLocalized.Settings.draftCountFormat(memoryStore.drafts.count))
@@ -38,7 +39,27 @@ struct SettingsView: View {
                     .foregroundStyle(UnfadingTheme.Color.textSecondary)
             }
             .frame(minHeight: 44)
+
+            Button(role: .destructive) {
+                Task {
+                    try? await authStore.signOut()
+                }
+            } label: {
+                Text(UnfadingLocalized.Auth.signOut)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            }
+            .accessibilityLabel(UnfadingLocalized.Auth.signOut)
+            .accessibilityHint(UnfadingLocalized.Auth.signOutConfirm)
         }
+    }
+
+    private var accountTitle: String {
+        if case let .signedIn(_, email) = authStore.state,
+           let email,
+           !email.isEmpty {
+            return email
+        }
+        return UnfadingLocalized.Auth.guest
     }
 
     private var preferencesSection: some View {
@@ -98,4 +119,5 @@ struct SettingsView: View {
 
 #Preview {
     SettingsView()
+        .environmentObject(AuthStore(preview: .signedIn(userId: UUID(), email: "preview@example.com")))
 }

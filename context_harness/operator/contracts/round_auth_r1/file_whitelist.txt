@@ -1,0 +1,11 @@
+workspace/ios/App/MemoryMapApp.swift
+workspace/ios/Shared/AuthStore.swift
+workspace/ios/Shared/UnfadingLocalized.swift
+workspace/ios/Features/Auth/AuthLandingView.swift
+workspace/ios/Features/Settings/SettingsView.swift
+workspace/ios/UITests/UnfadingUITests.swift
+workspace/ios/Tests/AuthStoreTests.swift
+context_harness/operator/contracts/round_auth_r1/spec.md
+context_harness/operator/contracts/round_auth_r1/file_whitelist.txt
+context_harness/reports/round_auth_r1/evidence/xcresult_summary.json
+context_harness/operator/meetings/2026-04-23_round17_auth_plan.md

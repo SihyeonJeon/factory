@@ -6,8 +6,21 @@ final class UnfadingUITests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments += ["-UI_TEST_SKIP_ONBOARDING"]
+        app.launchArguments += ["-UI_TEST_AUTH_STUB", "-UI_TEST_SKIP_ONBOARDING"]
         app.launchEnvironment["UNFADING_UI_TEST"] = "1"
+    }
+
+    func testAuthStubSkipsToRootTabView() {
+        app.launch()
+        XCTAssertTrue(app.tabBars.buttons["지도"].waitForExistence(timeout: 5))
+    }
+
+    func testSignedOutShowsAuthLanding() {
+        let signedOutApp = XCUIApplication()
+        signedOutApp.launchArguments = ["-UI_TEST_RESET_DEFAULTS"]
+        signedOutApp.launch()
+
+        XCTAssertTrue(signedOutApp.buttons["auth-primary-button"].waitForExistence(timeout: 5))
     }
 
     func testMapTabScreenshot() {

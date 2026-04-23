@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct MemoryMapApp: App {
     @StateObject private var prefs: UserPreferences
+    @StateObject private var authStore = AuthStore()
 
     private let evidenceMode: MemoryComposerEvidenceMode = {
         guard
@@ -16,6 +17,10 @@ struct MemoryMapApp: App {
     }()
 
     init() {
+        if ProcessInfo.processInfo.arguments.contains("-UI_TEST_RESET_DEFAULTS"),
+           let bundleId = Bundle.main.bundleIdentifier {
+            UserDefaults.standard.removePersistentDomain(forName: bundleId)
+        }
         _prefs = StateObject(wrappedValue: UserPreferences(forceHasSeenOnboarding: Self.shouldSkipOnboardingForUITests))
     }
 
@@ -27,12 +32,21 @@ struct MemoryMapApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if prefs.hasSeenOnboarding {
-                    RootTabView(evidenceMode: evidenceMode)
-                } else {
-                    OnboardingView {
-                        prefs.hasSeenOnboarding = true
+                if authStore.state == .unknown {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                } else if case .signedIn = authStore.state {
+                    if prefs.hasSeenOnboarding {
+                        RootTabView(evidenceMode: evidenceMode)
+                            .environmentObject(authStore)
+                    } else {
+                        OnboardingView {
+                            prefs.hasSeenOnboarding = true
+                        }
                     }
+                } else {
+                    AuthLandingView()
+                        .environmentObject(authStore)
                 }
             }
         }
