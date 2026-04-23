@@ -338,6 +338,21 @@ enum UnfadingLocalized {
         static let reminderPermissionDenied = "알람 권한이 꺼져 있어 알람은 울리지 않아요."
         static let plansForDate = "이 날의 계획"
         static let futureDayHint = "이 날짜는 미래라 추억 대신 계획을 추가할 수 있어요."
+        static let monthPickerTitle = "월 선택"
+        static let weatherSample = "맑음 23°"
+        static let eventsSectionTitle = "이벤트"
+        static let noEventsForDate = "이 날의 이벤트가 아직 없어요."
+        static let planPlaceFallback = "성수 카페 거리"
+        static let sendReminderCTA = "알림 보내기"
+        static let broadcastToast = "모든 멤버에게 알림을 보냈어요"
+
+        static func nextMeetingTitle(_ date: Date) -> String {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "ko_KR")
+            formatter.timeZone = TimeZone(identifier: "Asia/Seoul") ?? .autoupdatingCurrent
+            formatter.dateFormat = "E M/d"
+            return "다음 만남 — \(formatter.string(from: date))"
+        }
 
         static func expenseCurrencyFormat(_ won: Int64) -> String {
             "₩\(won.formatted(.number.grouping(.automatic)))"

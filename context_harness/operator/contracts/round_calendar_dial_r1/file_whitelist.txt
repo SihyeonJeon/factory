@@ -1,0 +1,16 @@
+workspace/ios/Features/Calendar/CalendarView.swift
+workspace/ios/Features/Calendar/MemoryCalendarStore.swift
+workspace/ios/Features/Calendar/EventPlanSheet.swift
+workspace/ios/Features/Calendar/RSVPStore.swift
+workspace/ios/Features/Calendar/NotificationBroadcaster.swift
+workspace/ios/Features/Groups/GroupStore.swift
+workspace/ios/Shared/UnfadingLocalized.swift
+workspace/ios/Shared/UnfadingMonthGrid.swift
+workspace/ios/Shared/UnfadingToast.swift
+workspace/ios/Tests/RSVPStoreTests.swift
+workspace/ios/Tests/UnfadingMonthGridTests.swift
+workspace/ios/UITests/UnfadingUITests.swift
+context_harness/operator/contracts/round_calendar_dial_r1/file_whitelist.txt
+context_harness/operator/meetings/2026-04-23_round_calendar_dial_plan.md
+context_harness/reports/round_calendar_dial_r1/evidence/notes.md
+context_harness/blackboard.md

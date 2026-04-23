@@ -1289,3 +1289,4 @@ xcodegen 성공. Sprint 26 완료입니다.
 - 2026-04-23 Codex: opened docs/design-docs/unfading_ref/design_handoff_unfading/README.md for R29 mandatory design sections.
 
 - 2026-04-23 Codex R31: opened user-mandated iOS composer/design files and noted missing round_composer_rebuild_r1 lock; reason: implement active R31 contract.
+- 2026-04-23 Codex R33: opened user-mandated Calendar iOS files, project/test helpers, and noted missing round_calendar_dial_r1 lock; reason: implement active R33 Calendar dial/plan/notification contract.

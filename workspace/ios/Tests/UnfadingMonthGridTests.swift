@@ -25,7 +25,8 @@ private struct MonthGridHarness: View {
         UnfadingMonthGrid(
             weeks: weeks,
             selectedDate: $selectedDate,
-            hasMemory: { _ in false }
+            hasMemory: { _ in false },
+            dayKind: { _ in .none }
         )
     }
 }

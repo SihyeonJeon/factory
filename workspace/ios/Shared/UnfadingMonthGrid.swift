@@ -5,6 +5,7 @@ struct UnfadingMonthGrid: View {
     let weeks: [[MemoryCalendarStore.CalendarCell]]
     @Binding var selectedDate: Date?
     let hasMemory: (Date) -> Bool
+    let dayKind: (Date) -> MemoryCalendarStore.DayKind
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: UnfadingTheme.Spacing.xs), count: 7)
     private var calendar: Calendar {
@@ -38,15 +39,14 @@ struct UnfadingMonthGrid: View {
     private func dayCell(_ cell: MemoryCalendarStore.CalendarCell) -> some View {
         let selected = selectedDate.map { calendar.isDate($0, inSameDayAs: cell.date) } ?? false
         let hasMemory = hasMemory(cell.date)
+        let kind = dayKind(cell.date)
         return Button {
             selectedDate = cell.date
         } label: {
             VStack(spacing: 2) {
                 Text("\(calendar.component(.day, from: cell.date))")
                     .font(UnfadingTheme.Font.footnoteSemibold())
-                Circle()
-                    .fill(hasMemory ? UnfadingTheme.Color.primary : .clear)
-                    .frame(width: 5, height: 5)
+                dotRow(for: kind)
             }
             .frame(maxWidth: .infinity, minHeight: 44)
             .foregroundStyle(foregroundColor(for: cell, selected: selected))
@@ -63,6 +63,29 @@ struct UnfadingMonthGrid: View {
         .buttonStyle(.plain)
         .accessibilityLabel(accessibilityLabel(for: cell, hasMemory: hasMemory))
         .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+
+    @ViewBuilder
+    private func dotRow(for kind: MemoryCalendarStore.DayKind) -> some View {
+        HStack(spacing: 2) {
+            switch kind {
+            case .memory, .both:
+                ForEach(0..<3, id: \.self) { _ in
+                    Circle()
+                        .fill(UnfadingTheme.Color.primary)
+                        .frame(width: 4, height: 4)
+                }
+            case .plan:
+                Circle()
+                    .fill(UnfadingTheme.Color.lavender)
+                    .frame(width: 5, height: 5)
+            case .none:
+                Circle()
+                    .fill(.clear)
+                    .frame(width: 5, height: 5)
+            }
+        }
+        .frame(height: 6)
     }
 
     private func foregroundColor(for cell: MemoryCalendarStore.CalendarCell, selected: Bool) -> Color {

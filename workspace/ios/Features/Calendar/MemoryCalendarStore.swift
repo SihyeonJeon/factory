@@ -30,18 +30,32 @@ final class MemoryCalendarStore: ObservableObject {
         self.selectedDate = nil
         self.memoryDates = Self.seedMemoryDates(for: displayedMonth, calendar: calendar)
         self.eventRepo = eventRepo
+        applyUITestStubIfNeeded()
     }
 
     func nextMonth() {
         displayedMonth = calendar.date(byAdding: .month, value: 1, to: displayedMonth) ?? displayedMonth
         selectedDate = nil
         memoryDates = Self.seedMemoryDates(for: displayedMonth, calendar: calendar)
+        applyUITestStubIfNeeded()
     }
 
     func previousMonth() {
         displayedMonth = calendar.date(byAdding: .month, value: -1, to: displayedMonth) ?? displayedMonth
         selectedDate = nil
         memoryDates = Self.seedMemoryDates(for: displayedMonth, calendar: calendar)
+        applyUITestStubIfNeeded()
+    }
+
+    func setDisplayedMonth(year: Int, month: Int) {
+        var components = DateComponents()
+        components.year = year
+        components.month = month
+        components.day = 1
+        displayedMonth = calendar.date(from: components) ?? displayedMonth
+        selectedDate = nil
+        memoryDates = Self.seedMemoryDates(for: displayedMonth, calendar: calendar)
+        applyUITestStubIfNeeded()
     }
 
     func select(_ date: Date?) {
@@ -94,6 +108,10 @@ final class MemoryCalendarStore: ObservableObject {
 
     // MARK: F9/F2-cal — Supabase 기반 월 지출 + 계획 이벤트 로드 (KST)
     func loadMonth(for groupId: UUID) async {
+        if ProcessInfo.processInfo.environment["UNFADING_UI_TEST"] == "1" {
+            applyUITestStubIfNeeded()
+            return
+        }
         let comps = calendar.dateComponents([.year, .month], from: displayedMonth)
         let year = comps.year ?? 1970
         let month = comps.month ?? 1
@@ -154,6 +172,30 @@ final class MemoryCalendarStore: ObservableObject {
             partial &+ Int(scalar.unicodeScalars.first?.value ?? 0)
         })
         return (hash % 28) + 1
+    }
+
+    private func applyUITestStubIfNeeded() {
+        guard ProcessInfo.processInfo.environment["UNFADING_UI_TEST"] == "1" else { return }
+        let todayStart = KSTDateFormatter.truncateToDayKST(today)
+        guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: todayStart) else { return }
+        guard calendar.isDate(tomorrow, equalTo: displayedMonth, toGranularity: .month) else {
+            plannedEvents = []
+            return
+        }
+        let groupId = UUID(uuidString: "11111111-1111-4111-8111-111111111117") ?? UUID()
+        plannedEvents = [
+            DBEvent(
+                id: UUID(uuidString: "44444444-4444-4444-8444-444444444447") ?? UUID(),
+                groupId: groupId,
+                title: "성수에서 만나요",
+                startDate: tomorrow.addingTimeInterval(60 * 60 * 19),
+                endDate: nil,
+                isMultiDay: false,
+                createdAt: today,
+                reminderAt: nil
+            )
+        ]
+        selectedDate = tomorrow
     }
 }
 
