@@ -6,7 +6,7 @@ final class UnfadingUITests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments += ["-UI_TEST_AUTH_STUB", "-UI_TEST_SKIP_ONBOARDING"]
+        app.launchArguments += ["-UI_TEST_AUTH_STUB", "-UI_TEST_SKIP_ONBOARDING", "-UI_TEST_GROUP_STUB"]
         app.launchEnvironment["UNFADING_UI_TEST"] = "1"
     }
 
@@ -82,6 +82,15 @@ final class UnfadingUITests: XCTestCase {
         } else {
             attachScreenshot(name: "07_memory_detail_skipped")
         }
+    }
+
+    func testGroupOnboardingShownWhenNoGroup() {
+        let noGroupApp = XCUIApplication()
+        noGroupApp.launchArguments = ["-UI_TEST_AUTH_STUB", "-UI_TEST_SKIP_ONBOARDING"]
+        noGroupApp.launchEnvironment["UNFADING_UI_TEST"] = "1"
+        noGroupApp.launch()
+
+        XCTAssertTrue(noGroupApp.buttons["group-create-button"].waitForExistence(timeout: 5))
     }
 
     private func tapTab(_ label: String) {

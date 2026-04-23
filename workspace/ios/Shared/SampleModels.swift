@@ -139,10 +139,17 @@ enum GroupMode: String, CaseIterable, Hashable {
 }
 
 struct SampleGroupMember: Identifiable, Hashable {
-    let id: UUID = UUID()
+    let id: UUID
     let name: String
     let initial: String
     let relation: String
+
+    init(id: UUID = UUID(), name: String, initial: String, relation: String) {
+        self.id = id
+        self.name = name
+        self.initial = initial
+        self.relation = relation
+    }
 }
 
 struct SampleGroup: Identifiable, Hashable {

@@ -120,4 +120,5 @@ struct SettingsView: View {
 #Preview {
     SettingsView()
         .environmentObject(AuthStore(preview: .signedIn(userId: UUID(), email: "preview@example.com")))
+        .environmentObject(GroupStore.preview())
 }

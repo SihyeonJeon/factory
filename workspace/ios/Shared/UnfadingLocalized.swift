@@ -226,13 +226,31 @@ enum UnfadingLocalized {
         static let inviteCta = "초대"
         static let coverEyebrow = "함께한 기록"
         static let modePickerLabel = "모드"
+        static let onboardingTitle = "그룹 시작"
+        static let createTab = "새로 만들기"
+        static let joinTab = "초대 코드로 참여"
+        static let namePlaceholder = "그룹 이름"
+        static let modeCouple = "커플"
+        static let modeGroup = "그룹"
+        static let introPlaceholder = "소개 (선택)"
+        static let createButton = "만들기"
+        static let codePlaceholder = "초대 코드"
+        static let joinButton = "참여하기"
+        static let createdBanner = "그룹이 생성되었어요!"
+        static let joinedBanner = "그룹에 참여했어요!"
+        static let invalidCode = "초대 코드를 확인해주세요."
+        static let inviteCodeLabel = "초대 코드"
+        static let copyCode = "복사"
+        static let rotateCode = "재생성"
+        static let rotated = "새 초대 코드로 바뀌었어요."
+        static let actionFailed = "잠시 후 다시 시도해주세요."
 
         static func dayCountFormat(_ days: Int) -> String {
             "함께한 지 \(days)일"
         }
 
         static func memberCountFormat(_ count: Int) -> String {
-            "\(count)명"
+            "멤버 \(count)명"
         }
     }
 

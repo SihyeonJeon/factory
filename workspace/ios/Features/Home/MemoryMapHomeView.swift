@@ -242,4 +242,5 @@ struct MemoryMapHomeView: View {
 
 #Preview {
     MemoryMapHomeView()
+        .environmentObject(GroupStore.preview())
 }

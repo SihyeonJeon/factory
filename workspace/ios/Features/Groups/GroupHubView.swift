@@ -1,18 +1,19 @@
 import SwiftUI
+import UIKit
 
-// vibe-limit-checked: 8 44pt/a11y/Dynamic Type, 7 Korean group hub fidelity, 11 sample group mapping, 14 reusable avatar stack
 struct GroupHubView: View {
-    @StateObject private var store = GroupStore()
+    @EnvironmentObject private var groupStore: GroupStore
+    @State private var toast: String?
+    @State private var isRotatingInvite = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xl) {
                     cover
-                    modePicker
                     membersSummary
                     membersList
-                    inviteButton
+                    inviteCodeRow
                 }
                 .padding(UnfadingTheme.Spacing.xl)
             }
@@ -26,14 +27,17 @@ struct GroupHubView: View {
             Text(UnfadingLocalized.Groups.coverEyebrow)
                 .font(UnfadingTheme.Font.captionSemibold())
                 .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
-            Text(store.currentGroup.name)
+            Text(groupStore.activeGroup?.name ?? "-")
                 .font(UnfadingTheme.Font.title())
                 .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
-            Text(store.currentGroup.mode.koreanTitle)
+            Text(groupStore.mode.koreanTitle)
                 .font(UnfadingTheme.Font.subheadlineSemibold())
                 .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
-            Text(store.currentGroup.coverEmojis.joined(separator: " "))
-                .font(UnfadingTheme.Font.title3Bold())
+            if let intro = groupStore.activeGroup?.intro, !intro.isEmpty {
+                Text(intro)
+                    .font(UnfadingTheme.Font.subheadline())
+                    .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
+            }
         }
         .padding(UnfadingTheme.Spacing.xl)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -47,22 +51,6 @@ struct GroupHubView: View {
         )
     }
 
-    private var modePicker: some View {
-        Picker(
-            UnfadingLocalized.Groups.modePickerLabel,
-            selection: Binding(
-                get: { store.mode },
-                set: { store.setMode($0) }
-            )
-        ) {
-            ForEach(GroupMode.allCases, id: \.self) { mode in
-                Text(mode.koreanTitle).tag(mode)
-            }
-        }
-        .pickerStyle(.segmented)
-        .accessibilityLabel(UnfadingLocalized.Groups.modePickerLabel)
-    }
-
     private var membersSummary: some View {
         VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
             HStack {
@@ -70,11 +58,11 @@ struct GroupHubView: View {
                     .font(UnfadingTheme.Font.subheadlineSemibold())
                     .foregroundStyle(UnfadingTheme.Color.textPrimary)
                 Spacer()
-                Text(UnfadingLocalized.Groups.memberCountFormat(store.currentGroup.members.count))
+                Text(UnfadingLocalized.Groups.memberCountFormat(groupStore.members.count))
                     .font(UnfadingTheme.Font.captionSemibold())
                     .foregroundStyle(UnfadingTheme.Color.textSecondary)
             }
-            UnfadingAvatarStack(members: store.currentGroup.members)
+            UnfadingAvatarStack(members: avatarMembers)
         }
         .padding(UnfadingTheme.Spacing.lg)
         .unfadingCardBackground(fill: UnfadingTheme.Color.sheet, radius: UnfadingTheme.Radius.card)
@@ -82,7 +70,7 @@ struct GroupHubView: View {
 
     private var membersList: some View {
         VStack(spacing: UnfadingTheme.Spacing.sm) {
-            ForEach(store.currentGroup.members) { member in
+            ForEach(avatarMembers) { member in
                 HStack(spacing: UnfadingTheme.Spacing.md) {
                     Text(member.initial)
                         .font(UnfadingTheme.Font.footnoteSemibold())
@@ -108,17 +96,96 @@ struct GroupHubView: View {
         }
     }
 
-    private var inviteButton: some View {
-        Button {
-        } label: {
-            Label(UnfadingLocalized.Groups.inviteCta, systemImage: "person.badge.plus")
-                .frame(maxWidth: .infinity, minHeight: 44)
+    private var inviteCodeRow: some View {
+        VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
+            Text(UnfadingLocalized.Groups.inviteCodeLabel)
+                .font(UnfadingTheme.Font.subheadlineSemibold())
+                .foregroundStyle(UnfadingTheme.Color.textPrimary)
+
+            HStack(spacing: UnfadingTheme.Spacing.sm) {
+                Text(groupStore.activeGroup?.inviteCode ?? "-")
+                    .font(UnfadingTheme.Font.title3Bold())
+                    .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+
+                Button {
+                    UIPasteboard.general.string = groupStore.activeGroup?.inviteCode
+                    toast = UnfadingLocalized.Groups.copyCode
+                } label: {
+                    Label(UnfadingLocalized.Groups.copyCode, systemImage: "doc.on.doc")
+                        .labelStyle(.iconOnly)
+                        .frame(width: 44, height: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(UnfadingLocalized.Groups.copyCode)
+
+                Button {
+                    Task { await rotateInvite() }
+                } label: {
+                    Label(UnfadingLocalized.Groups.rotateCode, systemImage: "arrow.clockwise")
+                        .labelStyle(.iconOnly)
+                        .frame(width: 44, height: 44)
+                }
+                .buttonStyle(.plain)
+                .disabled(isRotatingInvite || groupStore.activeGroup == nil)
+                .accessibilityLabel(UnfadingLocalized.Groups.rotateCode)
+            }
+
+            if let toast {
+                Text(toast)
+                    .font(UnfadingTheme.Font.captionSemibold())
+                    .foregroundStyle(UnfadingTheme.Color.primary)
+                    .frame(minHeight: 44, alignment: .leading)
+            }
         }
-        .buttonStyle(.unfadingPrimaryFullWidth)
-        .accessibilityHint(UnfadingLocalized.Accessibility.inviteGroupHint)
+        .padding(UnfadingTheme.Spacing.lg)
+        .unfadingCardBackground(fill: UnfadingTheme.Color.sheet, radius: UnfadingTheme.Radius.card)
+    }
+
+    private var avatarMembers: [SampleGroupMember] {
+        groupStore.members.map { profile in
+            let name = profile.displayName ?? "이름 없음"
+            return SampleGroupMember(
+                id: profile.id,
+                name: name,
+                initial: String(name.first ?? "?"),
+                relation: ""
+            )
+        }
+    }
+
+    private func rotateInvite() async {
+        isRotatingInvite = true
+        do {
+            _ = try await groupStore.rotateInvite()
+            toast = UnfadingLocalized.Groups.rotated
+        } catch {
+            toast = UnfadingLocalized.Groups.actionFailed
+        }
+        isRotatingInvite = false
     }
 }
 
 #Preview {
     GroupHubView()
+        .environmentObject(
+            GroupStore.preview(
+                groups: [
+                    DBGroup(
+                        id: UUID(),
+                        name: "주말 모임",
+                        inviteCode: "PREVIEW1",
+                        createdAt: Date(),
+                        createdBy: UUID(),
+                        mode: "group",
+                        intro: "함께 남기는 지도",
+                        coverColorHex: "#F5998C"
+                    )
+                ],
+                members: [
+                    DBProfile(id: UUID(), email: nil, displayName: "시현", photoURL: nil, createdAt: nil),
+                    DBProfile(id: UUID(), email: nil, displayName: "민지", photoURL: nil, createdAt: nil)
+                ]
+            )
+        )
 }

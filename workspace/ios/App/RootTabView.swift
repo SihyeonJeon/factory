@@ -117,4 +117,6 @@ private struct ComposeTabPlaceholder: View {
 
 #Preview {
     RootTabView()
+        .environmentObject(AuthStore(preview: .signedIn(userId: UUID(), email: "preview@example.com")))
+        .environmentObject(GroupStore.preview())
 }
