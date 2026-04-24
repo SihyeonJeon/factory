@@ -1308,3 +1308,4 @@ xcodegen 성공. Sprint 26 완료입니다.
 2026-04-24T02:58:06Z | opened MemorySelectionState and test files for R52 map clustering integration; needed selection/project wiring; not individually indexed
 2026-04-24T02:59:07Z | opened SheetFilteredHeader for R52 cluster type migration; user-scope dependency not indexed
 2026-04-24 12:36:10 | opened unindexed workspace files for R55 deep link implementation
+2026-04-24 Codex | opened unindexed workspace/ios files for R56 Siri Shortcuts/App Intents implementation: project.yml, Info.plist, RootTabView, composer/calendar/rewind flows, and tests.

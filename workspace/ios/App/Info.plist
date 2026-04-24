@@ -31,6 +31,12 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>com.jeonsihyeon.memorymap.shortcuts.showTodayMemories</string>
+		<string>com.jeonsihyeon.memorymap.shortcuts.newMemory</string>
+		<string>com.jeonsihyeon.memorymap.shortcuts.showCalendar</string>
+	</array>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Deliver rewind moments when you return to meaningful places.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

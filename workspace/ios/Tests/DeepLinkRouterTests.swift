@@ -19,6 +19,13 @@ final class DeepLinkRouterTests: XCTestCase {
         )
     }
 
+    func test_parse_custom_calendar_link() {
+        XCTAssertEqual(
+            DeepLinkRouter.parse(URL(string: "unfading://calendar")!),
+            .calendar
+        )
+    }
+
     func test_parse_custom_composer_link_with_photo() {
         XCTAssertEqual(
             DeepLinkRouter.parse(URL(string: "unfading://composer?photo=local-identifier-123")!),

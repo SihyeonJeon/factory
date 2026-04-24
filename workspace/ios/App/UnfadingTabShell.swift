@@ -258,6 +258,8 @@ struct UnfadingTabShell: View {
         case let .event(eventID):
             selectedTab = .calendar
             pendingCalendarEventId = eventID
+        case .calendar:
+            selectedTab = .calendar
         case let .composer(preSelectedPhotoID):
             selectedTab = .map
             pendingComposerLaunchRoute = ComposerLaunchRoute(preSelectedPhotoID: preSelectedPhotoID)

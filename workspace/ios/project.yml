@@ -49,6 +49,10 @@ targets:
             CFBundleURLName: com.jeonsihyeon.memorymap.deeplink
             CFBundleURLSchemes:
               - unfading
+        NSUserActivityTypes:
+          - com.jeonsihyeon.memorymap.shortcuts.showTodayMemories
+          - com.jeonsihyeon.memorymap.shortcuts.newMemory
+          - com.jeonsihyeon.memorymap.shortcuts.showCalendar
         UIAppFonts:
           - Fonts/GowunDodum-Regular.ttf
           - Fonts/Nunito-Regular.ttf
@@ -66,6 +70,7 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_ENTITLEMENTS: App/MemoryMap.entitlements
     dependencies:
+      - sdk: AppIntents.framework
       - sdk: MapKit.framework
       - sdk: AuthenticationServices.framework
       - package: Supabase

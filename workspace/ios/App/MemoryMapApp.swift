@@ -1,3 +1,4 @@
+import AppIntents
 import SwiftUI
 
 @main
@@ -31,6 +32,7 @@ struct MemoryMapApp: App {
            let bundleId = Bundle.main.bundleIdentifier {
             UserDefaults.standard.removePersistentDomain(forName: bundleId)
         }
+        UnfadingShortcutsProvider.updateAppShortcutParameters()
         _prefs = StateObject(wrappedValue: UserPreferences(forceHasSeenOnboarding: Self.shouldSkipOnboardingForUITests))
         _authStore = StateObject(wrappedValue: AuthStore())
         _groupStore = StateObject(wrappedValue: Self.makeGroupStore())

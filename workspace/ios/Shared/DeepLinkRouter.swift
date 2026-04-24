@@ -4,6 +4,7 @@ import SwiftUI
 enum DeepLinkTarget: Equatable, Sendable {
     case memory(UUID)
     case event(UUID)
+    case calendar
     case composer(preSelectedPhotoID: String?)
     case rewind
 }
@@ -30,6 +31,8 @@ enum DeepLinkRouter {
             return parseUUIDPath(url).map(DeepLinkTarget.memory)
         case "event":
             return parseUUIDPath(url).map(DeepLinkTarget.event)
+        case "calendar":
+            return url.path.isEmpty || url.path == "/" ? .calendar : nil
         case "composer":
             let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
             let photoID = components?.queryItems?.first(where: { $0.name == "photo" })?.value
