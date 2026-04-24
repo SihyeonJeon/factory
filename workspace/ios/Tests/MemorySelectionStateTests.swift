@@ -1,3 +1,5 @@
+import CoreLocation
+import MapKit
 import XCTest
 @testable import MemoryMap
 
@@ -52,7 +54,15 @@ final class MemorySelectionStateTests: XCTestCase {
 
     func test_selectCluster_sets_scene_and_resolves_cluster() {
         let state = MemorySelectionState()
-        let clusters = MemoryStore.uiTestStubMemories().clusteredByCoordinateRadius()
+        let clusters = MemoryClusterizer().clusterItems(
+            for: MemoryStore.uiTestStubMemories(),
+            in: MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 37.5519, longitude: 126.9215),
+                latitudinalMeters: 300,
+                longitudinalMeters: 300
+            ),
+            radiusOverride: 120
+        )
         let cluster = clusters.first!
         state.select(cluster: cluster)
         XCTAssertEqual(state.scene, .mapSelected)

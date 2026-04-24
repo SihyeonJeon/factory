@@ -62,7 +62,7 @@ final class MemorySelectionState: ObservableObject {
 
     /// Select the representative pin for a clustered annotation. The selected
     /// cluster is later resolved from the current rendered cluster set.
-    func select(cluster: MemoryPinCluster) {
+    func select(cluster: ClusterItem) {
         select(pinID: cluster.representativeMemory.id)
     }
 
@@ -88,7 +88,7 @@ final class MemorySelectionState: ObservableObject {
         return memories.first(where: { $0.id == id })
     }
 
-    func selectedCluster(from clusters: [MemoryPinCluster]) -> MemoryPinCluster? {
+    func selectedCluster(from clusters: [ClusterItem]) -> ClusterItem? {
         guard let id = selectedPinID else { return nil }
         return clusters.first { cluster in
             cluster.memories.contains { $0.id == id }

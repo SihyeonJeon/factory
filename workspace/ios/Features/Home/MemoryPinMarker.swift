@@ -63,6 +63,34 @@ enum MemoryMapPinStyle {
         return String(trimmed.prefix(5))
     }
 
+    static func matches(memory: DBMemory, categoryID: String, categoryName: String?, icon: String?) -> Bool {
+        let tokens = Set(memory.categories.map(normalize))
+        let normalizedID = normalize(categoryID)
+
+        if tokens.contains(normalizedID) {
+            return true
+        }
+
+        if let categoryName, tokens.contains(normalize(categoryName)) {
+            return true
+        }
+
+        guard let icon else { return false }
+
+        switch icon {
+        case "fork.knife":
+            return tokens.intersection(["food", "meal", "restaurant", "밥"]).isEmpty == false
+        case "cup.and.saucer.fill":
+            return tokens.intersection(["cafe", "coffee", "카페"]).isEmpty == false
+        case "safari.fill":
+            return tokens.intersection(["walk", "trip", "travel", "experience", "경험"]).isEmpty == false
+        case "heart.fill":
+            return tokens.isEmpty || tokens.intersection(["memory", "photo", "추억"]).isEmpty == false
+        default:
+            return false
+        }
+    }
+
     static let emptyMemory = DBMemory(
         id: UUID(uuidString: "00000000-0000-4000-8000-000000000038")!,
         userId: UUID(uuidString: "00000000-0000-4000-8000-000000000039")!,
@@ -82,4 +110,10 @@ enum MemoryMapPinStyle {
         reactionCount: 0,
         createdAt: nil
     )
+
+    private static func normalize(_ value: String) -> String {
+        value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+    }
 }

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct SheetFilteredHeader: View {
-    let cluster: MemoryPinCluster
+    let cluster: ClusterItem
     let memoryCount: Int
     let eventDate: Date
     let onClear: () -> Void
@@ -93,7 +93,7 @@ struct SheetFilteredHeader: View {
 }
 
 struct SheetFilteredContent: View {
-    let cluster: MemoryPinCluster
+    let cluster: ClusterItem
     let onClear: () -> Void
 
     private var items: [MemoryRowCardModel] {

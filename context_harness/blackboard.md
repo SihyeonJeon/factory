@@ -1304,3 +1304,6 @@ xcodegen 성공. Sprint 26 완료입니다.
 2026-04-24 02:12:32 +0900 | Opened local derived-data/package artifacts outside FILE_INDEX to verify Supabase/Postgrest API signatures after xcodebuild was blocked by network/simulator limits.
 2026-04-24 02:18:59 +0900 | opened unindexed workspace files for R49 export implementation: GroupHubView.swift, MemoryStore.swift, PhotoUploader.swift, and R49 lock/contract lookup.
 2026-04-24 02:22:48 +0900 | opened unindexed workspace files for R49 implementation follow-up: DBModels.swift, UnfadingLocalized.swift, GroupHubTests.swift, project.yml, SettingsView.swift, tests, and created r49 evidence notes.
+2026-04-24T02:57:47Z | opened workspace/ios home map files for user-requested R52 implementation; not indexed in FILE_INDEX
+2026-04-24T02:58:06Z | opened MemorySelectionState and test files for R52 map clustering integration; needed selection/project wiring; not individually indexed
+2026-04-24T02:59:07Z | opened SheetFilteredHeader for R52 cluster type migration; user-scope dependency not indexed

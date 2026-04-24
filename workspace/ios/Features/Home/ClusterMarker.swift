@@ -1,55 +1,7 @@
-import CoreLocation
 import SwiftUI
 
-struct MemoryPinCluster: Identifiable, Hashable {
-    let memories: [DBMemory]
-
-    var id: UUID {
-        representativeMemory.id
-    }
-
-    var representativeMemory: DBMemory {
-        memories.first ?? MemoryMapPinStyle.emptyMemory
-    }
-
-    var coordinate: CLLocationCoordinate2D {
-        representativeMemory.coordinate
-    }
-
-    var count: Int {
-        memories.count
-    }
-
-    func contains(memoryID: UUID?) -> Bool {
-        guard let memoryID else { return false }
-        return memories.contains { $0.id == memoryID }
-    }
-}
-
-extension Array where Element == DBMemory {
-    /// Lightweight clustering for equal/near-equal coordinates.
-    /// Real map zoom-aware clustering is deferred to a later MapKit algorithm.
-    func clusteredByCoordinateRadius(_ radius: CLLocationDegrees = 0.0008) -> [MemoryPinCluster] {
-        var clusters: [MemoryPinCluster] = []
-
-        for memory in self {
-            if let index = clusters.firstIndex(where: { cluster in
-                cluster.coordinate.distance(to: memory.coordinate) <= radius
-            }) {
-                var mergedMemories = clusters[index].memories
-                mergedMemories.append(memory)
-                clusters[index] = MemoryPinCluster(memories: mergedMemories)
-            } else {
-                clusters.append(MemoryPinCluster(memories: [memory]))
-            }
-        }
-
-        return clusters
-    }
-}
-
 struct ClusterMarker: View {
-    let cluster: MemoryPinCluster
+    let cluster: ClusterItem
     var isSelected: Bool = false
     var isDimmed: Bool = false
 
@@ -93,17 +45,5 @@ struct ClusterMarker: View {
             place: MemoryMapPinStyle.shortLabel(for: cluster.representativeMemory),
             count: cluster.count
         ))
-    }
-}
-
-extension DBMemory {
-    var coordinate: CLLocationCoordinate2D {
-        CLLocationCoordinate2D(latitude: locationLat, longitude: locationLng)
-    }
-}
-
-private extension CLLocationCoordinate2D {
-    func distance(to other: CLLocationCoordinate2D) -> CLLocationDegrees {
-        max(abs(latitude - other.latitude), abs(longitude - other.longitude))
     }
 }

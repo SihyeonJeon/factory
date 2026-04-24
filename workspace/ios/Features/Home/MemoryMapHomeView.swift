@@ -29,13 +29,12 @@ struct MemoryMapHomeView: View {
     @State private var showingSearch = false
     @State private var detailMemory: DBMemory?
     @State private var measuredSheetHeight: CGFloat = 0
-    @State private var memoryPinClusters: [MemoryPinCluster] = []
-    @State private var cameraPosition: MapCameraPosition = .region(
-        MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
-            span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)
-        )
-    )
+    @State private var clusterItems: [ClusterItem] = []
+    @State private var cameraPosition: MapCameraPosition = .region(Self.defaultMapRegion)
+    @State private var currentMapRegion = Self.defaultMapRegion
+    @State private var selectedMapItemID: String?
+    @State private var reclusterTask: Task<Void, Never>?
+    private let clusterizer = MemoryClusterizer()
 
     init(
         sheetSnap: Binding<BottomSheetSnap> = .constant(.default_),
@@ -115,9 +114,10 @@ struct MemoryMapHomeView: View {
                             )
                         }
                     ) {
-                        if let selectedCluster = selection.selectedCluster(from: memoryPinClusters) {
+                        if let selectedCluster = selection.selectedCluster(from: clusterItems) {
                             SheetFilteredContent(cluster: selectedCluster) {
                                 selection.clearSelection()
+                                selectedMapItemID = nil
                                 sheetSnap = selection.sheetSnap
                             }
                         } else {
@@ -182,20 +182,31 @@ struct MemoryMapHomeView: View {
             }
             .onChange(of: groupSwitchResetToken) { _, _ in
                 selection.clearSelection()
+                selectedMapItemID = nil
                 activeCategoryId = CategoryStore.allCategoryId
                 activeSheetTab = .curation
                 sheetSnap = .default_
+                scheduleClusterRefresh(for: currentMapRegion, debounced: false)
             }
             .onChange(of: autoSelectMemoryId) { _, _ in
                 applyAutoSelectionIfNeeded()
             }
             .onChange(of: memoryStore.memories) { _, _ in
-                syncMemoryPinClusters()
+                scheduleClusterRefresh(for: currentMapRegion)
                 applyAutoSelectionIfNeeded()
             }
+            .onChange(of: activeCategoryId) { _, _ in
+                scheduleClusterRefresh(for: currentMapRegion)
+            }
+            .onChange(of: selectedMapItemID) { _, newValue in
+                syncSelectionFromMapSelection(newValue)
+            }
             .onAppear {
-                syncMemoryPinClusters()
+                scheduleClusterRefresh(for: currentMapRegion, debounced: false)
                 applyAutoSelectionIfNeeded()
+            }
+            .onDisappear {
+                reclusterTask?.cancel()
             }
         }
     }
@@ -203,35 +214,39 @@ struct MemoryMapHomeView: View {
     // MARK: Layers
 
     private var mapLayer: some View {
-        Map(position: $cameraPosition, selection: .constant(nil as UUID?)) {
-            ForEach(memoryPinClusters) { cluster in
-                Annotation(cluster.representativeMemory.title, coordinate: cluster.coordinate) {
+        Map(position: $cameraPosition, selection: $selectedMapItemID) {
+            ForEach(clusterItems) { item in
+                Annotation(item.representativeMemory.title, coordinate: item.coordinate) {
                     Button {
-                        selection.select(cluster: cluster)
-                        sheetSnap = selection.sheetSnap
+                        handleAnnotationTap(item)
                     } label: {
-                        if cluster.count > 1 {
+                        if item.isCluster {
                             ClusterMarker(
-                                cluster: cluster,
-                                isSelected: cluster.contains(memoryID: selection.selectedPinID),
-                                isDimmed: selection.selectedPinID != nil && !cluster.contains(memoryID: selection.selectedPinID)
+                                cluster: item,
+                                isSelected: item.contains(memoryID: selection.selectedPinID),
+                                isDimmed: selection.selectedPinID != nil && !item.contains(memoryID: selection.selectedPinID)
                             )
                         } else {
                             MemoryPinMarker(
-                                memory: cluster.representativeMemory,
-                                isSelected: cluster.contains(memoryID: selection.selectedPinID),
-                                isDimmed: selection.selectedPinID != nil && !cluster.contains(memoryID: selection.selectedPinID)
+                                memory: item.representativeMemory,
+                                isSelected: item.contains(memoryID: selection.selectedPinID),
+                                isDimmed: selection.selectedPinID != nil && !item.contains(memoryID: selection.selectedPinID)
                             )
                         }
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(UnfadingLocalized.Accessibility.mapPinLabel(title: cluster.representativeMemory.title))
-                    .accessibilityHint(UnfadingLocalized.Accessibility.mapPinHint)
-                    .accessibilityIdentifier("memory-pin-\(cluster.representativeMemory.id.uuidString)")
+                    .accessibilityLabel(UnfadingLocalized.Accessibility.mapPinLabel(title: item.representativeMemory.title))
+                    .accessibilityHint(item.isCluster ? "탭하면 이 장소 묶음으로 확대합니다." : UnfadingLocalized.Accessibility.mapPinHint)
+                    .accessibilityIdentifier(item.accessibilityIdentifier)
                 }
+                .tag(item.selectionID)
             }
         }
         .mapStyle(userPreferences.mapTheme.style)
+        .onMapCameraChange(frequency: .continuous) { context in
+            currentMapRegion = context.region
+            scheduleClusterRefresh(for: context.region)
+        }
     }
 
     private var topChrome: some View {
@@ -343,17 +358,76 @@ struct MemoryMapHomeView: View {
         sheetSnap = .default_
     }
 
-    private func syncMemoryPinClusters() {
-        memoryPinClusters = memoryStore.memories.clusteredByCoordinateRadius()
+    private var filteredMemories: [DBMemory] {
+        guard activeCategoryId != CategoryStore.allCategoryId else {
+            return memoryStore.memories
+        }
+
+        let selectedCategory = categoryStore.categories.first { $0.id == activeCategoryId }
+        return memoryStore.memories.filter { memory in
+            MemoryMapPinStyle.matches(
+                memory: memory,
+                categoryID: activeCategoryId,
+                categoryName: selectedCategory?.name,
+                icon: selectedCategory?.icon
+            )
+        }
+    }
+
+    private func scheduleClusterRefresh(for region: MKCoordinateRegion, debounced: Bool = true) {
+        reclusterTask?.cancel()
+        reclusterTask = Task { @MainActor in
+            if debounced {
+                try? await Task.sleep(for: .milliseconds(120))
+            }
+            guard Task.isCancelled == false else { return }
+            refreshClusterItems(for: region)
+        }
+    }
+
+    private func refreshClusterItems(for region: MKCoordinateRegion) {
+        let items = clusterizer.clusterItems(for: filteredMemories, in: region)
+        clusterItems = items
+
+        if let selectedPinID = selection.selectedPinID,
+           items.contains(where: { $0.contains(memoryID: selectedPinID) }) == false {
+            selection.clearSelection()
+            selectedMapItemID = nil
+        } else if let selectedPinID = selection.selectedPinID,
+                  let selectedItem = items.first(where: { $0.contains(memoryID: selectedPinID) }) {
+            selectedMapItemID = selectedItem.selectionID
+        }
+    }
+
+    private func handleAnnotationTap(_ item: ClusterItem) {
+        if item.isCluster {
+            selectedMapItemID = nil
+            selection.clearSelection()
+            withAnimation(.easeInOut(duration: 0.26)) {
+                cameraPosition = .region(item.focusRegion())
+            }
+        } else {
+            selectedMapItemID = item.selectionID
+            selection.select(cluster: item)
+            sheetSnap = selection.sheetSnap
+        }
+    }
+
+    private func syncSelectionFromMapSelection(_ selectionID: String?) {
+        guard let selectionID else {
+            selection.clearSelection()
+            return
+        }
+
+        guard let item = clusterItems.first(where: { $0.selectionID == selectionID }) else { return }
+        guard item.isCluster == false else { return }
+        guard selection.selectedPinID != item.representativeMemory.id else { return }
+        selection.select(cluster: item)
     }
 
     private func resetCameraPosition() {
-        cameraPosition = .region(
-            MKCoordinateRegion(
-                center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
-                span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)
-            )
-        )
+        currentMapRegion = Self.defaultMapRegion
+        cameraPosition = .region(Self.defaultMapRegion)
     }
 
     private func applyAutoSelectionIfNeeded() {
@@ -363,10 +437,18 @@ struct MemoryMapHomeView: View {
         if selection.selectedPinID != autoSelectMemoryId {
             selection.select(pinID: autoSelectMemoryId)
         }
+        selectedMapItemID = clusterItems.first(where: { $0.contains(memoryID: autoSelectMemoryId) })?.selectionID
         activeSheetTab = .curation
         sheetSnap = .default_
         self.autoSelectMemoryId = nil
     }
+}
+
+private extension MemoryMapHomeView {
+    static let defaultMapRegion = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
+        span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)
+    )
 }
 
 enum MemoryMapHomeLayout {
