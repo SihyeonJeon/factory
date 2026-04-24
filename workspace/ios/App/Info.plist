@@ -2,6 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.jeonsihyeon.memorymap.refresh</string>
+		<string>com.jeonsihyeon.memorymap.rewind</string>
+	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
@@ -10,14 +15,17 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>ko</string>
+		<string>en</string>
+	</array>
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
-	<key>CFBundleVersion</key>
-	<string>1</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -31,12 +39,8 @@
 			</array>
 		</dict>
 	</array>
-	<key>NSUserActivityTypes</key>
-	<array>
-		<string>com.jeonsihyeon.memorymap.shortcuts.showTodayMemories</string>
-		<string>com.jeonsihyeon.memorymap.shortcuts.newMemory</string>
-		<string>com.jeonsihyeon.memorymap.shortcuts.showCalendar</string>
-	</array>
+	<key>CFBundleVersion</key>
+	<string>1</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Deliver rewind moments when you return to meaningful places.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
@@ -45,6 +49,12 @@
 	<string>Save shared memory photos to your library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Attach photos to group memories.</string>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>com.jeonsihyeon.memorymap.shortcuts.showTodayMemories</string>
+		<string>com.jeonsihyeon.memorymap.shortcuts.newMemory</string>
+		<string>com.jeonsihyeon.memorymap.shortcuts.showCalendar</string>
+	</array>
 	<key>SupabasePublishableKey</key>
 	<string>sb_publishable_eA_S-ojxFJwFV53VN6k4Nw_KfcGTZm3</string>
 	<key>SupabaseURL</key>
@@ -62,11 +72,6 @@
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
 	</dict>
-	<key>BGTaskSchedulerPermittedIdentifiers</key>
-	<array>
-		<string>com.jeonsihyeon.memorymap.refresh</string>
-		<string>com.jeonsihyeon.memorymap.rewind</string>
-	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

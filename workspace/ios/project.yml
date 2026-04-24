@@ -28,6 +28,7 @@ targets:
     resources:
       - App/Assets.xcassets
       - App/PrivacyInfo.xcprivacy
+      - App/Resources/Localizable.xcstrings
     info:
       path: App/Info.plist
       properties:
@@ -55,6 +56,9 @@ targets:
             CFBundleURLName: com.jeonsihyeon.memorymap.deeplink
             CFBundleURLSchemes:
               - unfading
+        CFBundleLocalizations:
+          - ko
+          - en
         NSUserActivityTypes:
           - com.jeonsihyeon.memorymap.shortcuts.showTodayMemories
           - com.jeonsihyeon.memorymap.shortcuts.newMemory
@@ -95,10 +99,14 @@ targets:
         buildPhase: resources
     resources:
       - App/Assets.xcassets
+      - App/Resources/Localizable.xcstrings
     info:
       path: Widget/Info.plist
       properties:
         CFBundleDisplayName: 오늘의 추억
+        CFBundleLocalizations:
+          - ko
+          - en
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
         UIAppFonts:
@@ -156,6 +164,8 @@ targets:
     platform: iOS
     sources:
       - Tests
+    resources:
+      - App/Resources/Localizable.xcstrings
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
