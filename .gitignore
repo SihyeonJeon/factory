@@ -24,3 +24,4 @@ archived_workspaces/
 docs/design-docs/travel deepsight.zip
 docs/design-docs/unfading.zip
 .cache/
+.swift-module-cache/
