@@ -65,6 +65,44 @@ targets:
       - sdk: AuthenticationServices.framework
       - package: Supabase
         product: Supabase
+  UnfadingWidget:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - Widget
+      - Shared/UnfadingTheme.swift
+      - Shared/UnfadingLocalized.swift
+      - Shared/SampleModels.swift
+      - path: App/Fonts
+        type: folder
+        buildPhase: resources
+    resources:
+      - App/Assets.xcassets
+    info:
+      path: Widget/Info.plist
+      properties:
+        CFBundleDisplayName: 오늘의 추억
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+        UIAppFonts:
+          - Fonts/GowunDodum-Regular.ttf
+          - Fonts/Nunito-Regular.ttf
+          - Fonts/Nunito-SemiBold.ttf
+          - Fonts/Nunito-Bold.ttf
+          - Fonts/Nunito-Black.ttf
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jeonsihyeon.memorymap.widget
+        GENERATE_INFOPLIST_FILE: NO
+        MARKETING_VERSION: 1.0.0
+        CURRENT_PROJECT_VERSION: 1
+        SWIFT_VERSION: "5.10"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: NO
+    dependencies:
+      - sdk: SwiftUI.framework
+      - sdk: WidgetKit.framework
   MemoryMapTests:
     type: bundle.unit-test
     platform: iOS
@@ -77,6 +115,7 @@ targets:
         INFOPLIST_KEY_SupabasePublishableKey: "sb_publishable_eA_S-ojxFJwFV53VN6k4Nw_KfcGTZm3"
     dependencies:
       - target: MemoryMap
+      - target: UnfadingWidget
   UnfadingUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -92,6 +131,7 @@ schemes:
     build:
       targets:
         MemoryMap: all
+        UnfadingWidget: all
         MemoryMapTests: [test]
         UnfadingUITests: [test]
     run:
