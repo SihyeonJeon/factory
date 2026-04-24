@@ -236,8 +236,6 @@ final class MemoryStore: ObservableObject {
 
     func subscribeRealtime(groupId: UUID) -> Task<Void, Never> {
         Task { [weak self] in
-            guard let self else { return }
-
             let channel = SupabaseService.shared.realtime.channel("memories:\(groupId.uuidString)")
             let filter = RealtimePostgresFilter.eq("group_id", value: groupId)
             let insertions = channel.postgresChange(InsertAction.self, schema: "public", table: "memories", filter: filter)
@@ -248,50 +246,50 @@ final class MemoryStore: ObservableObject {
                 try await channel.subscribeWithError()
             } catch {
                 await MainActor.run {
-                    self.logger.error("메모리 실시간 구독 실패: \(error.localizedDescription, privacy: .public)")
+                    self?.logger.error("메모리 실시간 구독 실패: \(error.localizedDescription, privacy: .public)")
                 }
                 await SupabaseService.shared.realtime.removeChannel(channel)
                 return
             }
 
             await withTaskGroup(of: Void.self) { group in
-                group.addTask {
+                group.addTask { [weak self] in
                     for await insertion in insertions {
                         guard !Task.isCancelled else { return }
                         do {
                             let memory = try insertion.decodeRecord(as: DBMemory.self, decoder: Self.supabaseDecoder())
-                            await MainActor.run { self.handleRealtimeInserted(memory) }
+                            await MainActor.run { self?.handleRealtimeInserted(memory) }
                         } catch {
                             await MainActor.run {
-                                self.logger.error("INSERT 메모리 디코드 실패: \(error.localizedDescription, privacy: .public)")
+                                self?.logger.error("INSERT 메모리 디코드 실패: \(error.localizedDescription, privacy: .public)")
                             }
                         }
                     }
                 }
 
-                group.addTask {
+                group.addTask { [weak self] in
                     for await update in updates {
                         guard !Task.isCancelled else { return }
                         do {
                             let memory = try update.decodeRecord(as: DBMemory.self, decoder: Self.supabaseDecoder())
-                            await MainActor.run { self.upsert(memory) }
+                            await MainActor.run { self?.upsert(memory) }
                         } catch {
                             await MainActor.run {
-                                self.logger.error("UPDATE 메모리 디코드 실패: \(error.localizedDescription, privacy: .public)")
+                                self?.logger.error("UPDATE 메모리 디코드 실패: \(error.localizedDescription, privacy: .public)")
                             }
                         }
                     }
                 }
 
-                group.addTask {
+                group.addTask { [weak self] in
                     for await deletion in deletes {
                         guard !Task.isCancelled else { return }
                         do {
                             let memory = try deletion.decodeOldRecord(as: DBMemory.self, decoder: Self.supabaseDecoder())
-                            await MainActor.run { self.memories.removeAll { $0.id == memory.id } }
+                            await MainActor.run { self?.memories.removeAll { $0.id == memory.id } }
                         } catch {
                             await MainActor.run {
-                                self.logger.error("DELETE 메모리 디코드 실패: \(error.localizedDescription, privacy: .public)")
+                                self?.logger.error("DELETE 메모리 디코드 실패: \(error.localizedDescription, privacy: .public)")
                             }
                         }
                     }

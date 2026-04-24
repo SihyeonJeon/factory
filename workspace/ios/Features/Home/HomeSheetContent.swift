@@ -71,10 +71,7 @@ struct HomeSheetContent: View {
     @Binding var selectedTab: SheetTab
     let mode: GroupMode
     let onRewindTap: () -> Void
-
-    private var aggregator: MemoryAggregator {
-        MemoryAggregator(memories: memoryStore.memories)
-    }
+    @State private var aggregator = MemoryAggregator(memories: [])
 
     var body: some View {
         VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.lg) {
@@ -91,6 +88,14 @@ struct HomeSheetContent: View {
         .padding(.top, UnfadingTheme.Spacing.sm)
         .padding(.bottom, UnfadingTheme.Spacing.xl)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .onAppear(perform: syncAggregator)
+        .onChange(of: memoryStore.memories) { _, _ in
+            syncAggregator()
+        }
+    }
+
+    private func syncAggregator() {
+        aggregator = MemoryAggregator(memories: memoryStore.memories)
     }
 }
 

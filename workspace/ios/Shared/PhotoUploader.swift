@@ -77,9 +77,7 @@ actor PhotoUploader: PhotoUploading {
 
         for (index, asset) in assets.enumerated() {
             let imageData = try await loadJPEG(from: asset)
-            guard imageData.count <= maxBytes else {
-                throw PhotoUploadError.tooLarge(Int(ceil(Double(imageData.count) / 1_000_000.0)))
-            }
+            try validateImageDataSize(imageData)
 
             let filename = "\(UUID().uuidString).jpg"
             let path = Self.storagePath(groupId: groupId, memoryId: memoryId, filename: filename)
@@ -130,11 +128,18 @@ actor PhotoUploader: PhotoUploading {
         throw PhotoUploadError.uploadFailed(lastError?.localizedDescription ?? "알 수 없는 오류")
     }
 
+    func validateImageDataSize(_ data: Data) throws {
+        guard data.count <= maxBytes else {
+            throw PhotoUploadError.tooLarge(Int(ceil(Double(data.count) / 1_000_000.0)))
+        }
+    }
+
     private func loadJPEG(from asset: PHAsset) async throws -> Data {
         try await withCheckedThrowingContinuation { continuation in
             let options = PHImageRequestOptions()
             options.isNetworkAccessAllowed = true
             options.deliveryMode = .highQualityFormat
+            options.resizeMode = .fast
             options.isSynchronous = false
 
             PHImageManager.default().requestImage(
@@ -158,7 +163,12 @@ actor PhotoUploader: PhotoUploading {
                     continuation.resume(throwing: PhotoUploadError.assetLoadFailed)
                     return
                 }
-                guard let jpeg = image.jpegData(compressionQuality: self.jpegQuality) else {
+
+                let jpeg = autoreleasepool {
+                    image.jpegData(compressionQuality: self.jpegQuality)
+                }
+
+                guard let jpeg else {
                     continuation.resume(throwing: PhotoUploadError.encodingFailed)
                     return
                 }

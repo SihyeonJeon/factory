@@ -29,6 +29,7 @@ struct MemoryMapHomeView: View {
     @State private var showingSearch = false
     @State private var detailMemory: DBMemory?
     @State private var measuredSheetHeight: CGFloat = 0
+    @State private var memoryPinClusters: [MemoryPinCluster] = []
     @State private var cameraPosition: MapCameraPosition = .region(
         MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
@@ -189,9 +190,11 @@ struct MemoryMapHomeView: View {
                 applyAutoSelectionIfNeeded()
             }
             .onChange(of: memoryStore.memories) { _, _ in
+                syncMemoryPinClusters()
                 applyAutoSelectionIfNeeded()
             }
             .onAppear {
+                syncMemoryPinClusters()
                 applyAutoSelectionIfNeeded()
             }
         }
@@ -232,155 +235,35 @@ struct MemoryMapHomeView: View {
     }
 
     private var topChrome: some View {
-        HStack(spacing: UnfadingTheme.Spacing.sm) {
-            Button {
-                onSwitchGroup()
-            } label: {
-                HStack(spacing: UnfadingTheme.Spacing.xs) {
-                    avatarStack
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(groupName)
-                            .font(UnfadingTheme.Font.sectionTitle(15))
-                            .foregroundStyle(UnfadingTheme.Color.textPrimary)
-                            .lineLimit(1)
-                        Text(groupSubtitle)
-                            .font(UnfadingTheme.Font.tag(11))
-                            .foregroundStyle(UnfadingTheme.Color.textSecondary)
-                            .lineLimit(1)
-                    }
-                    Image(systemName: "chevron.down")
-                        .imageScale(.small)
-                        .foregroundStyle(UnfadingTheme.Color.textSecondary)
-                }
-                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(groupName)
-            .accessibilityHint(UnfadingLocalized.Home.groupChipHint)
-            .accessibilityIdentifier("home-top-chrome-group-button")
-
-            Button {
-                showingSearch = true
-            } label: {
-                Image(systemName: "magnifyingglass")
-                    .imageScale(.medium)
-                    .foregroundStyle(UnfadingTheme.Color.textPrimary)
-                    .frame(width: 32, height: 32)
-                    .background(UnfadingTheme.Color.surface, in: Circle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(UnfadingLocalized.Home.searchLabel)
-            .accessibilityHint(UnfadingLocalized.Home.searchHint)
-            .accessibilityIdentifier("home-top-chrome-search-button")
-        }
-        .padding(.horizontal, UnfadingTheme.Spacing.md)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background {
-            RoundedRectangle(cornerRadius: MemoryMapHomeLayout.topChromeRadius, style: .continuous)
-                .fill(UnfadingTheme.Color.sheet.opacity(0.94))
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: MemoryMapHomeLayout.topChromeRadius, style: .continuous))
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: MemoryMapHomeLayout.topChromeRadius, style: .continuous)
-                .stroke(UnfadingTheme.Color.divider, lineWidth: 0.5)
-        }
-        .shadow(style: UnfadingTheme.Shadow.card)
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("home-top-chrome")
+        TopChromeSection(
+            headerInitials: headerInitials,
+            isCoupleMode: groupStore.mode == .couple,
+            groupName: groupName,
+            groupSubtitle: groupSubtitle,
+            onSwitchGroup: onSwitchGroup,
+            onSearch: { showingSearch = true }
+        )
     }
 
     private var filterRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: UnfadingTheme.Spacing.sm) {
-                UnfadingFilterChip(
-                    title: UnfadingLocalized.Home.filterAll,
-                    systemImage: "sparkles",
-                    isSelected: activeCategoryId == CategoryStore.allCategoryId
-                ) {
-                    activeCategoryId = CategoryStore.allCategoryId
-                }
-
-                ForEach(categoryStore.categories) { category in
-                    UnfadingFilterChip(
-                        title: category.name,
-                        systemImage: category.icon,
-                        isSelected: activeCategoryId == category.id
-                    ) {
-                        activeCategoryId = activeCategoryId == category.id ? CategoryStore.allCategoryId : category.id
-                    }
-                }
-
-                Button {
-                    onEditCategories()
-                } label: {
-                    Image(systemName: "plus")
-                        .imageScale(.small)
-                        .foregroundStyle(UnfadingTheme.Color.primary.opacity(0.66))
-                        .frame(width: 44, height: 44)
-                        .overlay {
-                            Circle()
-                                .stroke(
-                                    UnfadingTheme.Color.primary.opacity(0.66),
-                                    style: StrokeStyle(lineWidth: 1, dash: [4, 3])
-                                )
-                        }
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(UnfadingLocalized.Categories.addCategory)
-                .accessibilityIdentifier("home-filter-add-category")
-            }
-            .padding(.horizontal, UnfadingTheme.Spacing.md)
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(UnfadingLocalized.Accessibility.filterRowLabel)
-        .accessibilityHint(UnfadingLocalized.Accessibility.filterRowHint)
-        .accessibilityIdentifier("home-filter-chip-bar")
+        FilterRowSection(
+            categories: categoryStore.categories,
+            activeCategoryId: activeCategoryId,
+            onSelectAll: { activeCategoryId = CategoryStore.allCategoryId },
+            onToggleCategory: { category in
+                activeCategoryId = activeCategoryId == category.id ? CategoryStore.allCategoryId : category.id
+            },
+            onEditCategories: onEditCategories
+        )
     }
 
     private var mapControls: some View {
-        VStack(spacing: MemoryMapHomeLayout.mapControlsSpacing) {
-            mapControlButton(systemName: "location.fill", accessibilityLabel: UnfadingLocalized.Accessibility.showCurrentLocationLabel) {
-                _ = locationPermissionStore.handleCurrentLocationTap()
-            }
-
-            mapControlButton(systemName: "location.north.line.fill", accessibilityLabel: UnfadingLocalized.Accessibility.resetMapOrientationLabel) {
-                cameraPosition = .region(
-                    MKCoordinateRegion(
-                        center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
-                        span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)
-                    )
-                )
-            }
-        }
-        .animation(reduceMotion ? .easeInOut(duration: 0.25) : .interpolatingSpring(stiffness: 260, damping: 32), value: measuredSheetHeight)
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("home-map-controls")
-    }
-
-    private var avatarStack: some View {
-        let initials = Array(headerInitials.prefix(3))
-        return ZStack(alignment: .leading) {
-            ForEach(Array(initials.enumerated()), id: \.offset) { index, initial in
-                Text(initial)
-                    .font(UnfadingTheme.Font.tag(11))
-                    .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
-                    .frame(width: 28, height: 28)
-                    .background(UnfadingTheme.Color.memberPalette[index % UnfadingTheme.Color.memberPalette.count], in: Circle())
-                    .overlay(Circle().stroke(UnfadingTheme.Color.sheet, lineWidth: 1.5))
-                    .offset(x: CGFloat(index) * 18)
-            }
-
-            if groupStore.mode == .couple, initials.count >= 2 {
-                Image(systemName: "heart.fill")
-                    .imageScale(.small)
-                    .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
-                    .frame(width: 16, height: 16)
-                    .background(UnfadingTheme.Color.primary, in: Circle())
-                    .offset(x: 20, y: 8)
-            }
-        }
-        .frame(width: max(28, 28 + CGFloat(max(0, initials.count - 1)) * 18), height: 34, alignment: .leading)
+        MapControlsSection(
+            reduceMotion: reduceMotion,
+            measuredSheetHeight: measuredSheetHeight,
+            onShowCurrentLocation: { _ = locationPermissionStore.handleCurrentLocationTap() },
+            onResetMapOrientation: resetCameraPosition
+        )
     }
 
     private var groupName: String {
@@ -416,27 +299,6 @@ struct MemoryMapHomeView: View {
             let name = profile.displayName?.trimmingCharacters(in: .whitespacesAndNewlines)
             return String((name?.first ?? "?"))
         }
-    }
-
-    private var memoryPinClusters: [MemoryPinCluster] {
-        memoryStore.memories.clusteredByCoordinateRadius()
-    }
-
-    private func mapControlButton(systemName: String, accessibilityLabel: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: systemName)
-                .imageScale(.medium)
-                .foregroundStyle(UnfadingTheme.Color.textPrimary)
-                .frame(width: MemoryMapHomeLayout.mapControlsSize, height: MemoryMapHomeLayout.mapControlsSize)
-                .background {
-                    Circle()
-                        .fill(UnfadingTheme.Color.sheet.opacity(0.94))
-                        .background(.ultraThinMaterial, in: Circle())
-                }
-                .shadow(color: UnfadingTheme.Color.textPrimary.opacity(0.10), radius: 8, x: 0, y: 2)
-        }
-        .buttonStyle(MapControlButtonStyle())
-        .accessibilityLabel(accessibilityLabel)
     }
 
     // MARK: Helpers
@@ -479,6 +341,19 @@ struct MemoryMapHomeView: View {
     private func showRewindFromCuration() {
         showingRewind = true
         sheetSnap = .default_
+    }
+
+    private func syncMemoryPinClusters() {
+        memoryPinClusters = memoryStore.memories.clusteredByCoordinateRadius()
+    }
+
+    private func resetCameraPosition() {
+        cameraPosition = .region(
+            MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
+                span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)
+            )
+        )
     }
 
     private func applyAutoSelectionIfNeeded() {
@@ -527,6 +402,202 @@ private struct HomeChromeVisibilityModifier: ViewModifier {
             .opacity(snap == .expanded ? 0 : 1)
             .allowsHitTesting(snap != .expanded)
             .animation(.easeInOut(duration: 0.22), value: snap)
+    }
+}
+
+private struct TopChromeSection: View {
+    let headerInitials: [String]
+    let isCoupleMode: Bool
+    let groupName: String
+    let groupSubtitle: String
+    let onSwitchGroup: () -> Void
+    let onSearch: () -> Void
+
+    var body: some View {
+        HStack(spacing: UnfadingTheme.Spacing.sm) {
+            Button(action: onSwitchGroup) {
+                HStack(spacing: UnfadingTheme.Spacing.xs) {
+                    AvatarStack(headerInitials: headerInitials, isCoupleMode: isCoupleMode)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(groupName)
+                            .font(UnfadingTheme.Font.sectionTitle(15))
+                            .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                            .lineLimit(1)
+                        Text(groupSubtitle)
+                            .font(UnfadingTheme.Font.tag(11))
+                            .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                            .lineLimit(1)
+                    }
+                    Image(systemName: "chevron.down")
+                        .imageScale(.small)
+                        .foregroundStyle(UnfadingTheme.Color.textSecondary)
+                }
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(groupName)
+            .accessibilityHint(UnfadingLocalized.Home.groupChipHint)
+            .accessibilityIdentifier("home-top-chrome-group-button")
+
+            Button(action: onSearch) {
+                Image(systemName: "magnifyingglass")
+                    .imageScale(.medium)
+                    .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                    .frame(width: 32, height: 32)
+                    .background(UnfadingTheme.Color.surface, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(UnfadingLocalized.Home.searchLabel)
+            .accessibilityHint(UnfadingLocalized.Home.searchHint)
+            .accessibilityIdentifier("home-top-chrome-search-button")
+        }
+        .padding(.horizontal, UnfadingTheme.Spacing.md)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background {
+            RoundedRectangle(cornerRadius: MemoryMapHomeLayout.topChromeRadius, style: .continuous)
+                .fill(UnfadingTheme.Color.sheet.opacity(0.94))
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: MemoryMapHomeLayout.topChromeRadius, style: .continuous))
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: MemoryMapHomeLayout.topChromeRadius, style: .continuous)
+                .stroke(UnfadingTheme.Color.divider, lineWidth: 0.5)
+        }
+        .shadow(style: UnfadingTheme.Shadow.card)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("home-top-chrome")
+    }
+}
+
+private struct AvatarStack: View {
+    let headerInitials: [String]
+    let isCoupleMode: Bool
+
+    var body: some View {
+        let initials = Array(headerInitials.prefix(3))
+        ZStack(alignment: .leading) {
+            ForEach(Array(initials.enumerated()), id: \.offset) { index, initial in
+                Text(initial)
+                    .font(UnfadingTheme.Font.tag(11))
+                    .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
+                    .frame(width: 28, height: 28)
+                    .background(UnfadingTheme.Color.memberPalette[index % UnfadingTheme.Color.memberPalette.count], in: Circle())
+                    .overlay(Circle().stroke(UnfadingTheme.Color.sheet, lineWidth: 1.5))
+                    .offset(x: CGFloat(index) * 18)
+            }
+
+            if isCoupleMode, initials.count >= 2 {
+                Image(systemName: "heart.fill")
+                    .imageScale(.small)
+                    .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
+                    .frame(width: 16, height: 16)
+                    .background(UnfadingTheme.Color.primary, in: Circle())
+                    .offset(x: 20, y: 8)
+            }
+        }
+        .frame(width: max(28, 28 + CGFloat(max(0, initials.count - 1)) * 18), height: 34, alignment: .leading)
+    }
+}
+
+private struct FilterRowSection: View {
+    let categories: [Category]
+    let activeCategoryId: String
+    let onSelectAll: () -> Void
+    let onToggleCategory: (Category) -> Void
+    let onEditCategories: () -> Void
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: UnfadingTheme.Spacing.sm) {
+                UnfadingFilterChip(
+                    title: UnfadingLocalized.Home.filterAll,
+                    systemImage: "sparkles",
+                    isSelected: activeCategoryId == CategoryStore.allCategoryId,
+                    action: onSelectAll
+                )
+
+                ForEach(categories) { category in
+                    UnfadingFilterChip(
+                        title: category.name,
+                        systemImage: category.icon,
+                        isSelected: activeCategoryId == category.id
+                    ) {
+                        onToggleCategory(category)
+                    }
+                }
+
+                Button(action: onEditCategories) {
+                    Image(systemName: "plus")
+                        .imageScale(.small)
+                        .foregroundStyle(UnfadingTheme.Color.primary.opacity(0.66))
+                        .frame(width: 44, height: 44)
+                        .overlay {
+                            Circle()
+                                .stroke(
+                                    UnfadingTheme.Color.primary.opacity(0.66),
+                                    style: StrokeStyle(lineWidth: 1, dash: [4, 3])
+                                )
+                        }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(UnfadingLocalized.Categories.addCategory)
+                .accessibilityIdentifier("home-filter-add-category")
+            }
+            .padding(.horizontal, UnfadingTheme.Spacing.md)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(UnfadingLocalized.Accessibility.filterRowLabel)
+        .accessibilityHint(UnfadingLocalized.Accessibility.filterRowHint)
+        .accessibilityIdentifier("home-filter-chip-bar")
+    }
+}
+
+private struct MapControlsSection: View {
+    let reduceMotion: Bool
+    let measuredSheetHeight: CGFloat
+    let onShowCurrentLocation: () -> Void
+    let onResetMapOrientation: () -> Void
+
+    var body: some View {
+        VStack(spacing: MemoryMapHomeLayout.mapControlsSpacing) {
+            MapControlButton(
+                systemName: "location.fill",
+                accessibilityLabel: UnfadingLocalized.Accessibility.showCurrentLocationLabel,
+                action: onShowCurrentLocation
+            )
+
+            MapControlButton(
+                systemName: "location.north.line.fill",
+                accessibilityLabel: UnfadingLocalized.Accessibility.resetMapOrientationLabel,
+                action: onResetMapOrientation
+            )
+        }
+        .animation(reduceMotion ? .easeInOut(duration: 0.25) : .interpolatingSpring(stiffness: 260, damping: 32), value: measuredSheetHeight)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("home-map-controls")
+    }
+}
+
+private struct MapControlButton: View {
+    let systemName: String
+    let accessibilityLabel: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .imageScale(.medium)
+                .foregroundStyle(UnfadingTheme.Color.textPrimary)
+                .frame(width: MemoryMapHomeLayout.mapControlsSize, height: MemoryMapHomeLayout.mapControlsSize)
+                .background {
+                    Circle()
+                        .fill(UnfadingTheme.Color.sheet.opacity(0.94))
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+                .shadow(color: UnfadingTheme.Color.textPrimary.opacity(0.10), radius: 8, x: 0, y: 2)
+        }
+        .buttonStyle(MapControlButtonStyle())
+        .accessibilityLabel(accessibilityLabel)
     }
 }
 

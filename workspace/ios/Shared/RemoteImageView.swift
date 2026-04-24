@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 /// Renders a memories-bucket photo from a storage path such as "<gid>/<mid>/<name>.jpg".
 struct RemoteImageView: View {
@@ -7,43 +8,36 @@ struct RemoteImageView: View {
     var contentMode: ContentMode = .fill
     var uploader: any PhotoUploading = PhotoUploader()
     var cache: RemoteImageSignedURLCache = .shared
+    var imageDataProvider: RemoteImageDataProvider = RemoteImageLoader.liveImageData(from:)
 
-    @State private var signedURL: URL?
-    @State private var isResolving = false
-    @State private var loadErrorMessage: String?
     @State private var reloadToken = 0
+    @StateObject private var loader = RemoteImageLoader()
 
     var body: some View {
         ZStack {
-            if let url = signedURL {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .empty:
-                        shimmerPlaceholder
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: contentMode)
-                            .transition(.opacity)
-                    case .failure:
-                        failurePlaceholder
-                    @unknown default:
-                        fallbackPlaceholder
-                    }
-                }
+            if let image = loader.image {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: contentMode)
+                    .transition(.opacity)
             } else {
-                if isResolving {
+                if loader.isResolving {
                     shimmerPlaceholder
-                } else if loadErrorMessage != nil {
+                } else if loader.loadErrorMessage != nil {
                     failurePlaceholder
                 } else {
                     fallbackPlaceholder
                 }
             }
         }
-        .animation(.easeInOut(duration: 0.18), value: signedURL)
+        .animation(.easeInOut(duration: 0.18), value: loader.image)
         .task(id: RemoteImageRequestKey(path: storagePath, reloadToken: reloadToken)) {
-            await resolveURL()
+            await loader.load(
+                storagePath: storagePath,
+                uploader: uploader,
+                cache: cache,
+                imageDataProvider: imageDataProvider
+            )
         }
     }
 
@@ -66,46 +60,14 @@ struct RemoteImageView: View {
     private var failurePlaceholder: some View {
         RemoteImagePlaceholderCard(
             isLoading: false,
-            errorMessage: loadErrorMessage ?? "사진을 다시 불러오지 못했어요.",
+            errorMessage: loader.loadErrorMessage ?? "사진을 다시 불러오지 못했어요.",
             retry: retry
         )
     }
 
     private func retry() {
-        signedURL = nil
-        loadErrorMessage = nil
+        loader.reset()
         reloadToken += 1
-    }
-
-    @MainActor
-    private func resolveURL() async {
-        signedURL = nil
-        loadErrorMessage = nil
-        isResolving = false
-
-        guard let path = storagePath, path.isEmpty == false else {
-            return
-        }
-
-        if let cachedURL = cache.url(for: path) {
-            signedURL = cachedURL
-            return
-        }
-
-        isResolving = true
-        do {
-            let expiresIn = 60 * 60 * 24 * 7
-            let resolvedURL = try await uploader.signedURL(storagePath: path, expiresIn: expiresIn)
-            signedURL = resolvedURL
-            if let resolvedURL {
-                cache.store(url: resolvedURL, for: path, expiresIn: expiresIn)
-            } else {
-                loadErrorMessage = "사진을 다시 불러오지 못했어요."
-            }
-        } catch {
-            loadErrorMessage = "사진을 다시 불러오지 못했어요."
-        }
-        isResolving = false
     }
 }
 
@@ -117,9 +79,10 @@ struct RemoteImageRequestKey: Hashable {
 final class RemoteImageSignedURLCache {
     static let shared = RemoteImageSignedURLCache()
 
-    private let cache = NSCache<NSString, RemoteImageSignedURLBox>()
+    private let cache = NSCache<NSString, RemoteImageCacheEntry>()
     private let refreshLeadTime: TimeInterval
     private var now: () -> Date
+    private var memoryWarningObserver: NSObjectProtocol?
 
     init(
         refreshLeadTime: TimeInterval = 5 * 60,
@@ -127,11 +90,30 @@ final class RemoteImageSignedURLCache {
     ) {
         self.refreshLeadTime = refreshLeadTime
         self.now = now
+        cache.countLimit = 60
+        cache.totalCostLimit = 40 * 1_024 * 1_024
+        memoryWarningObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.removeAll()
+        }
+    }
+
+    deinit {
+        if let memoryWarningObserver {
+            NotificationCenter.default.removeObserver(memoryWarningObserver)
+        }
     }
 
     func url(for path: String) -> URL? {
         guard let cached = cache.object(forKey: path as NSString) else { return nil }
-        let remaining = cached.expiry.timeIntervalSince(now())
+        guard let expiry = cached.expiry else {
+            return cached.url
+        }
+
+        let remaining = expiry.timeIntervalSince(now())
         guard remaining > refreshLeadTime else {
             cache.removeObject(forKey: path as NSString)
             return nil
@@ -141,7 +123,20 @@ final class RemoteImageSignedURLCache {
 
     func store(url: URL, for path: String, expiresIn: Int) {
         let expiry = now().addingTimeInterval(TimeInterval(expiresIn))
-        cache.setObject(RemoteImageSignedURLBox(url: url, expiry: expiry), forKey: path as NSString)
+        let entry = cache.object(forKey: path as NSString) ?? RemoteImageCacheEntry()
+        entry.url = url
+        entry.expiry = expiry
+        cache.setObject(entry, forKey: path as NSString, cost: entry.cacheCost)
+    }
+
+    func image(for path: String) -> UIImage? {
+        cache.object(forKey: path as NSString)?.image
+    }
+
+    func store(image: UIImage, for path: String) {
+        let entry = cache.object(forKey: path as NSString) ?? RemoteImageCacheEntry()
+        entry.image = image
+        cache.setObject(entry, forKey: path as NSString, cost: entry.cacheCost)
     }
 
     func removeValue(for path: String) {
@@ -157,13 +152,87 @@ final class RemoteImageSignedURLCache {
     }
 }
 
-private final class RemoteImageSignedURLBox: NSObject {
-    let url: URL
-    let expiry: Date
+typealias RemoteImageDataProvider = @Sendable (URL) async throws -> Data
 
-    init(url: URL, expiry: Date) {
-        self.url = url
-        self.expiry = expiry
+@MainActor
+final class RemoteImageLoader: ObservableObject {
+    @Published private(set) var image: UIImage?
+    @Published private(set) var isResolving = false
+    @Published private(set) var loadErrorMessage: String?
+
+    func load(
+        storagePath: String?,
+        uploader: any PhotoUploading,
+        cache: RemoteImageSignedURLCache,
+        imageDataProvider: RemoteImageDataProvider
+    ) async {
+        reset()
+
+        guard let path = storagePath, path.isEmpty == false else {
+            return
+        }
+
+        if let cachedImage = cache.image(for: path) {
+            image = cachedImage
+            return
+        }
+
+        isResolving = true
+        do {
+            let expiresIn = 60 * 60 * 24 * 7
+            let resolvedURL: URL
+            if let cachedURL = cache.url(for: path) {
+                resolvedURL = cachedURL
+            } else if let signedURL = try await uploader.signedURL(storagePath: path, expiresIn: expiresIn) {
+                cache.store(url: signedURL, for: path, expiresIn: expiresIn)
+                resolvedURL = signedURL
+            } else {
+                loadErrorMessage = "사진을 다시 불러오지 못했어요."
+                isResolving = false
+                return
+            }
+
+            let data = try await imageDataProvider(resolvedURL)
+            guard let resolvedImage = UIImage(data: data) else {
+                loadErrorMessage = "사진을 다시 불러오지 못했어요."
+                isResolving = false
+                return
+            }
+
+            cache.store(image: resolvedImage, for: path)
+            image = resolvedImage
+        } catch {
+            loadErrorMessage = "사진을 다시 불러오지 못했어요."
+        }
+
+        isResolving = false
+    }
+
+    func reset() {
+        image = nil
+        isResolving = false
+        loadErrorMessage = nil
+    }
+
+    static func liveImageData(from url: URL) async throws -> Data {
+        let (data, _) = try await URLSession.shared.data(from: url)
+        return data
+    }
+}
+
+private final class RemoteImageCacheEntry: NSObject {
+    var url: URL?
+    var expiry: Date?
+    var image: UIImage?
+
+    var cacheCost: Int {
+        guard let image else { return 1 }
+        if let cgImage = image.cgImage {
+            return cgImage.bytesPerRow * cgImage.height
+        }
+        let size = image.size
+        let scale = image.scale
+        return max(Int(size.width * scale * size.height * scale * 4), 1)
     }
 }
 

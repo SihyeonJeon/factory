@@ -60,6 +60,27 @@ final class PhotoUploaderTests: XCTestCase {
         let attempts = await client.uploadAttempts
         XCTAssertEqual(attempts, 4)
     }
+
+    func test_validateImageDataSize_acceptsPayloadAtLimit() async throws {
+        let uploader = PhotoUploader(client: StubPhotoUploaderClient(uploadFailuresBeforeSuccess: 0))
+        let data = Data(count: 25 * 1024 * 1024)
+
+        try await uploader.validateImageDataSize(data)
+    }
+
+    func test_validateImageDataSize_rejectsPayloadAboveLimit() async {
+        let uploader = PhotoUploader(client: StubPhotoUploaderClient(uploadFailuresBeforeSuccess: 0))
+        let data = Data(count: (25 * 1024 * 1024) + 1)
+
+        do {
+            try await uploader.validateImageDataSize(data)
+            XCTFail("Expected oversized payload to be rejected")
+        } catch let error as PhotoUploadError {
+            XCTAssertEqual(error, .tooLarge(27))
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
 }
 
 private actor FakePhotoUploader: PhotoUploading {
