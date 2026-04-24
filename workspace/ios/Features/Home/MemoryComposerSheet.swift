@@ -12,6 +12,7 @@ struct MemoryComposerSheet: View {
 
     private let initialLocationPermissionState: LocationPermissionState
     private let evidenceMode: MemoryComposerEvidenceMode
+    private let sharedPhotoReference: ComposerLaunchPhotoReference?
 
     @StateObject private var state: MemoryComposerState
     @State private var showingDeniedRecovery = false
@@ -24,12 +25,18 @@ struct MemoryComposerSheet: View {
 
     init(
         initialLocationPermissionState: LocationPermissionState = .denied,
-        evidenceMode: MemoryComposerEvidenceMode = .none
+        evidenceMode: MemoryComposerEvidenceMode = .none,
+        sharedPhotoReference: ComposerLaunchPhotoReference? = nil
     ) {
         self.initialLocationPermissionState = initialLocationPermissionState
         self.evidenceMode = evidenceMode
+        self.sharedPhotoReference = sharedPhotoReference
         _state = StateObject(
-            wrappedValue: MemoryComposerState(locationPermissionState: initialLocationPermissionState)
+            wrappedValue: MemoryComposerState(
+                selectedPhotos: [],
+                sharedAssetIdentifier: sharedPhotoReference?.assetIdentifier,
+                locationPermissionState: initialLocationPermissionState
+            )
         )
     }
 
@@ -104,6 +111,9 @@ struct MemoryComposerSheet: View {
             .onAppear {
                 applyEvidenceModeIfNeeded()
                 applyParticipantDefaultsIfNeeded()
+            }
+            .task(id: state.selectedPhotos.first?.itemIdentifier) {
+                await state.applyFirstPhotoSeedIfAvailable()
             }
         }
     }
@@ -578,6 +588,13 @@ struct MemoryComposerSheet: View {
                 saveErrorMessage = error.localizedDescription
             }
         }
+    }
+}
+
+private extension ComposerLaunchPhotoReference {
+    var assetIdentifier: String? {
+        guard case let .assetIdentifier(value) = self else { return nil }
+        return value
     }
 }
 

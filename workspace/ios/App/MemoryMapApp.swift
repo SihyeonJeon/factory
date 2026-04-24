@@ -12,6 +12,7 @@ struct MemoryMapApp: App {
     @State private var memoryRealtimeTask: Task<Void, Never>?
     @State private var bootstrappedPreferencesUserId: UUID?
     @State private var didRequestLocationOnLaunch = false
+    @State private var composerLaunchRoute: ComposerLaunchRoute?
 
     private let evidenceMode: MemoryComposerEvidenceMode = {
         guard
@@ -94,7 +95,11 @@ struct MemoryMapApp: App {
                             GroupOnboardingView()
                                 .environmentObject(groupStore)
                         } else {
-                            RootTabView(evidenceMode: evidenceMode, initialSheetSnap: Self.initialSheetSnap())
+                            RootTabView(
+                                evidenceMode: evidenceMode,
+                                initialSheetSnap: Self.initialSheetSnap(),
+                                composerLaunchRoute: $composerLaunchRoute
+                            )
                                 .environmentObject(authStore)
                                 .environmentObject(prefs)
                                 .environmentObject(groupStore)
@@ -156,6 +161,10 @@ struct MemoryMapApp: App {
             }
             .onChange(of: groupStore.activeGroupId) { _, activeGroupId in
                 configureMemorySync(for: activeGroupId)
+            }
+            .onOpenURL { url in
+                guard let route = ComposerLaunchRoute.from(url: url) else { return }
+                composerLaunchRoute = route
             }
         }
     }

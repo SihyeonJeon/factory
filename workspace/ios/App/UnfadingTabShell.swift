@@ -45,6 +45,7 @@ struct UnfadingTabShell: View {
     @EnvironmentObject private var offlineQueue: OfflineQueue
 
     private let evidenceMode: MemoryComposerEvidenceMode
+    @Binding private var composerLaunchRoute: ComposerLaunchRoute?
 
     @State private var selectedTab: ShellTab = .map
     @State private var sheetSnap: BottomSheetSnap
@@ -55,10 +56,16 @@ struct UnfadingTabShell: View {
     @State private var didPresentEvidenceComposer = false
     @State private var groupSwitchResetToken = 0
     @State private var pendingAutoselectMemoryId: UUID?
+    @State private var pendingComposerLaunchRoute: ComposerLaunchRoute?
     @StateObject private var categoryStore: CategoryStore
 
-    init(evidenceMode: MemoryComposerEvidenceMode = .none, initialSheetSnap: BottomSheetSnap = Self.initialSheetSnap()) {
+    init(
+        evidenceMode: MemoryComposerEvidenceMode = .none,
+        initialSheetSnap: BottomSheetSnap = Self.initialSheetSnap(),
+        composerLaunchRoute: Binding<ComposerLaunchRoute?> = .constant(nil)
+    ) {
         self.evidenceMode = evidenceMode
+        self._composerLaunchRoute = composerLaunchRoute
         self._sheetSnap = State(initialValue: initialSheetSnap)
         self._categoryStore = StateObject(wrappedValue: CategoryStore.shared)
     }
@@ -135,10 +142,14 @@ struct UnfadingTabShell: View {
         }
         .background(UnfadingTheme.Color.bg)
         .environmentObject(categoryStore)
-        .fullScreenCover(isPresented: $isPresentingComposer) {
+        .fullScreenCover(
+            isPresented: $isPresentingComposer,
+            onDismiss: { pendingComposerLaunchRoute = nil }
+        ) {
             MemoryComposerSheet(
                 initialLocationPermissionState: .denied,
-                evidenceMode: evidenceMode
+                evidenceMode: evidenceMode,
+                sharedPhotoReference: pendingComposerLaunchRoute?.photoReference
             )
         }
         .sheet(isPresented: $isPresentingGroupOnboarding) {
@@ -151,9 +162,14 @@ struct UnfadingTabShell: View {
             if isShowing { showingGroupPicker = false }
         }
         .onAppear {
-            guard evidenceMode != .none, didPresentEvidenceComposer == false else { return }
+            consumeComposerLaunchRouteIfNeeded()
+            guard evidenceMode != .none, didPresentEvidenceComposer == false, isPresentingComposer == false else { return }
             didPresentEvidenceComposer = true
             isPresentingComposer = true
+        }
+        .onChange(of: composerLaunchRoute) { _, route in
+            guard route != nil else { return }
+            consumeComposerLaunchRouteIfNeeded()
         }
     }
 
@@ -221,6 +237,14 @@ struct UnfadingTabShell: View {
             }
             .shadow(style: UnfadingTheme.Shadow.card)
             .accessibilityIdentifier("offline-queue-banner")
+    }
+
+    private func consumeComposerLaunchRouteIfNeeded() {
+        guard let route = composerLaunchRoute else { return }
+        selectedTab = .map
+        pendingComposerLaunchRoute = route
+        isPresentingComposer = true
+        composerLaunchRoute = nil
     }
 }
 

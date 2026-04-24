@@ -236,6 +236,15 @@ enum UnfadingLocalized {
         static let confirm = "확인"
     }
 
+    // MARK: Share Extension
+
+    enum ShareExtension {
+        static let opening = "Unfading 여는 중"
+        static let openingMessage = "공유한 사진을 추억 기록 화면으로 보내고 있어요."
+        static let unsupported = "이 사진은 아직 바로 가져올 수 없어요."
+        static let close = "닫기"
+    }
+
     // MARK: Auth
 
     enum Auth {

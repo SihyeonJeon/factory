@@ -56,6 +56,7 @@ final class MemoryComposerState: ObservableObject {
     init(
         note: String = "",
         selectedPhotos: [PhotosPickerItem] = [],
+        sharedAssetIdentifier: String? = nil,
         selectedPlace: String = UnfadingLocalized.Composer.samplePlace,
         selectedAddress: String? = nil,
         selectedCoordinate: CLLocationCoordinate2D? = nil,
@@ -71,7 +72,8 @@ final class MemoryComposerState: ObservableObject {
         eventRepository: EventRepository = SupabaseEventRepository()
     ) {
         self.note = note
-        self.selectedPhotos = selectedPhotos
+        let seededPhotos = sharedAssetIdentifier.map { [PhotosPickerItem(itemIdentifier: $0)] } ?? selectedPhotos
+        self.selectedPhotos = seededPhotos
         self.selectedPlace = selectedPlace
         self.selectedAddress = selectedAddress
         self.selectedCoordinate = selectedCoordinate

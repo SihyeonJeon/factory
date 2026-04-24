@@ -6,14 +6,24 @@ import SwiftUI
 struct RootTabView: View {
     private let evidenceMode: MemoryComposerEvidenceMode
     private let initialSheetSnap: BottomSheetSnap
+    @Binding private var composerLaunchRoute: ComposerLaunchRoute?
 
-    init(evidenceMode: MemoryComposerEvidenceMode = .none, initialSheetSnap: BottomSheetSnap = .default_) {
+    init(
+        evidenceMode: MemoryComposerEvidenceMode = .none,
+        initialSheetSnap: BottomSheetSnap = .default_,
+        composerLaunchRoute: Binding<ComposerLaunchRoute?> = .constant(nil)
+    ) {
         self.evidenceMode = evidenceMode
         self.initialSheetSnap = initialSheetSnap
+        self._composerLaunchRoute = composerLaunchRoute
     }
 
     var body: some View {
-        UnfadingTabShell(evidenceMode: evidenceMode, initialSheetSnap: initialSheetSnap)
+        UnfadingTabShell(
+            evidenceMode: evidenceMode,
+            initialSheetSnap: initialSheetSnap,
+            composerLaunchRoute: $composerLaunchRoute
+        )
     }
 }
 

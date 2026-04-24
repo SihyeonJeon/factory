@@ -103,6 +103,38 @@ targets:
     dependencies:
       - sdk: SwiftUI.framework
       - sdk: WidgetKit.framework
+  UnfadingShareExtension:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - ShareExtension
+    info:
+      path: ShareExtension/Info.plist
+      properties:
+        CFBundleDisplayName: Unfading Share
+        NSExtension:
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsImageWithMaxCount: 12
+            PHSupportedMediaTypes:
+              - Image
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).ShareViewController"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jeonsihyeon.memorymap.share
+        GENERATE_INFOPLIST_FILE: NO
+        MARKETING_VERSION: 1.0.0
+        CURRENT_PROJECT_VERSION: 1
+        SWIFT_VERSION: "5.10"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: NO
+        CODE_SIGN_ENTITLEMENTS: ShareExtension/ShareExtension.entitlements
+    dependencies:
+      - sdk: UIKit.framework
+      - sdk: Photos.framework
+      - sdk: UniformTypeIdentifiers.framework
   MemoryMapTests:
     type: bundle.unit-test
     platform: iOS
@@ -132,6 +164,7 @@ schemes:
       targets:
         MemoryMap: all
         UnfadingWidget: all
+        UnfadingShareExtension: all
         MemoryMapTests: [test]
         UnfadingUITests: [test]
     run:
