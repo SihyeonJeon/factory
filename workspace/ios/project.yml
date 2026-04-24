@@ -37,6 +37,12 @@ targets:
           UIImageRespectsSafeAreaInsets: true
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
+        BGTaskSchedulerPermittedIdentifiers:
+          - com.jeonsihyeon.memorymap.refresh
+          - com.jeonsihyeon.memorymap.rewind
+        UIBackgroundModes:
+          - fetch
+          - processing
         NSLocationWhenInUseUsageDescription: "Show nearby memory pins and place-based rewind moments."
         NSLocationAlwaysAndWhenInUseUsageDescription: "Deliver rewind moments when you return to meaningful places."
         NSPhotoLibraryAddUsageDescription: "Save shared memory photos to your library."

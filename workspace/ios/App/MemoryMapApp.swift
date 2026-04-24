@@ -3,6 +3,7 @@ import SwiftUI
 
 @main
 struct MemoryMapApp: App {
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var prefs: UserPreferences
     @StateObject private var authStore: AuthStore
     @StateObject private var groupStore: GroupStore
@@ -40,6 +41,7 @@ struct MemoryMapApp: App {
         _memoryStore = StateObject(wrappedValue: MemoryStore(offlineQueue: offlineQueue))
         _subscriptionStore = StateObject(wrappedValue: SubscriptionStore())
         _locationPermission = StateObject(wrappedValue: LocationPermissionStore())
+        BackgroundSyncController.shared.register()
     }
 
     private static var shouldSkipOnboardingForUITests: Bool {
@@ -147,6 +149,7 @@ struct MemoryMapApp: App {
                 guard case let .signedIn(userId, _) = state else {
                     bootstrappedPreferencesUserId = nil
                     memoryStore.setCurrentUserId(nil)
+                    BackgroundSyncController.shared.setActiveGroupId(nil)
                     return
                 }
                 memoryStore.setCurrentUserId(userId)
@@ -159,10 +162,18 @@ struct MemoryMapApp: App {
             }
             .onAppear {
                 memoryStore.setCurrentUserId(authStore.currentUserId)
+                BackgroundSyncController.shared.configure(offlineQueue: offlineQueue, memoryStore: memoryStore)
+                BackgroundSyncController.shared.setActiveGroupId(groupStore.activeGroupId)
                 configureMemorySync(for: groupStore.activeGroupId)
             }
             .onChange(of: groupStore.activeGroupId) { _, activeGroupId in
+                BackgroundSyncController.shared.setActiveGroupId(activeGroupId)
                 configureMemorySync(for: activeGroupId)
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                guard newPhase == .background else { return }
+                BackgroundSyncController.shared.scheduleAppRefresh()
+                BackgroundSyncController.shared.scheduleRewindProcessing()
             }
             .onOpenURL { url in
                 deepLinkStore.pendingDeepLink = DeepLinkRouter.parse(url)
