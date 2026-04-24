@@ -1,94 +1,111 @@
-# Launchability Review — Phase 3 Final (2026-04-24)
+# Launchability Review — Phase 4 Final (2026-04-24)
 
-Round: `round_phase3_final_r1`
-Primary locale: Korean (`ko_KR`)
+Round: `round_phase4_final_r1`
+Primary locales: Korean / English (`ko`, `en`)
 Build target: `MemoryMap`
-Signing status: `DEVELOPMENT_TEAM` remains empty until an Apple Developer team is assigned.
+Signing status: `DEVELOPMENT_TEAM` remains unset until an Apple Developer team is assigned.
 
 ## Integrated Scope
 
+- Feedback stream integrated before this line: `feedback 14건 병렬 스트림 통합` folded sheet/composer/calendar feedback into the current design direction.
 - Phase 1 complete: R26-R30 delivered the Unfading token reset, custom 3-tab shell, rebuilt bottom sheet, home chrome, and overlay stack.
 - Phase 2 complete: R31-R35 delivered the rebuilt composer, Sprint 28 memory detail, calendar dial/day detail, rewind stories, and settings-driven group hub.
-- Launch/TestFlight prep complete: R36-R39 delivered ship assets, local StoreKit paywall, launchability review, E2E/TestFlight helper scripts, and screenshot harvest support.
-- Phase 3 product hardening complete: R41-R49 delivered real-data wiring, StoreKit server sync stub wiring, native Sign in with Apple client flow, realtime/offline handling, marker/detail stabilization, map themes, search, and data export.
-- Final consolidation complete: R50 refreshed the release-facing docs and reran the requested regression in the current workspace-write sandbox without changing app code.
+- Phase 3 complete: R36-R50 delivered ship assets, local StoreKit paywall, launchability/TestFlight helper scripts, real-data wiring, StoreKit sync stub, native Sign in with Apple client flow, realtime/offline handling, marker/detail stabilization, map themes, search, export, and the Phase 3 final documentation pass.
+- Phase 4 complete: R51-R60 delivered performance hardening, radius-based map clustering, WidgetKit, Share Extension, Universal Links/custom deep links, Siri Shortcuts/App Intents expansion, background refresh processing, Korean/English localization, VoiceOver/Reduce Motion hardening, and the final documentation/evidence consolidation.
+
+## Phase Checklist
+
+### Phase 1 — R26-R30
+
+- [x] Design tokens and bundled fonts aligned to Unfading visual system
+- [x] Custom 3-tab shell and FAB shipped
+- [x] Bottom sheet rebuilt and integrated
+- [x] Home chrome coordinate/z-index polish landed
+- [x] Group picker and category editor overlays integrated
+
+### Phase 2 — R31-R35
+
+- [x] Composer rebuilt around new flow and state model
+- [x] Memory detail redesigned per Sprint 28
+- [x] Calendar dial, plan card, and alert surfaces integrated
+- [x] Rewind stories flow shipped
+- [x] Settings-driven group hub flow integrated
+
+### Phase 3 — R36-R50
+
+- [x] Curated sheet/archive surfaces integrated
+- [x] Marker selection and filtered detail entry stabilized
+- [x] Real Supabase data wiring connected across map/calendar/detail
+- [x] Accessibility and Dynamic Type pass landed
+- [x] App icon, launch assets, and privacy manifest added
+- [x] Local StoreKit paywall and subscription state shipped
+- [x] Launchability/TestFlight helper scripts added
+- [x] Photo UX, Sign in with Apple client, realtime, offline queue, map themes, search, export integrated
+- [x] Phase 3 final docs/evidence recorded
+
+### Phase 4 — R51-R60
+
+- [x] Performance audit and image caching/body recompute reduction landed
+- [x] Radius-based map clustering integrated
+- [x] WidgetKit extension added with Today Memory snapshot strategy
+- [x] Share Extension added for Photos.app handoff into composer
+- [x] Universal Links + custom scheme routing integrated
+- [x] Siri Shortcuts/App Intents expansion landed
+- [x] Background refresh/rewind processing wired
+- [x] Korean/English localization assets introduced
+- [x] VoiceOver and Reduce Motion hardening integrated
+- [x] R60 final docs/evidence and regression rerun recorded
 
 ## Status Table
 
 | Area | Status | Notes |
 |---|---|---|
-| Design shell + map surface | CHECK | R26-R30 shell, chrome, sheet, overlays, marker/detail surface, and theme work are integrated. |
-| Composer + memory detail + calendar + rewind | CHECK | R31-R35 flows remain integrated and visible in the current codebase. |
-| Local StoreKit paywall | CHECK | On-device paywall and entitlement state surfaces remain available for manual verification. |
-| Server subscription sync stub | CHECK | Phase 3 added app-side sync wiring toward backend receipt/subscription reconciliation. |
-| Apple Sign in client | CHECK | Native Sign in with Apple client wiring landed in-app; backend/provider setup remains external. |
-| Real data / realtime / offline | CHECK | Supabase-backed data wiring, realtime incoming-memory flow, and offline queue support are present. |
-| Search / map themes / export | CHECK | Search surface, theme preference flow, and JSON/photo export surfaces are integrated. |
+| Design shell + core flows | CHECK | R26-R35 shell, sheet, overlays, composer, detail, calendar, rewind, and group surfaces remain integrated. |
+| Data/account hardening | CHECK | R36-R50 real-data wiring, StoreKit sync stub, native Sign in with Apple client, realtime/offline, search, themes, and export remain present. |
+| Performance + cluster surface | CHECK | R51-R52 performance cleanup and radius-based clustering are in the current app line. |
+| WidgetKit | CHECK | Widget target is present; current widget data remains bundle-local/sample until App Group snapshot handoff is completed. |
+| Share Extension | CHECK | Share extension target is present; real file-container handoff remains partially deferred to App Group setup. |
+| Deep links + App Intents + background refresh | CHECK | R55-R57 routing, shortcuts, and BGTaskScheduler wiring are integrated in-app. |
+| Localization + accessibility hardening | CHECK | R58-R59 added `xcstrings` localization and VoiceOver/Reduce Motion conformance work. |
 | Archive helper | CHECK | `workspace/ios/scripts/archive.sh` passed `bash -n` on 2026-04-24. |
 | Export options plist | CHECK | `workspace/ios/scripts/export-options.plist` passed `plutil -lint` on 2026-04-24. |
-| Latest green baseline | CHECK | `context_harness/reports/round_data_export_r1/evidence/xcresult_summary.json` recorded `229` total tests with `215` passed / `14` skipped / `0` failed. |
-| Requested final regression rerun | BLOCKED | The 2026-04-24 R50 rerun created `.deriveddata/r50/Test-R50.xcresult` but stopped before test execution with `xcodebuild` exit `74`. |
-| Signed archive / TestFlight upload | DEFER | Real archive/export/upload still depends on Apple team assignment, App Store Connect product setup, and physical-device upload verification. |
+| Source test inventory | CHECK | Current source inventory is `217` unit + `29` UITest = `246` test methods. |
+| Latest historical green baseline | CHECK | `context_harness/reports/round_data_export_r1/evidence/xcresult_summary.json` remains the latest full green baseline: `229` total / `215` passed / `14` skipped / `0` failed. |
+| Requested final regression rerun | BLOCKED | The 2026-04-24 R60 rerun created `.deriveddata/r60/Test-R60.xcresult` but stopped before test execution with `xcodebuild` exit `74`. |
+| Signed archive / TestFlight submission | DEFER | External operator setup is still required before a real signed upload can be completed. |
 
-## Final Test Inventory
+## Final Test Snapshot
 
-- Current source inventory: `201` unit tests + `28` UITests = `229` test methods.
-- Last known full green simulator baseline: `229` total, `215` passed, `14` skipped, `0` failed (`round_data_export_r1` evidence).
-- Current R50 rerun in this sandbox: `0` executed, `.xcresult` status `failedToStart`, `xcodebuild` exit `74`.
+- Current source inventory: `217` unit tests + `29` UITests = `246` test methods.
+- Latest historical green simulator baseline: `229` total / `215` passed / `14` skipped / `0` failed (`round_data_export_r1` evidence).
+- Current R60 rerun in this sandbox: `0` executed, `.xcresult` status `failedToStart`, `xcodebuild` exit `74`.
 
-## Known Skip List (14)
+## Known Environment Blockers For R60 Rerun
 
-1. `SupabaseE2ETests.testSignInAndFetchProfile` — skips when `UNFADING_E2E_EMAIL/PASSWORD` are unset.
-2. `SupabaseE2ETests.testCreateAndFetchGroupThenMemory` — same E2E credential gate.
-3. `UnfadingUITests.testCalendarDialOpensMonthPicker` — simulator timing; verify on device.
-4. `UnfadingUITests.testPlanCardVisibleInGeneralGroup` — requires future-date plan stub; verify on device.
-5. `UnfadingUITests.testGroupHubFromSettings` — SwiftUI `List` row identifier flakiness in simulator.
-6. `UnfadingUITests.testMemoryDetailOpensAndShowsSections` — selected-pin bootstrap deferred to marker/detail smoke path.
-7. `UnfadingUITests.testMarkerClickPopulatesSheetFiltered` — MapKit annotation hitability can fail in simulator stub.
-8. `UnfadingUITests.testMapBottomSheetSnapGestures` — 5pt handle swipe flakiness; device-only smoke.
-9. `UnfadingUITests.testSheetCollapsedHandleIsAboveTabBar` — same simulator gesture limitation.
-10. `UnfadingUITests.testSheetExpandedBackButtonReturnsToDefault` — same simulator gesture limitation.
-11. `UnfadingUITests.testSheetScrollDoesNotCollapseWhenNotAtTop` — same simulator gesture limitation.
-12. `UnfadingUITests.testCategoryEditorOpensFromFilterPlus` — horizontal scroll hit-point issue in simulator.
-13. `UnfadingUITests.testRewindFromHomeCuration` — navigation-wrapped query flakiness in simulator.
-14. `UnfadingUITests.testRewindStoriesOpensAndAdvances` — story stub can fail to open in simulator.
+- `CoreSimulatorService connection became invalid`
+- `Unable to discover any Simulator runtimes`
+- SwiftPM package resolution failed because GitHub host lookup was unavailable
+- multiple `fatal: unable to access 'https://github.com/...': Could not resolve host: github.com`
 
-## R50 Verification Snapshot
-
-- Requested command executed on 2026-04-24:
-
-```bash
-cd /Users/jeonsihyeon/factory/workspace/ios
-xcodegen generate
-xcodebuild test \
-  -project MemoryMap.xcodeproj \
-  -scheme MemoryMap \
-  -destination 'platform=iOS Simulator,name=iPhone 16' \
-  -derivedDataPath .deriveddata/r50 \
-  -resultBundlePath .deriveddata/r50/Test-R50.xcresult
-```
-
-- Observed blockers in this sandbox:
-  - `CoreSimulatorService connection became invalid`
-  - `Could not resolve package dependencies`
-  - multiple `fatal: unable to access 'https://github.com/...': Could not resolve host: github.com`
-- Result bundle exists: `workspace/ios/.deriveddata/r50/Test-R50.xcresult`
-- Result status: `failedToStart`
-- Executed tests: `0`
-
-## Remaining Deferred
+## Deferred Operator Actions
 
 | Item | Owner | Reason |
 |---|---|---|
-| App Store Connect product registration | Operator / owner action | App record, subscriptions/products, privacy answers, screenshots, support/privacy URLs are not registered yet. |
-| Apple Developer team ID | Operator / owner action | `DEVELOPMENT_TEAM` is still unset, so signed archive/export cannot be completed. |
-| Supabase HIBP leaked-password toggle | Operator / owner action | Dashboard configuration item, not an in-repo code change. |
-| Real-device TestFlight upload | Operator / owner action | Requires a signed archive/export plus actual App Store Connect upload from a provisioned environment. |
+| Apple Developer team ID registration | Operator / account owner | `DEVELOPMENT_TEAM` is unset, so signed archive/export cannot complete. |
+| App Store Connect app + subscription product registration | Operator / account owner | `com.jeonsihyeon.memorymap.premium.monthly` and `.yearly` must exist before production billing review. |
+| Entitlement capability verification in signing environment | Operator / account owner | Sign in with Apple, Background fetch, Associated Domains, and Push Notifications must be confirmed against the provisioning profile. |
+| AASA deployment to `https://unfading.app/.well-known/apple-app-site-association` | Operator / infra owner | Universal Links cannot be validated end-to-end until the file is live. |
+| Supabase dashboard hardening | Operator / backend owner | HIBP leaked-password protection, email confirm, and Apple provider Services ID remain external dashboard tasks. |
+| Privacy manifest final review | Operator / release owner | Final pre-submit audit is still required. |
+| App Privacy Data Collection disclosure in App Store Connect | Operator / release owner | Privacy answers are not an in-repo artifact. |
+| TestFlight tester invitation pass | Operator / release owner | External upload + tester management step. |
+| App Store listing metadata | Operator / release owner | Screenshots, description, category, and age rating remain pending. |
+| Real-device signed archive/export/upload | Operator / release owner | Requires provisioned signing environment and App Store Connect access. |
 
 ## Evidence
 
-- Phase 3 final evidence: `context_harness/reports/phase3_final/evidence/`
-- R50 test log: `context_harness/reports/phase3_final/evidence/xcodebuild_test_r50.log`
-- R50 summary: `context_harness/reports/phase3_final/evidence/xcresult_summary.json`
+- Phase 4 final evidence: `context_harness/reports/phase4_final/evidence/`
+- R60 test log: `context_harness/reports/phase4_final/evidence/xcodebuild_test_r60.log`
+- R60 summary: `context_harness/reports/phase4_final/evidence/xcresult_summary.json`
 - Archive helper: `workspace/ios/scripts/archive.sh`
 - Export plist: `workspace/ios/scripts/export-options.plist`

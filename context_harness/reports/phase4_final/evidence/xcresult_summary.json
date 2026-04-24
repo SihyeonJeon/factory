@@ -1,0 +1,27 @@
+{
+  "round": "round_phase4_final_r1",
+  "date": "2026-04-24",
+  "command": "xcodebuild test -project MemoryMap.xcodeproj -scheme MemoryMap -destination 'platform=iOS Simulator,name=iPhone 16' -derivedDataPath .deriveddata/r60 -resultBundlePath .deriveddata/r60/Test-R60.xcresult",
+  "exit_code": 74,
+  "xcresult_path": "workspace/ios/.deriveddata/r60/Test-R60.xcresult",
+  "xcresult_status": "failedToStart",
+  "executed_tests": 0,
+  "source_test_inventory": {
+    "unit": 217,
+    "ui": 29,
+    "total": 246
+  },
+  "latest_green_baseline": {
+    "source": "context_harness/reports/round_data_export_r1/evidence/xcresult_summary.json",
+    "passed": 215,
+    "skipped": 14,
+    "failed": 0,
+    "total": 229
+  },
+  "blockers": [
+    "CoreSimulatorService connection became invalid",
+    "Unable to discover any Simulator runtimes",
+    "Could not resolve package dependencies",
+    "Could not resolve host: github.com"
+  ]
+}
