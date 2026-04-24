@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct GroupPickerOverlay: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Namespace private var groupRotorNamespace
     @EnvironmentObject private var groupStore: GroupStore
     @Binding var isPresented: Bool
     let onCreateGroup: () -> Void
@@ -24,8 +26,14 @@ struct GroupPickerOverlay: View {
                 .frame(width: proxy.size.width, height: proxy.size.height)
                 .zIndex(200)
                 .accessibilityIdentifier("group-picker-overlay")
+                .accessibilityRotor("그룹 목록") {
+                    ForEach(groupRotorEntries) { entry in
+                        AccessibilityRotorEntry(LocalizedStringKey(entry.label), id: entry.id, in: groupRotorNamespace)
+                    }
+                }
+                .unfadingUITestRotorMarkers(groupRotorEntries, prefix: "rotor-group-picker")
             }
-            .transition(.opacity.combined(with: .scale(scale: 0.98)))
+            .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.98)))
         }
     }
 
@@ -39,7 +47,8 @@ struct GroupPickerOverlay: View {
                         GroupPickerRow(
                             group: group,
                             isActive: group.id == groupStore.activeGroupId,
-                            members: members(for: group)
+                            members: members(for: group),
+                            rotorNamespace: groupRotorNamespace
                         ) {
                             guard group.id != groupStore.activeGroupId else { return }
                             groupStore.setActive(group.id)
@@ -74,6 +83,7 @@ struct GroupPickerOverlay: View {
         .padding(UnfadingTheme.Spacing.xl)
         .background(UnfadingTheme.Color.sheet, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(style: UnfadingTheme.Shadow.overlay)
+        .unfadingSemanticGroup()
     }
 
     private var header: some View {
@@ -121,12 +131,19 @@ struct GroupPickerOverlay: View {
             ? SampleGroup.sampleCouple.members.map(\.initial)
             : SampleGroup.sampleGeneral.members.map(\.initial)
     }
+
+    private var groupRotorEntries: [UnfadingRotorMarkerEntry] {
+        groupStore.groups.map { group in
+            UnfadingRotorMarkerEntry(id: group.id.uuidString, label: group.name)
+        }
+    }
 }
 
 private struct GroupPickerRow: View {
     let group: DBGroup
     let isActive: Bool
     let members: [String]
+    let rotorNamespace: Namespace.ID
     let action: () -> Void
 
     var body: some View {
@@ -170,6 +187,8 @@ private struct GroupPickerRow: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("group-picker-row-\(group.id.uuidString)")
+        .accessibilityRotorEntry(id: group.id.uuidString, in: rotorNamespace)
+        .unfadingSemanticGroup()
     }
 
     private var background: Color {

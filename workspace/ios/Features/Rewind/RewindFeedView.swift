@@ -4,6 +4,7 @@ import SwiftUI
 struct RewindFeedView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @EnvironmentObject private var groupStore: GroupStore
+    @Namespace private var rewindRotorNamespace
     @State private var selectedIndex = 0
 
     private let data: RewindData
@@ -29,6 +30,7 @@ struct RewindFeedView: View {
                             storyTapZones
                         }
                         .accessibilityIdentifier("rewind-story-page-\(index)")
+                        .accessibilityRotorEntry(id: story.id, in: rewindRotorNamespace)
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
@@ -42,6 +44,17 @@ struct RewindFeedView: View {
             topChrome
         }
         .background(UnfadingTheme.Color.primary)
+        .accessibilityRotor("리와인드 카드") {
+            ForEach(storyRotorEntries) { entry in
+                AccessibilityRotorEntry(LocalizedStringKey(entry.label), id: entry.id, in: rewindRotorNamespace) {
+                    selectedIndex = entry.index
+                }
+            }
+        }
+        .unfadingUITestRotorMarkers(
+            storyRotorEntries.map { UnfadingRotorMarkerEntry(id: "\($0.id)", label: $0.label) },
+            prefix: "rotor-rewind"
+        )
     }
 
     private var topChrome: some View {
@@ -120,6 +133,35 @@ struct RewindFeedView: View {
             selectedIndex = max(selectedIndex - 1, 0)
         }
     }
+
+    private var storyRotorEntries: [RewindRotorEntry] {
+        stories.enumerated().map { index, story in
+            RewindRotorEntry(id: story.id, index: index, label: rotorLabel(for: story))
+        }
+    }
+
+    private func rotorLabel(for story: RewindStoryKind) -> String {
+        switch story {
+        case .cover:
+            return UnfadingLocalized.Rewind.coverHeadline(for: groupStore.mode)
+        case .topPlaces:
+            return UnfadingLocalized.Rewind.topPlacesTitle
+        case .firstVisits:
+            return UnfadingLocalized.Rewind.firstVisitsTitle
+        case .photoDay:
+            return UnfadingLocalized.Rewind.photoDayTitle
+        case .emotionCloud:
+            return UnfadingLocalized.Rewind.emotionCloudTitle
+        case .timeTogether:
+            return UnfadingLocalized.Rewind.timeTogetherTitle(for: groupStore.mode)
+        }
+    }
+}
+
+private struct RewindRotorEntry: Identifiable {
+    let id: Int
+    let index: Int
+    let label: String
 }
 
 private extension DateInterval {

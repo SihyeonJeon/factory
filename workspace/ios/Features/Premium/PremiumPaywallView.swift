@@ -3,6 +3,7 @@ import SwiftUI
 
 // vibe-limit-checked: 4 StoreKit 2 product buttons, 7 Korean purchase copy, 8 44pt a11y controls
 struct PremiumPaywallView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var store: SubscriptionStore
     @State private var alertMessage: String?
@@ -46,10 +47,10 @@ struct PremiumPaywallView: View {
                     UnfadingToast(message: toastMessage)
                         .padding(.horizontal, UnfadingTheme.Spacing.xl)
                         .padding(.bottom, UnfadingTheme.Spacing.xl)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
                 }
             }
-            .animation(.easeInOut(duration: 0.2), value: toastMessage)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: toastMessage)
         }
     }
 

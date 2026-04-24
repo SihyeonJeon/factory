@@ -45,6 +45,7 @@ enum GroupHubFormatting {
 }
 
 struct GroupHubView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @EnvironmentObject private var authStore: AuthStore
     @EnvironmentObject private var groupStore: GroupStore
     @EnvironmentObject private var memoryStore: MemoryStore
@@ -170,7 +171,7 @@ struct GroupHubView: View {
                 )
 
                 Button {
-                    withAnimation(.easeInOut(duration: 0.18)) {
+                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.18)) {
                         isShowingGroupPicker = true
                     }
                 } label: {
@@ -731,6 +732,7 @@ private struct GroupHubCard<Content: View>: View {
         .padding(UnfadingTheme.Spacing.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
         .unfadingCardBackground(fill: UnfadingTheme.Color.sheet, radius: UnfadingTheme.Radius.card)
+        .unfadingSemanticGroup()
     }
 }
 

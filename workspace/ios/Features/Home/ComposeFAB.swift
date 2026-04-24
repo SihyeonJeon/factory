@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ComposeFAB: View {
     @ScaledMetric(relativeTo: .title3) private var buttonSize: CGFloat = 56
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let onTap: () -> Void
 
     var body: some View {
@@ -20,17 +21,19 @@ struct ComposeFAB: View {
                 )
                 .shadow(style: UnfadingTheme.Shadow.activeCard)
         }
-        .buttonStyle(ComposeFABButtonStyle())
+        .buttonStyle(ComposeFABButtonStyle(reduceMotion: reduceMotion))
         .accessibilityLabel(UnfadingLocalized.Accessibility.composeTabLabel)
         .accessibilityIdentifier("home-fab")
     }
 }
 
 private struct ComposeFABButtonStyle: ButtonStyle {
+    let reduceMotion: Bool
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.96 : 1)
-            .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
+            .scaleEffect(reduceMotion ? 1 : (configuration.isPressed ? 0.96 : 1))
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.12), value: configuration.isPressed)
     }
 }
 

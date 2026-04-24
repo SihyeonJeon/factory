@@ -21,7 +21,7 @@ struct RewindMomentCard: View {
             .foregroundStyle(UnfadingTheme.Color.textOnPrimary)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         }
-        .accessibilityElement(children: .contain)
+        .unfadingSemanticGroup()
     }
 
     @ViewBuilder

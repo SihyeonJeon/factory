@@ -220,7 +220,7 @@ struct UnfadingBottomSheet<Content: View>: View {
             .onChange(of: liveHeight) { _, newValue in
                 measuredHeight.wrappedValue = newValue
             }
-            .animation(reduceMotion ? .easeInOut(duration: 0.25) : .easeInOut(duration: 0.22), value: snap == .expanded)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: snap == .expanded)
         }
     }
 
@@ -275,13 +275,17 @@ struct UnfadingBottomSheet<Content: View>: View {
     }
 
     private func snapTo(_ target: BottomSheetSnap, velocityHeight: CGFloat) {
-        let animation: Animation = reduceMotion
-            ? .easeInOut(duration: 0.25)
-            : .interpolatingSpring(
-                stiffness: 260,
-                damping: 32,
-                initialVelocity: Double(velocityHeight) / 1000
-            )
+        if reduceMotion {
+            snap = target
+            interactiveHeight = nil
+            return
+        }
+
+        let animation = Animation.interpolatingSpring(
+            stiffness: 260,
+            damping: 32,
+            initialVelocity: Double(velocityHeight) / 1000
+        )
 
         withAnimation(animation) {
             snap = target

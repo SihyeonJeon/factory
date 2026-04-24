@@ -19,7 +19,7 @@ enum UnfadingTheme {
         private static let secondaryLightToken: SwiftUI.Color = hex(0x8F, 0xB7, 0xA8)
         private static let secondaryBackgroundLight: SwiftUI.Color = hex(0xCD, 0xE2, 0xDA)
         private static let textPrimaryLight: SwiftUI.Color = hex(0x40, 0x38, 0x33)
-        private static let textSecondaryLight: SwiftUI.Color = hex(0x8C, 0x82, 0x7A)
+        private static let textSecondaryLight: SwiftUI.Color = hex(0x76, 0x6D, 0x66)
         private static let textTertiaryLight: SwiftUI.Color = hex(0xB8, 0xAE, 0xA5)
         private static let dividerLight: SwiftUI.Color = hex(0xEB, 0xE1, 0xD4)
         private static let chipBgLight: SwiftUI.Color = hex(0xF5, 0xEE, 0xE4)
@@ -62,7 +62,7 @@ enum UnfadingTheme {
         static var primarySoft: SwiftUI.Color { accentSoft }
         static let lavender: SwiftUI.Color = adaptive(light: hex(0xC2, 0xB0, 0xDE), dark: hex(0xA1, 0x92, 0xBA))
         static var cream: SwiftUI.Color { bg }
-        static let textOnPrimary: SwiftUI.Color = adaptive(light: .white, dark: textPrimaryLight)
+        static let textOnPrimary: SwiftUI.Color = adaptive(light: textPrimaryLight, dark: textPrimaryLight)
         static let textOnOverlay: SwiftUI.Color = adaptive(light: SwiftUI.Color.white.opacity(0.92), dark: textPrimaryDarkToken.opacity(0.92))
         static let overlayBackdrop: SwiftUI.Color = adaptive(light: textPrimaryLight.opacity(0.28), dark: SwiftUI.Color.black.opacity(0.45))
         static let shadow: SwiftUI.Color = adaptive(light: textPrimaryLight.opacity(0.06), dark: SwiftUI.Color.black.opacity(0.22))

@@ -258,6 +258,78 @@ Audit date: 2026-04-24 KST.
   - date labels
   - category delete labels
   - photo upload progress label/value
+
+## R59 Update: VoiceOver Precision + Reduce Motion Full Sweep
+
+Round context: R59 accessibility precision pass on 2026-04-24 KST.
+
+### VoiceOver updates
+
+- Added custom rotors to major surfaces:
+  - `MemoryMapHomeView`: `지도 추억`
+  - `MemoryDetailView`: `이벤트 추억`
+  - `CalendarView`: `캘린더 이벤트`
+  - `RewindFeedView`: `리와인드 카드`
+  - `GroupPickerOverlay`: `그룹 목록`
+  - `CategoryEditorOverlay`: `카테고리 목록`
+  - `AuthLandingView`: `인증 동작`
+  - `SettingsView`: `설정 바로가기`
+- Added named VoiceOver custom actions on `MemoryDetailView` for event-scoped navigation:
+  - `이전 이벤트`
+  - `다음 이벤트`
+- Added semantic-group container hints for composite cards/rows via shared UIKit-backed container-type bridge:
+  - detail metadata/note cards
+  - rewind story cards
+  - group picker rows and overlay card
+  - category rows and editor card
+  - group hub cards
+  - home top chrome and map controls
+  - calendar event list card
+
+### Reduce Motion sweep
+
+- Audited all current `withAnimation`, `.animation`, spring, and move-transition call sites under `workspace/ios/App`, `workspace/ios/Features`, and `workspace/ios/Shared`.
+- Added or tightened `accessibilityReduceMotion` branching in:
+  - `MemoryMapHomeView` cluster zoom, chrome fade, map-controls spring, map-control press animation
+  - `MemoryPinMarker`, `ClusterMarker`, `ComposeFAB`, `UnfadingTabShell`
+  - `MemoryDetailView` photo page indicator
+  - `CalendarView` reminder toast transition/animation
+  - `RewindFeedView` story auto-advance and manual page motion
+  - `GroupPickerOverlay`, `CategoryEditorOverlay`, `GroupHubView`
+  - `AuthLandingView`, `PremiumPaywallView`
+  - `RemoteImageView` fade/shimmer
+  - `UnfadingBottomSheet` snap animation: reduce-motion path is now instant instead of spring
+- Result: stories auto-advance stop, sheet drag spring becomes instant, chrome/toast motion falls back to fade or no animation, and map cluster emphasis no longer animates under Reduce Motion.
+
+### WCAG AA contrast re-check
+
+Re-checked theme token pairs after R59 token adjustment:
+
+- Light:
+  - `textPrimary` on `bg`: `10.89:1`
+  - `textSecondary` on `sheet`: `4.91:1`
+  - `textOnPrimary` on `primary`: `5.36:1`
+- Dark:
+  - `textPrimary` on `bg`: `14.93:1`
+  - `textSecondary` on `sheet`: `7.37:1`
+  - `textOnPrimary` on `primary`: `5.36:1`
+
+Status:
+
+- Current audited theme token pairs above meet WCAG AA for normal text.
+
+### Test / verification notes
+
+- Added UITest: `testVoiceOverRotorsPresentOnMainScreens`
+  - Uses stub environment rotor markers to assert rotor registration names on main screens.
+  - Falls back to `XCTSkip` if the simulator accessibility tree does not expose the markers.
+- Requested build/test command for this round:
+  - `xcodebuild test -project MemoryMap.xcodeproj -scheme MemoryMap -destination 'platform=iOS Simulator,name=iPhone 16' -derivedDataPath .deriveddata/r59`
+- 2026-04-24 sandbox verification blockers:
+  - `CoreSimulatorService connection became invalid`
+  - SwiftPM network resolution blocked (`Could not resolve host: github.com`)
+  - sandbox prevented writes to user cache/module-cache paths under `~/Library` and `~/.cache`
+- Static syntax validation passed with `xcrun swiftc -parse` across the touched Swift files.
   - filtered-sheet clear/add-place labels
 - Replaced `ComposeFAB` fixed `.font(.system(size: 22, weight: .bold))` with semantic `.title3.weight(.bold)` plus a scaled 56pt touch frame.
 

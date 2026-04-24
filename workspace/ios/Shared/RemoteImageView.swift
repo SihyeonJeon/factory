@@ -4,6 +4,7 @@ import UIKit
 
 /// Renders a memories-bucket photo from a storage path such as "<gid>/<mid>/<name>.jpg".
 struct RemoteImageView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let storagePath: String?
     var contentMode: ContentMode = .fill
     var uploader: any PhotoUploading = PhotoUploader()
@@ -30,7 +31,7 @@ struct RemoteImageView: View {
                 }
             }
         }
-        .animation(.easeInOut(duration: 0.18), value: loader.image)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: loader.image)
         .task(id: RemoteImageRequestKey(path: storagePath, reloadToken: reloadToken)) {
             await loader.load(
                 storagePath: storagePath,
@@ -237,6 +238,7 @@ private final class RemoteImageCacheEntry: NSObject {
 }
 
 private struct RemoteImagePlaceholderCard: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let isLoading: Bool
     let errorMessage: String?
     let retry: (() -> Void)?
@@ -307,7 +309,7 @@ private struct RemoteImagePlaceholderCard: View {
                         .frame(width: proxy.size.width * 0.55)
                         .offset(x: shimmerActive ? proxy.size.width * 0.78 : -proxy.size.width * 0.78)
                         .animation(
-                            .linear(duration: 1.1).repeatForever(autoreverses: false),
+                            reduceMotion ? nil : .linear(duration: 1.1).repeatForever(autoreverses: false),
                             value: shimmerActive
                         )
                 }

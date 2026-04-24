@@ -19,7 +19,7 @@ final class UnfadingThemeTests: XCTestCase {
             (UnfadingTheme.Color.secondary, 0x8F, 0xB7, 0xA8),
             (UnfadingTheme.Color.secondaryLight, 0xCD, 0xE2, 0xDA),
             (UnfadingTheme.Color.textPrimary, 0x40, 0x38, 0x33),
-            (UnfadingTheme.Color.textSecondary, 0x8C, 0x82, 0x7A),
+            (UnfadingTheme.Color.textSecondary, 0x76, 0x6D, 0x66),
             (UnfadingTheme.Color.textTertiary, 0xB8, 0xAE, 0xA5),
             (UnfadingTheme.Color.divider, 0xEB, 0xE1, 0xD4),
             (UnfadingTheme.Color.chipBg, 0xF5, 0xEE, 0xE4),

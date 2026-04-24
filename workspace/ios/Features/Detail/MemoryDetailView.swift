@@ -3,7 +3,9 @@ import UIKit
 
 // vibe-limit-checked: 8 a11y/44pt, 7 Korean detail copy, 11 DBMemory event scoped carousel
 struct MemoryDetailView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
+    @Namespace private var detailRotorNamespace
 
     let memory: DBMemory
     let eventMemories: [DBMemory]
@@ -89,6 +91,23 @@ struct MemoryDetailView: View {
             }
         }
         .accessibilityIdentifier("memory-detail-screen")
+        .accessibilityRotor("이벤트 추억") {
+            ForEach(detailRotorEntries) { entry in
+                AccessibilityRotorEntry(LocalizedStringKey(entry.label), id: entry.id, in: detailRotorNamespace) {
+                    currentIndex = entry.index
+                }
+            }
+        }
+        .accessibilityAction(named: "이전 이벤트") {
+            moveEvent(delta: -1)
+        }
+        .accessibilityAction(named: "다음 이벤트") {
+            moveEvent(delta: 1)
+        }
+        .unfadingUITestRotorMarkers(
+            detailRotorEntries.map { UnfadingRotorMarkerEntry(id: $0.id.uuidString, label: $0.label) },
+            prefix: "rotor-memory-detail"
+        )
     }
 
     private var carousel: some View {
@@ -124,7 +143,7 @@ struct MemoryDetailView: View {
                 Capsule()
                     .fill(index == photoPageIndex ? UnfadingTheme.Color.primary : UnfadingTheme.Color.divider)
                     .frame(width: index == photoPageIndex ? 24 : 8, height: 8)
-                    .animation(.easeInOut(duration: 0.18), value: photoPageIndex)
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: photoPageIndex)
             }
         }
         .frame(maxWidth: .infinity)
@@ -158,6 +177,7 @@ struct MemoryDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .unfadingCardBackground(fill: UnfadingTheme.Color.card)
         .accessibilityIdentifier("memory-detail-meta")
+        .unfadingSemanticGroup()
     }
 
     private var noteBlock: some View {
@@ -170,6 +190,7 @@ struct MemoryDetailView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .unfadingCardBackground(fill: UnfadingTheme.Color.card)
             .accessibilityIdentifier("memory-detail-note")
+            .unfadingSemanticGroup()
     }
 
     @ViewBuilder
@@ -209,6 +230,7 @@ struct MemoryDetailView: View {
                 currentIndex = next
             }
         }
+        .accessibilityRotorEntry(id: currentMemory.id, in: detailRotorNamespace)
     }
 
     private var participantsSection: some View {
@@ -392,6 +414,25 @@ struct MemoryDetailView: View {
         extraLine = trimmed
         didSubmitExtraLine = true
     }
+
+    private func moveEvent(delta: Int) {
+        let next = MemoryDetailEventScope.boundedIndex(current: currentIndex, delta: delta, count: scopedMemories.count)
+        guard next != currentIndex else { return }
+        currentIndex = next
+        photoPageIndex = 0
+    }
+
+    private var detailRotorEntries: [MemoryDetailRotorEntry] {
+        scopedMemories.enumerated().map { index, memory in
+            MemoryDetailRotorEntry(id: memory.id, index: index, label: memory.title)
+        }
+    }
+}
+
+private struct MemoryDetailRotorEntry: Identifiable {
+    let id: UUID
+    let index: Int
+    let label: String
 }
 
 enum MemoryDetailEventScope {

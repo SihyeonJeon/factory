@@ -36,6 +36,7 @@ struct MemoryMapHomeView: View {
     @State private var currentMapRegion = Self.defaultMapRegion
     @State private var selectedMapItemID: String?
     @State private var reclusterTask: Task<Void, Never>?
+    @Namespace private var mapRotorNamespace
     private let clusterizer = MemoryClusterizer()
 
     init(
@@ -139,6 +140,14 @@ struct MemoryMapHomeView: View {
                 }
                 .frame(width: proxy.size.width, height: proxy.size.height)
             }
+            .accessibilityRotor("지도 추억") {
+                ForEach(mapRotorEntries) { entry in
+                    AccessibilityRotorEntry(LocalizedStringKey(entry.label), id: entry.id, in: mapRotorNamespace) {
+                        focusMapRotorEntry(id: entry.id)
+                    }
+                }
+            }
+            .unfadingUITestRotorMarkers(mapRotorEntries, prefix: "rotor-home-map")
             .toolbar(.hidden, for: .navigationBar)
             .fullScreenCover(isPresented: $showingRewind) {
                 RewindFeedView {
@@ -253,6 +262,7 @@ struct MemoryMapHomeView: View {
                     .accessibilityLabel(UnfadingLocalized.Accessibility.mapPinLabel(title: item.representativeMemory.title))
                     .accessibilityHint(item.isCluster ? "탭하면 이 장소 묶음으로 확대합니다." : UnfadingLocalized.Accessibility.mapPinHint)
                     .accessibilityIdentifier(item.accessibilityIdentifier)
+                    .accessibilityRotorEntry(id: item.accessibilityIdentifier, in: mapRotorNamespace)
                 }
                 .tag(item.selectionID)
             }
@@ -418,7 +428,7 @@ struct MemoryMapHomeView: View {
         if item.isCluster {
             selectedMapItemID = nil
             selection.clearSelection()
-            withAnimation(.easeInOut(duration: 0.26)) {
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.26)) {
                 cameraPosition = .region(item.focusRegion())
             }
         } else {
@@ -478,6 +488,17 @@ struct MemoryMapHomeView: View {
         sheetSnap = .default_
         pendingHomeDeepLinkAction = nil
     }
+
+    private var mapRotorEntries: [UnfadingRotorMarkerEntry] {
+        clusterItems.map { item in
+            UnfadingRotorMarkerEntry(id: item.accessibilityIdentifier, label: item.representativeMemory.title)
+        }
+    }
+
+    private func focusMapRotorEntry(id: String) {
+        guard let item = clusterItems.first(where: { $0.accessibilityIdentifier == id }) else { return }
+        handleAnnotationTap(item)
+    }
 }
 
 private extension MemoryMapHomeView {
@@ -513,13 +534,14 @@ enum MemoryMapHomeLayout {
 }
 
 private struct HomeChromeVisibilityModifier: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let snap: BottomSheetSnap
 
     func body(content: Content) -> some View {
         content
             .opacity(snap == .expanded ? 0 : 1)
             .allowsHitTesting(snap != .expanded)
-            .animation(.easeInOut(duration: 0.22), value: snap)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: snap)
     }
 }
 
@@ -582,7 +604,7 @@ private struct TopChromeSection: View {
                 .stroke(UnfadingTheme.Color.divider, lineWidth: 0.5)
         }
         .shadow(style: UnfadingTheme.Shadow.card)
-        .accessibilityElement(children: .contain)
+        .unfadingSemanticGroup()
         .accessibilityIdentifier("home-top-chrome")
     }
 }
@@ -690,8 +712,8 @@ private struct MapControlsSection: View {
                 action: onResetMapOrientation
             )
         }
-        .animation(reduceMotion ? .easeInOut(duration: 0.25) : .interpolatingSpring(stiffness: 260, damping: 32), value: measuredSheetHeight)
-        .accessibilityElement(children: .contain)
+        .animation(reduceMotion ? nil : .interpolatingSpring(stiffness: 260, damping: 32), value: measuredSheetHeight)
+        .unfadingSemanticGroup()
         .accessibilityIdentifier("home-map-controls")
     }
 }
@@ -720,10 +742,12 @@ private struct MapControlButton: View {
 }
 
 private struct MapControlButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.92 : 1)
-            .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
+            .scaleEffect(reduceMotion ? 1 : (configuration.isPressed ? 0.92 : 1))
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.12), value: configuration.isPressed)
     }
 }
 

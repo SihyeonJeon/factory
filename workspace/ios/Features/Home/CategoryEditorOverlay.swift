@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct CategoryEditorOverlay: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Namespace private var categoryRotorNamespace
     @EnvironmentObject private var categoryStore: CategoryStore
     @Binding var isPresented: Bool
 
@@ -39,8 +41,14 @@ struct CategoryEditorOverlay: View {
                 .frame(width: proxy.size.width, height: proxy.size.height)
                 .zIndex(201)
                 .accessibilityIdentifier("category-editor-overlay")
+                .accessibilityRotor("카테고리 목록") {
+                    ForEach(categoryRotorEntries) { entry in
+                        AccessibilityRotorEntry(LocalizedStringKey(entry.label), id: entry.id, in: categoryRotorNamespace)
+                    }
+                }
+                .unfadingUITestRotorMarkers(categoryRotorEntries, prefix: "rotor-category-editor")
             }
-            .transition(.opacity.combined(with: .scale(scale: 0.98)))
+            .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.98)))
         }
     }
 
@@ -62,6 +70,7 @@ struct CategoryEditorOverlay: View {
         .padding(UnfadingTheme.Spacing.xl)
         .background(UnfadingTheme.Color.sheet, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(style: UnfadingTheme.Shadow.overlay)
+        .unfadingSemanticGroup()
     }
 
     private var header: some View {
@@ -121,6 +130,8 @@ struct CategoryEditorOverlay: View {
                 .frame(minHeight: 44)
                 .padding(.horizontal, UnfadingTheme.Spacing.sm)
                 .background(UnfadingTheme.Color.card, in: RoundedRectangle(cornerRadius: UnfadingTheme.Radius.segment, style: .continuous))
+                .accessibilityRotorEntry(id: category.id, in: categoryRotorNamespace)
+                .unfadingSemanticGroup()
             }
         }
     }
@@ -221,5 +232,11 @@ struct CategoryEditorOverlay: View {
 
     private func close() {
         isPresented = false
+    }
+
+    private var categoryRotorEntries: [UnfadingRotorMarkerEntry] {
+        categoryStore.categories.map { category in
+            UnfadingRotorMarkerEntry(id: category.id, label: category.name)
+        }
     }
 }

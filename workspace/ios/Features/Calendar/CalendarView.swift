@@ -2,6 +2,7 @@ import SwiftUI
 
 // vibe-limit-checked: 8 Korean/Dynamic Type/a11y grouping, 1 screen uses reusable grid/store, 7 runtime-fidelity
 struct CalendarView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @StateObject private var store = MemoryCalendarStore()
     @StateObject private var rsvpStore = RSVPStore(rsvps: [
         UUID(uuidString: "11111111-1111-4111-8111-111111111117")!: .going,
@@ -17,6 +18,7 @@ struct CalendarView: View {
     @State private var toastMessage: String?
     @State private var highlightedEventID: UUID?
     @State private var eventDeepLinkTask: Task<Void, Never>?
+    @Namespace private var calendarRotorNamespace
 
     private let broadcaster = NotificationBroadcaster()
 
@@ -66,10 +68,16 @@ struct CalendarView: View {
                     UnfadingToast(message: toastMessage)
                         .padding(.horizontal, UnfadingTheme.Spacing.lg)
                         .padding(.bottom, UnfadingTheme.Spacing.tabBarClear)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
                 }
             }
             .navigationTitle(UnfadingLocalized.Calendar.navTitle)
+            .accessibilityRotor("캘린더 이벤트") {
+                ForEach(calendarRotorEntries) { entry in
+                    AccessibilityRotorEntry(LocalizedStringKey(entry.label), id: entry.id, in: calendarRotorNamespace)
+                }
+            }
+            .unfadingUITestRotorMarkers(calendarRotorEntries, prefix: "rotor-calendar")
             .task(id: groupStore.activeGroupId) {
                 store.bind(memories: memoryStore.memories)
                 if let gid = groupStore.activeGroupId {
@@ -250,6 +258,7 @@ struct CalendarView: View {
                     isHighlighted: highlightedEventID == event.id
                 )
                 .accessibilityIdentifier("calendar-plan-row-\(event.id.uuidString)")
+                .accessibilityRotorEntry(id: "plan-\(event.id.uuidString)", in: calendarRotorNamespace)
             }
             ForEach(memories) { memory in
                 NavigationLink {
@@ -269,10 +278,12 @@ struct CalendarView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("calendar-memory-row-\(memory.id.uuidString)")
+                .accessibilityRotorEntry(id: "memory-\(memory.id.uuidString)", in: calendarRotorNamespace)
             }
         }
         .padding(UnfadingTheme.Spacing.md)
         .unfadingCardBackground(fill: UnfadingTheme.Color.sheet, radius: UnfadingTheme.Radius.button, shadow: false)
+        .unfadingListContainer()
     }
 
     private func calendarEventRow(systemImage: String, tint: Color, title: String, subtitle: String, isHighlighted: Bool = false) -> some View {
@@ -374,7 +385,7 @@ struct CalendarView: View {
     }
 
     private func sendReminder(for event: DBEvent) {
-        withAnimation(.easeInOut(duration: 0.18)) {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.18)) {
             toastMessage = UnfadingLocalized.Calendar.broadcastToast
         }
         Task {
@@ -383,7 +394,7 @@ struct CalendarView: View {
             }
             try? await Task.sleep(nanoseconds: 2_000_000_000)
             await MainActor.run {
-                withAnimation(.easeInOut(duration: 0.18)) {
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.18)) {
                     toastMessage = nil
                 }
             }
@@ -403,6 +414,17 @@ struct CalendarView: View {
         calendar.locale = Locale(identifier: "ko_KR")
         calendar.timeZone = KSTDateFormatter.timeZone
         return store.hasMemory(on: calendar.dateComponents([.year, .month, .day], from: date))
+    }
+
+    private var calendarRotorEntries: [UnfadingRotorMarkerEntry] {
+        guard let selectedDate = store.selectedDate else { return [] }
+        let planEntries = plans(on: selectedDate).map {
+            UnfadingRotorMarkerEntry(id: "plan-\($0.id.uuidString)", label: $0.title)
+        }
+        let memoryEntries = (store.isFutureDate(selectedDate) ? [] : store.memoriesForSelectedDate()).map {
+            UnfadingRotorMarkerEntry(id: "memory-\($0.id.uuidString)", label: $0.title)
+        }
+        return planEntries + memoryEntries
     }
 }
 

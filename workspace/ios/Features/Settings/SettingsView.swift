@@ -2,6 +2,7 @@ import SwiftUI
 
 // vibe-limit-checked: 8 a11y hints/44pt rows, 5 @MainActor settings state objects, 7 Korean UI, 14 reuses preference/store models
 struct SettingsView: View {
+    @Namespace private var settingsRotorNamespace
     @EnvironmentObject private var authStore: AuthStore
     @EnvironmentObject private var memoryStore: MemoryStore
     @EnvironmentObject private var prefs: UserPreferences
@@ -21,6 +22,12 @@ struct SettingsView: View {
             }
             .listStyle(.insetGrouped)
             .navigationTitle(UnfadingLocalized.Settings.navTitle)
+            .accessibilityRotor("설정 바로가기") {
+                ForEach(settingsRotorEntries) { entry in
+                    AccessibilityRotorEntry(LocalizedStringKey(entry.label), id: entry.id, in: settingsRotorNamespace)
+                }
+            }
+            .unfadingUITestRotorMarkers(settingsRotorEntries, prefix: "rotor-settings")
             .sheet(isPresented: $showingPremium) {
                 PremiumPaywallView()
                     .environmentObject(subscriptionStore)
@@ -35,6 +42,7 @@ struct SettingsView: View {
                 .submitLabel(.done)
                 .frame(minHeight: 44)
                 .accessibilityLabel(UnfadingLocalized.Settings.displayNamePlaceholder)
+                .accessibilityRotorEntry(id: "profile", in: settingsRotorNamespace)
 
             Text(accountTitle)
                 .font(UnfadingTheme.Font.subheadline())
@@ -65,6 +73,7 @@ struct SettingsView: View {
             }
             .accessibilityLabel(UnfadingLocalized.Auth.signOut)
             .accessibilityHint(UnfadingLocalized.Auth.signOutConfirm)
+            .accessibilityRotorEntry(id: "signout", in: settingsRotorNamespace)
         }
     }
 
@@ -107,6 +116,7 @@ struct SettingsView: View {
             }
             .accessibilityIdentifier("settings-groups-row")
             .accessibilityHint(UnfadingLocalized.Settings.groupsRowHint)
+            .accessibilityRotorEntry(id: "groups", in: settingsRotorNamespace)
         }
     }
 
@@ -132,6 +142,7 @@ struct SettingsView: View {
                         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                 }
                 .accessibilityHint(UnfadingLocalized.Premium.manageHint)
+                .accessibilityRotorEntry(id: "premium", in: settingsRotorNamespace)
             } else {
                 Button {
                     showingPremium = true
@@ -141,6 +152,7 @@ struct SettingsView: View {
                         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                 }
                 .accessibilityHint(UnfadingLocalized.Accessibility.premiumExploreHint)
+                .accessibilityRotorEntry(id: "premium", in: settingsRotorNamespace)
             }
         }
     }
@@ -151,7 +163,18 @@ struct SettingsView: View {
                 .frame(minHeight: 44)
             Text(UnfadingLocalized.Settings.licensesRow)
                 .frame(minHeight: 44)
+                .accessibilityRotorEntry(id: "info", in: settingsRotorNamespace)
         }
+    }
+
+    private var settingsRotorEntries: [UnfadingRotorMarkerEntry] {
+        [
+            UnfadingRotorMarkerEntry(id: "profile", label: UnfadingLocalized.Settings.profileSection),
+            UnfadingRotorMarkerEntry(id: "signout", label: UnfadingLocalized.Auth.signOut),
+            UnfadingRotorMarkerEntry(id: "groups", label: UnfadingLocalized.Settings.groupsRow),
+            UnfadingRotorMarkerEntry(id: "premium", label: UnfadingLocalized.Settings.premiumSection),
+            UnfadingRotorMarkerEntry(id: "info", label: UnfadingLocalized.Settings.infoSection)
+        ]
     }
 }
 

@@ -45,6 +45,7 @@ enum ShellTab: String, CaseIterable {
 }
 
 struct UnfadingTabShell: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @EnvironmentObject private var deepLinkStore: DeepLinkStore
     @EnvironmentObject private var memoryStore: MemoryStore
     @EnvironmentObject private var offlineQueue: OfflineQueue
@@ -94,7 +95,7 @@ struct UnfadingTabShell: View {
                     }
                     .opacity(sheetSnap == .expanded ? 0 : 1)
                     .allowsHitTesting(sheetSnap != .expanded)
-                    .animation(.easeInOut(duration: 0.22), value: sheetSnap)
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: sheetSnap)
                     .position(
                         x: proxy.size.width - MemoryMapHomeLayout.fabRight - 28,
                         y: sheetTop - MemoryMapHomeLayout.fabBottomGap - 28
@@ -125,7 +126,7 @@ struct UnfadingTabShell: View {
                         .accessibilityLabel(UnfadingLocalized.Home.incomingMemoryToast)
                         .accessibilityHint(UnfadingLocalized.Accessibility.mapTabHint)
                         .accessibilityIdentifier("incoming-memory-toast")
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
                     }
                 }
                 .padding(.horizontal, UnfadingTheme.Spacing.lg)

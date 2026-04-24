@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct MemoryPinMarker: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let memory: DBMemory
     var isSelected: Bool = false
     var isDimmed: Bool = false
@@ -30,8 +31,8 @@ struct MemoryPinMarker: View {
         }
         .scaleEffect(isSelected ? 1.15 : 1)
         .opacity(isDimmed ? 0.4 : 1)
-        .animation(.easeInOut(duration: 0.22), value: isSelected)
-        .animation(.easeInOut(duration: 0.22), value: isDimmed)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: isSelected)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: isDimmed)
     }
 }
 

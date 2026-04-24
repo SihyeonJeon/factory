@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ClusterMarker: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let cluster: ClusterItem
     var isSelected: Bool = false
     var isDimmed: Bool = false
@@ -38,8 +39,8 @@ struct ClusterMarker: View {
         .frame(minWidth: 64, minHeight: 74)
         .scaleEffect(isSelected ? 1.15 : 1)
         .opacity(isDimmed ? 0.4 : 1)
-        .animation(.easeInOut(duration: 0.22), value: isSelected)
-        .animation(.easeInOut(duration: 0.22), value: isDimmed)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: isSelected)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: isDimmed)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(UnfadingLocalized.Home.clusterMarkerLabel(
             place: MemoryMapPinStyle.shortLabel(for: cluster.representativeMemory),

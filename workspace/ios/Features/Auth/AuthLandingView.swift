@@ -18,6 +18,7 @@ struct AuthLandingView: View {
 
     @EnvironmentObject private var authStore: AuthStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Namespace private var authRotorNamespace
 
     @State private var mode: Mode = .signIn
     @State private var email = ""
@@ -47,6 +48,12 @@ struct AuthLandingView: View {
                 ResetPasswordSheet(initialEmail: email)
                     .environmentObject(authStore)
             }
+            .accessibilityRotor("인증 동작") {
+                ForEach(authRotorEntries) { entry in
+                    AccessibilityRotorEntry(LocalizedStringKey(entry.label), id: entry.id, in: authRotorNamespace)
+                }
+            }
+            .unfadingUITestRotorMarkers(authRotorEntries, prefix: "rotor-auth")
         }
     }
 
@@ -101,6 +108,7 @@ struct AuthLandingView: View {
                 .accessibilityIdentifier("auth-apple-sign-in-button")
                 .accessibilityLabel(UnfadingLocalized.Auth.appleSignIn)
                 .accessibilityHint(UnfadingLocalized.Auth.appleSignInHint)
+                .accessibilityRotorEntry(id: "apple", in: authRotorNamespace)
             }
         }
     }
@@ -163,6 +171,7 @@ struct AuthLandingView: View {
             .accessibilityIdentifier("auth-primary-button")
             .accessibilityLabel(mode == .signIn ? UnfadingLocalized.Auth.signInPrimary : UnfadingLocalized.Auth.signUpPrimary)
             .accessibilityHint(UnfadingLocalized.Auth.primaryHint)
+            .accessibilityRotorEntry(id: "primary", in: authRotorNamespace)
 
             Button {
                 isShowingResetSheet = true
@@ -174,6 +183,7 @@ struct AuthLandingView: View {
             }
             .accessibilityLabel(UnfadingLocalized.Auth.forgotPassword)
             .accessibilityHint(UnfadingLocalized.Auth.forgotPasswordHint)
+            .accessibilityRotorEntry(id: "reset", in: authRotorNamespace)
         }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: errorMessage)
     }
@@ -236,6 +246,17 @@ struct AuthLandingView: View {
             return UnfadingLocalized.Auth.invalidCredentials
         }
         return UnfadingLocalized.Auth.networkError
+    }
+
+    private var authRotorEntries: [UnfadingRotorMarkerEntry] {
+        [
+            UnfadingRotorMarkerEntry(id: "apple", label: UnfadingLocalized.Auth.appleSignIn),
+            UnfadingRotorMarkerEntry(
+                id: "primary",
+                label: mode == .signIn ? UnfadingLocalized.Auth.signInPrimary : UnfadingLocalized.Auth.signUpPrimary
+            ),
+            UnfadingRotorMarkerEntry(id: "reset", label: UnfadingLocalized.Auth.forgotPassword)
+        ]
     }
 }
 
