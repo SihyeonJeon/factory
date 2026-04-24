@@ -202,6 +202,7 @@ private struct StubQueueEventRepository: EventRepository {
         DBEvent(id: UUID(), groupId: groupId, title: title, startDate: startDate, endDate: endDate, isMultiDay: endDate != nil, createdAt: nil, reminderAt: reminderAt)
     }
     func findEventAt(groupId: UUID, timestamp: Date) async throws -> DBEvent? { nil }
+    func fetchEvent(groupId: UUID, eventId: UUID) async throws -> DBEvent? { nil }
 }
 
 private actor InMemoryMemoryRepository: MemoryRepository {

@@ -12,7 +12,7 @@ struct MemoryMapApp: App {
     @State private var memoryRealtimeTask: Task<Void, Never>?
     @State private var bootstrappedPreferencesUserId: UUID?
     @State private var didRequestLocationOnLaunch = false
-    @State private var composerLaunchRoute: ComposerLaunchRoute?
+    @StateObject private var deepLinkStore = DeepLinkStore()
 
     private let evidenceMode: MemoryComposerEvidenceMode = {
         guard
@@ -97,14 +97,14 @@ struct MemoryMapApp: App {
                         } else {
                             RootTabView(
                                 evidenceMode: evidenceMode,
-                                initialSheetSnap: Self.initialSheetSnap(),
-                                composerLaunchRoute: $composerLaunchRoute
+                                initialSheetSnap: Self.initialSheetSnap()
                             )
                                 .environmentObject(authStore)
                                 .environmentObject(prefs)
                                 .environmentObject(groupStore)
                                 .environmentObject(offlineQueue)
                                 .environmentObject(memoryStore)
+                                .environmentObject(deepLinkStore)
                         }
                     } else {
                         OnboardingView {
@@ -163,8 +163,7 @@ struct MemoryMapApp: App {
                 configureMemorySync(for: activeGroupId)
             }
             .onOpenURL { url in
-                guard let route = ComposerLaunchRoute.from(url: url) else { return }
-                composerLaunchRoute = route
+                deepLinkStore.pendingDeepLink = DeepLinkRouter.parse(url)
             }
         }
     }

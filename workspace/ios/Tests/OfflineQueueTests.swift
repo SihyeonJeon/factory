@@ -130,6 +130,7 @@ private actor QueueEventRepository: EventRepository {
     }
 
     func findEventAt(groupId: UUID, timestamp: Date) async throws -> DBEvent? { nil }
+    func fetchEvent(groupId: UUID, eventId: UUID) async throws -> DBEvent? { nil }
 
     func setShouldFail(_ value: Bool) {
         shouldFail = value

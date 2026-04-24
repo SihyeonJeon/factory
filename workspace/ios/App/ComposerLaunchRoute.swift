@@ -19,13 +19,12 @@ enum ComposerLaunchPhotoReference: Equatable {
 struct ComposerLaunchRoute: Equatable {
     let photoReference: ComposerLaunchPhotoReference?
 
-    static func from(url: URL) -> ComposerLaunchRoute? {
-        guard url.scheme?.lowercased() == "unfading", url.host?.lowercased() == "composer" else {
-            return nil
-        }
+    init(preSelectedPhotoID: String?) {
+        self.photoReference = preSelectedPhotoID.flatMap(ComposerLaunchPhotoReference.init(rawValue:))
+    }
 
-        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-        let photoValue = components?.queryItems?.first(where: { $0.name == "photo" })?.value
-        return ComposerLaunchRoute(photoReference: photoValue.flatMap(ComposerLaunchPhotoReference.init(rawValue:)))
+    static func from(url: URL) -> ComposerLaunchRoute? {
+        guard case let .composer(preSelectedPhotoID) = DeepLinkRouter.parse(url) else { return nil }
+        return ComposerLaunchRoute(preSelectedPhotoID: preSelectedPhotoID)
     }
 }

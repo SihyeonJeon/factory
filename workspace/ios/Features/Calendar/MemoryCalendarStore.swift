@@ -60,6 +60,13 @@ final class MemoryCalendarStore: ObservableObject {
         applyUITestStubIfNeeded()
     }
 
+    func setDisplayedMonth(containing date: Date) {
+        displayedMonth = calendar.startOfMonth(for: date)
+        selectedDate = nil
+        refreshMemoryDates()
+        applyUITestStubIfNeeded()
+    }
+
     func bind(memories: [DBMemory]) {
         self.memories = memories
         refreshMemoryDates()
@@ -141,6 +148,11 @@ final class MemoryCalendarStore: ObservableObject {
         let (e, x) = await (events, expense)
         self.plannedEvents = e
         self.monthlyExpense = x
+    }
+
+    func fetchEvent(groupId: UUID, eventId: UUID) async -> DBEvent? {
+        guard let repo = eventRepo else { return nil }
+        return try? await repo.fetchEvent(groupId: groupId, eventId: eventId)
     }
 
     /// 주어진 날짜가 KST 기준 미래인지 (오늘 자정 이후).

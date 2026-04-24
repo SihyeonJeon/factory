@@ -20,6 +20,8 @@ struct MemoryMapHomeView: View {
     private let onSwitchGroup: () -> Void
     private let onEditCategories: () -> Void
     @Binding private var autoSelectMemoryId: UUID?
+    @Binding private var pendingMemoryDetailId: UUID?
+    @Binding private var pendingHomeDeepLinkAction: HomeDeepLinkAction?
     @Binding private var sheetSnap: BottomSheetSnap
     @StateObject private var locationPermissionStore = LocationPermissionStore()
     @StateObject private var selection = MemorySelectionState()
@@ -39,6 +41,8 @@ struct MemoryMapHomeView: View {
     init(
         sheetSnap: Binding<BottomSheetSnap> = .constant(.default_),
         autoSelectMemoryId: Binding<UUID?> = .constant(nil),
+        pendingMemoryDetailId: Binding<UUID?> = .constant(nil),
+        pendingHomeDeepLinkAction: Binding<HomeDeepLinkAction?> = .constant(nil),
         evidenceMode: MemoryComposerEvidenceMode = .none,
         groupSwitchResetToken: Int = 0,
         onSwitchGroup: @escaping () -> Void = {},
@@ -46,6 +50,8 @@ struct MemoryMapHomeView: View {
     ) {
         self._sheetSnap = sheetSnap
         self._autoSelectMemoryId = autoSelectMemoryId
+        self._pendingMemoryDetailId = pendingMemoryDetailId
+        self._pendingHomeDeepLinkAction = pendingHomeDeepLinkAction
         self.evidenceMode = evidenceMode
         self.groupSwitchResetToken = groupSwitchResetToken
         self.onSwitchGroup = onSwitchGroup
@@ -194,9 +200,16 @@ struct MemoryMapHomeView: View {
             .onChange(of: memoryStore.memories) { _, _ in
                 scheduleClusterRefresh(for: currentMapRegion)
                 applyAutoSelectionIfNeeded()
+                applyPendingMemoryDetailIfNeeded()
             }
             .onChange(of: activeCategoryId) { _, _ in
                 scheduleClusterRefresh(for: currentMapRegion)
+            }
+            .onChange(of: pendingMemoryDetailId) { _, _ in
+                applyPendingMemoryDetailIfNeeded()
+            }
+            .onChange(of: pendingHomeDeepLinkAction) { _, _ in
+                applyPendingHomeDeepLinkActionIfNeeded()
             }
             .onChange(of: selectedMapItemID) { _, newValue in
                 syncSelectionFromMapSelection(newValue)
@@ -204,6 +217,8 @@ struct MemoryMapHomeView: View {
             .onAppear {
                 scheduleClusterRefresh(for: currentMapRegion, debounced: false)
                 applyAutoSelectionIfNeeded()
+                applyPendingMemoryDetailIfNeeded()
+                applyPendingHomeDeepLinkActionIfNeeded()
             }
             .onDisappear {
                 reclusterTask?.cancel()
@@ -441,6 +456,27 @@ struct MemoryMapHomeView: View {
         activeSheetTab = .curation
         sheetSnap = .default_
         self.autoSelectMemoryId = nil
+    }
+
+    private func applyPendingMemoryDetailIfNeeded() {
+        guard let pendingMemoryDetailId,
+              let memory = memoryStore.memories.first(where: { $0.id == pendingMemoryDetailId }) else { return }
+
+        if selection.selectedPinID != pendingMemoryDetailId {
+            selection.select(pinID: pendingMemoryDetailId)
+        }
+        selectedMapItemID = clusterItems.first(where: { $0.contains(memoryID: pendingMemoryDetailId) })?.selectionID
+        activeSheetTab = .curation
+        sheetSnap = .default_
+        detailMemory = memory
+        self.pendingMemoryDetailId = nil
+    }
+
+    private func applyPendingHomeDeepLinkActionIfNeeded() {
+        guard pendingHomeDeepLinkAction == .rewind else { return }
+        showingRewind = true
+        sheetSnap = .default_
+        pendingHomeDeepLinkAction = nil
     }
 }
 

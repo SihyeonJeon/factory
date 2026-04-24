@@ -13,6 +13,7 @@ protocol EventRepository: Sendable {
         reminderAt: Date?
     ) async throws -> DBEvent
     func findEventAt(groupId: UUID, timestamp: Date) async throws -> DBEvent?
+    func fetchEvent(groupId: UUID, eventId: UUID) async throws -> DBEvent?
 }
 
 struct SupabaseEventRepository: EventRepository {
@@ -86,5 +87,16 @@ struct SupabaseEventRepository: EventRepository {
         .execute()
         .value
         return row
+    }
+
+    func fetchEvent(groupId: UUID, eventId: UUID) async throws -> DBEvent? {
+        let rows: [DBEvent] = try await db.from("events")
+            .select()
+            .eq("group_id", value: groupId.uuidString)
+            .eq("id", value: eventId.uuidString)
+            .limit(1)
+            .execute()
+            .value
+        return rows.first
     }
 }

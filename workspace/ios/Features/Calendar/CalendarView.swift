@@ -11,11 +11,18 @@ struct CalendarView: View {
     ])
     @EnvironmentObject private var groupStore: GroupStore
     @EnvironmentObject private var memoryStore: MemoryStore
+    @Binding private var pendingEventID: UUID?
     @State private var planSheetDate: Date?
     @State private var isShowingMonthPicker = false
     @State private var toastMessage: String?
+    @State private var highlightedEventID: UUID?
+    @State private var eventDeepLinkTask: Task<Void, Never>?
 
     private let broadcaster = NotificationBroadcaster()
+
+    init(pendingEventID: Binding<UUID?> = .constant(nil)) {
+        self._pendingEventID = pendingEventID
+    }
 
     var body: some View {
         NavigationStack {
@@ -71,14 +78,25 @@ struct CalendarView: View {
             }
             .onAppear {
                 store.bind(memories: memoryStore.memories)
+                consumePendingEventLinkIfNeeded()
             }
             .onChange(of: memoryStore.memories) { _, memories in
                 store.bind(memories: memories)
+            }
+            .onChange(of: groupStore.activeGroupId) { _, _ in
+                consumePendingEventLinkIfNeeded()
+            }
+            .onChange(of: pendingEventID) { _, newValue in
+                guard newValue != nil else { return }
+                consumePendingEventLinkIfNeeded()
             }
             .task(id: store.displayedMonth) {
                 if let gid = groupStore.activeGroupId {
                     await store.loadMonth(for: gid)
                 }
+            }
+            .onDisappear {
+                eventDeepLinkTask?.cancel()
             }
             .sheet(item: Binding(
                 get: { planSheetDate.map(PlanSheetItem.init) },
@@ -228,8 +246,10 @@ struct CalendarView: View {
                     systemImage: "calendar.badge.plus",
                     tint: UnfadingTheme.Color.lavender,
                     title: event.title,
-                    subtitle: KSTDateFormatter.dateTime.string(from: event.startDate)
+                    subtitle: KSTDateFormatter.dateTime.string(from: event.startDate),
+                    isHighlighted: highlightedEventID == event.id
                 )
+                .accessibilityIdentifier("calendar-plan-row-\(event.id.uuidString)")
             }
             ForEach(memories) { memory in
                 NavigationLink {
@@ -255,7 +275,7 @@ struct CalendarView: View {
         .unfadingCardBackground(fill: UnfadingTheme.Color.sheet, radius: UnfadingTheme.Radius.button, shadow: false)
     }
 
-    private func calendarEventRow(systemImage: String, tint: Color, title: String, subtitle: String) -> some View {
+    private func calendarEventRow(systemImage: String, tint: Color, title: String, subtitle: String, isHighlighted: Bool = false) -> some View {
         HStack(spacing: UnfadingTheme.Spacing.md) {
             Image(systemName: systemImage)
                 .foregroundStyle(tint)
@@ -271,7 +291,39 @@ struct CalendarView: View {
             }
             Spacer(minLength: 0)
         }
+        .padding(UnfadingTheme.Spacing.sm)
+        .background(
+            RoundedRectangle(cornerRadius: UnfadingTheme.Radius.compact, style: .continuous)
+                .fill(isHighlighted ? UnfadingTheme.Color.secondaryLight.opacity(0.55) : Color.clear)
+        )
+        .overlay {
+            if isHighlighted {
+                RoundedRectangle(cornerRadius: UnfadingTheme.Radius.compact, style: .continuous)
+                    .stroke(UnfadingTheme.Color.secondary, lineWidth: 1.5)
+            }
+        }
         .accessibilityElement(children: .combine)
+    }
+
+    private func consumePendingEventLinkIfNeeded() {
+        guard let pendingEventID, let groupId = groupStore.activeGroupId else { return }
+
+        eventDeepLinkTask?.cancel()
+        eventDeepLinkTask = Task { @MainActor in
+            let event = await store.fetchEvent(groupId: groupId, eventId: pendingEventID)
+            guard Task.isCancelled == false else { return }
+
+            self.pendingEventID = nil
+            guard let event else {
+                highlightedEventID = nil
+                return
+            }
+
+            store.setDisplayedMonth(containing: event.startDate)
+            await store.loadMonth(for: groupId)
+            store.select(KSTDateFormatter.truncateToDayKST(event.startDate))
+            highlightedEventID = event.id
+        }
     }
 
     private func planCard(for event: DBEvent, on date: Date) -> some View {

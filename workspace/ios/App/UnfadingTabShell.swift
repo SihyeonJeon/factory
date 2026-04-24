@@ -1,5 +1,9 @@
 import SwiftUI
 
+enum HomeDeepLinkAction: Equatable {
+    case rewind
+}
+
 enum ShellTab: String, CaseIterable {
     case map
     case calendar
@@ -41,11 +45,11 @@ enum ShellTab: String, CaseIterable {
 }
 
 struct UnfadingTabShell: View {
+    @EnvironmentObject private var deepLinkStore: DeepLinkStore
     @EnvironmentObject private var memoryStore: MemoryStore
     @EnvironmentObject private var offlineQueue: OfflineQueue
 
     private let evidenceMode: MemoryComposerEvidenceMode
-    @Binding private var composerLaunchRoute: ComposerLaunchRoute?
 
     @State private var selectedTab: ShellTab = .map
     @State private var sheetSnap: BottomSheetSnap
@@ -56,16 +60,17 @@ struct UnfadingTabShell: View {
     @State private var didPresentEvidenceComposer = false
     @State private var groupSwitchResetToken = 0
     @State private var pendingAutoselectMemoryId: UUID?
+    @State private var pendingMemoryDetailId: UUID?
+    @State private var pendingCalendarEventId: UUID?
+    @State private var pendingHomeDeepLinkAction: HomeDeepLinkAction?
     @State private var pendingComposerLaunchRoute: ComposerLaunchRoute?
     @StateObject private var categoryStore: CategoryStore
 
     init(
         evidenceMode: MemoryComposerEvidenceMode = .none,
-        initialSheetSnap: BottomSheetSnap = Self.initialSheetSnap(),
-        composerLaunchRoute: Binding<ComposerLaunchRoute?> = .constant(nil)
+        initialSheetSnap: BottomSheetSnap = Self.initialSheetSnap()
     ) {
         self.evidenceMode = evidenceMode
-        self._composerLaunchRoute = composerLaunchRoute
         self._sheetSnap = State(initialValue: initialSheetSnap)
         self._categoryStore = StateObject(wrappedValue: CategoryStore.shared)
     }
@@ -84,6 +89,7 @@ struct UnfadingTabShell: View {
 
                 if selectedTab == .map {
                     ComposeFAB {
+                        pendingComposerLaunchRoute = nil
                         isPresentingComposer = true
                     }
                     .opacity(sheetSnap == .expanded ? 0 : 1)
@@ -162,14 +168,14 @@ struct UnfadingTabShell: View {
             if isShowing { showingGroupPicker = false }
         }
         .onAppear {
-            consumeComposerLaunchRouteIfNeeded()
+            consumePendingDeepLinkIfNeeded()
             guard evidenceMode != .none, didPresentEvidenceComposer == false, isPresentingComposer == false else { return }
             didPresentEvidenceComposer = true
             isPresentingComposer = true
         }
-        .onChange(of: composerLaunchRoute) { _, route in
-            guard route != nil else { return }
-            consumeComposerLaunchRouteIfNeeded()
+        .onChange(of: deepLinkStore.pendingDeepLink) { _, target in
+            guard target != nil else { return }
+            consumePendingDeepLinkIfNeeded()
         }
     }
 
@@ -180,13 +186,15 @@ struct UnfadingTabShell: View {
             MemoryMapHomeView(
                 sheetSnap: $sheetSnap,
                 autoSelectMemoryId: $pendingAutoselectMemoryId,
+                pendingMemoryDetailId: $pendingMemoryDetailId,
+                pendingHomeDeepLinkAction: $pendingHomeDeepLinkAction,
                 evidenceMode: evidenceMode,
                 groupSwitchResetToken: groupSwitchResetToken,
                 onSwitchGroup: { showingGroupPicker = true },
                 onEditCategories: { showingCategoryEditor = true }
             )
         case .calendar:
-            CalendarView()
+            CalendarView(pendingEventID: $pendingCalendarEventId)
         case .settings:
             SettingsView()
         }
@@ -239,12 +247,27 @@ struct UnfadingTabShell: View {
             .accessibilityIdentifier("offline-queue-banner")
     }
 
-    private func consumeComposerLaunchRouteIfNeeded() {
-        guard let route = composerLaunchRoute else { return }
-        selectedTab = .map
-        pendingComposerLaunchRoute = route
-        isPresentingComposer = true
-        composerLaunchRoute = nil
+    private func consumePendingDeepLinkIfNeeded() {
+        guard let deepLink = deepLinkStore.pendingDeepLink else { return }
+
+        switch deepLink {
+        case let .memory(memoryID):
+            selectedTab = .map
+            pendingAutoselectMemoryId = memoryID
+            pendingMemoryDetailId = memoryID
+        case let .event(eventID):
+            selectedTab = .calendar
+            pendingCalendarEventId = eventID
+        case let .composer(preSelectedPhotoID):
+            selectedTab = .map
+            pendingComposerLaunchRoute = ComposerLaunchRoute(preSelectedPhotoID: preSelectedPhotoID)
+            isPresentingComposer = true
+        case .rewind:
+            selectedTab = .map
+            pendingHomeDeepLinkAction = .rewind
+        }
+
+        deepLinkStore.pendingDeepLink = nil
     }
 }
 

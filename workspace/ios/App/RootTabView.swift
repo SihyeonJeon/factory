@@ -6,23 +6,19 @@ import SwiftUI
 struct RootTabView: View {
     private let evidenceMode: MemoryComposerEvidenceMode
     private let initialSheetSnap: BottomSheetSnap
-    @Binding private var composerLaunchRoute: ComposerLaunchRoute?
 
     init(
         evidenceMode: MemoryComposerEvidenceMode = .none,
-        initialSheetSnap: BottomSheetSnap = .default_,
-        composerLaunchRoute: Binding<ComposerLaunchRoute?> = .constant(nil)
+        initialSheetSnap: BottomSheetSnap = .default_
     ) {
         self.evidenceMode = evidenceMode
         self.initialSheetSnap = initialSheetSnap
-        self._composerLaunchRoute = composerLaunchRoute
     }
 
     var body: some View {
         UnfadingTabShell(
             evidenceMode: evidenceMode,
-            initialSheetSnap: initialSheetSnap,
-            composerLaunchRoute: $composerLaunchRoute
+            initialSheetSnap: initialSheetSnap
         )
     }
 }
@@ -30,6 +26,7 @@ struct RootTabView: View {
 #Preview {
     RootTabView()
         .environmentObject(AuthStore(preview: .signedIn(userId: UUID(), email: "preview@example.com")))
+        .environmentObject(DeepLinkStore())
         .environmentObject(UserPreferences())
         .environmentObject(GroupStore.preview())
         .environmentObject(OfflineQueue())

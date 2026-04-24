@@ -44,6 +44,11 @@ targets:
         UNUserNotificationCenterUsageDescription: "Send rewind reminders and group updates."
         SupabaseURL: "https://umkbjxycdgfhgwcnfbmo.supabase.co"
         SupabasePublishableKey: "sb_publishable_eA_S-ojxFJwFV53VN6k4Nw_KfcGTZm3"
+        CFBundleURLTypes:
+          - CFBundleTypeRole: Editor
+            CFBundleURLName: com.jeonsihyeon.memorymap.deeplink
+            CFBundleURLSchemes:
+              - unfading
         UIAppFonts:
           - Fonts/GowunDodum-Regular.ttf
           - Fonts/Nunito-Regular.ttf
