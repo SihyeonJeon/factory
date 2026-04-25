@@ -239,6 +239,8 @@ struct MemoryMapHomeView: View {
 
     private var mapLayer: some View {
         Map(position: $cameraPosition, selection: $selectedMapItemID) {
+            UserAnnotation()
+
             ForEach(clusterItems) { item in
                 Annotation(item.representativeMemory.title, coordinate: item.coordinate) {
                     Button {
@@ -301,7 +303,12 @@ struct MemoryMapHomeView: View {
         MapControlsSection(
             reduceMotion: reduceMotion,
             measuredSheetHeight: measuredSheetHeight,
-            onShowCurrentLocation: { _ = locationPermissionStore.handleCurrentLocationTap() },
+            onShowCurrentLocation: {
+                let result = locationPermissionStore.handleCurrentLocationTap()
+                if case .centerOnUser = result {
+                    cameraPosition = .userLocation(fallback: .automatic)
+                }
+            },
             onResetMapOrientation: resetCameraPosition
         )
     }
