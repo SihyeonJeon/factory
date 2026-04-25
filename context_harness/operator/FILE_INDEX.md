@@ -17,6 +17,7 @@
 ## Regulation and authority
 
 - Top-level regulation (precedence, lock schema, immutability): `context_harness/operator/REGULATION.md`
+- v5.9 orchestration addendum draft: `context_harness/operator/REGULATION_v5_9.md`
 - Stage matrix, ownership, parallel/serial rules: `context_harness/operator/STAGE_CONTRACT.md`
 - Meeting template and Challenge Section rule: `context_harness/operator/MEETING_PROTOCOL.md`
 - Gate 5 checklist: `context_harness/operator/PROCESS_AUDIT_CHECKLIST.md`
