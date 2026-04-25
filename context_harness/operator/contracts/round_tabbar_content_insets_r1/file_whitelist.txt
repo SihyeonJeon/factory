@@ -1,0 +1,11 @@
+workspace/ios/App/UnfadingTabShell.swift
+workspace/ios/Features/Home/MemoryMapHomeView.swift
+workspace/ios/Tests/UnfadingBottomSheetTests.swift
+context_harness/operator/contracts/round_tabbar_content_insets_r1/spec.md
+context_harness/operator/contracts/round_tabbar_content_insets_r1/acceptance.md
+context_harness/operator/contracts/round_tabbar_content_insets_r1/eval_protocol.md
+context_harness/operator/contracts/round_tabbar_content_insets_r1/file_whitelist.txt
+context_harness/operator/contracts/round_tabbar_content_insets_r1/convention_version.txt
+context_harness/operator/contracts/round_tabbar_content_insets_r1/lint_config.txt
+context_harness/operator/contracts/round_tabbar_content_insets_r1/gate_evidence.json
+context_harness/reports/round_tabbar_content_insets_r1/evidence/notes.md

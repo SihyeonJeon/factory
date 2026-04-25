@@ -62,6 +62,11 @@ final class UnfadingBottomSheetTests: XCTestCase {
         XCTAssertEqual(bottomEdgeFromBottom, UnfadingTabBar.height + 34, accuracy: 0.5)
     }
 
+    func test_tab_bar_reserve_equals_height_plus_safe_bottom() {
+        XCTAssertEqual(MemoryMapHomeLayout.tabBarReserve(safeBottom: 34), UnfadingTabBar.height + 34, accuracy: 0.5)
+        XCTAssertEqual(MemoryMapHomeLayout.tabBarReserve(safeBottom: 0), UnfadingTabBar.height, accuracy: 0.5)
+    }
+
     func test_nearest_picks_closest_snap() {
         XCTAssertEqual(BottomSheetSnap.nearest(to: 0.10), .collapsed)
         XCTAssertEqual(BottomSheetSnap.nearest(to: 0.25), .collapsed)

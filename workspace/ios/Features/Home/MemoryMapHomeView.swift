@@ -533,11 +533,15 @@ enum MemoryMapHomeLayout {
     /// Prototype HTML `bottom: calc(var(--sheet-height) + 88px)`.
     static let mapControlsBottomGap: CGFloat = 88
 
+    static func tabBarReserve(safeBottom: CGFloat) -> CGFloat {
+        UnfadingTabBar.height + safeBottom
+    }
+
     static func sheetTopY(screenHeight: CGFloat, safeBottom: CGFloat, snap: BottomSheetSnap) -> CGFloat {
         let availableHeight = max(screenHeight - UnfadingTabBar.height, 1)
         let sheetHeight = availableHeight * CGFloat(snap.fraction)
         let clearance: CGFloat = snap == .collapsed ? 8 : 0
-        let bottomInset = UnfadingTabBar.height + safeBottom + clearance
+        let bottomInset = tabBarReserve(safeBottom: safeBottom) + clearance
         return screenHeight - bottomInset - sheetHeight
     }
 }

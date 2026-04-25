@@ -130,7 +130,11 @@ struct UnfadingTabShell: View {
                     }
                 }
                 .padding(.horizontal, UnfadingTheme.Spacing.lg)
-                .padding(.bottom, UnfadingTabBar.height + UnfadingTheme.Spacing.sm)
+                .padding(
+                    .bottom,
+                    MemoryMapHomeLayout.tabBarReserve(safeBottom: proxy.safeAreaInsets.bottom)
+                        + UnfadingTheme.Spacing.sm
+                )
             }
             .overlay {
                 GroupPickerOverlay(
@@ -196,8 +200,14 @@ struct UnfadingTabShell: View {
             )
         case .calendar:
             CalendarView(pendingEventID: $pendingCalendarEventId)
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    Color.clear.frame(height: MemoryMapHomeLayout.tabBarReserve(safeBottom: 0))
+                }
         case .settings:
             SettingsView()
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    Color.clear.frame(height: MemoryMapHomeLayout.tabBarReserve(safeBottom: 0))
+                }
         }
     }
 
