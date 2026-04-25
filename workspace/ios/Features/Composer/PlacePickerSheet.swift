@@ -126,7 +126,7 @@ struct PlacePickerSheet: View {
         errorMessage = nil
         let place: PickedPlace
         if let match = try? await resolver.closestMatch(to: center) {
-            place = match.pickedPlace
+            place = match.pickedPlace(at: center)
         } else {
             place = PickedPlace(
                 name: UnfadingLocalized.Composer.placeholderCurrent,

@@ -62,6 +62,10 @@ struct DiscoveredPlace: Hashable, Identifiable {
     var pickedPlace: PickedPlace {
         PickedPlace(name: name, coordinate: coordinate, address: address)
     }
+
+    func pickedPlace(at coordinate: CLLocationCoordinate2D) -> PickedPlace {
+        PickedPlace(name: name, coordinate: coordinate, address: address)
+    }
 }
 
 protocol PlaceResolving: Sendable {

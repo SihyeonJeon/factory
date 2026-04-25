@@ -56,6 +56,25 @@ final class NearbyPlaceServiceTests: XCTestCase {
         XCTAssertEqual(picked, other)
     }
 
+    func test_pickedPlace_at_uses_provided_coordinate_not_poi() {
+        let place = DiscoveredPlace(
+            id: "poi",
+            name: "POI",
+            coordinate: CLLocationCoordinate2D(latitude: 37.501, longitude: 127.002),
+            distanceMeters: 25,
+            category: .park,
+            address: "서울 강남구"
+        )
+        let center = CLLocationCoordinate2D(latitude: 37.500, longitude: 127.000)
+
+        let picked = place.pickedPlace(at: center)
+
+        XCTAssertEqual(picked.name, "POI")
+        XCTAssertEqual(picked.coordinate.latitude, center.latitude, accuracy: 0.000001)
+        XCTAssertEqual(picked.coordinate.longitude, center.longitude, accuracy: 0.000001)
+        XCTAssertEqual(picked.address, "서울 강남구")
+    }
+
     func testDiscoveredPlaceHashable() {
         let a = DiscoveredPlace(
             id: "z",
