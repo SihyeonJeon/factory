@@ -1,0 +1,8 @@
+workspace/ios/App/MemoryMap.entitlements
+workspace/ios/project.yml
+workspace/ios/Features/Auth/AuthLandingView.swift
+workspace/ios/Shared/PaidDeveloperFeatures.swift
+workspace/ios/Shared/DeepLinkRouter.swift
+context_harness/operator/contracts/round_personal_team_unblock_r1/file_whitelist.txt
+context_harness/operator/meetings/2026-04-24_round_personal_team_unblock_plan.md
+context_harness/reports/round_personal_team_unblock_r1/evidence/notes.md

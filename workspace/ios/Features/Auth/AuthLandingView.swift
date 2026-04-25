@@ -36,7 +36,9 @@ struct AuthLandingView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.xl) {
                         header
-                        appleSignInSection
+                        if PaidDeveloperFeatures.signInWithAppleAvailable {
+                            appleSignInSection
+                        }
                         modePicker
                         form
                     }
@@ -72,7 +74,9 @@ struct AuthLandingView: View {
 
     private var modePicker: some View {
         VStack(alignment: .leading, spacing: UnfadingTheme.Spacing.md) {
-            divider
+            if PaidDeveloperFeatures.signInWithAppleAvailable {
+                divider
+            }
 
             Picker(UnfadingLocalized.Auth.modePickerLabel, selection: $mode) {
                 ForEach(Mode.allCases) { mode in
@@ -249,14 +253,17 @@ struct AuthLandingView: View {
     }
 
     private var authRotorEntries: [UnfadingRotorMarkerEntry] {
-        [
-            UnfadingRotorMarkerEntry(id: "apple", label: UnfadingLocalized.Auth.appleSignIn),
+        var entries = [
             UnfadingRotorMarkerEntry(
                 id: "primary",
                 label: mode == .signIn ? UnfadingLocalized.Auth.signInPrimary : UnfadingLocalized.Auth.signUpPrimary
             ),
             UnfadingRotorMarkerEntry(id: "reset", label: UnfadingLocalized.Auth.forgotPassword)
         ]
+        if PaidDeveloperFeatures.signInWithAppleAvailable {
+            entries.insert(UnfadingRotorMarkerEntry(id: "apple", label: UnfadingLocalized.Auth.appleSignIn), at: 0)
+        }
+        return entries
     }
 }
 
