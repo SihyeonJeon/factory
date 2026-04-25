@@ -1,0 +1,35 @@
+{
+  "round_id": "round_verification_harness_three_axis_r1",
+  "notes": "v5.9 protocol infra round — documentation only. 3-axis verifier dry-run.",
+  "gate1": {
+    "status": "pass",
+    "command": "n/a (documentation round)",
+    "exit_code": 0,
+    "test_count": 0,
+    "log": {
+      "path": "context_harness/reports/round_verification_harness_three_axis_r1/evidence/notes.md",
+      "sha256": "sha256:1ab2aeb62274028bb3158a380537270e27988d582b15a58d1e4c91391a602b9a"
+    }
+  },
+  "gate2": {
+    "status": "pass",
+    "reports": [
+      {"path": "context_harness/reports/round_verification_harness_three_axis_r1/evidence/notes.md", "sha256": "sha256:1ab2aeb62274028bb3158a380537270e27988d582b15a58d1e4c91391a602b9a"},
+      {"path": "context_harness/operator/REGULATION_v5_9.md", "sha256": "sha256:0584cf5ca56fe7d9bdb7ce85cf12ad44c707e60d4ae1b2c95085c6357a24add1"},
+      {"path": "context_harness/operator/meetings/2026-04-24_v5_9_orchestrator_roadmap.md", "sha256": "sha256:456f25673992fe9bca6f4983b326172e52ccb93f88e5601a68a6c7aee49878a9"}
+    ]
+  },
+  "gate3": {
+    "status": "pass",
+    "cross_agreement_note": "Author=orchestrator Codex (fresh handoff session); Verifier=codex_verifier_r62 (fresh session). 1 remediation cycle (Process FAIL → lock created → re-verify PASS)."
+  },
+  "gate4": {
+    "status": "pass",
+    "metrics_source": {
+      "path": "docs/exec-plans/process-log.jsonl",
+      "sha256": "sha256:639dfac92e4c0130067f0a858e05331eb7d6038907850161a9e0104d5d09828c"
+    },
+    "remediation_cycles": 1,
+    "blocker_recurrence": 0
+  }
+}
