@@ -71,6 +71,13 @@ struct MemoryMapHomeView: View {
                     safeBottom: safeBottom,
                     snap: sheetSnap
                 )
+                let activeCategory = categoryStore.categories.first(where: { $0.id == activeCategoryId })
+                let categoryName = (activeCategoryId == CategoryStore.allCategoryId) ? nil : activeCategory?.name
+                let hasSelection = selection.selectedPinID != nil
+                let indicatorText = MemoryMapHomeLayout.homeStateIndicatorText(
+                    activeCategoryName: categoryName,
+                    hasSelection: hasSelection
+                )
 
                 ZStack(alignment: .topLeading) {
                     mapLayer
@@ -99,6 +106,12 @@ struct MemoryMapHomeView: View {
                         )
                         .chromeVisibility(sheetSnap)
                         .zIndex(28)
+
+                    if let text = indicatorText {
+                        homeStateIndicator(text: text, screenWidth: screenWidth, safeTop: safeTop)
+                            .chromeVisibility(sheetSnap)
+                            .zIndex(27)
+                    }
 
                     mapControls
                         .frame(width: MemoryMapHomeLayout.mapControlsSize, height: MemoryMapHomeLayout.mapControlsStackHeight)
@@ -317,6 +330,31 @@ struct MemoryMapHomeView: View {
             },
             onResetMapOrientation: resetCameraPosition
         )
+    }
+
+    @ViewBuilder
+    private func homeStateIndicator(text: String, screenWidth: CGFloat, safeTop: CGFloat) -> some View {
+        let centerY = MemoryMapHomeLayout.filterChipY(safeTop: safeTop)
+            + MemoryMapHomeLayout.filterChipHeight
+            + MemoryMapHomeLayout.homeStateIndicatorTopGap
+            + (MemoryMapHomeLayout.homeStateIndicatorMinHeight / 2)
+        Button(action: clearHomeStateIndicators) {
+            HomeStateIndicatorLabel(text: text)
+        }
+        .buttonStyle(.plain)
+        .frame(minHeight: MemoryMapHomeLayout.homeStateIndicatorMinHeight)
+        .contentShape(Capsule())
+        .fixedSize()
+        .position(x: screenWidth / 2, y: centerY)
+        .accessibilityLabel(text)
+        .accessibilityHint("두 번 탭하면 필터와 선택을 해제합니다.")
+        .accessibilityIdentifier("home-state-indicator")
+    }
+
+    private func clearHomeStateIndicators() {
+        selection.clearSelection()
+        selectedMapItemID = nil
+        activeCategoryId = CategoryStore.allCategoryId
     }
 
     private var groupName: String {
@@ -549,6 +587,18 @@ enum MemoryMapHomeLayout {
         topChromeY(safeTop: safeTop) + topChromeHeight + topChromeBottomToFilterGap
     }
 
+    static let homeStateIndicatorTopGap: CGFloat = 8
+    static let homeStateIndicatorMinHeight: CGFloat = 44
+
+    static func homeStateIndicatorText(activeCategoryName: String?, hasSelection: Bool) -> String? {
+        switch (activeCategoryName, hasSelection) {
+        case (nil, false): return nil
+        case (nil, true): return "선택됨"
+        case (.some(let name), false): return "필터: \(name)"
+        case (.some(let name), true): return "필터: \(name) · 선택됨"
+        }
+    }
+
     static let filterToMapControlsMinGap: CGFloat = 8
 
     static func mapControlsCenterY(safeTop: CGFloat, sheetTop: CGFloat) -> CGFloat {
@@ -569,6 +619,20 @@ enum MemoryMapHomeLayout {
         let clearance: CGFloat = snap == .collapsed ? 8 : 0
         let bottomInset = tabBarReserve(safeBottom: safeBottom) + clearance
         return screenHeight - bottomInset - sheetHeight
+    }
+}
+
+private struct HomeStateIndicatorLabel: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(UnfadingTheme.Font.tag(12))
+            .foregroundStyle(UnfadingTheme.Color.primary)
+            .lineLimit(1)
+            .padding(.horizontal, UnfadingTheme.Spacing.sm)
+            .padding(.vertical, UnfadingTheme.Spacing.xs)
+            .background(UnfadingTheme.Color.primary.opacity(0.12), in: Capsule())
     }
 }
 

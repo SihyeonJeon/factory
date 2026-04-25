@@ -124,6 +124,22 @@ final class UnfadingBottomSheetTests: XCTestCase {
         XCTAssertEqual(centerY, preferredCenter, accuracy: 0.5)
     }
 
+    func test_home_state_indicator_returns_nil_when_no_state() {
+        XCTAssertNil(MemoryMapHomeLayout.homeStateIndicatorText(activeCategoryName: nil, hasSelection: false))
+    }
+
+    func test_home_state_indicator_shows_selection_only() {
+        XCTAssertEqual(MemoryMapHomeLayout.homeStateIndicatorText(activeCategoryName: nil, hasSelection: true), "선택됨")
+    }
+
+    func test_home_state_indicator_shows_category_only() {
+        XCTAssertEqual(MemoryMapHomeLayout.homeStateIndicatorText(activeCategoryName: "데이트", hasSelection: false), "필터: 데이트")
+    }
+
+    func test_home_state_indicator_shows_category_and_selection() {
+        XCTAssertEqual(MemoryMapHomeLayout.homeStateIndicatorText(activeCategoryName: "데이트", hasSelection: true), "필터: 데이트 · 선택됨")
+    }
+
     func test_nearest_picks_closest_snap() {
         XCTAssertEqual(BottomSheetSnap.nearest(to: 0.10), .collapsed)
         XCTAssertEqual(BottomSheetSnap.nearest(to: 0.25), .collapsed)
