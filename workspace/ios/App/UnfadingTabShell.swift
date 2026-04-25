@@ -275,7 +275,8 @@ struct UnfadingTabShell: View {
 }
 
 struct UnfadingTabBar: View {
-    static let height: CGFloat = 83
+    static let height: CGFloat = 64
+    static let hitTargetHeight: CGFloat = 44
 
     @Binding var selected: ShellTab
     let showsMapBadge: Bool
@@ -297,8 +298,7 @@ struct UnfadingTabBar: View {
                 tabButton(tab)
             }
         }
-        .frame(height: Self.height, alignment: .top)
-        .padding(.top, UnfadingTheme.Spacing.xs)
+        .frame(height: Self.height, alignment: .bottom)
         .background(UnfadingTheme.Color.sheet.ignoresSafeArea(edges: .bottom))
         .overlay(alignment: .top) {
             Rectangle()
@@ -333,7 +333,7 @@ struct UnfadingTabBar: View {
             }
             .foregroundStyle(selected == tab ? UnfadingTheme.Color.primary : UnfadingTheme.Color.textSecondary)
             .frame(maxWidth: .infinity)
-            .frame(height: 49)
+            .frame(height: Self.hitTargetHeight)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
