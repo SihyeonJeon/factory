@@ -193,7 +193,8 @@ struct UnfadingBottomSheet<Content: View>: View {
                 topSafeArea: proxy.safeAreaInsets.top,
                 snap: snap
             )
-            let bottomInset = tabBarHeight + proxy.safeAreaInsets.bottom
+            let clearance: CGFloat = snap == .collapsed ? 8 : 0
+            let bottomInset = tabBarHeight + proxy.safeAreaInsets.bottom + clearance
             let currentSnapHeight = availableHeight * CGFloat(snap.fraction)
             let liveHeight = interactiveHeight ?? BottomSheetDragResolution.clampedHeight(currentSnapHeight - translation, in: availableHeight)
             let isExpanded = snap == .expanded

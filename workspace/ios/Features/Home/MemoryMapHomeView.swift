@@ -534,9 +534,11 @@ enum MemoryMapHomeLayout {
     static let mapControlsBottomGap: CGFloat = 88
 
     static func sheetTopY(screenHeight: CGFloat, safeBottom: CGFloat, snap: BottomSheetSnap) -> CGFloat {
-        let availableHeight = max(screenHeight - UnfadingTabBar.height - safeBottom, 1)
+        let availableHeight = max(screenHeight - UnfadingTabBar.height, 1)
         let sheetHeight = availableHeight * CGFloat(snap.fraction)
-        return screenHeight - UnfadingTabBar.height - safeBottom - sheetHeight
+        let clearance: CGFloat = snap == .collapsed ? 8 : 0
+        let bottomInset = UnfadingTabBar.height + safeBottom + clearance
+        return screenHeight - bottomInset - sheetHeight
     }
 }
 

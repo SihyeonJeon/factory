@@ -46,6 +46,22 @@ final class UnfadingBottomSheetTests: XCTestCase {
         )
     }
 
+    func test_collapsed_sheet_clears_tab_bar_with_8pt_padding() {
+        let top = MemoryMapHomeLayout.sheetTopY(screenHeight: 800, safeBottom: 34, snap: .collapsed)
+        let availableHeight: CGFloat = 800 - UnfadingTabBar.height
+        let sheetHeight = availableHeight * CGFloat(BottomSheetSnap.collapsed.fraction)
+        let bottomEdgeFromBottom = 800 - (top + sheetHeight)
+        XCTAssertEqual(bottomEdgeFromBottom, UnfadingTabBar.height + 34 + 8, accuracy: 0.5)
+    }
+
+    func test_default_sheet_has_no_extra_clearance() {
+        let top = MemoryMapHomeLayout.sheetTopY(screenHeight: 800, safeBottom: 34, snap: .default_)
+        let availableHeight: CGFloat = 800 - UnfadingTabBar.height
+        let sheetHeight = availableHeight * CGFloat(BottomSheetSnap.default_.fraction)
+        let bottomEdgeFromBottom = 800 - (top + sheetHeight)
+        XCTAssertEqual(bottomEdgeFromBottom, UnfadingTabBar.height + 34, accuracy: 0.5)
+    }
+
     func test_nearest_picks_closest_snap() {
         XCTAssertEqual(BottomSheetSnap.nearest(to: 0.10), .collapsed)
         XCTAssertEqual(BottomSheetSnap.nearest(to: 0.25), .collapsed)
