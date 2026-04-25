@@ -75,6 +75,19 @@ enum BottomSheetDragResolution {
         min(max(height, fullHeight * CGFloat(BottomSheetSnap.collapsed.fraction)), fullHeight)
     }
 
+    static func availableHeight(
+        screenHeight: CGFloat,
+        tabBarHeight: CGFloat,
+        topSafeArea: CGFloat,
+        snap: BottomSheetSnap
+    ) -> CGFloat {
+        if snap == .expanded {
+            return max(screenHeight + topSafeArea, 1)
+        }
+
+        return max(screenHeight - tabBarHeight, 1)
+    }
+
     static func projectedFraction(
         currentSnap: BottomSheetSnap,
         translationHeight: CGFloat,
@@ -174,7 +187,12 @@ struct UnfadingBottomSheet<Content: View>: View {
     var body: some View {
         GeometryReader { proxy in
             let screenHeight = proxy.size.height
-            let availableHeight = max(screenHeight - tabBarHeight, 1)
+            let availableHeight = BottomSheetDragResolution.availableHeight(
+                screenHeight: screenHeight,
+                tabBarHeight: tabBarHeight,
+                topSafeArea: proxy.safeAreaInsets.top,
+                snap: snap
+            )
             let bottomInset = tabBarHeight + proxy.safeAreaInsets.bottom
             let currentSnapHeight = availableHeight * CGFloat(snap.fraction)
             let liveHeight = interactiveHeight ?? BottomSheetDragResolution.clampedHeight(currentSnapHeight - translation, in: availableHeight)
@@ -221,13 +239,26 @@ struct UnfadingBottomSheet<Content: View>: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: liveHeight)
-            .background(
-                UnfadingTheme.Color.sheet,
-                in: UnevenRoundedRectangle(
-                    topLeadingRadius: snap.topCornerRadius,
-                    topTrailingRadius: snap.topCornerRadius
-                )
-            )
+            .background {
+                if isExpanded {
+                    UnfadingTheme.Color.sheet
+                        .ignoresSafeArea(.container, edges: .top)
+                        .clipShape(
+                            UnevenRoundedRectangle(
+                                topLeadingRadius: snap.topCornerRadius,
+                                topTrailingRadius: snap.topCornerRadius
+                            )
+                        )
+                } else {
+                    UnfadingTheme.Color.sheet
+                        .clipShape(
+                            UnevenRoundedRectangle(
+                                topLeadingRadius: snap.topCornerRadius,
+                                topTrailingRadius: snap.topCornerRadius
+                            )
+                        )
+                }
+            }
             .shadow(
                 color: snap == .expanded ? .clear : UnfadingTheme.Color.shadow,
                 radius: snap.shadowRadius,

@@ -22,6 +22,30 @@ final class UnfadingBottomSheetTests: XCTestCase {
         XCTAssertEqual(fractions, fractions.sorted())
     }
 
+    func test_available_height_uses_full_screen_plus_top_inset_when_expanded() {
+        XCTAssertEqual(
+            BottomSheetDragResolution.availableHeight(
+                screenHeight: 800,
+                tabBarHeight: 64,
+                topSafeArea: 59,
+                snap: .expanded
+            ),
+            859
+        )
+    }
+
+    func test_available_height_subtracts_tab_bar_when_not_expanded() {
+        XCTAssertEqual(
+            BottomSheetDragResolution.availableHeight(
+                screenHeight: 800,
+                tabBarHeight: 64,
+                topSafeArea: 59,
+                snap: .default_
+            ),
+            736
+        )
+    }
+
     func test_nearest_picks_closest_snap() {
         XCTAssertEqual(BottomSheetSnap.nearest(to: 0.10), .collapsed)
         XCTAssertEqual(BottomSheetSnap.nearest(to: 0.25), .collapsed)
