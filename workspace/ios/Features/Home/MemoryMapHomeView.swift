@@ -114,9 +114,12 @@ struct MemoryMapHomeView: View {
                     }
 
                     mapControls
-                        .frame(width: MemoryMapHomeLayout.mapControlsSize, height: MemoryMapHomeLayout.mapControlsStackHeight)
+                        .frame(
+                            width: MemoryMapHomeLayout.mapControlsHitTargetSize,
+                            height: MemoryMapHomeLayout.mapControlsStackHeight
+                        )
                         .position(
-                            x: screenWidth - MemoryMapHomeLayout.mapControlsRight - (MemoryMapHomeLayout.mapControlsSize / 2),
+                            x: screenWidth - MemoryMapHomeLayout.mapControlsRight - (MemoryMapHomeLayout.mapControlsHitTargetSize / 2),
                             y: MemoryMapHomeLayout.mapControlsCenterY(
                                 safeTop: safeTop,
                                 sheetTop: sheetTop
@@ -574,8 +577,9 @@ enum MemoryMapHomeLayout {
     /// Prototype HTML `right: 14`.
     static let mapControlsRight: CGFloat = UnfadingTheme.Spacing.sm2
     static let mapControlsSize: CGFloat = 40
+    static let mapControlsHitTargetSize: CGFloat = 44
     static let mapControlsSpacing: CGFloat = UnfadingTheme.Spacing.xs
-    static let mapControlsStackHeight: CGFloat = (mapControlsSize * 2) + mapControlsSpacing
+    static let mapControlsStackHeight: CGFloat = (mapControlsHitTargetSize * 2) + mapControlsSpacing
     /// Prototype HTML `bottom: calc(var(--sheet-height) + 88px)`.
     static let mapControlsBottomGap: CGFloat = 88
 
@@ -620,6 +624,32 @@ enum MemoryMapHomeLayout {
         let bottomInset = tabBarReserve(safeBottom: safeBottom) + clearance
         return screenHeight - bottomInset - sheetHeight
     }
+}
+
+enum HomeActionZone: String {
+    case topNavigation
+    case mapControls
+    case composing
+    case indicator
+}
+
+struct HomeAction {
+    let name: String
+    let identifier: String
+    let zone: HomeActionZone
+    let hitTarget: CGFloat
+}
+
+enum HomeActionInventory {
+    static let all: [HomeAction] = [
+        HomeAction(name: "Group switch", identifier: "home-top-chrome-group-button", zone: .topNavigation, hitTarget: 44),
+        HomeAction(name: "Search", identifier: "home-top-chrome-search-button", zone: .topNavigation, hitTarget: 44),
+        HomeAction(name: "Current location", identifier: "home-map-control-current-location", zone: .mapControls, hitTarget: 44),
+        HomeAction(name: "Reset orientation", identifier: "home-map-control-reset-orientation", zone: .mapControls, hitTarget: 44),
+        HomeAction(name: "Compose memory", identifier: "home-fab", zone: .composing, hitTarget: 56),
+        HomeAction(name: "Add category", identifier: "home-filter-add-category", zone: .topNavigation, hitTarget: 44),
+        HomeAction(name: "Home state indicator", identifier: "home-state-indicator", zone: .indicator, hitTarget: 44),
+    ]
 }
 
 private struct HomeStateIndicatorLabel: View {
@@ -784,6 +814,7 @@ private struct FilterRowSection: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(UnfadingLocalized.Categories.addCategory)
+                .accessibilityHint("두 번 탭하면 새 카테고리를 추가합니다.")
                 .accessibilityIdentifier("home-filter-add-category")
             }
             .padding(.horizontal, UnfadingTheme.Spacing.md)
@@ -806,12 +837,14 @@ private struct MapControlsSection: View {
             MapControlButton(
                 systemName: "location.fill",
                 accessibilityLabel: UnfadingLocalized.Accessibility.showCurrentLocationLabel,
+                accessibilityIdentifier: "home-map-control-current-location",
                 action: onShowCurrentLocation
             )
 
             MapControlButton(
                 systemName: "location.north.line.fill",
                 accessibilityLabel: UnfadingLocalized.Accessibility.resetMapOrientationLabel,
+                accessibilityIdentifier: "home-map-control-reset-orientation",
                 action: onResetMapOrientation
             )
         }
@@ -824,6 +857,7 @@ private struct MapControlsSection: View {
 private struct MapControlButton: View {
     let systemName: String
     let accessibilityLabel: String
+    let accessibilityIdentifier: String
     let action: () -> Void
 
     var body: some View {
@@ -840,7 +874,13 @@ private struct MapControlButton: View {
                 .shadow(color: UnfadingTheme.Color.textPrimary.opacity(0.10), radius: 8, x: 0, y: 2)
         }
         .buttonStyle(MapControlButtonStyle())
+        .frame(
+            minWidth: MemoryMapHomeLayout.mapControlsHitTargetSize,
+            minHeight: MemoryMapHomeLayout.mapControlsHitTargetSize
+        )
+        .contentShape(Rectangle())
         .accessibilityLabel(accessibilityLabel)
+        .accessibilityIdentifier(accessibilityIdentifier)
     }
 }
 

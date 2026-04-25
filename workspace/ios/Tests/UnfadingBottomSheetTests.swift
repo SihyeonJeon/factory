@@ -140,6 +140,41 @@ final class UnfadingBottomSheetTests: XCTestCase {
         XCTAssertEqual(MemoryMapHomeLayout.homeStateIndicatorText(activeCategoryName: "데이트", hasSelection: true), "필터: 데이트 · 선택됨")
     }
 
+    func test_home_action_inventory_has_at_least_seven_entries() {
+        XCTAssertGreaterThanOrEqual(HomeActionInventory.all.count, 7)
+    }
+
+    func test_home_action_inventory_identifiers_non_empty() {
+        for action in HomeActionInventory.all {
+            XCTAssertFalse(action.identifier.isEmpty, "Empty identifier for \(action.name)")
+        }
+    }
+
+    func test_home_action_inventory_meets_hit_target_minimum() {
+        for action in HomeActionInventory.all {
+            XCTAssertGreaterThanOrEqual(action.hitTarget, 44, "\(action.name) below 44pt")
+        }
+    }
+
+    func test_home_action_inventory_covers_all_zones() {
+        let zones = Set(HomeActionInventory.all.map(\.zone))
+        XCTAssertTrue(zones.contains(.topNavigation))
+        XCTAssertTrue(zones.contains(.mapControls))
+        XCTAssertTrue(zones.contains(.composing))
+        XCTAssertTrue(zones.contains(.indicator))
+    }
+
+    func test_map_controls_stack_height_uses_hit_target_not_visual_size() {
+        // Layout math must reflect rendered hit-area frames (44pt), not the visual circle (40pt),
+        // otherwise mapControlsCenterY clamp drifts by 4pt per button.
+        XCTAssertEqual(
+            MemoryMapHomeLayout.mapControlsStackHeight,
+            (MemoryMapHomeLayout.mapControlsHitTargetSize * 2) + MemoryMapHomeLayout.mapControlsSpacing,
+            accuracy: 0.01
+        )
+        XCTAssertGreaterThanOrEqual(MemoryMapHomeLayout.mapControlsHitTargetSize, 44)
+    }
+
     func test_nearest_picks_closest_snap() {
         XCTAssertEqual(BottomSheetSnap.nearest(to: 0.10), .collapsed)
         XCTAssertEqual(BottomSheetSnap.nearest(to: 0.25), .collapsed)
