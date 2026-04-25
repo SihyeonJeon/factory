@@ -35,6 +35,7 @@ struct MemoryComposerSheet: View {
             wrappedValue: MemoryComposerState(
                 selectedPhotos: [],
                 sharedAssetIdentifier: sharedPhotoReference?.assetIdentifier,
+                sharedTempFilePath: sharedPhotoReference?.tempFilePath,
                 locationPermissionState: initialLocationPermissionState
             )
         )
@@ -209,7 +210,9 @@ struct MemoryComposerSheet: View {
 
     @ViewBuilder
     private func photoTile(index: Int, isLarge: Bool) -> some View {
-        if state.selectedPhotos.indices.contains(index) {
+        if index == 0, let sharedTempImageURL = state.sharedTempImageURL {
+            sharedTempImageTile(url: sharedTempImageURL, isLarge: isLarge)
+        } else if state.selectedPhotos.indices.contains(selectedPhotoIndex(for: index)) {
             RoundedRectangle(cornerRadius: isLarge ? UnfadingTheme.Radius.card : UnfadingTheme.Radius.segment, style: .continuous)
                 .fill(UnfadingTheme.Color.accentSoft)
                 .overlay {
@@ -224,6 +227,30 @@ struct MemoryComposerSheet: View {
                 .aspectRatio(1, contentMode: .fit)
         } else {
             emptyPhotoTile(label: index == 0 ? "PHOTO" : "—")
+        }
+    }
+
+    private func selectedPhotoIndex(for index: Int) -> Int {
+        state.sharedTempImageURL == nil ? index : index - 1
+    }
+
+    @ViewBuilder
+    private func sharedTempImageTile(url: URL, isLarge: Bool) -> some View {
+        if let image = UIImage(contentsOfFile: url.path) {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .aspectRatio(1, contentMode: .fill)
+                .clipShape(
+                    RoundedRectangle(
+                        cornerRadius: isLarge ? UnfadingTheme.Radius.card : UnfadingTheme.Radius.segment,
+                        style: .continuous
+                    )
+                )
+                .accessibilityLabel("공유된 사진")
+        } else {
+            emptyPhotoTile(label: "PHOTO")
         }
     }
 
@@ -594,6 +621,11 @@ struct MemoryComposerSheet: View {
 private extension ComposerLaunchPhotoReference {
     var assetIdentifier: String? {
         guard case let .assetIdentifier(value) = self else { return nil }
+        return value
+    }
+
+    var tempFilePath: String? {
+        guard case let .tempFilePath(value) = self else { return nil }
         return value
     }
 }

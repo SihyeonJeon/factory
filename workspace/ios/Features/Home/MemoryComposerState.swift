@@ -3,6 +3,7 @@ import Foundation
 import Photos
 import PhotosUI
 import SwiftUI
+import UIKit
 
 // vibe-limit-checked: 5 @MainActor state ownership, 12 behavior-testable state transitions
 @MainActor
@@ -33,6 +34,7 @@ final class MemoryComposerState: ObservableObject {
     @Published var showPhotoSeedNotice: Bool
     @Published var selectedMoods: Set<MemoryDraftTag>
     @Published var locationPermissionState: LocationPermissionState
+    @Published var sharedTempImageURL: URL?
     /// 사진 메타데이터로 자동 채움이 적용된 상태 (banner 표시 / 수동 edit 시 해제).
     @Published private(set) var photoSeedApplied: PhotoSeedApplied
     /// 근처 장소 후보. refreshNearbyPlaces() 에서 채움.
@@ -57,6 +59,7 @@ final class MemoryComposerState: ObservableObject {
         note: String = "",
         selectedPhotos: [PhotosPickerItem] = [],
         sharedAssetIdentifier: String? = nil,
+        sharedTempFilePath: String? = nil,
         selectedPlace: String = UnfadingLocalized.Composer.samplePlace,
         selectedAddress: String? = nil,
         selectedCoordinate: CLLocationCoordinate2D? = nil,
@@ -87,6 +90,7 @@ final class MemoryComposerState: ObservableObject {
         self.showPhotoSeedNotice = false
         self.selectedMoods = selectedMoods
         self.locationPermissionState = locationPermissionState
+        self.sharedTempImageURL = Self.tempImageURL(from: sharedTempFilePath)
         self.uploadProgress = 0
         self.isUploading = false
         self.photoSeedApplied = .none
@@ -286,6 +290,7 @@ final class MemoryComposerState: ObservableObject {
 
         note = ""
         selectedPhotos = []
+        sharedTempImageURL = nil
         selectedPlace = UnfadingLocalized.Composer.samplePlace
         selectedAddress = nil
         selectedCoordinate = nil
@@ -315,9 +320,11 @@ final class MemoryComposerState: ObservableObject {
 
         let memoryId = UUID()
         let selectedAssets = photoAssets()
+        let sharedTempURL = sharedTempImageURL
+        let hasUploads = selectedAssets.isEmpty == false || sharedTempURL != nil
         var uploadedPhotos: [UploadedPhoto] = []
-        isUploading = selectedAssets.isEmpty == false
-        uploadProgress = selectedAssets.isEmpty ? 0 : 0.01
+        isUploading = hasUploads
+        uploadProgress = hasUploads ? 0.01 : 0
 
         let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
         let fallbackTitle = selectedPlace.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -326,15 +333,26 @@ final class MemoryComposerState: ObservableObject {
         do {
             let eventId = try await resolvedEventId(groupId: groupId)
             if selectedAssets.isEmpty == false {
-                uploadedPhotos = try await photoUploader.upload(
+                let uploadedAssets = try await photoUploader.upload(
                     assets: selectedAssets,
                     groupId: groupId,
                     memoryId: memoryId
                 ) { [weak self] progress in
                     Task { @MainActor in
-                        self?.uploadProgress = progress
+                        self?.uploadProgress = sharedTempURL == nil ? progress : min(progress * 0.8, 0.8)
                     }
                 }
+                uploadedPhotos.append(contentsOf: uploadedAssets)
+            }
+
+            if let sharedTempURL {
+                let uploadedTemp = try await uploadSharedTempImage(
+                    from: sharedTempURL,
+                    groupId: groupId,
+                    memoryId: memoryId
+                )
+                uploadedPhotos.append(uploadedTemp)
+                uploadProgress = 1
             }
 
             let photoPaths = uploadedPhotos.map(\.storagePath)
@@ -383,6 +401,43 @@ final class MemoryComposerState: ObservableObject {
             assets.append(asset)
         }
         return assets
+    }
+
+    private func uploadSharedTempImage(from url: URL, groupId: UUID, memoryId: UUID) async throws -> UploadedPhoto {
+        guard let uploader = photoUploader as? PhotoUploader else {
+            throw PhotoUploadError.uploadFailed("임시 사진 업로더를 사용할 수 없어요.")
+        }
+        guard let image = UIImage(contentsOfFile: url.path),
+              let imageData = image.jpegData(compressionQuality: 0.82) else {
+            throw PhotoUploadError.encodingFailed
+        }
+
+        try await uploader.validateImageDataSize(imageData)
+        uploadProgress = selectedPhotos.isEmpty ? 0.5 : max(uploadProgress, 0.9)
+
+        let path = PhotoUploader.storagePath(
+            groupId: groupId,
+            memoryId: memoryId,
+            filename: "shared-temp-\(UUID().uuidString).jpg"
+        )
+        try await uploader.uploadImageData(imageData, path: path)
+        let signedURL = try? await uploader.signedURL(storagePath: path)
+
+        return UploadedPhoto(
+            storagePath: path,
+            remoteURL: signedURL,
+            width: Int(image.size.width * image.scale),
+            height: Int(image.size.height * image.scale),
+            bytes: imageData.count
+        )
+    }
+
+    private static func tempImageURL(from path: String?) -> URL? {
+        guard let path, path.isEmpty == false else { return nil }
+        if let url = URL(string: path), url.isFileURL {
+            return url
+        }
+        return URL(fileURLWithPath: path)
     }
 
     private func resolvedEventId(groupId: UUID) async throws -> UUID? {

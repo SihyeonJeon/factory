@@ -86,6 +86,20 @@ final class MemoryComposerStateTests: XCTestCase {
         XCTAssertEqual(state.participantUserIds, Set([first, second]))
     }
 
+    func test_temp_file_path_initializes_shared_temp_image_url() {
+        let state = MemoryComposerState(sharedTempFilePath: "/tmp/foo.jpg")
+
+        XCTAssertEqual(state.sharedTempImageURL, URL(fileURLWithPath: "/tmp/foo.jpg"))
+        XCTAssertTrue(state.selectedPhotos.isEmpty)
+    }
+
+    func test_asset_identifier_initializes_selected_photo_item() {
+        let state = MemoryComposerState(sharedAssetIdentifier: "ABC123-IDENTIFIER")
+
+        XCTAssertEqual(state.selectedPhotos.first?.itemIdentifier, "ABC123-IDENTIFIER")
+        XCTAssertNil(state.sharedTempImageURL)
+    }
+
     private func mockItem() -> PhotosPickerItem {
         PhotosPickerItem(itemIdentifier: "mock-photo")
     }
