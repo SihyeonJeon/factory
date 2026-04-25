@@ -67,6 +67,63 @@ final class UnfadingBottomSheetTests: XCTestCase {
         XCTAssertEqual(MemoryMapHomeLayout.tabBarReserve(safeBottom: 0), UnfadingTabBar.height, accuracy: 0.5)
     }
 
+    func test_top_chrome_y_clears_dynamic_island() {
+        XCTAssertEqual(MemoryMapHomeLayout.topChromeY(safeTop: 59), 67, accuracy: 0.5)
+    }
+
+    func test_filter_chip_y_below_top_chrome_with_gap() {
+        XCTAssertEqual(
+            MemoryMapHomeLayout.filterChipY(safeTop: 59),
+            67 + MemoryMapHomeLayout.topChromeHeight + 8,
+            accuracy: 0.5
+        )
+    }
+
+    func test_filter_bottom_above_default_sheet_top() {
+        let sheetTop = MemoryMapHomeLayout.sheetTopY(
+            screenHeight: 800,
+            safeBottom: 34,
+            snap: .default_
+        )
+        let filterBottom = MemoryMapHomeLayout.filterChipY(safeTop: 59)
+            + MemoryMapHomeLayout.filterChipHeight
+        XCTAssertLessThan(filterBottom, sheetTop)
+    }
+
+    func test_map_controls_clear_filter_row_on_small_screens() {
+        // iPhone SE 1st gen viewport (568x320 @2x = 568pt height): safeTop=20, safeBottom=0.
+        // Worst-case small-screen target where filter bottom can collide with the lifted controls.
+        let safeTop: CGFloat = 20
+        let sheetTop = MemoryMapHomeLayout.sheetTopY(
+            screenHeight: 568,
+            safeBottom: 0,
+            snap: .default_
+        )
+        let centerY = MemoryMapHomeLayout.mapControlsCenterY(safeTop: safeTop, sheetTop: sheetTop)
+        let mapControlsTop = centerY - (MemoryMapHomeLayout.mapControlsStackHeight / 2)
+        let mapControlsBottom = centerY + (MemoryMapHomeLayout.mapControlsStackHeight / 2)
+        let filterBottom = MemoryMapHomeLayout.filterChipY(safeTop: safeTop)
+            + MemoryMapHomeLayout.filterChipHeight
+        XCTAssertGreaterThanOrEqual(mapControlsTop, filterBottom + MemoryMapHomeLayout.filterToMapControlsMinGap)
+        XCTAssertLessThanOrEqual(mapControlsBottom, sheetTop - MemoryMapHomeLayout.filterToMapControlsMinGap + 0.5)
+    }
+
+    func test_map_controls_use_preferred_center_on_large_screens() {
+        // iPhone 17 Pro: height=874, safeTop=59, safeBottom=34.
+        // Plenty of vertical room → preferred center wins.
+        let safeTop: CGFloat = 59
+        let sheetTop = MemoryMapHomeLayout.sheetTopY(
+            screenHeight: 874,
+            safeBottom: 34,
+            snap: .default_
+        )
+        let preferredCenter = sheetTop
+            - MemoryMapHomeLayout.mapControlsBottomGap
+            - (MemoryMapHomeLayout.mapControlsStackHeight / 2)
+        let centerY = MemoryMapHomeLayout.mapControlsCenterY(safeTop: safeTop, sheetTop: sheetTop)
+        XCTAssertEqual(centerY, preferredCenter, accuracy: 0.5)
+    }
+
     func test_nearest_picks_closest_snap() {
         XCTAssertEqual(BottomSheetSnap.nearest(to: 0.10), .collapsed)
         XCTAssertEqual(BottomSheetSnap.nearest(to: 0.25), .collapsed)

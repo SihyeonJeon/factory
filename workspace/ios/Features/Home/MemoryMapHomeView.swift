@@ -64,6 +64,7 @@ struct MemoryMapHomeView: View {
             GeometryReader { proxy in
                 let screenWidth = proxy.size.width
                 let screenHeight = proxy.size.height
+                let safeTop = proxy.safeAreaInsets.top
                 let safeBottom = proxy.safeAreaInsets.bottom
                 let sheetTop = MemoryMapHomeLayout.sheetTopY(
                     screenHeight: screenHeight,
@@ -83,7 +84,8 @@ struct MemoryMapHomeView: View {
                         )
                         .position(
                             x: screenWidth / 2,
-                            y: MemoryMapHomeLayout.topChromeTop + (MemoryMapHomeLayout.topChromeHeight / 2)
+                            y: MemoryMapHomeLayout.topChromeY(safeTop: safeTop)
+                                + (MemoryMapHomeLayout.topChromeHeight / 2)
                         )
                         .chromeVisibility(sheetSnap)
                         .zIndex(30)
@@ -92,7 +94,8 @@ struct MemoryMapHomeView: View {
                         .frame(width: screenWidth, height: MemoryMapHomeLayout.filterChipHeight)
                         .position(
                             x: screenWidth / 2,
-                            y: MemoryMapHomeLayout.filterChipTop + (MemoryMapHomeLayout.filterChipHeight / 2)
+                            y: MemoryMapHomeLayout.filterChipY(safeTop: safeTop)
+                                + (MemoryMapHomeLayout.filterChipHeight / 2)
                         )
                         .chromeVisibility(sheetSnap)
                         .zIndex(28)
@@ -101,7 +104,10 @@ struct MemoryMapHomeView: View {
                         .frame(width: MemoryMapHomeLayout.mapControlsSize, height: MemoryMapHomeLayout.mapControlsStackHeight)
                         .position(
                             x: screenWidth - MemoryMapHomeLayout.mapControlsRight - (MemoryMapHomeLayout.mapControlsSize / 2),
-                            y: sheetTop - MemoryMapHomeLayout.mapControlsBottomGap - (MemoryMapHomeLayout.mapControlsStackHeight / 2)
+                            y: MemoryMapHomeLayout.mapControlsCenterY(
+                                safeTop: safeTop,
+                                sheetTop: sheetTop
+                            )
                         )
                         .chromeVisibility(sheetSnap)
                         .zIndex(26)
@@ -519,9 +525,11 @@ enum MemoryMapHomeLayout {
     /// Prototype HTML `padding: '0 14px'` — 14pt.
     static let horizontalInset: CGFloat = UnfadingTheme.Spacing.sm2
     static let topChromeTop: CGFloat = 54
+    static let topChromeMargin: CGFloat = 8
     static let topChromeHeight: CGFloat = 60
     static let topChromeRadius: CGFloat = 18
     static let filterChipTop: CGFloat = 108
+    static let topChromeBottomToFilterGap: CGFloat = 8
     static let filterChipHeight: CGFloat = 44
     static let fabRight: CGFloat = 18
     static let fabBottomGap: CGFloat = 18
@@ -532,6 +540,24 @@ enum MemoryMapHomeLayout {
     static let mapControlsStackHeight: CGFloat = (mapControlsSize * 2) + mapControlsSpacing
     /// Prototype HTML `bottom: calc(var(--sheet-height) + 88px)`.
     static let mapControlsBottomGap: CGFloat = 88
+
+    static func topChromeY(safeTop: CGFloat) -> CGFloat {
+        safeTop + topChromeMargin
+    }
+
+    static func filterChipY(safeTop: CGFloat) -> CGFloat {
+        topChromeY(safeTop: safeTop) + topChromeHeight + topChromeBottomToFilterGap
+    }
+
+    static let filterToMapControlsMinGap: CGFloat = 8
+
+    static func mapControlsCenterY(safeTop: CGFloat, sheetTop: CGFloat) -> CGFloat {
+        let preferred = sheetTop - mapControlsBottomGap - (mapControlsStackHeight / 2)
+        let filterBottom = filterChipY(safeTop: safeTop) + filterChipHeight
+        let minCenter = filterBottom + filterToMapControlsMinGap + (mapControlsStackHeight / 2)
+        let maxCenter = sheetTop - filterToMapControlsMinGap - (mapControlsStackHeight / 2)
+        return min(max(preferred, minCenter), max(minCenter, maxCenter))
+    }
 
     static func tabBarReserve(safeBottom: CGFloat) -> CGFloat {
         UnfadingTabBar.height + safeBottom
