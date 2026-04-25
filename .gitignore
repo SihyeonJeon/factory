@@ -7,6 +7,8 @@ workspace/ios/*
 !workspace/ios/Shared/
 !workspace/ios/Tests/
 !workspace/ios/UITests/
+!workspace/ios/Widget/
+!workspace/ios/ShareExtension/
 !workspace/ios/project.yml
 !workspace/ios/StoreKitConfiguration.storekit
 !workspace/ios/scripts/
