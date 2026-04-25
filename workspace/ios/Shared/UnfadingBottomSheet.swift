@@ -69,6 +69,7 @@ public enum BottomSheetSnap: CaseIterable, Hashable {
 
 enum BottomSheetDragResolution {
     static let velocityProjectionSeconds: CGFloat = 0.2
+    static let velocitySnapThreshold: CGFloat = 600
 
     static func clampedHeight(_ height: CGFloat, in fullHeight: CGFloat) -> CGFloat {
         min(max(height, fullHeight * CGFloat(BottomSheetSnap.collapsed.fraction)), fullHeight)
@@ -98,7 +99,29 @@ enum BottomSheetDragResolution {
             velocityHeight: velocityHeight,
             fullHeight: fullHeight
         )
-        return BottomSheetSnap.nearest(to: projected)
+        let nearestProjected = BottomSheetSnap.nearest(to: projected)
+        let ordered = BottomSheetSnap.ordered
+        guard
+            let currentIndex = ordered.firstIndex(of: currentSnap),
+            let projectedIndex = ordered.firstIndex(of: nearestProjected)
+        else {
+            return nearestProjected
+        }
+
+        let isFastFling = abs(velocityHeight) >= velocitySnapThreshold
+        if velocityHeight < 0 {
+            if currentIndex == ordered.index(before: ordered.endIndex) { return currentSnap }
+            if isFastFling || projectedIndex > currentIndex {
+                return ordered[currentIndex + 1]
+            }
+        } else if velocityHeight > 0 {
+            if currentIndex == ordered.startIndex { return currentSnap }
+            if isFastFling || projectedIndex < currentIndex {
+                return ordered[currentIndex - 1]
+            }
+        }
+
+        return nearestProjected
     }
 }
 

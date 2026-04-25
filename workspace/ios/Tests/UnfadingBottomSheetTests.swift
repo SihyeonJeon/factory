@@ -32,44 +32,70 @@ final class UnfadingBottomSheetTests: XCTestCase {
         XCTAssertEqual(BottomSheetSnap.nearest(to: 1.20), .expanded)
     }
 
-    func test_drag_resolution_uses_nearest_projected_snap_with_velocity() {
+    func test_drag_resolution_moves_default_to_expanded_for_short_fast_upward_swipe() {
         let fullHeight: CGFloat = 800
 
         XCTAssertEqual(
             BottomSheetDragResolution.resolvedSnap(
                 currentSnap: .default_,
-                translationHeight: -220,
+                translationHeight: -20,
                 velocityHeight: -600,
                 fullHeight: fullHeight
             ),
             .expanded
         )
+    }
+
+    func test_drag_resolution_moves_default_to_collapsed_for_short_fast_downward_swipe() {
+        let fullHeight: CGFloat = 800
 
         XCTAssertEqual(
             BottomSheetDragResolution.resolvedSnap(
                 currentSnap: .default_,
-                translationHeight: 260,
-                velocityHeight: 200,
+                translationHeight: 20,
+                velocityHeight: 600,
                 fullHeight: fullHeight
             ),
             .collapsed
         )
+    }
+
+    func test_drag_resolution_keeps_default_for_short_low_velocity_swipe() {
+        let fullHeight: CGFloat = 800
 
         XCTAssertEqual(
             BottomSheetDragResolution.resolvedSnap(
-                currentSnap: .expanded,
-                translationHeight: 300,
+                currentSnap: .default_,
+                translationHeight: 20,
                 velocityHeight: 0,
                 fullHeight: fullHeight
             ),
             .default_
         )
+    }
+
+    func test_drag_resolution_preserves_nearest_for_long_low_velocity_drag() {
+        let fullHeight: CGFloat = 800
 
         XCTAssertEqual(
             BottomSheetDragResolution.resolvedSnap(
-                currentSnap: .collapsed,
-                translationHeight: -700,
-                velocityHeight: -3_000,
+                currentSnap: .default_,
+                translationHeight: 260,
+                velocityHeight: 0,
+                fullHeight: fullHeight
+            ),
+            .collapsed
+        )
+    }
+
+    func test_drag_resolution_keeps_expanded_for_fast_upward_swipe_at_expanded() {
+        let fullHeight: CGFloat = 800
+
+        XCTAssertEqual(
+            BottomSheetDragResolution.resolvedSnap(
+                currentSnap: .expanded,
+                translationHeight: -20,
+                velocityHeight: -600,
                 fullHeight: fullHeight
             ),
             .expanded
